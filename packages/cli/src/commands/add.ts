@@ -12,6 +12,7 @@ import { installBytes } from "../install/installer.ts";
 import { flushEvents, registerMachine } from "../registration.ts";
 import { compareSemver } from "../semver.ts";
 import { enqueueEvent } from "../state/events.ts";
+import { keySource } from "../state/keys.ts";
 import { readLock, writeLock } from "../state/lock.ts";
 import { writeFileAtomic } from "../util/fs.ts";
 import { CLI_VERSION } from "../version.ts";
@@ -67,7 +68,7 @@ async function installModule(ctx: Context, client: Client, assets: CoreAssets, m
   ctx.io.out(t(ctx, "add.checksum", { sha: download.sha256, size: download.size_bytes, url: download.verify_url }));
   ctx.io.out(t(ctx, "add.installed", { slug: module.slug, version: latest.version, skills: result.module.skills.join(", ") || "—" }));
   for (const credential of result.module.external_credentials) {
-    if (credential.required && !ctx.env[credential.env]) {
+    if (credential.required && !keySource(ctx, credential.env)) {
       ctx.io.out(t(ctx, "add.missing_env", { env: credential.env, name: credential.name, url: credential.url ?? "" }));
     }
   }

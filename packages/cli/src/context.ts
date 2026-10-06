@@ -10,6 +10,10 @@ export type Io = {
   confirm: (question: string) => Promise<boolean>;
   /** Opens a URL in the member's browser; returns false when it could not. */
   openBrowser: (url: string) => Promise<boolean>;
+  /** Reads a secret typed with the echo off; null when there is no terminal to type on. */
+  secret: (question: string) => Promise<string | null>;
+  /** Everything piped into stdin (`--stdin`). */
+  stdin: () => Promise<string>;
 };
 
 export type Context = {
@@ -55,6 +59,8 @@ export function createContext(options: ContextOptions = {}): Context {
     err: options.io?.err ?? ((line) => process.stderr.write(`${line}\n`)),
     confirm: options.io?.confirm ?? (async () => false),
     openBrowser: options.io?.openBrowser ?? (async () => false),
+    secret: options.io?.secret ?? (async () => null),
+    stdin: options.io?.stdin ?? (async () => ""),
   };
   return {
     baseUrl,

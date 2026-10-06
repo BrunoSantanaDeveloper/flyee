@@ -6,6 +6,7 @@ import type { Context } from "../context.ts";
 import { loadCoreAssets } from "../core-assets.ts";
 import { t } from "../i18n.ts";
 import { detectTools } from "../install/adapters.ts";
+import { type KeySource, keySource } from "../state/keys.ts";
 import { moduleDir, readLock } from "../state/lock.ts";
 import { readText, sha256File } from "../util/fs.ts";
 import { CLI_VERSION } from "../version.ts";
@@ -39,7 +40,7 @@ export async function runDoctor(ctx: Context): Promise<Result> {
   ctx.io.out(t(ctx, "doctor.adapters", { list: Object.entries(adapters).map(([name, ok]) => `${name} ${ok ? "ok" : "missing"}`).join(", ") }));
 
   const integrity: Record<string, { intact: number; changed: string[] }> = {};
-  const credentials: { slug: string; env: string; name: string; set: boolean; required: boolean }[] = [];
+  const credentials: { slug: string; env: string; name: string; set: boolean; source: KeySource | null; required: boolean }[] = [];
   for (const [slug, module] of Object.entries(lock?.modules ?? {})) {
     const changed: string[] = [];
     for (const file of module.files) {
@@ -54,9 +55,10 @@ export async function runDoctor(ctx: Context): Promise<Result> {
         : t(ctx, "doctor.integrity_ok", { slug, count: module.files.length }),
     );
     for (const credential of module.external_credentials) {
-      const set = Boolean(ctx.env[credential.env]);
-      credentials.push({ slug, env: credential.env, name: credential.name, set, required: credential.required });
-      ctx.io.out(set ? t(ctx, "doctor.env_ok", { slug, env: credential.env }) : t(ctx, "doctor.env_missing", { slug, env: credential.env, name: credential.name }));
+      const source = keySource(ctx, credential.env);
+      credentials.push({ slug, env: credential.env, name: credential.name, set: source !== null, source, required: credential.required });
+      const where = source === "environment" ? t(ctx, "key.where_environment") : t(ctx, "key.where_saved");
+      ctx.io.out(source ? t(ctx, "doctor.env_ok", { slug, env: credential.env, where }) : t(ctx, "doctor.env_missing", { slug, env: credential.env, name: credential.name }));
     }
   }
 

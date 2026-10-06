@@ -42,6 +42,7 @@ Estado da máquina, fora do projeto:
 ~/.flyee/
 ├── config.json        device_id, nome da máquina, idioma, base_url
 ├── credentials.json   tokens (0600 onde o sistema respeita modo; no Windows, a ACL do perfil protege)
+├── keys.json          chaves externas dos apps, salvas com `npx flyee key set` (mesma proteção; nunca saem da máquina)
 ├── refresh.lock       serializa a renovação do refresh token
 ├── events.jsonl       fila de eventos de telemetria, lotes de até 50
 └── projects.json      projetos conhecidos nesta máquina, para montar installed_modules
@@ -57,7 +58,9 @@ Estado da máquina, fora do projeto:
 
 **`npx flyee status`.** Conexão, dias para revalidar, apps e versões, avisos (`deprecations`). `--quiet` imprime uma linha só quando há algo a fazer, para hooks de início de sessão.
 
-**`npx flyee doctor`.** Node, ferramentas de IA detectadas, adaptadores presentes, integridade dos arquivos instalados pelo sha gravado no lock, variáveis das credenciais externas, alcance da plataforma.
+**`npx flyee doctor`.** Node, ferramentas de IA detectadas, adaptadores presentes, integridade dos arquivos instalados pelo sha gravado no lock, chaves das credenciais externas (variável de ambiente ou `keys.json`), alcance da plataforma.
+
+**`npx flyee key set|list|remove`.** As chaves externas que os apps declaram (`external_credentials`). `set <NOME>` pede o valor no terminal com o eco desligado e nunca o aceita como argumento, porque ele ficaria no histórico e à vista da IA. Sem terminal, recusa; `--stdin` serve para automação. `list` mostra nomes, onde cada chave está e quais apps a usam, nunca o valor. Os apps leem a variável de ambiente de mesmo nome primeiro e depois `~/.flyee/keys.json`. A chave fica fora de todo projeto, onde a IA não lê por acaso, o git não versiona e uma pasta sincronizada não copia.
 
 **Erros.** A CLI imprime `message` e `action_url` como o servidor manda. Em 401 renova uma vez; em `device_unknown` registra a máquina e repete; em `device_revoked` ou `device_mismatch` pede login; em `denied_entitlement` mostra o cadeado com o link de upgrade.
 

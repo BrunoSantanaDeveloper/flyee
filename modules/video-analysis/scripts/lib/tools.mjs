@@ -1,6 +1,6 @@
 // Finds ffmpeg, ffprobe and yt-dlp on the member's machine without relying on an up-to-date PATH.
 
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 
@@ -151,9 +151,41 @@ export async function gridFont(tools) {
   return tools.font;
 }
 
-/** Whether the key is set. Its value is never read here, printed or written. */
-export function hasGeminiKey() {
-  return Boolean(process.env.GEMINI_API_KEY?.trim());
+/** Where `npx flyee key set` saves the member's keys: one file per machine, outside every project. */
+export function keyStorePath(home = homedir()) {
+  return join(home, ".flyee", "keys.json");
+}
+
+/** A key saved with `npx flyee key set` ({ "version": 1, "keys": { "NAME": "value" } }), or null. */
+export function readSavedKey(name, path = keyStorePath()) {
+  try {
+    const value = JSON.parse(readFileSync(path, "utf8").replace(/^﻿/, ""))?.keys?.[name];
+    return typeof value === "string" && value.trim() ? value.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The Gemini key, by the flyee rule for app keys: the environment variable
+ * first (one that exists but is empty means "no key" and stops the search),
+ * then the key saved with `npx flyee key set`. Read on every run, so a key
+ * saved after the AI was opened works at once. Never printed or written.
+ */
+export function geminiKey(env = process.env, path = keyStorePath()) {
+  const fromEnvironment = env.GEMINI_API_KEY;
+  if (fromEnvironment !== undefined) return fromEnvironment.trim() ? { key: fromEnvironment.trim(), from: "environment" } : { key: null, from: null };
+  const saved = readSavedKey("GEMINI_API_KEY", path);
+  return saved ? { key: saved, from: "flyee" } : { key: null, from: null };
+}
+
+/** How the member saves the key: one command, the same on every system, typed in their own terminal. */
+export function keySetup() {
+  return {
+    command: "npx flyee key set GEMINI_API_KEY",
+    how: "Rode no seu terminal (PowerShell, Prompt de Comando ou Terminal), fora do chat, e cole a chave quando ele pedir: ela não aparece na tela.",
+    after: "O app enxerga a chave na hora, sem reabrir a IA.",
+  };
 }
 
 /** Install and update commands for the member's system. */

@@ -24,9 +24,27 @@ Outros apps do flyee.club usam este para entender vídeos. O de edição, por ex
   - Windows: `winget install --id Gyan.FFmpeg -e` e `winget install --id yt-dlp.yt-dlp -e`
   - Mac: `brew install ffmpeg yt-dlp`
   - Linux: `sudo apt install ffmpeg` e `python3 -m pip install --user -U yt-dlp`
-- Para o modo Gemini (opcional): uma chave da API do Gemini, criada no Google AI Studio, na variável de ambiente `GEMINI_API_KEY`.
+- Para o modo Gemini (opcional): uma chave gratuita da API do Gemini, salva uma vez com `npx flyee key set GEMINI_API_KEY`. O passo a passo está logo abaixo.
 
 Na dúvida, peça à IA: "confira o que falta para a análise de vídeo". Ela verifica a máquina e mostra os comandos.
+
+## Como ligar o modo Gemini
+
+A chave nunca passa pelo chat: nem a IA nem o app pedem que você a cole na conversa. Você a salva uma vez no seu computador, e todos os apps do flyee.club que usam a mesma chave a encontram.
+
+1. Crie a chave no Google AI Studio, entrando com a sua conta Google. A IA mostra o endereço quando você pede para conferir a análise de vídeo.
+2. No **seu terminal** (PowerShell, Prompt de Comando ou Terminal), fora do chat da IA, rode:
+
+   ```
+   npx flyee key set GEMINI_API_KEY
+   ```
+
+   Cole a chave quando ele pedir e tecle Enter. Ela não aparece na tela e fica guardada só neste computador, fora dos seus projetos.
+3. Pronto: o app enxerga a chave na hora, sem reabrir a IA. Peça "confira a análise de vídeo" e a IA confirma que a chave foi encontrada, sem nunca mostrar o valor.
+
+Para ver as chaves salvas e quais apps usam cada uma: `npx flyee key list`. Para apagar: `npx flyee key remove GEMINI_API_KEY`. Quem prefere variável de ambiente pode definir `GEMINI_API_KEY`; ela tem prioridade sobre a chave salva.
+
+Colou a chave no chat por engano? Ela ficou no histórico da conversa: apague-a no Google AI Studio e crie outra.
 
 ## Peça assim
 
@@ -63,7 +81,7 @@ Tudo funciona no modo local: descrição, os três focos, perguntas, frames extr
 - O plano gratuito do Gemini limita as horas de vídeo do YouTube por dia e os pedidos por minuto. Quando o limite acaba, o app avisa e segue no modo local.
 - Pelo endereço, o Gemini só lê vídeos **públicos** do YouTube. Vídeos não listados são baixados e enviados.
 - Um arquivo do seu computador só vai para o Google com a sua autorização. A IA pergunta antes. O Google apaga o arquivo enviado em até 48 horas. Arquivos grandes são reduzidos para 720p antes do envio.
-- A chave fica só na variável de ambiente; o app nunca a grava nem a mostra.
+- A chave fica só no seu computador, salva pelo flyee fora dos projetos (ou na variável de ambiente, se você preferir); o app nunca a grava nem a mostra.
 
 ## Cuidados
 

@@ -15,7 +15,7 @@
   "compatible_ais": [
     "claude_code"
   ],
-  "min_core": ">=1.0.0",
+  "min_core": ">=1.1.0",
   "entry": "skills/analyze-video/SKILL.md",
   "files": [
     "README.md",
@@ -98,6 +98,14 @@
       }
     },
     {
+      "kind": "fs:read",
+      "scope": "~/.flyee/keys.json (só a chave GEMINI_API_KEY)",
+      "reason": {
+        "pt-BR": "Lê a chave do Gemini que você salvou com `npx flyee key set GEMINI_API_KEY`, quando ela existe.",
+        "en": "Reads the Gemini key you saved with `npx flyee key set GEMINI_API_KEY`, when there is one."
+      }
+    },
+    {
       "kind": "fs:write",
       "scope": "./video-analyses/",
       "reason": {
@@ -109,8 +117,8 @@
       "kind": "env",
       "scope": "GEMINI_API_KEY",
       "reason": {
-        "pt-BR": "Lê a chave do Gemini, quando definida. Ela nunca é gravada nem mostrada.",
-        "en": "Reads the Gemini key, when set. It is never written or shown."
+        "pt-BR": "Lê a chave do Gemini da variável de ambiente, se você preferir defini-la assim; ela tem prioridade sobre a salva no flyee. Nunca é pedida no chat, gravada ou mostrada.",
+        "en": "Reads the Gemini key from the environment variable, if you prefer to set it that way; it takes precedence over the one saved in flyee. Never asked for in the chat, written or shown."
       }
     }
   ],

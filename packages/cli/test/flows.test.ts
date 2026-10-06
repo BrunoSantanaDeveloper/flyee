@@ -134,6 +134,55 @@ describe("the member's journey against the contract", () => {
     assert.equal(result.changed, false);
   });
 
+  it("saves an app key typed with the echo off, outside the project, and never prints it", async () => {
+    const asked: string[] = [];
+    const ctx = makeContext({ io: { out: (line) => output.push(line), secret: async (question) => (asked.push(question), "  apify-segredo-123  ") } });
+    const result = await run(ctx, ["key", "set", "APIFY_TOKEN"]);
+    assert.equal(result.ok, true, JSON.stringify(result));
+    assert.deepEqual(result.used_by, ["radar"]);
+    assert.ok(asked[0].includes("APIFY_TOKEN"));
+    const file = join(sandbox, "home", ".flyee", "keys.json");
+    assert.deepEqual(JSON.parse(readFileSync(file, "utf8")), { version: 1, keys: { APIFY_TOKEN: "apify-segredo-123" } });
+    assert.ok(!existsSync(join(ctx.cwd, ".flyee", "keys.json")), "never inside the project");
+    assert.ok(!JSON.stringify(result).includes("apify-segredo-123") && !output.join("\n").includes("apify-segredo-123"), "the value is never printed");
+
+    const doctor = await run(ctx, ["doctor"]);
+    assert.deepEqual((doctor.credentials as { env: string; source: string }[]).map(({ env, source }) => ({ env, source })), [{ env: "APIFY_TOKEN", source: "flyee" }]);
+    const listed = await run(ctx, ["key", "list"]);
+    assert.deepEqual(listed.keys, [{ name: "APIFY_TOKEN", source: "flyee", saved: true, apps: ["radar"], required: true, url: "https://console.apify.com/" }]);
+    assert.ok(!output.join("\n").includes("apify-segredo-123"));
+  });
+
+  it("lets the environment variable win, and an empty one means no key", async () => {
+    const withVariable = makeContext({ env: { PATH: "", APIFY_TOKEN: "do-ambiente" } });
+    assert.equal(((await run(withVariable, ["key", "list"])).keys as { source: string }[])[0].source, "environment");
+    const emptyVariable = makeContext({ env: { PATH: "", APIFY_TOKEN: "" } });
+    assert.equal(((await run(emptyVariable, ["key", "list"])).keys as { source: string | null }[])[0].source, null);
+  });
+
+  it("refuses a key passed as an argument and a run without a terminal", async () => {
+    const ctx = makeContext();
+    const inArguments = await run(ctx, ["key", "set", "APIFY_TOKEN", "apify-no-historico"]);
+    assert.equal(inArguments.ok, false);
+    assert.equal(inArguments.error, "key_in_arguments");
+    assert.ok(!readFileSync(join(sandbox, "home", ".flyee", "keys.json"), "utf8").includes("apify-no-historico"));
+    const noTerminal = await run(ctx, ["key", "set", "APIFY_TOKEN"]);
+    assert.equal(noTerminal.error, "key_needs_terminal");
+    const badName = await run(ctx, ["key", "set", "apify-token"]);
+    assert.equal(badName.error, "usage");
+  });
+
+  it("reads a piped key with --stdin and removes a key on request", async () => {
+    const ctx = makeContext({ io: { out: (line) => output.push(line), stdin: async () => "chave-via-pipe\n" } });
+    const piped = await run(ctx, ["key", "set", "OUTRA_CHAVE", "--stdin"]);
+    assert.equal(piped.ok, true, JSON.stringify(piped));
+    assert.equal(piped.replaced, false);
+    const removed = await run(ctx, ["key", "remove", "OUTRA_CHAVE"]);
+    assert.equal(removed.removed, true);
+    const keys = JSON.parse(readFileSync(join(sandbox, "home", ".flyee", "keys.json"), "utf8")).keys;
+    assert.deepEqual(Object.keys(keys), ["APIFY_TOKEN"]);
+  });
+
   it("refuses an app the account does not unlock, with the upgrade link", async () => {
     const ctx = makeContext();
     const result = await run(ctx, ["add", "pauta"]);

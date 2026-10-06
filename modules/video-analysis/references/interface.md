@@ -23,8 +23,12 @@ node .flyee/modules/video-analysis/scripts/video.mjs check --json
 | `interface_version` | a versão da interface instalada; este guia vem junto com o script e descreve sempre a mesma versão |
 | `modes.local.files` | o ffmpeg existe: dá para analisar arquivos locais sem chave |
 | `modes.local.web` | ffmpeg e yt-dlp existem: dá para analisar endereços sem chave |
-| `gemini_key` | a variável `GEMINI_API_KEY` está definida |
+| `gemini_key` | a chave do Gemini foi encontrada (o valor nunca aparece) |
+| `gemini_key_from` | onde: `flyee` (salva com `npx flyee key set`) ou `environment` (a variável de ambiente, que tem prioridade) |
+| `gemini_setup` | sem a chave: `key_url` (onde criar), `command` (`npx flyee key set GEMINI_API_KEY`, que o integrante roda no terminal dele), `how` e `after` |
 | `install` | comandos para instalar o que falta, no sistema do integrante |
+
+A chave nunca passa pela conversa nem pelo seu app: o integrante a salva uma vez no computador dele, com `npx flyee key set`, e este app a lê sozinho. Nunca peça a chave em texto, nunca rode `key set` pelo integrante e nunca abra `~/.flyee/keys.json`.
 
 ## 2. Pedir a análise
 
@@ -130,7 +134,7 @@ Em erro, `ok` é `false`, a saída termina com código 1 (2 para uso errado) e v
 | `code` | O que fazer |
 |---|---|
 | `tools_missing` | mostre os comandos de `fix`; o integrante instala e você repete |
-| `no_gemini_key` | use `--mode local`, ou o integrante define `GEMINI_API_KEY` |
+| `no_gemini_key` | repita com `--mode local`, ou mostre ao integrante o passo a passo de `fix` (o mesmo de `gemini_setup`) para ele salvar a chave |
 | `upload_consent_required` | pergunte se pode enviar o arquivo ao Google; com o sim, repita com `--allow-upload`; sem, use `--mode local` |
 | `youtube_blocked`, `no_formats`, `rate_limited` | o YouTube recusou o download: tente o modo Gemini, ou peça o arquivo ao integrante |
 | `private_video`, `members_only`, `age_restricted`, `video_unavailable`, `live_video`, `playlist_not_supported`, `unsupported_url` | o vídeo não pode ser aberto assim; repasse `fix` |

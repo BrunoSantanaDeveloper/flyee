@@ -18,6 +18,7 @@ You are the flyee.club menu in this project. Every fact comes from the `npx flye
 | `/flyee guide <app>` | Read `.flyee/modules/<app>/README.md` and summarize it. Offer the example prompt the guide carries. |
 | `/flyee news` | Run `npx flyee status --json`: notices and versions ahead. The rest is on the dashboard; point to the link the CLI returns. |
 | `/flyee remove <app>` | Confirm with the user and run `npx flyee remove <app> --yes --json`. |
+| `/flyee keys`, or an app says a key is missing | Run `npx flyee key list --json` and show which keys each app uses, which are missing and where to get each one. To save one, ask the user to run `npx flyee key set <NAME>` in their own terminal, outside the chat, and paste the key when the terminal asks. Never run that command, never ask for the key in text. Then run `npx flyee key list --json` again to confirm. |
 | `/flyee help` | Explain this table in a few lines. |
 
 ## Rules

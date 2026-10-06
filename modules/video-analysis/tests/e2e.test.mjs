@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -17,9 +17,17 @@ const SCRIPT = fileURLToPath(new URL("../scripts/video.mjs", import.meta.url));
 const tools = await checkTools({ ytdlp: false });
 const noFfmpeg = !tools.ffmpeg || !tools.ffprobe ? "ffmpeg is not installed" : false;
 
-function cli(args, { cwd, env = {} }) {
+/**
+ * Runs the script as the member's AI would. The home folder is a scratch one, so
+ * a key the operator saved with `npx flyee key set` is never found by a test.
+ */
+function cli(args, { cwd, env = {}, home = join(cwd, "home") }) {
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [SCRIPT, ...args, "--json"], { cwd, env: { ...process.env, GEMINI_API_KEY: "", ...env }, windowsHide: true });
+    const child = spawn(process.execPath, [SCRIPT, ...args, "--json"], {
+      cwd,
+      env: { ...process.env, GEMINI_API_KEY: "", HOME: home, USERPROFILE: home, ...env },
+      windowsHide: true,
+    });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (chunk) => (stdout += chunk));
@@ -249,6 +257,52 @@ test("gemini mode: a large or high-resolution file is reduced before the upload"
   const upload = fake.requests.find((request) => request.url === "/session/1");
   assert.ok(upload.bytes > 0 && upload.bytes < readFileSync(big).length, `${upload.bytes} bytes sent`);
   assert.ok(!existsSync(join(dir, result.json.dir, "media", "upload.mp4")), "the reduced copy is removed");
+});
+
+test("the Gemini key: never shown, and without it the member gets the steps to save it", async (t) => {
+  const dir = scratch(t);
+  // An empty variable means "no key" and stops the search (the saved Windows variables are not read).
+  const without = await cli(["check"], { cwd: dir, env: { GEMINI_API_KEY: "" } });
+  assert.equal(without.json.gemini_key, false);
+  assert.equal(without.json.gemini_setup.key_url, "https://aistudio.google.com/apikey");
+  assert.match(without.json.gemini_setup.command, /GEMINI_API_KEY/);
+
+  const refused = await cli(["analyze", "https://youtu.be/jNQXAC9IVRw", "--mode", "gemini"], { cwd: dir, env: { GEMINI_API_KEY: "" } });
+  assert.equal(refused.json.error.code, "no_gemini_key");
+  assert.match(refused.json.error.fix, /fora do chat/);
+  assert.match(refused.json.error.fix, /Nunca cole a chave no chat/);
+
+  const withKey = await cli(["check"], { cwd: dir, env: { GEMINI_API_KEY: "segredo-de-teste-123" } });
+  assert.equal(withKey.json.gemini_key, true);
+  assert.equal(withKey.json.gemini_key_from, "environment");
+  assert.equal(withKey.json.gemini_setup, null);
+  assert.ok(!withKey.stdout.includes("segredo-de-teste-123") && !withKey.stderr.includes("segredo-de-teste-123"));
+});
+
+test("a key saved with `npx flyee key set` turns the Gemini mode on, and the variable wins over it", async (t) => {
+  const dir = scratch(t);
+  const home = join(dir, "home");
+  mkdirSync(join(home, ".flyee"), { recursive: true });
+  writeFileSync(join(home, ".flyee", "keys.json"), JSON.stringify({ version: 1, keys: { GEMINI_API_KEY: "salva-no-flyee-456" } }));
+  const fake = await fakeGemini(REPLY);
+  t.after(() => fake.server.close());
+
+  const saved = await cli(["check"], { cwd: dir, home, env: { GEMINI_API_KEY: undefined } });
+  assert.equal(saved.json.gemini_key, true);
+  assert.equal(saved.json.gemini_key_from, "flyee");
+  assert.equal(saved.json.gemini_setup, null);
+  assert.ok(!saved.stdout.includes("salva-no-flyee-456"));
+
+  // Only ffmpeg on the PATH, so the app goes straight to Gemini with the saved key.
+  const pathWithoutYtdlp = tools.ffmpeg ? join(tools.ffmpeg.path, "..") : "";
+  const analyzed = await cli(["analyze", "https://youtu.be/jNQXAC9IVRw", "--gemini-url", fake.url], { cwd: dir, home, env: { GEMINI_API_KEY: undefined, PATH: pathWithoutYtdlp } });
+  assert.equal(analyzed.json.mode, "gemini", analyzed.stdout + analyzed.stderr);
+  assert.equal(fake.requests.find((request) => request.url.includes(":generateContent")).headers["x-goog-api-key"], "salva-no-flyee-456");
+
+  const variable = await cli(["check"], { cwd: dir, home, env: { GEMINI_API_KEY: "da-variavel" } });
+  assert.equal(variable.json.gemini_key_from, "environment");
+  const disabled = await cli(["check"], { cwd: dir, home, env: { GEMINI_API_KEY: "" } });
+  assert.equal(disabled.json.gemini_key, false);
 });
 
 test("auto mode sends a public YouTube address to Gemini without downloading", async (t) => {

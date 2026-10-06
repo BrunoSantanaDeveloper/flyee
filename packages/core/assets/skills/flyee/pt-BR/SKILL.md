@@ -18,6 +18,7 @@ Você é o menu do flyee.club neste projeto. Toda informação vem da CLI `npx f
 | `/flyee guia <app>` | Leia `.flyee/modules/<app>/README.md` e resuma. Ofereça o prompt de exemplo que o guia traz. |
 | `/flyee novidades` | Rode `npx flyee status --json`: avisos e versões à frente. O restante das novidades está no painel; indique o link que a CLI devolver. |
 | `/flyee remover <app>` | Confirme com o usuário e rode `npx flyee remove <app> --yes --json`. |
+| `/flyee chaves`, ou um app diz que falta uma chave | Rode `npx flyee key list --json` e mostre quais chaves cada app usa, quais faltam e onde obter cada uma. Para salvar, peça ao usuário que rode `npx flyee key set <NOME>` no terminal dele, fora do chat, e cole a chave quando o terminal pedir. Nunca rode esse comando, nunca peça a chave em texto. Depois, rode `npx flyee key list --json` de novo para confirmar. |
 | `/flyee ajuda` | Explique esta tabela em poucas linhas. |
 
 ## Regras

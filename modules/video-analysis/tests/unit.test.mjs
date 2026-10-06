@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -10,6 +10,7 @@ import { escapeFilterPath, gridLayout, mergeCuts, pickFrames, similar, stillChan
 import { classifyGeminiError, parseJsonReply, videoPart } from "../scripts/lib/gemini.mjs";
 import { identifySource, looksLikeId, youtubeId } from "../scripts/lib/source.mjs";
 import { measurementLines } from "../scripts/lib/store.mjs";
+import { geminiKey, keySetup, keyStorePath, readSavedKey } from "../scripts/lib/tools.mjs";
 import { AppError, displayPath, fileTime, formatTime, parseArgs, parseTime, slugify } from "../scripts/lib/util.mjs";
 import { classifyYtdlpError, mostReplayed, pickCaptionTrack, summarizeMetadata } from "../scripts/lib/ytdlp.mjs";
 
@@ -211,6 +212,32 @@ test("pickCaptionTrack prefers the original language, manual before automatic", 
   assert.deepEqual(pickCaptionTrack({ subtitles: { de: [], en: [] }, automatic_captions: {} }), { key: "en", origin: "manual" });
   assert.deepEqual(pickCaptionTrack({ subtitles: { live_chat: [] }, automatic_captions: { fr: [] } }), { key: "fr", origin: "auto" });
   assert.equal(pickCaptionTrack({ subtitles: {}, automatic_captions: {} }), null);
+});
+
+test("geminiKey follows the flyee rule: the variable, then the key saved with `flyee key set`", () => {
+  const home = mkdtempSync(join(tmpdir(), "va-keys-"));
+  try {
+    const path = keyStorePath(home);
+    assert.equal(path, join(home, ".flyee", "keys.json"));
+    assert.deepEqual(geminiKey({}, path), { key: null, from: null }, "no file yet");
+    mkdirSync(join(home, ".flyee"), { recursive: true });
+    writeFileSync(path, JSON.stringify({ version: 1, keys: { GEMINI_API_KEY: "  salva-123  ", OUTRA: "x" } }));
+    assert.deepEqual(geminiKey({}, path), { key: "salva-123", from: "flyee" });
+    assert.deepEqual(geminiKey({ GEMINI_API_KEY: "da-variavel" }, path), { key: "da-variavel", from: "environment" });
+    assert.deepEqual(geminiKey({ GEMINI_API_KEY: "" }, path), { key: null, from: null }, "an empty variable means no key");
+    assert.equal(readSavedKey("OUTRA", path), "x");
+    writeFileSync(path, "{ quebrado");
+    assert.equal(readSavedKey("GEMINI_API_KEY", path), null);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("keySetup gives one command, the same on every system", () => {
+  const setup = keySetup();
+  assert.equal(setup.command, "npx flyee key set GEMINI_API_KEY");
+  assert.match(setup.how, /fora do chat/);
+  assert.ok(setup.after);
 });
 
 test("summarizeMetadata formats the date and keeps the useful fields", () => {

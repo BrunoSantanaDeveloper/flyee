@@ -12,7 +12,7 @@ The reference is `docs/COMO-CRIAR-UM-APP.md`; read it once per session. This ski
 - `type`: `skill` (instructions the AI follows), `workflow` (a pipeline with steps, state and, when scheduled, an automatic half without approvals), `tool` (scripts the AI runs; needs `shell` in permissions), `framework` (a scaffold that creates a new folder; never installs into an existing project).
 - `trail`: one of `planejar`, `construir`, `publicar`, `divulgar`, `vender`, `escalar`, `manter`.
 - Which AIs you will test (`compatible_ais`); the rest is "compatible by the standard" and needs no declaration.
-- Which external keys the member supplies (`external_credentials`) and what the app still does without them.
+- Which external keys the member supplies (`external_credentials`) and what the app still does without them. The member saves each key once with `npx flyee key set <ENV>`; scripts read the environment variable first (an empty one means no key), then `~/.flyee/keys.json` (`docs/COMO-CRIAR-UM-APP.md` §4 has the reader). Declare `env` and `fs:read ~/.flyee/keys.json`; never ask for, print or write a key.
 
 ## 2. Create or open the directory
 

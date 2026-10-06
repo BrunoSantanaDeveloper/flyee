@@ -60,7 +60,31 @@ description: Encontra Reels que performaram acima do normal do próprio perfil e
 
 Declare tudo: a IA mostra as permissões antes de instalar, e a página pública do app as exibe. Um app que grava no projeto declara `fs:write` com o escopo; um que chama uma API declara `network` com o domínio; um que roda script declara `shell` com o comando, inclusive binários externos como `ffmpeg`.
 
-Toda credencial externa vem por variável de ambiente; o app nunca pede a chave em texto nem a grava em arquivo. E todo app com credencial tem um modo que entrega algo sem ela, por exemplo planejar ou preparar o material, dizendo o que a chave liberaria.
+Toda credencial externa se declara em `external_credentials`, e o `env` é o nome da chave. O integrante a salva uma vez por máquina com `npx flyee key set <ENV>`, no terminal dele e sem que ela apareça na tela. Ela fica em `~/.flyee/keys.json`, fora de todo projeto, e serve a todos os apps que usam o mesmo nome. Quem preferir pode definir uma variável de ambiente com esse nome.
+
+O script do app lê a chave sozinho, nesta ordem:
+
+1. A variável de ambiente `<ENV>`, que tem prioridade. Se ela existe mas está vazia, significa "sem chave" e a busca para.
+2. `keys[<ENV>]` em `~/.flyee/keys.json`, um JSON `{ "version": 1, "keys": { "<ENV>": "valor" } }`, lido a cada execução. Assim, uma chave salva depois de a IA abrir funciona na hora.
+
+```js
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+function appKey(name) {
+  const fromEnvironment = process.env[name];
+  if (fromEnvironment !== undefined) return fromEnvironment.trim() || null;
+  try {
+    const saved = JSON.parse(readFileSync(join(homedir(), ".flyee", "keys.json"), "utf8")).keys?.[name];
+    return typeof saved === "string" && saved.trim() ? saved.trim() : null;
+  } catch {
+    return null;
+  }
+}
+```
+
+Declare `env` com o nome da chave e `fs:read` com `~/.flyee/keys.json`. O app e a skill nunca pedem a chave em texto, nunca a põem num comando, nunca rodam `key set` pelo integrante, nunca abrem esse arquivo por conta própria e nunca gravam a chave em arquivo do projeto. Sem a chave, o app mostra o comando `npx flyee key set <ENV>` e o `url` de onde obtê-la. E todo app com credencial tem um modo que entrega algo sem ela, por exemplo planejar ou preparar o material, dizendo o que a chave liberaria.
 
 ## 5. O README é o guia
 

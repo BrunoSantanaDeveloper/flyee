@@ -2,6 +2,7 @@ import { ApiError, CliError } from "./api/errors.ts";
 import { runAdd } from "./commands/add.ts";
 import { runDev } from "./commands/dev.ts";
 import { runDoctor } from "./commands/doctor.ts";
+import { runKey } from "./commands/key.ts";
 import { runLogin } from "./commands/login.ts";
 import { runLogout } from "./commands/logout.ts";
 import { runRemove } from "./commands/remove.ts";
@@ -13,7 +14,7 @@ import { type Context, createContext } from "./context.ts";
 import { t } from "./i18n.ts";
 import { readConfig } from "./state/config.ts";
 import { openBrowser } from "./util/os.ts";
-import { confirmOnTerminal } from "./util/prompt.ts";
+import { confirmOnTerminal, readAllStdin, readSecretOnTerminal } from "./util/prompt.ts";
 import { CLI_VERSION } from "./version.ts";
 
 export function parseArgs(argv: string[]): ParsedArgs {
@@ -34,7 +35,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
   return { command, positionals: rest, flags };
 }
 
-const BOOLEAN_FLAGS = new Set(["json", "yes", "device", "dry-run", "quiet", "help", "version"]);
+const BOOLEAN_FLAGS = new Set(["json", "yes", "device", "dry-run", "quiet", "help", "version", "stdin"]);
 
 const HELP = `flyee ${CLI_VERSION}
 
@@ -44,6 +45,7 @@ const HELP = `flyee ${CLI_VERSION}
   npx flyee status [--quiet]
   npx flyee doctor
   npx flyee remove <app>
+  npx flyee key set <NOME> | key list | key remove <NOME>   (chaves dos apps, digitadas sem aparecer)
   npx flyee track <evento> [--module <app>] [--version <v>] [--from <v>] [--to <v>] [--reason <r>] [--origin <o>]
   npx flyee logout
 
@@ -67,6 +69,8 @@ export async function runCommand(ctx: Context, args: ParsedArgs): Promise<Result
       return runStatus(ctx);
     case "doctor":
       return runDoctor(ctx);
+    case "key":
+      return runKey(ctx, args);
     case "track":
       return runTrack(ctx, args);
     case "dev":
@@ -125,6 +129,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       err: (line) => (json ? lines.push(line) : process.stderr.write(`${line}\n`)),
       confirm: (question) => (yes ? Promise.resolve(true) : confirmOnTerminal(question, t({ locale: "pt-BR" }, "common.yes_no"))),
       openBrowser,
+      secret: readSecretOnTerminal,
+      stdin: readAllStdin,
     },
   });
   const saved = readConfig(ctx)?.locale;

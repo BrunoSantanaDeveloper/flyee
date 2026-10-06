@@ -26,7 +26,7 @@ import {
   writeIndex,
   writeTranscript,
 } from "./lib/store.mjs";
-import { checkTools, gridFont, hasGeminiKey, installHints } from "./lib/tools.mjs";
+import { checkTools, geminiKey, gridFont, installHints, keySetup } from "./lib/tools.mjs";
 import {
   AppError,
   displayPath,
@@ -85,6 +85,25 @@ function installText(missing) {
   const hints = installHints();
   const lines = [...new Set(missing.map((name) => (name === "ffprobe" ? "ffmpeg" : name)))].map((name) => `${name}: ${hints[name]}`);
   return `Instale: ${lines.join("; ")}.${hints.note ? ` ${hints.note}` : ""}`;
+}
+
+/** How to get and save the Gemini key. The address is the one the app declares for its credential. */
+function geminiSetup() {
+  const credential = (MANIFEST.external_credentials ?? []).find((item) => item.env === "GEMINI_API_KEY");
+  return { key_url: credential?.url ?? null, ...keySetup() };
+}
+
+function geminiSetupText() {
+  const setup = geminiSetup();
+  // One step per line, so the command can be copied without the sentence after it.
+  return [
+    `Crie uma chave gratuita no Google AI Studio${setup.key_url ? ` (${setup.key_url})` : ""}.`,
+    "Salve-a com este comando:",
+    `  ${setup.command}`,
+    setup.how,
+    setup.after,
+    "Nunca cole a chave no chat.",
+  ].join("\n");
 }
 
 function readInstructions(path) {
@@ -159,7 +178,7 @@ function localPossible(source, tools) {
 function chooseMode(opts, source, tools, key) {
   const missing = [!tools.ffmpeg && "ffmpeg", !tools.ffprobe && "ffprobe", source.type !== "file" && !tools.ytdlp && "yt-dlp"].filter(Boolean);
   const toolsMissing = (list, extra = "") => new AppError("tools_missing", `Faltam programas para o modo local: ${list.join(", ")}.`, `${installText(list)}${extra}`);
-  const noKey = () => new AppError("no_gemini_key", "O modo Gemini precisa da variável de ambiente GEMINI_API_KEY.", "Crie uma chave gratuita no Google AI Studio e defina GEMINI_API_KEY; sem ela, use o modo local.");
+  const noKey = () => new AppError("no_gemini_key", "O modo Gemini precisa da chave GEMINI_API_KEY.", `${geminiSetupText()}\nSem a chave, use o modo local.`);
   const consent = () =>
     new AppError(
       "upload_consent_required",
@@ -184,7 +203,7 @@ function chooseMode(opts, source, tools, key) {
   if (!missing.length) return { local: true, gemini: false, auto: true };
   if (key && source.type === "file") throw consent();
   if (key && reachable) return { local: false, gemini: true, auto: true };
-  throw toolsMissing(missing, key ? "" : " Ou defina GEMINI_API_KEY para usar o modo Gemini.");
+  throw toolsMissing(missing, key ? "" : " Ou ligue o modo Gemini salvando a chave com `npx flyee key set GEMINI_API_KEY` (o comando check explica).");
 }
 
 const probedMetadata = (probed) => ({ width: probed.width, height: probed.height, fps: probed.fps, has_audio: probed.has_audio });
@@ -498,7 +517,7 @@ async function analyze(input, values, { command = "analyze", forceMode = null } 
   const opts = analysisOptions(forceMode ? { ...values, mode: forceMode } : values);
   const source = resolveSource(input, values.dir);
   const tools = await checkTools({ ytdlp: source.type !== "file" });
-  const key = process.env.GEMINI_API_KEY?.trim() || null;
+  const { key } = geminiKey();
   const plan = chooseMode(opts, source, tools, key);
   const root = analysesDir(values.dir);
   ensureAnalysesDir(root);
@@ -668,7 +687,8 @@ function listCommand(values) {
 
 async function checkCommand() {
   const tools = await checkTools({ versions: true });
-  const key = hasGeminiKey();
+  const { key: found, from } = geminiKey();
+  const key = Boolean(found);
   const hints = installHints();
   const install = {};
   if (!tools.ffmpeg || !tools.ffprobe) install.ffmpeg = hints.ffmpeg;
@@ -684,6 +704,7 @@ async function checkCommand() {
     node: process.version,
     tools: { ffmpeg: tools.ffmpeg?.version ?? null, ffprobe: tools.ffprobe?.version ?? null, "yt-dlp": tools.ytdlp?.version ?? null, grid_labels: Boolean(tools.font) },
     gemini_key: key,
+    gemini_key_from: from,
     modes: {
       local: { files: local, web: local && Boolean(tools.ytdlp) },
       gemini: { youtube: key, files: key, web: key && Boolean(tools.ytdlp) },
@@ -691,6 +712,7 @@ async function checkCommand() {
     install,
     install_note: Object.keys(install).length && hints.note ? hints.note : null,
     update_ytdlp: hints.update_ytdlp,
+    gemini_setup: key ? null : geminiSetup(),
   };
 }
 
@@ -740,10 +762,19 @@ function humanText(result) {
         `Análise de vídeo ${result.app.version} · Node ${result.node}`,
         `ffmpeg: ${result.tools.ffmpeg ?? "não encontrado"} · yt-dlp: ${result.tools["yt-dlp"] ?? "não encontrado"} · chave do Gemini: ${result.gemini_key ? "definida" : "não definida"}`,
         `Modo local: ${result.modes.local.files ? `arquivos sim, endereços ${result.modes.local.web ? "sim" : "não (falta o yt-dlp)"}` : "indisponível (falta o ffmpeg)"}`,
-        `Modo Gemini: ${result.gemini_key ? "disponível" : "indisponível (defina GEMINI_API_KEY)"}`,
+        `Modo Gemini: ${result.gemini_key ? `disponível (chave ${result.gemini_key_from === "flyee" ? "salva no flyee" : "na variável de ambiente"})` : "desligado: falta a chave GEMINI_API_KEY"}`,
       ];
       for (const [name, command] of Object.entries(result.install)) lines.push(`Instalar ${name}: ${command}`);
       if (result.install_note) lines.push(result.install_note);
+      if (result.gemini_setup) {
+        const setup = result.gemini_setup;
+        lines.push(
+          `Para ligar o modo Gemini: crie uma chave gratuita no Google AI Studio${setup.key_url ? ` (${setup.key_url})` : ""} e salve-a com:`,
+          `  ${setup.command}`,
+          setup.how,
+          setup.after,
+        );
+      }
       return lines.join("\n");
     }
     case "analyze": {

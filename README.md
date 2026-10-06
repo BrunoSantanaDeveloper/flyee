@@ -20,6 +20,9 @@ npm install            # sempre na raiz
 npm run validate       # valida todos os apps em modules/
 npm run pack           # regenera `files`, valida e empacota os apps em dist/modules/
 npm run index          # gera dist/index.json
+npm run apps -- list   # os apps: versão, validação, tags, pasta de trabalho, quem usa quem
+npm run apps -- new <slug> --type <tipo> --trail <trilha>   # app novo a partir do modelo
+npm run apps -- link <slug>    # instala o app na pasta de trabalho, fora do repositório
 npm run build          # empacota a CLI em packages/cli/dist/flyee.js
 npm test               # testes de todos os pacotes
 npm run typecheck

@@ -3,9 +3,9 @@
   "cases": [
     {
       "name": "resultado basico",
-      "prompt": "Um pedido típico que aciona a skill.",
+      "prompt": "[PREENCHER] Um pedido típico que aciona a skill.",
       "assertions": [{ "kind": "file_exists", "path": "saida/*" }],
-      "rubric": "O que um juiz deve ver no resultado para aprovar."
+      "rubric": "[PREENCHER] O que um juiz deve ver no resultado para aprovar."
     }
   ]
 }

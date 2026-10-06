@@ -14,6 +14,7 @@
     "validate": "node --experimental-strip-types --no-warnings packages/module-tools/src/cli.ts validate",
     "pack": "node --experimental-strip-types --no-warnings packages/module-tools/src/cli.ts pack",
     "index": "node --experimental-strip-types --no-warnings packages/module-tools/src/cli.ts index",
+    "apps": "node --experimental-strip-types --no-warnings packages/module-tools/src/cli.ts",
     "build": "npm run build -w flyee",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present && npm run test:apps",
@@ -23,7 +24,7 @@
     "harness:sync": "node scripts/sync-agent-harness.mjs",
     "harness:check": "node scripts/sync-agent-harness.mjs --check",
     "harness:test": "node scripts/test-agent-harness.mjs",
-    "ci:verify": "npm run harness:check && npm run harness:test && npm run typecheck && npm test && npm run validate && npm run build && npm run check:tarball"
+    "ci:verify": "npm run harness:check && npm run harness:test && npm run typecheck && npm test && npm run validate && npm run apps -- catalog --check && npm run build && npm run check:tarball"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

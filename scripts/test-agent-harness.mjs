@@ -61,6 +61,34 @@ const unrelated = runHook("app-guard.mjs", {
 });
 assert(unrelated === null, "App guard fired for CLI source");
 
+const catalogGuard = runHook("app-guard.mjs", {
+  cwd: repoRoot,
+  hook_event_name: "PreToolUse",
+  tool_input: { file_path: join(repoRoot, ".claude/rules/catalogo.md") },
+});
+assert(catalogGuard?.hookSpecificOutput?.additionalContext?.includes("GENERATED CATALOG"), "Editing the generated catalog was not flagged");
+
+const catalogUnrelated = runHook("catalog-sync.mjs", {
+  ...codexBase,
+  hook_event_name: "PostToolUse",
+  tool_input: { command: "*** Begin Patch\n*** Update File: packages/cli/src/main.ts\n*** End Patch" },
+});
+assert(catalogUnrelated === null, "Catalog sync fired for a file outside modules/");
+
+const catalogTemplate = runHook("catalog-sync.mjs", {
+  cwd: repoRoot,
+  hook_event_name: "PostToolUse",
+  tool_input: { file_path: join(repoRoot, "modules/_template/README.md") },
+});
+assert(catalogTemplate === null, "Catalog sync fired for the template");
+
+const catalogApp = runHook("catalog-sync.mjs", {
+  cwd: repoRoot,
+  hook_event_name: "PostToolUse",
+  tool_input: { file_path: join(repoRoot, "modules/video-analysis/README.md") },
+});
+assert(catalogApp === null, `Catalog refresh failed: ${JSON.stringify(catalogApp)}`);
+
 const harnessSync = runHook("harness-sync.mjs", {
   ...codexBase,
   hook_event_name: "PostToolUse",

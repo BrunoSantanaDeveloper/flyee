@@ -57,10 +57,13 @@ contracts below. Never edit this file manually. Update the matching
 \`npm run harness:sync\`.
 
 Canonical skill content lives only in \`.claude/skills/*\`.
-\`.agents/skills/*/SKILL.md\` files are generated discovery bridges. Load the
-\`app-author\` skill before writing under \`modules/\`, \`cli-dev\` before
-writing under \`packages/cli\` or \`packages/core\`, and \`app-release\` when
-publishing. Canonical hook implementations live only in \`.claude/hooks/*\`
+\`.agents/skills/*/SKILL.md\` files are generated discovery bridges. The
+\`apps\` skill is the operator's console for the catalog (list, create,
+version, link into the workspace, use, publish). Load the \`app-author\`
+skill before writing under \`modules/\` and start a new app at its step 0,
+against the apps catalog included below; \`cli-dev\` before writing under
+\`packages/cli\` or \`packages/core\`; \`app-release\` when publishing.
+Canonical hook implementations live only in \`.claude/hooks/*\`
 and support both agents; Codex discovers them through \`.codex/config.toml\`.
 After changing any harness source, run \`npm run harness:check\` and
 \`npm run harness:test\`.

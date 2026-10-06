@@ -16,6 +16,13 @@ matcher = "^(?:apply_patch|Edit|Write)$"
 
 [[hooks.PostToolUse.hooks]]
 type = "command"
+command = 'node "$(git rev-parse --show-toplevel)/.claude/hooks/catalog-sync.mjs"'
+command_windows = "node -e \"const{execFileSync}=require('node:child_process');const{join}=require('node:path');const{pathToFileURL}=require('node:url');const root=execFileSync('git',['rev-parse','--show-toplevel'],{encoding:'utf8'}).trim();import(pathToFileURL(join(root,'.claude','hooks',process.argv[1])).href)\" catalog-sync.mjs"
+timeout = 60
+statusMessage = "Refreshing the apps catalog"
+
+[[hooks.PostToolUse.hooks]]
+type = "command"
 command = 'node "$(git rev-parse --show-toplevel)/.claude/hooks/harness-sync.mjs"'
 command_windows = "node -e \"const{execFileSync}=require('node:child_process');const{join}=require('node:path');const{pathToFileURL}=require('node:url');const root=execFileSync('git',['rev-parse','--show-toplevel'],{encoding:'utf8'}).trim();import(pathToFileURL(join(root,'.claude','hooks',process.argv[1])).href)\" harness-sync.mjs"
 timeout = 30

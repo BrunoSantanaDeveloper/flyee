@@ -1,29 +1,29 @@
 # Meu app
 
-Uma frase do que o app entrega. Este texto é o guia do integrante e vira a página do app no flyee.club.
+[PREENCHER] Uma frase do que o app entrega. Este texto é o guia do integrante e vira a página do app no flyee.club.
 
 ## O que ele faz
 
-Em dois ou três parágrafos: o problema, o que o app produz e onde grava.
+[PREENCHER] Em dois ou três parágrafos: o problema, o que o app produz e onde grava.
 
 ## O que você precisa
 
 - Uma das IAs em que o app foi testado.
-- Chaves externas, se houver, por variável de ambiente. Diga qual e onde obter.
+- [PREENCHER] Programas e chaves externas, se houver. Chave é salva uma vez com `npx flyee key set <NOME>`; diga qual e onde obter. Se o app usa outro app do flyee.club, diga qual e que ele instala com `npx flyee add <app>`.
 
 ## Peça assim
 
-> "Exemplo de pedido que aciona a skill e entrega o resultado completo."
+> "[PREENCHER] Exemplo de pedido que aciona a skill e entrega o resultado completo."
 
 ## O que ele grava
 
 | Caminho | Conteúdo |
 |---|---|
-| `saida/` | o resultado |
+| `saida/` | [PREENCHER] o resultado |
 
 ## Sem a chave
 
-O que o app ainda entrega quando a chave externa não está configurada.
+[PREENCHER] O que o app ainda entrega quando a chave externa não está configurada. Apague esta seção se o app não usa chave.
 
 ## O que há de novo
 

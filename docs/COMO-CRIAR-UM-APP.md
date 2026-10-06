@@ -2,6 +2,24 @@
 
 Referência de autoria. O procedimento passo a passo é a skill `app-author`; a publicação está em `docs/RELEASE.md`. Tudo o que você escreve em `modules/<slug>/`, menos `tests/`, `.dev/` e `*.dev.md`, chega ao integrante e é lido pela IA dele.
 
+## 0. Pelo chat
+
+O jeito normal de trabalhar é conversar com a IA aberta neste repositório. A skill `/apps` é o console: liste os apps (`/apps`), peça um app novo ("crie um app que…"), peça uma mudança ("adicione ao app X…"), use um app enquanto constrói outro ("analise este vídeo com o video-analysis") e peça a publicação. Por baixo, ela roda os comandos abaixo; você pode rodá-los à mão também.
+
+| Comando | O que faz |
+|---|---|
+| `npm run apps -- list` | cada app com versão, validação, última tag, cópia na pasta de trabalho e quem usa quem |
+| `npm run apps -- new <slug> --type <tipo> --trail <trilha> --title "…" --summary "…"` | cria o app a partir do modelo, com `[PREENCHER]` onde falta escrever |
+| `npm run apps -- bump <slug> patch\|minor\|major` | sobe a versão e põe o changelog em `[PREENCHER]` |
+| `npm run apps -- link <slug…>` / `unlink` | instala ou tira apps da pasta de trabalho |
+| `npm run apps -- catalog` | regenera o catálogo (um gancho já faz isso a cada mudança em `modules/`) |
+
+**O catálogo.** `.claude/rules/catalogo.md` e `docs/CATALOGO.md` são gerados a partir dos apps: o que cada um entrega, as skills, a interface para outros apps, quem usa quem. A IA deste repositório sempre os tem no contexto, e por isso, ao pedir um app novo, ela começa dizendo quais apps existentes o novo deve chamar, quais ajudam a construí-lo agora, o que já existe em parte e que ferramenta nova valeria a pena separar. Quem usa quem é lido do que os apps distribuem: um app usa outro quando cita o caminho instalado dele (`.flyee/modules/<slug>/`). Não edite esses dois arquivos.
+
+**A pasta de trabalho.** Fica fora do repositório, por padrão em `C:\AppsProjects\flyee-workspace` (a variável `FLYEE_WORKSPACE` muda o lugar). Os apps chegam lá como chegariam ao integrante, e é lá que eles são usados e testados; o que produzem fica lá. O `dev link` da CLI recusa rodar dentro deste repositório, porque escreveria o harness do integrante por cima do seu. A cópia na pasta de trabalho não acompanha as edições sozinha: depois de mudar um app, ligue-o de novo (`apps list` mostra quando ela está desatualizada).
+
+**O que nunca sai daqui.** O catálogo, a pasta de trabalho, as skills do operador e as ferramentas são seus. Ao integrante chega só o pacote de cada app, montado por `npm run pack` sem `tests/`, `.dev/` e `*.dev.md`, e a CLI publicada no npm.
+
 ## 1. Estrutura
 
 ```
@@ -15,7 +33,7 @@ modules/<slug>/
 └── .dev/                  notas do operador; nunca sai do repositório
 ```
 
-Comece copiando `modules/_template`. O nome do diretório é o `name` do manifesto: minúsculas, dígitos e hífens, até 60 caracteres.
+Comece com `npm run apps -- new <slug> --type <tipo> --trail <trilha>`, que copia `modules/_template` e preenche nomes, tipo e trilha. O que falta escrever fica marcado com `[PREENCHER]`, e a validação recusa o app até não sobrar nenhum. O nome do diretório é o `name` do manifesto: minúsculas, dígitos e hífens, até 60 caracteres.
 
 ## 2. O manifesto
 
@@ -133,11 +151,9 @@ Um app pode ser a ferramenta de outros, como o `video-analysis`, que o app de ed
 ## 10. Testar antes de publicar
 
 ```bash
-npm run validate
-npm run pack
-# numa pasta de teste, fora deste repositório:
-set FLYEE_DEV=1
-node C:\AppsProjects\flyee\packages\cli\dist\flyee.js dev link C:\AppsProjects\flyee\modules\<slug>
+npm run validate <slug>
+npm run pack <slug>
+npm run apps -- link <slug> <apps que ele usa>
 ```
 
-Depois abra a IA nessa pasta e use a skill como um integrante usaria.
+Depois rode os casos de `tests/eval.json` a partir da pasta de trabalho, pelo chat deste repositório, ou abra a IA na pasta de trabalho e use a skill como um integrante usaria. O `link` reconstrói a CLI quando o código dela mudou.

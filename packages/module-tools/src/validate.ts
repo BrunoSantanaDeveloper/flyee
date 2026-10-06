@@ -1,10 +1,12 @@
 import { existsSync, readFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 
 import { MANIFEST_FILE, shippableFiles, totalSize } from "./files.ts";
 import { parseFrontmatter } from "./frontmatter.ts";
 import { crossFieldErrors, MAX_UNCOMPRESSED_BYTES, type Manifest, readManifest, schemaErrors } from "./manifest.ts";
 import { listModuleDirs } from "./paths.ts";
+import { PLACEHOLDER, placeholdersIn } from "./placeholders.ts";
+import { referencedApps } from "./relations.ts";
 
 export type Report = {
   slug: string;
@@ -37,12 +39,15 @@ function validateEval(dir: string, slug: string, errors: string[]): void {
     return;
   }
   let raw: unknown;
+  let text: string;
   try {
-    raw = JSON.parse(readFileSync(path, "utf8"));
+    text = readFileSync(path, "utf8");
+    raw = JSON.parse(text);
   } catch {
     errors.push("tests/eval.json: not valid JSON");
     return;
   }
+  if (text.includes(PLACEHOLDER)) errors.push(`tests/eval.json: ${PLACEHOLDER} still to be written`);
   const evalFile = raw as { app?: unknown; cases?: unknown };
   if (evalFile.app !== slug) errors.push(`tests/eval.json: "app" must be "${slug}"`);
   if (!Array.isArray(evalFile.cases) || evalFile.cases.length === 0) {
@@ -142,6 +147,8 @@ export function validateModule(dir: string): Report {
   }
 
   if (files.length && totalSize(dir, files) > MAX_UNCOMPRESSED_BYTES) report.errors.push("the package exceeds 200 MB uncompressed");
+  const unfilled = placeholdersIn(dir, files);
+  if (unfilled.length) report.errors.push(`${PLACEHOLDER} still to be written in: ${unfilled.join(", ")}`);
   validateEval(dir, slug, report.errors);
   return report;
 }
@@ -154,9 +161,34 @@ function safeRead(path: string): string {
   }
 }
 
+/**
+ * An app that calls another (`.flyee/modules/<other>/` in what it ships)
+ * needs that app to exist, and the other app should ship the guide for
+ * callers. The member must learn about the dependency from the README.
+ */
+function validateRelations(report: Report): void {
+  const root = dirname(report.dir);
+  for (const other of referencedApps(report.dir)) {
+    const otherDir = join(root, other);
+    if (!existsSync(join(otherDir, "flyee.module.json"))) {
+      report.errors.push(`uses: names .flyee/modules/${other}/ but no app "${other}" exists in modules/`);
+      continue;
+    }
+    if (!existsSync(join(otherDir, "references", "interface.md"))) {
+      report.warnings.push(`uses: "${other}" has no references/interface.md, the guide for apps that call it`);
+    }
+    const readme = safeRead(join(report.dir, "README.md"));
+    const otherTitle = readManifest(join(otherDir, "flyee.module.json")).manifest?.title?.["pt-BR"] ?? "";
+    if (!readme.includes(other) && !(otherTitle && readme.includes(otherTitle))) {
+      report.warnings.push(`README.md: tell the member this app uses "${other}" and that it installs with \`npx flyee add ${other}\``);
+    }
+  }
+}
+
 /** Validates every app and the rules that span apps (a skill name must be unique across the catalog). */
 export function validateAll(dirs: string[] = listModuleDirs()): Report[] {
   const reports = dirs.map(validateModule);
+  for (const report of reports) if (report.manifest) validateRelations(report);
   const owners = new Map<string, string[]>();
   for (const report of reports) {
     for (const skill of report.skills) owners.set(skill.name, [...(owners.get(skill.name) ?? []), report.slug]);

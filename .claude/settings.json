@@ -27,6 +27,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node .claude/hooks/catalog-sync.mjs"
+          },
+          {
+            "type": "command",
             "command": "node .claude/hooks/harness-sync.mjs"
           }
         ]

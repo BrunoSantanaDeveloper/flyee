@@ -1,42 +1,54 @@
 import assert from "node:assert/strict";
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
 
 import { unzipSync } from "fflate";
 
+import { buildCatalog, renderDigest, renderDocument, writeCatalog } from "../src/catalog.ts";
 import { parseFrontmatter } from "../src/frontmatter.ts";
 import { buildPackage, packModule, writeFilesToManifest } from "../src/pack.ts";
 import { repoRoot } from "../src/paths.ts";
+import { PLACEHOLDER } from "../src/placeholders.ts";
+import { readInterface, referencedApps } from "../src/relations.ts";
 import { isSafePackagePath } from "../src/safe-path.ts";
+import { bumpApp, nextVersion, scaffoldApp } from "../src/scaffold.ts";
 import { compareSemver, isSemver, minimumOfRange } from "../src/semver.ts";
 import { validateAll, validateModule } from "../src/validate.ts";
+import { isInsideRepo, workspaceState } from "../src/workspace.ts";
 
-const template = join(repoRoot, "modules", "_template");
 let sandbox: string;
+let root: string;
 
-/** A fresh copy of the template renamed to a real slug, with `files` regenerated. */
-function makeApp(slug: string): string {
-  const dir = join(sandbox, slug);
-  cpSync(template, dir, { recursive: true });
-  const manifestPath = join(dir, "flyee.module.json");
-  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  manifest.name = slug;
-  manifest.entry = `skills/${slug}/SKILL.md`;
-  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-  cpSync(join(dir, "skills", "meu-app"), join(dir, "skills", slug), { recursive: true });
-  rmSync(join(dir, "skills", "meu-app"), { recursive: true });
-  const skillPath = join(dir, "skills", slug, "SKILL.md");
-  writeFileSync(skillPath, readFileSync(skillPath, "utf8").replace("name: meu-app", `name: ${slug}`));
-  const evalPath = join(dir, "tests", "eval.json");
-  writeFileSync(evalPath, readFileSync(evalPath, "utf8").replace('"meu-app"', `"${slug}"`));
+/** Replaces every placeholder of the shipped files and of the eval with real text. */
+function fill(dir: string): void {
+  const walk = (path: string) => {
+    for (const entry of readdirSync(path, { withFileTypes: true })) {
+      const full = join(path, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (statSync(full).isFile()) {
+        const text = readFileSync(full, "utf8");
+        if (text.includes(PLACEHOLDER)) writeFileSync(full, text.split(`${PLACEHOLDER} `).join("").split(PLACEHOLDER).join("texto"));
+      }
+    }
+  };
+  walk(dir);
   writeFilesToManifest(dir);
-  return dir;
+}
+
+/** A complete app built the way the operator builds one: scaffold, then write. */
+function makeApp(slug: string, options: { type?: string; trail?: string } = {}): string {
+  const result = scaffoldApp({ slug, type: options.type ?? "skill", trail: options.trail ?? "divulgar", title: slug, summary: `Entrega ${slug}.`, root });
+  fill(result.dir);
+  return result.dir;
 }
 
 before(() => {
   sandbox = mkdtempSync(join(tmpdir(), "flyee-tools-"));
+  root = join(sandbox, "modules");
+  mkdirSync(root, { recursive: true });
+  cpSync(join(repoRoot, "modules", "_template"), join(root, "_template"), { recursive: true });
 });
 after(() => {
   rmSync(sandbox, { recursive: true, force: true });
@@ -80,9 +92,49 @@ describe("frontmatter", () => {
   });
 });
 
+describe("creating an app from the chat", () => {
+  it("scaffolds a valid structure that validate refuses until every placeholder is written", () => {
+    const result = scaffoldApp({ slug: "radar", type: "tool", trail: "divulgar", title: "Radar", root });
+    const manifest = JSON.parse(readFileSync(join(result.dir, "flyee.module.json"), "utf8"));
+    assert.equal(manifest.name, "radar");
+    assert.equal(manifest.type, "tool");
+    assert.equal(manifest.entry, "skills/radar/SKILL.md");
+    assert.ok(readFileSync(join(result.dir, "skills", "radar", "SKILL.md"), "utf8").includes("name: radar"));
+    assert.ok(result.placeholders.includes("manifest.summary.pt-BR"), result.placeholders.join(", "));
+    assert.ok(result.placeholders.includes("README.md"));
+    const before = validateModule(result.dir);
+    assert.ok(before.errors.some((error) => error.includes(PLACEHOLDER) && error.includes("README.md")), before.errors.join("\n"));
+    assert.ok(before.errors.some((error) => error.startsWith("tests/eval.json") && error.includes(PLACEHOLDER)));
+    fill(result.dir);
+    const manifestPath = join(result.dir, "flyee.module.json");
+    const filled = JSON.parse(readFileSync(manifestPath, "utf8"));
+    filled.summary = { "pt-BR": "Mostra o que funciona." };
+    writeFileSync(manifestPath, JSON.stringify(filled, null, 2));
+    assert.deepEqual(validateModule(result.dir).errors, []);
+  });
+
+  it("refuses a slug that exists, an invalid slug, type or trail", () => {
+    assert.throws(() => scaffoldApp({ slug: "radar", type: "skill", trail: "divulgar", root }), /already exists/);
+    assert.throws(() => scaffoldApp({ slug: "Radar", type: "skill", trail: "divulgar", root }), /not a valid slug/);
+    assert.throws(() => scaffoldApp({ slug: "outro", type: "agent", trail: "divulgar", root }), /type must be/);
+    assert.throws(() => scaffoldApp({ slug: "outro", type: "skill", trail: "video", root }), /trail must be/);
+  });
+
+  it("bumps a version and blocks it until the changelog is written", () => {
+    const dir = makeApp("pauta");
+    assert.equal(nextVersion("1.2.3", "patch"), "1.2.4");
+    assert.equal(nextVersion("1.2.3", "minor"), "1.3.0");
+    assert.equal(nextVersion("1.2.3", "major"), "2.0.0");
+    assert.deepEqual(bumpApp("pauta", "minor", root), { from: "1.0.0", to: "1.1.0" });
+    assert.throws(() => bumpApp("pauta", "1.0.5", root), /not greater/);
+    const report = validateModule(dir);
+    assert.ok(report.errors.some((error) => error.includes("manifest.changelog")), report.errors.join("\n"));
+  });
+});
+
 describe("validate", () => {
-  it("accepts the template renamed to a real slug", () => {
-    const report = validateModule(makeApp("radar"));
+  it("accepts a complete app and never ships its tests", () => {
+    const report = validateModule(makeApp("copy-social"));
     assert.deepEqual(report.errors, []);
     assert.equal(report.skills.length, 1);
     assert.ok(report.files.includes("README.md"));
@@ -90,7 +142,7 @@ describe("validate", () => {
   });
 
   it("refuses a stale files list, an unsafe entry and a missing eval", () => {
-    const dir = makeApp("pauta");
+    const dir = makeApp("copy-lp");
     writeFileSync(join(dir, "extra.md"), "novo arquivo");
     rmSync(join(dir, "tests"), { recursive: true });
     const manifestPath = join(dir, "flyee.module.json");
@@ -104,37 +156,110 @@ describe("validate", () => {
   });
 
   it("refuses a manifest that drifts from the schema and a skill whose name differs from its folder", () => {
-    const dir = makeApp("copy-lp");
+    const dir = makeApp("roteiro");
     const manifestPath = join(dir, "flyee.module.json");
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-    manifest.trail = "video";
     manifest.unknown = true;
     writeFileSync(manifestPath, JSON.stringify(manifest));
     let report = validateModule(dir);
     assert.ok(report.errors.some((error) => error.includes('unknown key "unknown"')), report.errors.join("\n"));
-
     delete manifest.unknown;
-    manifest.trail = "divulgar";
     writeFileSync(manifestPath, JSON.stringify(manifest));
-    const skillPath = join(dir, "skills", "copy-lp", "SKILL.md");
-    writeFileSync(skillPath, readFileSync(skillPath, "utf8").replace("name: copy-lp", "name: outro"));
+    const skillPath = join(dir, "skills", "roteiro", "SKILL.md");
+    writeFileSync(skillPath, readFileSync(skillPath, "utf8").replace("name: roteiro", "name: outro"));
     report = validateModule(dir);
-    assert.ok(report.errors.some((error) => error.includes('must equal the folder')), report.errors.join("\n"));
+    assert.ok(report.errors.some((error) => error.includes("must equal the folder")), report.errors.join("\n"));
   });
 
   it("refuses the same skill name in two apps", () => {
     const a = makeApp("app-a");
     const b = makeApp("app-b");
-    for (const dir of [a, b]) {
-      cpSync(join(dir, "skills", dir === a ? "app-a" : "app-b"), join(dir, "skills", "shared"), { recursive: true });
+    for (const [dir, slug] of [[a, "app-a"], [b, "app-b"]] as const) {
+      cpSync(join(dir, "skills", slug), join(dir, "skills", "shared"), { recursive: true });
       const shared = join(dir, "skills", "shared", "SKILL.md");
-      writeFileSync(shared, readFileSync(shared, "utf8").replace(/name: app-[ab]/, "name: shared"));
+      writeFileSync(shared, readFileSync(shared, "utf8").replace(`name: ${slug}`, "name: shared"));
       writeFilesToManifest(dir);
     }
-    const reports = validateAll([a, b]);
-    for (const report of reports) {
+    for (const report of validateAll([a, b])) {
       assert.ok(report.errors.some((error) => error.includes('"shared" is also used by')), report.errors.join("\n"));
     }
+  });
+});
+
+describe("relations between apps", () => {
+  it("reads who calls whom from what the apps ship, and checks the called app exists", () => {
+    const tool = makeApp("video-tool", { type: "tool" });
+    mkdirSync(join(tool, "references"), { recursive: true });
+    writeFileSync(
+      join(tool, "references", "interface.md"),
+      "# Interface\n\nVersão da interface: **2**.\n\n```\nnode .flyee/modules/video-tool/scripts/run.mjs check --json\nnode .flyee/modules/video-tool/scripts/run.mjs analyze <x> --json\n```\n",
+    );
+    writeFilesToManifest(tool);
+    const consumer = makeApp("editor");
+    const skill = join(consumer, "skills", "editor", "SKILL.md");
+    writeFileSync(skill, `${readFileSync(skill, "utf8")}\nRode \`node .flyee/modules/video-tool/scripts/run.mjs analyze <video> --json\`. Exemplo de outro: .flyee/modules/<app>/x.\n`);
+    writeFilesToManifest(consumer);
+
+    assert.deepEqual(referencedApps(consumer), ["video-tool"]);
+    assert.deepEqual(readInterface(tool), { version: 2, entry: "scripts/run.mjs", commands: ["analyze", "check"] });
+
+    const [toolReport, consumerReport] = validateAll([tool, consumer]);
+    assert.deepEqual(toolReport.errors, []);
+    assert.deepEqual(consumerReport.errors, []);
+    assert.ok(consumerReport.warnings.some((warning) => warning.includes('uses "video-tool"')), consumerReport.warnings.join("\n"));
+
+    writeFileSync(skill, `${readFileSync(skill, "utf8")}\nE também .flyee/modules/nao-existe/run.mjs\n`);
+    const broken = validateAll([consumer])[0];
+    assert.ok(broken.errors.some((error) => error.includes('no app "nao-existe"')), broken.errors.join("\n"));
+    writeFileSync(skill, readFileSync(skill, "utf8").replace("\nE também .flyee/modules/nao-existe/run.mjs\n", "\n"));
+  });
+
+  it("builds the catalog with the inverse relation and renders it deterministically", () => {
+    const catalog = buildCatalog(root);
+    const tool = catalog.find((entry) => entry.slug === "video-tool")!;
+    const editor = catalog.find((entry) => entry.slug === "editor")!;
+    assert.deepEqual(editor.uses, ["video-tool"]);
+    assert.deepEqual(tool.used_by, ["editor"]);
+    assert.equal(tool.interface?.version, 2);
+    assert.ok(!catalog.some((entry) => entry.slug === "_template"));
+    const digest = renderDigest(catalog);
+    assert.ok(digest.includes("| `video-tool` 1.0.0 | tool · divulgar |"), digest);
+    assert.ok(digest.includes("sim v2 `scripts/run.mjs`"));
+    assert.equal(renderDigest(buildCatalog(root)), digest, "deterministic");
+    const document = renderDocument(catalog);
+    assert.ok(document.includes("## editor") && document.includes("**Usa** `video-tool`"));
+  });
+
+  it("writes the catalog files and reports them stale until regenerated", () => {
+    // Separate folders, as in the repository: on Windows catalogo.md and CATALOGO.md are one file.
+    const digestPath = join(sandbox, "out", "rules", "catalogo.md");
+    const documentPath = join(sandbox, "out", "docs", "CATALOGO.md");
+    const options = { root, digestPath, documentPath, syncHarness: false };
+    assert.equal(writeCatalog({ ...options, check: true }).stale.length, 2);
+    assert.equal(writeCatalog(options).written.length, 2);
+    assert.equal(writeCatalog({ ...options, check: true }).stale.length, 0);
+  });
+});
+
+describe("workspace", () => {
+  it("is never inside the repository", () => {
+    assert.equal(isInsideRepo(repoRoot), true);
+    assert.equal(isInsideRepo(join(repoRoot, "sandbox")), true);
+    assert.equal(isInsideRepo(join(repoRoot, "..", "flyee-workspace")), false);
+  });
+
+  it("tells a current copy from a stale one", () => {
+    const dir = makeApp("ws-app");
+    const report = validateModule(dir);
+    const files = report.files.map((path) => ({
+      path,
+      sha256: buildShaOf(join(dir, ...path.split("/"))),
+    }));
+    const lock = { modules: { "ws-app": { version: "1.0.0", files } } };
+    assert.equal(workspaceState(lock, "ws-app", dir), "current");
+    assert.equal(workspaceState(lock, "other", dir), "absent");
+    writeFileSync(join(dir, "README.md"), "# mudou\n");
+    assert.equal(workspaceState(lock, "ws-app", dir), "stale");
   });
 });
 
@@ -153,12 +278,24 @@ describe("pack", () => {
   });
 
   it("writes the zip and the checksum file", () => {
-    const dir = makeApp("roteiro");
+    const dir = makeApp("pesquisa");
     const out = join(sandbox, "dist");
     const result = packModule(dir, out);
     assert.deepEqual(result.report.errors, []);
-    assert.ok(result.zipPath?.endsWith("roteiro-1.0.0.zip"));
-    const sha = readFileSync(result.shaPath!, "utf8");
-    assert.ok(sha.startsWith(result.built!.sha256));
+    assert.ok(result.zipPath?.endsWith("pesquisa-1.0.0.zip"));
+    assert.ok(readFileSync(result.shaPath!, "utf8").startsWith(result.built!.sha256));
+  });
+
+  it("refuses to pack an app with placeholders left", () => {
+    const result = scaffoldApp({ slug: "incompleto", type: "skill", trail: "planejar", root });
+    const packed = packModule(result.dir, join(sandbox, "dist"));
+    assert.equal(packed.built, undefined);
+    assert.ok(packed.report.errors.some((error) => error.includes(PLACEHOLDER)));
   });
 });
+
+function buildShaOf(path: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createHash } = process.getBuiltinModule("node:crypto") as typeof import("node:crypto");
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}

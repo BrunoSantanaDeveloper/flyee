@@ -21,6 +21,8 @@ export type LockModule = {
   files: LockFile[];
   bridges: string[];
   external_credentials: { name: string; env: string; url?: string; required: boolean }[];
+  /** Programs the app declares in its `shell` permissions and the CLI installs (`programs.json`). */
+  programs?: string[];
   /** Installed from a local directory by the operator (`dev link`); never came from the platform. */
   dev?: boolean;
   source_dir?: string;

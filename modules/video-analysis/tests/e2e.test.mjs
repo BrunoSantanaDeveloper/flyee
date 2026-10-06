@@ -269,7 +269,8 @@ test("the Gemini key: never shown, and without it the member gets the steps to s
 
   const refused = await cli(["analyze", "https://youtu.be/jNQXAC9IVRw", "--mode", "gemini"], { cwd: dir, env: { GEMINI_API_KEY: "" } });
   assert.equal(refused.json.error.code, "no_gemini_key");
-  assert.match(refused.json.error.fix, /fora do chat/);
+  assert.match(refused.json.error.fix, /página no navegador/);
+  assert.match(refused.json.error.fix, /rode você mesmo/);
   assert.match(refused.json.error.fix, /Nunca cole a chave no chat/);
 
   const withKey = await cli(["check"], { cwd: dir, env: { GEMINI_API_KEY: "segredo-de-teste-123" } });

@@ -20,29 +20,20 @@ Outros apps do flyee.club usam este para entender vídeos. O de edição, por ex
 ## O que você precisa
 
 - Uma IA que leia imagens, como o Claude Code.
-- Para o modo local: o **ffmpeg** e, para endereços da internet, o **yt-dlp**.
-  - Windows: `winget install --id Gyan.FFmpeg -e` e `winget install --id yt-dlp.yt-dlp -e`
-  - Mac: `brew install ffmpeg yt-dlp`
-  - Linux: `sudo apt install ffmpeg` e `python3 -m pip install --user -U yt-dlp`
-- Para o modo Gemini (opcional): uma chave gratuita da API do Gemini, salva uma vez com `npx flyee key set GEMINI_API_KEY`. O passo a passo está logo abaixo.
+- Para o modo local: o **ffmpeg** e, para endereços da internet, o **yt-dlp**. Você não instala nada: a sua IA instala os dois na primeira vez que o app precisar, depois de avisar.
+- Para o modo Gemini (opcional): uma chave gratuita da API do Gemini. O passo a passo está logo abaixo.
 
-Na dúvida, peça à IA: "confira o que falta para a análise de vídeo". Ela verifica a máquina e mostra os comandos.
+Na dúvida, peça à IA: "confira o que falta para a análise de vídeo". Ela verifica a máquina e resolve o que faltar.
 
 ## Como ligar o modo Gemini
 
 A chave nunca passa pelo chat: nem a IA nem o app pedem que você a cole na conversa. Você a salva uma vez no seu computador, e todos os apps do flyee.club que usam a mesma chave a encontram.
 
-1. Crie a chave no Google AI Studio, entrando com a sua conta Google. A IA mostra o endereço quando você pede para conferir a análise de vídeo.
-2. No **seu terminal** (PowerShell, Prompt de Comando ou Terminal), fora do chat da IA, rode:
+1. Peça à IA: "ligue o modo Gemini da análise de vídeo". Ela mostra o endereço do Google AI Studio, onde você cria a chave gratuita com a sua conta Google.
+2. A IA abre uma página no seu navegador. Cole a chave lá e clique em Salvar. Ela fica guardada só neste computador, fora dos seus projetos.
+3. Pronto: o app enxerga a chave na hora, sem reabrir a IA, e a IA confirma que a chave foi encontrada, sem nunca mostrar o valor.
 
-   ```
-   npx flyee key set GEMINI_API_KEY
-   ```
-
-   Cole a chave quando ele pedir e tecle Enter. Ela não aparece na tela e fica guardada só neste computador, fora dos seus projetos.
-3. Pronto: o app enxerga a chave na hora, sem reabrir a IA. Peça "confira a análise de vídeo" e a IA confirma que a chave foi encontrada, sem nunca mostrar o valor.
-
-Para ver as chaves salvas e quais apps usam cada uma: `npx flyee key list`. Para apagar: `npx flyee key remove GEMINI_API_KEY`. Quem prefere variável de ambiente pode definir `GEMINI_API_KEY`; ela tem prioridade sobre a chave salva.
+Para ver ou apagar as chaves salvas, peça à IA, por exemplo "quais chaves eu tenho salvas?". Quem prefere variável de ambiente pode definir `GEMINI_API_KEY`; ela tem prioridade sobre a chave salva.
 
 Colou a chave no chat por engano? Ela ficou no histórico da conversa: apague-a no Google AI Studio e crie outra.
 

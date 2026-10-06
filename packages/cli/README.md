@@ -2,6 +2,8 @@
 
 A CLI do [flyee.club](https://flyee.club): instala e mantém atualizados os apps do clube na IA que você já usa. Funciona com Claude Code, Codex, Gemini CLI e Cursor, e com qualquer ferramenta que leia `AGENTS.md` e skills em `.agents/skills`.
 
+Você não precisa usar o terminal: peça à sua IA, e ela roda os comandos abaixo. Os programas que um app usa, como ffmpeg e yt-dlp, ela instala sozinha. Chaves de serviços externos você cola numa página que abre no seu navegador. Você só confirma na conversa e aprova o login no navegador.
+
 ```bash
 npx flyee login                 # conecta este computador à sua conta (abre o navegador)
 npx flyee login --device        # o mesmo, sem navegador nesta máquina
@@ -9,7 +11,9 @@ npx flyee add <app>             # instala um app no projeto atual
 npx flyee add receita:<nome>    # instala os apps de uma receita
 npx flyee update                # atualiza os apps instalados e renova a conexão
 npx flyee status                # conexão, apps instalados, versões e avisos
-npx flyee doctor                # confere a instalação e as chaves externas
+npx flyee doctor                # confere a instalação, os programas e as chaves externas
+npx flyee need <programa>       # instala um programa que um app usa (winget, Homebrew ou apt)
+npx flyee key set <NOME>        # abre uma página no navegador para colar a chave de um app
 npx flyee remove <app>
 npx flyee logout
 ```
@@ -27,6 +31,11 @@ Nada é instalado sem antes conferir o tamanho e o SHA-256 do pacote contra o qu
 ## Privacidade
 
 A CLI envia à plataforma só o necessário para entregar e manter os apps: a identificação deste computador, as versões instaladas, e eventos de uso com o nome do app e a versão. Nunca envia código, prompts, caminhos de arquivo ou nomes de projeto. A fila de eventos fica em `~/.flyee/events.jsonl`, legível. As credenciais ficam em `~/.flyee/credentials.json`.
+
+## Programas e chaves
+
+- **Programas.** Quando um app declara que usa um programa, o `add` e o `update` o instalam pelo gerenciador de pacotes do seu sistema, sem perguntas além da confirmação do app: winget no Windows, Homebrew no Mac, apt, dnf ou pacman no Linux. Nada é baixado de outro lugar. Se o sistema pedir algo que só você pode dar, como a senha de administrador no Linux, a CLI devolve esse passo único.
+- **Chaves.** `npx flyee key set <NOME>` abre uma página em `127.0.0.1`, com endereço de uso único, que vale 15 minutos. Você cola a chave e clica em Salvar. Ela fica em `~/.flyee/keys.json`, fora dos seus projetos, e não passa pela conversa nem pelo terminal.
 
 ## Idiomas
 

@@ -1,4 +1,8 @@
+import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
+
 import type { Context } from "../context.ts";
+import { freePort, KEY_PAGE_TTL_MS, type KeyPageInfo, serveKeyPage, waitForPort } from "../key-page.ts";
 import { t } from "../i18n.ts";
 import { KEY_NAME, keySource, keysPath, readKeys, writeKeys } from "../state/keys.ts";
 import { readLock } from "../state/lock.ts";
@@ -28,16 +32,89 @@ function refuse(ctx: Context, error: string, message: string): Result {
   return { ok: false, error, message };
 }
 
+/** What the key page shows about a key: where to get it and which apps of this project use it. */
+function pageInfo(ctx: Context, name: string): KeyPageInfo {
+  const entry = declaredKeys(ctx).get(name);
+  return entry ? { label: entry.name, url: entry.url, apps: entry.apps } : {};
+}
+
 /**
- * `flyee key set <NAME>`: the value is typed in the member's own terminal with
- * the echo off. It is never accepted as an argument (it would stay in the
- * shell history and in the AI's view) and never printed back, not even in --json.
+ * The browser path, the one the member's AI uses: a page on 127.0.0.1 where the
+ * member pastes the key. By default the page is served by a detached process
+ * and this command returns at once (an AI's command has a short time limit);
+ * `--wait` serves it here and returns when the key is saved.
+ */
+async function setKeyInBrowser(ctx: Context, args: ParsedArgs, name: string): Promise<Result> {
+  const token = randomBytes(24).toString("base64url");
+  const info = pageInfo(ctx, name);
+  const announce = async (url: string) => {
+    const opened = await ctx.io.openBrowser(url);
+    ctx.io.out(t(ctx, "key.browser_opened", { name }));
+    if (!opened) ctx.io.out(t(ctx, "key.browser_url", { url }));
+  };
+
+  if (has(args, "wait") || !ctx.cliEntry) {
+    let url = "";
+    let announced: Promise<void> = Promise.resolve();
+    const saved = await serveKeyPage(ctx, name, {
+      port: 0,
+      token,
+      info,
+      onListening: (address) => {
+        url = address;
+        announced = announce(address);
+      },
+    });
+    await announced;
+    if (!saved.saved) return refuse(ctx, "key_page_expired", t(ctx, "key.browser_timeout", { name }));
+    ctx.io.out(t(ctx, "key.saved", { name, length: saved.length ?? 0, file: keysPath(ctx) }));
+    return { ok: true, name, saved: true, via: "browser", url, file: keysPath(ctx) };
+  }
+
+  const port = await freePort();
+  const child = spawn(process.execPath, [...process.execArgv, ctx.cliEntry, "key", "serve", name], {
+    cwd: ctx.cwd,
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+    env: { ...process.env, FLYEE_KEY_PORT: String(port), FLYEE_KEY_TOKEN: token, FLYEE_KEY_INFO: JSON.stringify(info), FLYEE_LOCALE: ctx.locale },
+  });
+  child.unref();
+  if (!(await waitForPort(port))) return refuse(ctx, "key_page_failed", t(ctx, "key.browser_failed"));
+  const url = `http://127.0.0.1:${port}/k/${token}`;
+  await announce(url);
+  return { ok: true, name, waiting: true, via: "browser", url, expires_in: KEY_PAGE_TTL_MS / 1000, check: "npx flyee key list --json" };
+}
+
+/** `flyee key serve <NAME>`: the detached process behind the page; not for people. */
+async function serveKey(ctx: Context, name: string | undefined): Promise<Result> {
+  const port = Number(ctx.env.FLYEE_KEY_PORT);
+  const token = ctx.env.FLYEE_KEY_TOKEN ?? "";
+  if (!name || !KEY_NAME.test(name) || !Number.isInteger(port) || port <= 0 || token.length < 16) return usage(ctx);
+  let info: KeyPageInfo = {};
+  try {
+    info = JSON.parse(ctx.env.FLYEE_KEY_INFO ?? "{}") as KeyPageInfo;
+  } catch {
+    info = {};
+  }
+  const result = await serveKeyPage(ctx, name, { port, token, info });
+  if (!result.saved) return { ok: false, error: "key_page_expired", message: t(ctx, "key.browser_timeout", { name }), name };
+  return { ok: true, name, saved: true };
+}
+
+/**
+ * `flyee key set <NAME>`: run by the member's AI, it opens the key page in the
+ * member's browser; run by the member in a terminal, it asks with the echo
+ * off. The value is never accepted as an argument (it would stay in the shell
+ * history and in the AI's view) and never printed back, not even in --json.
  */
 async function setKey(ctx: Context, args: ParsedArgs, name: string | undefined, extra: string[]): Promise<Result> {
   if (!name || !KEY_NAME.test(name)) return { ok: false, error: "usage", message: t(ctx, "key.bad_name", { name: name ?? "" }) };
   if (extra.length) return refuse(ctx, "key_in_arguments", t(ctx, "key.in_arguments", { name }));
+  if (has(args, "browser")) return setKeyInBrowser(ctx, args, name);
   const raw = has(args, "stdin") ? await ctx.io.stdin() : await ctx.io.secret(t(ctx, "key.prompt", { name }));
-  if (raw === null) return refuse(ctx, "key_needs_terminal", t(ctx, "key.needs_terminal", { name }));
+  // No terminal to type on: the AI ran it. The member pastes the key in the browser instead.
+  if (raw === null) return setKeyInBrowser(ctx, args, name);
   const value = raw.trim();
   if (!value) return refuse(ctx, "key_empty", t(ctx, "key.empty"));
   if (/[\r\n]/.test(value)) return refuse(ctx, "key_invalid", t(ctx, "key.multiline"));
@@ -97,6 +174,8 @@ export async function runKey(ctx: Context, args: ParsedArgs): Promise<Result> {
   switch (action) {
     case "set":
       return setKey(ctx, args, name, extra);
+    case "serve":
+      return serveKey(ctx, name);
     case "list":
     case undefined:
       return listKeys(ctx);

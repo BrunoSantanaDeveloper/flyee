@@ -13,6 +13,8 @@ import { flushEvents, registerMachine } from "../registration.ts";
 import { compareSemver } from "../semver.ts";
 import { enqueueEvent } from "../state/events.ts";
 import { keySource } from "../state/keys.ts";
+import { programsDeclared } from "../programs.ts";
+import { ensurePrograms, isPresent, specsForApp } from "./need.ts";
 import { readLock, writeLock } from "../state/lock.ts";
 import { writeFileAtomic } from "../util/fs.ts";
 import { CLI_VERSION } from "../version.ts";
@@ -24,8 +26,22 @@ function localized(value: Record<string, string | undefined> | undefined, locale
 }
 
 /** The review the member sees before anything is downloaded (declared permissions, keys, checksum). */
-function printReview(ctx: Context, module: CatalogModule): void {
+/** The programs an app declares and whether each is already here, from the catalog's permissions. */
+function programsOfModule(ctx: Context, assets: CoreAssets, module: CatalogModule): { name: string; label: string; present: boolean }[] {
+  return specsForApp(assets, programsDeclared(assets.programs, module.latest?.permissions)).map((spec) => ({
+    name: spec.name,
+    label: spec.label,
+    present: isPresent(ctx, spec),
+  }));
+}
+
+function printReview(ctx: Context, module: CatalogModule, assets: CoreAssets): void {
   const latest = module.latest!;
+  const programs = programsOfModule(ctx, assets, module);
+  if (programs.length) {
+    const list = programs.map((program) => (program.present ? t(ctx, "add.program_present", { label: program.label }) : t(ctx, "add.program_missing", { label: program.label }))).join(", ");
+    ctx.io.out(t(ctx, "add.programs", { list }));
+  }
   ctx.io.out(t(ctx, "add.review", { title: module.name, slug: module.slug, version: latest.version }));
   ctx.io.out(t(ctx, "add.permissions"));
   if (latest.permissions.length === 0) ctx.io.out(t(ctx, "add.no_permissions"));
@@ -67,6 +83,8 @@ async function installModule(ctx: Context, client: Client, assets: CoreAssets, m
   });
   ctx.io.out(t(ctx, "add.checksum", { sha: download.sha256, size: download.size_bytes, url: download.verify_url }));
   ctx.io.out(t(ctx, "add.installed", { slug: module.slug, version: latest.version, skills: result.module.skills.join(", ") || "—" }));
+  // The member approved the app, and with it the programs it declares: install what is missing now.
+  ensurePrograms(ctx, specsForApp(assets, result.module.programs));
   for (const credential of result.module.external_credentials) {
     if (credential.required && !keySource(ctx, credential.env)) {
       ctx.io.out(t(ctx, "add.missing_env", { env: credential.env, name: credential.name, url: credential.url ?? "" }));
@@ -139,10 +157,18 @@ export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
     }
   }
 
-  printReview(ctx, module);
+  printReview(ctx, module, assets);
   if (ctx.dryRun) {
     ctx.io.out(t(ctx, "add.dry_run"));
-    return { ok: true, slug, version: module.latest.version, dry_run: true, permissions: module.latest.permissions, external_credentials: module.external_credentials };
+    return {
+      ok: true,
+      slug,
+      version: module.latest.version,
+      dry_run: true,
+      permissions: module.latest.permissions,
+      external_credentials: module.external_credentials,
+      programs: programsOfModule(ctx, assets, module),
+    };
   }
   if (!ctx.yes && !(await ctx.io.confirm(t(ctx, "add.confirm")))) {
     ctx.io.out(t(ctx, "add.cancelled"));
@@ -177,7 +203,7 @@ async function runAddRecipe(ctx: Context, client: Client, assets: CoreAssets, sl
     return { ok: false, error: "denied_entitlement", message: t(ctx, "recipe.locked", { slug, url: url ?? "" }), action_url: url };
   }
   const installable = recipe.modules.filter((module) => module.entitled && module.latest);
-  for (const module of installable) printReview(ctx, module);
+  for (const module of installable) printReview(ctx, module, assets);
   if (ctx.dryRun) return { ok: true, recipe: slug, modules: installable.map((module) => module.slug), dry_run: true };
   if (!ctx.yes && !(await ctx.io.confirm(t(ctx, "add.confirm")))) {
     ctx.io.out(t(ctx, "add.cancelled"));

@@ -5,6 +5,7 @@ import { runDoctor } from "./commands/doctor.ts";
 import { runKey } from "./commands/key.ts";
 import { runLogin } from "./commands/login.ts";
 import { runLogout } from "./commands/logout.ts";
+import { runNeed } from "./commands/need.ts";
 import { runRemove } from "./commands/remove.ts";
 import { runStatus } from "./commands/status.ts";
 import { runTrack } from "./commands/track.ts";
@@ -35,7 +36,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
   return { command, positionals: rest, flags };
 }
 
-const BOOLEAN_FLAGS = new Set(["json", "yes", "device", "dry-run", "quiet", "help", "version", "stdin"]);
+const BOOLEAN_FLAGS = new Set(["json", "yes", "device", "dry-run", "quiet", "help", "version", "stdin", "browser", "wait", "upgrade"]);
 
 const HELP = `flyee ${CLI_VERSION}
 
@@ -45,7 +46,8 @@ const HELP = `flyee ${CLI_VERSION}
   npx flyee status [--quiet]
   npx flyee doctor
   npx flyee remove <app>
-  npx flyee key set <NOME> | key list | key remove <NOME>   (chaves dos apps, digitadas sem aparecer)
+  npx flyee need <programa…> [--upgrade] [--yes]   (instala os programas que um app usa, como ffmpeg e yt-dlp)
+  npx flyee key set <NOME> | key list | key remove <NOME>   (chaves dos apps: abre uma página no navegador para colar)
   npx flyee track <evento> [--module <app>] [--version <v>] [--from <v>] [--to <v>] [--reason <r>] [--origin <o>]
   npx flyee logout
 
@@ -71,6 +73,8 @@ export async function runCommand(ctx: Context, args: ParsedArgs): Promise<Result
       return runDoctor(ctx);
     case "key":
       return runKey(ctx, args);
+    case "need":
+      return runNeed(ctx, args);
     case "track":
       return runTrack(ctx, args);
     case "dev":
@@ -124,6 +128,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     dryRun: args.flags["dry-run"] === true,
     quiet: args.flags.quiet === true,
     baseUrl: typeof args.flags.base === "string" ? args.flags.base : undefined,
+    cliEntry: process.argv[1],
     io: {
       out: (line) => (json ? lines.push(line) : process.stdout.write(`${line}\n`)),
       err: (line) => (json ? lines.push(line) : process.stderr.write(`${line}\n`)),

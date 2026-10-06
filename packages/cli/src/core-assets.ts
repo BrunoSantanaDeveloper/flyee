@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import type { Locale } from "./context.ts";
+import { type ProgramSpec, programsRegistry, type ProgramsRegistry } from "./programs.ts";
 
 /**
  * The harness content the CLI writes into member projects. In the published
@@ -33,6 +34,8 @@ export type CoreAssets = {
   root: string;
   core: CoreInfo;
   tools: ToolsRegistry;
+  /** Programs the CLI installs for apps (`programs.json`). */
+  programs: Map<string, ProgramSpec>;
   agentsTemplate: (locale: Locale) => string;
   flyeeSkill: (locale: Locale) => string;
 };
@@ -56,6 +59,7 @@ export function loadCoreAssets(): CoreAssets {
     root,
     core: JSON.parse(read("core.json")) as CoreInfo,
     tools: JSON.parse(read("tools.json")) as ToolsRegistry,
+    programs: programsRegistry(JSON.parse(read("programs.json")) as ProgramsRegistry),
     agentsTemplate: (locale) => read(`agents/${locale === "en" ? "en" : "pt-BR"}.md`),
     flyeeSkill: (locale) => read(`skills/flyee/${locale === "en" ? "en" : "pt-BR"}/SKILL.md`),
   };

@@ -28,6 +28,10 @@ const KNOWN_FRONTMATTER = new Set([
   "allowed-tools",
   "disable-model-invocation",
 ]);
+/** Install commands written for a person to type: the AI installs through `npx flyee need` instead. */
+const MEMBER_INSTALL = /\b(?:winget|brew|choco|scoop)\s+(?:install|upgrade)\b|\bapt(?:-get)?\s+install\b|\bpip3?\s+install\b|\bpython3?\s+-m\s+pip\s+install\b/i;
+/** Text that sends the member to a terminal. */
+const MEMBER_TERMINAL = /\bno seu terminal\b|\babra o terminal\b|\bin your (?:own )?terminal\b|\bopen (?:a|the|your) terminal\b/i;
 /** A description enters the context of every session: above this the app pays for it in every turn. */
 export const DESCRIPTION_SOFT_LIMIT = 400;
 export const DESCRIPTION_HARD_LIMIT = 1024;
@@ -147,6 +151,16 @@ export function validateModule(dir: string): Report {
   }
 
   if (files.length && totalSize(dir, files) > MAX_UNCOMPRESSED_BYTES) report.errors.push("the package exceeds 200 MB uncompressed");
+  // The member never opens a terminal: their AI installs programs (`npx flyee need`) and opens the key page.
+  for (const file of files.filter((candidate) => candidate.endsWith(".md"))) {
+    const text = safeRead(join(dir, ...file.split("/")));
+    if (MEMBER_INSTALL.test(text)) {
+      report.errors.push(`${file}: tells someone to install a program by hand; the AI installs it with \`npx flyee need <program> --yes --json\``);
+    }
+    if (MEMBER_TERMINAL.test(text)) {
+      report.errors.push(`${file}: sends the member to the terminal; the AI runs every command (keys go through \`npx flyee key set\`, which opens a page in the browser)`);
+    }
+  }
   const unfilled = placeholdersIn(dir, files);
   if (unfilled.length) report.errors.push(`${PLACEHOLDER} still to be written in: ${unfilled.join(", ")}`);
   validateEval(dir, slug, report.errors);

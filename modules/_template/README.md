@@ -9,7 +9,7 @@
 ## O que você precisa
 
 - Uma das IAs em que o app foi testado.
-- [PREENCHER] Programas e chaves externas, se houver. Chave é salva uma vez com `npx flyee key set <NOME>`; diga qual e onde obter. Se o app usa outro app do flyee.club, diga qual e que ele instala com `npx flyee add <app>`.
+- [PREENCHER] Programas e chaves externas, se houver. O integrante não instala nem digita nada: a IA dele instala os programas e abre uma página no navegador para ele colar a chave. Diga só qual programa ou chave o app usa, para quê, e onde a chave é criada. Se o app usa outro app do flyee.club, diga qual; a IA o instala também.
 
 ## Peça assim
 

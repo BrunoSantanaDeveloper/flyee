@@ -11,6 +11,7 @@ import { compareSemver } from "../semver.ts";
 import { enqueueEvent } from "../state/events.ts";
 import { readLock, writeLock } from "../state/lock.ts";
 import { CLI_VERSION } from "../version.ts";
+import { ensurePrograms, specsForApp } from "./need.ts";
 import type { Result } from "./types.ts";
 
 export type UpdateLine = { slug: string; from: string; to: string | null; status: "updated" | "unchanged" | "locked" | "unavailable" | "dev"; newest?: string | null };
@@ -54,7 +55,9 @@ export async function runUpdate(ctx: Context): Promise<Result> {
       if (compareSemver(module.latest.version, installed.version) > 0) {
         const download = await client.download(slug, module.latest.version);
         const bytes = await downloadBytes(ctx, download.url);
-        installBytes(ctx, assets, bytes, { sha256: download.sha256, size_bytes: download.size_bytes, slug, version: module.latest.version }, download.license);
+        const fresh = installBytes(ctx, assets, bytes, { sha256: download.sha256, size_bytes: download.size_bytes, slug, version: module.latest.version }, download.license);
+        // A new version may use a program the previous one did not: install it, as `add` does.
+        ensurePrograms(ctx, specsForApp(assets, fresh.module.programs));
         enqueueEvent(ctx, "module.updated", {
           module: slug,
           from_version: installed.version,

@@ -25,10 +25,10 @@ node .flyee/modules/video-analysis/scripts/video.mjs check --json
 | `modes.local.web` | ffmpeg e yt-dlp existem: dá para analisar endereços sem chave |
 | `gemini_key` | a chave do Gemini foi encontrada (o valor nunca aparece) |
 | `gemini_key_from` | onde: `flyee` (salva com `npx flyee key set`) ou `environment` (a variável de ambiente, que tem prioridade) |
-| `gemini_setup` | sem a chave: `key_url` (onde criar), `command` (`npx flyee key set GEMINI_API_KEY`, que o integrante roda no terminal dele), `how` e `after` |
-| `install` | comandos para instalar o que falta, no sistema do integrante |
+| `gemini_setup` | sem a chave: `key_url` (onde criar), `command` (`npx flyee key set GEMINI_API_KEY --json`, que você roda: abre uma página no navegador do integrante para ele colar a chave), `how` e `after` |
+| `install` | os comandos `npx flyee need …` que instalam o que falta; rode-os você mesmo, com tempo limite longo, depois de avisar o integrante |
 
-A chave nunca passa pela conversa nem pelo seu app: o integrante a salva uma vez no computador dele, com `npx flyee key set`, e este app a lê sozinho. Nunca peça a chave em texto, nunca rode `key set` pelo integrante e nunca abra `~/.flyee/keys.json`.
+O integrante não usa o terminal: os programas, você instala com os comandos de `install`; a chave, ele cola numa página que `npx flyee key set` abre no navegador dele, e este app a lê sozinho. Ela nunca passa pela conversa nem pelo seu app. Nunca peça a chave em texto e nunca abra `~/.flyee/keys.json`.
 
 ## 2. Pedir a análise
 
@@ -133,7 +133,7 @@ Em erro, `ok` é `false`, a saída termina com código 1 (2 para uso errado) e v
 
 | `code` | O que fazer |
 |---|---|
-| `tools_missing` | mostre os comandos de `fix`; o integrante instala e você repete |
+| `tools_missing` | rode você mesmo os comandos de `fix` e repita |
 | `no_gemini_key` | repita com `--mode local`, ou mostre ao integrante o passo a passo de `fix` (o mesmo de `gemini_setup`) para ele salvar a chave |
 | `upload_consent_required` | pergunte se pode enviar o arquivo ao Google; com o sim, repita com `--allow-upload`; sem, use `--mode local` |
 | `youtube_blocked`, `no_formats`, `rate_limited` | o YouTube recusou o download: tente o modo Gemini, ou peça o arquivo ao integrante |

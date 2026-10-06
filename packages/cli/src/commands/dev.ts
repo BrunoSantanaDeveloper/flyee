@@ -5,6 +5,7 @@ import type { Context } from "../context.ts";
 import { loadCoreAssets } from "../core-assets.ts";
 import { t } from "../i18n.ts";
 import { installFromDirectory } from "../install/installer.ts";
+import { ensurePrograms, specsForApp } from "./need.ts";
 import type { ParsedArgs, Result } from "./types.ts";
 
 const PRODUCT_REPO = "flyee-product";
@@ -47,5 +48,7 @@ export async function runDev(ctx: Context, args: ParsedArgs): Promise<Result> {
   const assets = loadCoreAssets();
   const result = installFromDirectory(ctx, assets, resolve(ctx.cwd, dir));
   ctx.io.out(t(ctx, "dev.linked", { slug: result.slug, version: result.module.version, dir }));
-  return { ok: true, slug: result.slug, version: result.module.version, skills: result.module.skills, dev: true };
+  // The operator does not install programs by hand either.
+  const programs = ensurePrograms(ctx, specsForApp(assets, result.module.programs));
+  return { ok: true, slug: result.slug, version: result.module.version, skills: result.module.skills, programs, dev: true };
 }

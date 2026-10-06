@@ -179,32 +179,30 @@ export function geminiKey(env = process.env, path = keyStorePath()) {
   return saved ? { key: saved, from: "flyee" } : { key: null, from: null };
 }
 
-/** How the member saves the key: one command, the same on every system, typed in their own terminal. */
+/**
+ * How the key gets saved: the member's AI runs one command, the same on every
+ * system, and the member pastes the key in the page it opens in their browser.
+ * The member never opens a terminal and the key never enters the conversation.
+ */
 export function keySetup() {
   return {
-    command: "npx flyee key set GEMINI_API_KEY",
-    how: "Rode no seu terminal (PowerShell, Prompt de Comando ou Terminal), fora do chat, e cole a chave quando ele pedir: ela não aparece na tela.",
-    after: "O app enxerga a chave na hora, sem reabrir a IA.",
+    command: "npx flyee key set GEMINI_API_KEY --json",
+    how: "Rode você mesmo: o comando abre uma página no navegador do integrante, onde ele cola a chave. Ela não passa pela conversa nem pelo terminal.",
+    after: "Quando ele disser que salvou, rode check --json de novo: o app enxerga a chave na hora, sem reabrir a IA.",
   };
 }
 
-/** Install and update commands for the member's system. */
+/**
+ * The commands that install or update the programs, for the AI to run itself:
+ * the flyee CLI picks the system's package manager (winget, Homebrew, apt…),
+ * installs without questions, and this app finds the program at once, without
+ * reopening the AI. The member never receives an install command to type.
+ */
 export function installHints() {
-  if (WINDOWS) {
-    return {
-      ffmpeg: "winget install --id Gyan.FFmpeg -e",
-      "yt-dlp": "winget install --id yt-dlp.yt-dlp -e",
-      update_ytdlp: "winget upgrade --id yt-dlp.yt-dlp -e",
-      note: "Depois de instalar, este app já procura nas pastas do winget; se ainda assim não encontrar, feche e abra a IA.",
-    };
-  }
-  if (MAC) {
-    return { ffmpeg: "brew install ffmpeg", "yt-dlp": "brew install yt-dlp", update_ytdlp: "brew upgrade yt-dlp", note: "" };
-  }
   return {
-    ffmpeg: "sudo apt install ffmpeg (ou o gerenciador de pacotes da sua distribuição)",
-    "yt-dlp": "python3 -m pip install --user -U yt-dlp",
-    update_ytdlp: "python3 -m pip install --user -U yt-dlp",
-    note: "A versão do yt-dlp nos repositórios das distribuições costuma estar desatualizada; prefira a do pip.",
+    ffmpeg: "npx flyee need ffmpeg --yes --json",
+    "yt-dlp": "npx flyee need yt-dlp --yes --json",
+    update_ytdlp: "npx flyee need yt-dlp --upgrade --yes --json",
+    note: "Rode você mesmo, com tempo limite longo (até 10 minutos), depois de avisar o integrante numa frase. Se o resultado trouxer needs_member, mostre a ele só o passo único indicado.",
   };
 }

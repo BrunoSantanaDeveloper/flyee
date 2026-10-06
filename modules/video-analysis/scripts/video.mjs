@@ -95,10 +95,10 @@ function geminiSetup() {
 
 function geminiSetupText() {
   const setup = geminiSetup();
-  // One step per line, so the command can be copied without the sentence after it.
+  // Written for the member's AI, one step per line: it runs the command; the member only pastes the key in the browser.
   return [
-    `Crie uma chave gratuita no Google AI Studio${setup.key_url ? ` (${setup.key_url})` : ""}.`,
-    "Salve-a com este comando:",
+    `O integrante cria uma chave gratuita no Google AI Studio${setup.key_url ? ` (${setup.key_url})` : ""}.`,
+    "Para salvá-la, rode você mesmo:",
     `  ${setup.command}`,
     setup.how,
     setup.after,

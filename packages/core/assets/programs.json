@@ -1,0 +1,32 @@
+{
+  "_note": "Programas que os apps usam e que a CLI instala sozinha (`npx flyee need`), para o integrante nunca abrir o terminal. Um app declara o programa numa permissão `shell` cujo escopo cita um dos `binaries`; `add`, `update` e `dev link` instalam o que faltar. Os passos de cada sistema são tentados em ordem, pelo primeiro gerenciador de pacotes presente, sempre sem perguntas. Programa novo é uma entrada aqui; até a CLI ser publicada com ela, o app pode passar a receita no próprio comando (`npx flyee need <binário> --winget <id> --brew <id> --apt <id>`).",
+  "programs": {
+    "ffmpeg": {
+      "label": "FFmpeg",
+      "binaries": ["ffmpeg", "ffprobe"],
+      "url": "https://ffmpeg.org/download.html",
+      "install": {
+        "windows": [{ "manager": "winget", "id": "Gyan.FFmpeg" }],
+        "macos": [{ "manager": "brew", "id": "ffmpeg" }],
+        "linux": [
+          { "manager": "apt", "id": "ffmpeg" },
+          { "manager": "dnf", "id": "ffmpeg" },
+          { "manager": "pacman", "id": "ffmpeg" }
+        ]
+      }
+    },
+    "yt-dlp": {
+      "label": "yt-dlp",
+      "binaries": ["yt-dlp"],
+      "url": "https://github.com/yt-dlp/yt-dlp#installation",
+      "install": {
+        "windows": [{ "manager": "winget", "id": "yt-dlp.yt-dlp" }],
+        "macos": [{ "manager": "brew", "id": "yt-dlp" }],
+        "linux": [
+          { "manager": "pipx", "id": "yt-dlp" },
+          { "manager": "pip", "id": "yt-dlp" }
+        ]
+      }
+    }
+  }
+}

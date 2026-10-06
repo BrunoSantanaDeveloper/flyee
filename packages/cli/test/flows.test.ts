@@ -160,14 +160,39 @@ describe("the member's journey against the contract", () => {
     assert.equal(((await run(emptyVariable, ["key", "list"])).keys as { source: string | null }[])[0].source, null);
   });
 
-  it("refuses a key passed as an argument and a run without a terminal", async () => {
+  it("refuses a key passed as an argument, and without a terminal takes it through a page in the browser", async () => {
     const ctx = makeContext();
     const inArguments = await run(ctx, ["key", "set", "APIFY_TOKEN", "apify-no-historico"]);
     assert.equal(inArguments.ok, false);
     assert.equal(inArguments.error, "key_in_arguments");
     assert.ok(!readFileSync(join(sandbox, "home", ".flyee", "keys.json"), "utf8").includes("apify-no-historico"));
-    const noTerminal = await run(ctx, ["key", "set", "APIFY_TOKEN"]);
-    assert.equal(noTerminal.error, "key_needs_terminal");
+
+    // The member's AI runs `key set` (no terminal): the CLI opens a page; the member pastes the key there.
+    const statuses: number[] = [];
+    let form = "";
+    const form_ = { "Content-Type": "application/x-www-form-urlencoded" };
+    const viaBrowser = makeContext({
+      io: {
+        out: (line) => output.push(line),
+        openBrowser: async (url) => {
+          const page = await fetch(url);
+          statuses.push(page.status);
+          form = await page.text();
+          statuses.push((await fetch(url.replace(/\/k\/[^/]+$/, "/k/outro-token-qualquer"))).status);
+          statuses.push((await fetch(url, { method: "POST", headers: form_, body: "value=" })).status);
+          statuses.push((await fetch(url, { method: "POST", headers: form_, body: "value=apify-pela-pagina" })).status);
+          return true;
+        },
+      },
+    });
+    const saved = await run(viaBrowser, ["key", "set", "APIFY_TOKEN"]);
+    assert.equal(saved.ok, true, JSON.stringify(saved));
+    assert.equal(saved.via, "browser");
+    assert.deepEqual(statuses, [200, 404, 400, 200]);
+    assert.ok(form.includes("APIFY_TOKEN") && form.includes('type="password"') && form.includes("https://console.apify.com/"));
+    assert.equal(JSON.parse(readFileSync(join(sandbox, "home", ".flyee", "keys.json"), "utf8")).keys.APIFY_TOKEN, "apify-pela-pagina");
+    assert.ok(!JSON.stringify(saved).includes("apify-pela-pagina") && !output.join("\n").includes("apify-pela-pagina"), "the value is never printed");
+
     const badName = await run(ctx, ["key", "set", "apify-token"]);
     assert.equal(badName.error, "usage");
   });

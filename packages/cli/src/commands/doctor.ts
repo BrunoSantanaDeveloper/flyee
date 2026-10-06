@@ -10,6 +10,7 @@ import { type KeySource, keySource } from "../state/keys.ts";
 import { moduleDir, readLock } from "../state/lock.ts";
 import { readText, sha256File } from "../util/fs.ts";
 import { CLI_VERSION } from "../version.ts";
+import { isPresent, specsForApp } from "./need.ts";
 import type { Result } from "./types.ts";
 
 /**
@@ -41,6 +42,7 @@ export async function runDoctor(ctx: Context): Promise<Result> {
 
   const integrity: Record<string, { intact: number; changed: string[] }> = {};
   const credentials: { slug: string; env: string; name: string; set: boolean; source: KeySource | null; required: boolean }[] = [];
+  const programs: { slug: string; name: string; present: boolean }[] = [];
   for (const [slug, module] of Object.entries(lock?.modules ?? {})) {
     const changed: string[] = [];
     for (const file of module.files) {
@@ -54,6 +56,11 @@ export async function runDoctor(ctx: Context): Promise<Result> {
         ? t(ctx, "doctor.integrity_fail", { slug, count: changed.length, list: changed.slice(0, 5).join(", ") })
         : t(ctx, "doctor.integrity_ok", { slug, count: module.files.length }),
     );
+    for (const spec of specsForApp(assets, module.programs)) {
+      const present = isPresent(ctx, spec);
+      programs.push({ slug, name: spec.name, present });
+      ctx.io.out(present ? t(ctx, "doctor.program_ok", { slug, label: spec.label }) : t(ctx, "doctor.program_missing", { slug, label: spec.label, name: spec.name }));
+    }
     for (const credential of module.external_credentials) {
       const source = keySource(ctx, credential.env);
       credentials.push({ slug, env: credential.env, name: credential.name, set: source !== null, source, required: credential.required });
@@ -79,6 +86,7 @@ export async function runDoctor(ctx: Context): Promise<Result> {
     tools: tools.map((tool) => ({ id: tool.id, label: tool.label, tier: tool.tier, detected: tool.detected, reasons: tool.reasons })),
     adapters,
     integrity,
+    programs,
     credentials,
     platform,
   };

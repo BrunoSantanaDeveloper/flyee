@@ -16,7 +16,17 @@ export type Io = {
   stdin: () => Promise<string>;
 };
 
+/** How the CLI looks for and installs programs; tests replace both. */
+export type SystemAccess = {
+  find?: (binary: string) => string | null;
+  run?: (file: string, args: string[], env?: Record<string, string>) => { status: number | null; stdout: string; stderr: string };
+};
+
 export type Context = {
+  /** Program lookup and package-manager calls (`npx flyee need`); defaults to the real system. */
+  system?: SystemAccess;
+  /** The CLI script this process runs, when started from the command line; detached helpers reuse it. */
+  cliEntry?: string;
   /** The platform, without trailing slash. Overridable by FLYEE_BASE_URL for previews and tests. */
   baseUrl: string;
   /** `~/.flyee`: device identity, credentials, the event queue, known projects. */
@@ -76,5 +86,7 @@ export function createContext(options: ContextOptions = {}): Context {
     now: options.now ?? (() => Date.now()),
     fetch: options.fetch ?? fetch,
     dev: options.dev ?? env.FLYEE_DEV === "1",
+    system: options.system,
+    cliEntry: options.cliEntry,
   };
 }

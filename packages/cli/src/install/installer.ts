@@ -6,6 +6,7 @@ import { CliError } from "../api/errors.ts";
 import type { Context } from "../context.ts";
 import type { CoreAssets } from "../core-assets.ts";
 import { localeOf } from "../i18n.ts";
+import { programsDeclared } from "../programs.ts";
 import { type Lock, type LockModule, moduleDir, modulesDir, newLock, readLock, writeLock } from "../state/lock.ts";
 import { ensureDir, removeDir, sha256Hex, walkFiles, writeFileAtomic } from "../util/fs.ts";
 import { applyAdapters, removeBridges, type SkillInfo, writeSkillBridges } from "./adapters.ts";
@@ -100,6 +101,7 @@ export function installInspected(ctx: Context, assets: CoreAssets, inspected: In
   const lock = readLock(ctx) ?? newLock(ctx, assets.core.version);
   lock.locale = ctx.locale;
   const module = lockEntry(ctx, manifest, fileShas, skills, packageSha, bridges);
+  module.programs = programsDeclared(assets.programs, manifest.permissions);
   if (license) {
     const licensePath = join(ctx.cwd, ".flyee", "licenses", `${slug}.jwt`);
     writeFileAtomic(licensePath, license);

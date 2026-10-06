@@ -10,7 +10,7 @@ import { escapeFilterPath, gridLayout, mergeCuts, pickFrames, similar, stillChan
 import { classifyGeminiError, parseJsonReply, videoPart } from "../scripts/lib/gemini.mjs";
 import { identifySource, looksLikeId, youtubeId } from "../scripts/lib/source.mjs";
 import { measurementLines } from "../scripts/lib/store.mjs";
-import { geminiKey, keySetup, keyStorePath, readSavedKey } from "../scripts/lib/tools.mjs";
+import { geminiKey, installHints, keySetup, keyStorePath, readSavedKey } from "../scripts/lib/tools.mjs";
 import { AppError, displayPath, fileTime, formatTime, parseArgs, parseTime, slugify } from "../scripts/lib/util.mjs";
 import { classifyYtdlpError, mostReplayed, pickCaptionTrack, summarizeMetadata } from "../scripts/lib/ytdlp.mjs";
 
@@ -233,11 +233,20 @@ test("geminiKey follows the flyee rule: the variable, then the key saved with `f
   }
 });
 
-test("keySetup gives one command, the same on every system", () => {
+test("keySetup gives one command the AI runs itself, the same on every system", () => {
   const setup = keySetup();
-  assert.equal(setup.command, "npx flyee key set GEMINI_API_KEY");
-  assert.match(setup.how, /fora do chat/);
+  assert.equal(setup.command, "npx flyee key set GEMINI_API_KEY --json");
+  assert.match(setup.how, /navegador/);
+  assert.doesNotMatch(setup.how, /seu terminal/);
   assert.ok(setup.after);
+});
+
+test("installHints never hands the member an install command: the AI runs `npx flyee need`", () => {
+  const hints = installHints();
+  assert.equal(hints.ffmpeg, "npx flyee need ffmpeg --yes --json");
+  assert.equal(hints["yt-dlp"], "npx flyee need yt-dlp --yes --json");
+  assert.equal(hints.update_ytdlp, "npx flyee need yt-dlp --upgrade --yes --json");
+  for (const command of [hints.ffmpeg, hints["yt-dlp"], hints.update_ytdlp]) assert.doesNotMatch(command, /winget|brew|apt|pip/);
 });
 
 test("summarizeMetadata formats the date and keeps the useful fields", () => {

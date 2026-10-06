@@ -15,7 +15,7 @@ description: "[PREENCHER] O que esta skill faz e quando usar, em uma ou duas fra
 
 ## Passo 1 — Produzir
 
-[PREENCHER] Os passos, com os scripts e as referências relativas a esta pasta (`references/…`, `scripts/…`). Para usar outro app do flyee.club, siga o guia dele em `.flyee/modules/<app>/references/interface.md`; se ele não estiver instalado, ofereça `npx flyee add <app>` e siga sem ele.
+[PREENCHER] Os passos, com os scripts e as referências relativas a esta pasta (`references/…`, `scripts/…`). Para usar outro app do flyee.club, siga o guia dele em `.flyee/modules/<app>/references/interface.md`; se ele não estiver instalado, ofereça instalá-lo e rode você mesmo `npx flyee add <app> --yes --json` depois do sim. Programa que falta, instale com `npx flyee need <programa> --yes --json`; chave que falta, `npx flyee key set <NOME> --json` abre a página do navegador. O integrante nunca abre o terminal.
 
 ## Passo 2 — Entregar
 

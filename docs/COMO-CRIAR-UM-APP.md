@@ -74,11 +74,17 @@ description: Encontra Reels que performaram acima do normal do próprio perfil e
 - Uma skill por tarefa clara. Descrições que se sobrepõem fazem a IA escolher errado: o `validate` acusa nomes repetidos entre apps.
 - A skill nunca fala de material interno nem aponta para links que o servidor não deu.
 
-## 4. Permissões, credenciais e o modo sem chave
+## 4. O integrante não usa o terminal
+
+Esta é a regra de experiência de todo app: o integrante conversa com a IA dele, e a IA roda tudo. Ele só confirma na conversa o que a IA vai fazer, aprova o login no navegador e cola chaves numa página que abre no navegador. Nenhum texto do app manda o integrante abrir o terminal, rodar um comando ou instalar um programa. A validação recusa um `.md` do app com comando de instalação (`winget install`, `brew install`, `apt install`, `pip install`…) ou com "no seu terminal".
+
+**Programas.** Um app que usa um programa (ffmpeg, yt-dlp…) o declara numa permissão `shell` cujo escopo cita o nome dele, por exemplo `"scope": "ffmpeg, ffprobe"`. O `npx flyee add`, o `update` e o `dev link` instalam sozinhos o que faltar, pelo gerenciador de pacotes do sistema (winget, Homebrew, apt…), sem perguntas além da confirmação do próprio `add`. Se o app descobre em uso que falta algo, a skill manda a IA rodar `npx flyee need <programa> --yes --json`, com tempo limite longo, depois de avisar numa frase. Os programas conhecidos estão em `packages/core/assets/programs.json`; um programa novo entra ali, e até a CLI ser publicada com ele o app passa a receita no próprio comando (`npx flyee need <binário> --winget <id> --brew <id> --apt <id>`). Só o que exige o integrante volta como `needs_member`, com o passo único: a senha de administrador no Linux, o Homebrew ausente no Mac. O script do app procura o programa no PATH e nas pastas dos gerenciadores de pacotes, porque a IA aberta antes da instalação herda o PATH antigo; `~/.flyee/programs.json` guarda o caminho de cada programa que a CLI conferiu.
+
+## 5. Permissões, credenciais e o modo sem chave
 
 Declare tudo: a IA mostra as permissões antes de instalar, e a página pública do app as exibe. Um app que grava no projeto declara `fs:write` com o escopo; um que chama uma API declara `network` com o domínio; um que roda script declara `shell` com o comando, inclusive binários externos como `ffmpeg`.
 
-Toda credencial externa se declara em `external_credentials`, e o `env` é o nome da chave. O integrante a salva uma vez por máquina com `npx flyee key set <ENV>`, no terminal dele e sem que ela apareça na tela. Ela fica em `~/.flyee/keys.json`, fora de todo projeto, e serve a todos os apps que usam o mesmo nome. Quem preferir pode definir uma variável de ambiente com esse nome.
+Toda credencial externa se declara em `external_credentials`, e o `env` é o nome da chave. A IA do integrante roda `npx flyee key set <ENV> --json`, que abre uma página no navegador dele, numa porta local e com um endereço de uso único; ele cola a chave ali e clica em Salvar. A chave não passa pela conversa, pelo terminal nem pela linha de comando. Ela fica em `~/.flyee/keys.json`, fora de todo projeto, e serve a todos os apps que usam o mesmo nome. Quem preferir pode definir uma variável de ambiente com esse nome. Quem roda `key set` num terminal de verdade digita a chave com o eco desligado.
 
 O script do app lê a chave sozinho, nesta ordem:
 
@@ -102,13 +108,13 @@ function appKey(name) {
 }
 ```
 
-Declare `env` com o nome da chave e `fs:read` com `~/.flyee/keys.json`. O app e a skill nunca pedem a chave em texto, nunca a põem num comando, nunca rodam `key set` pelo integrante, nunca abrem esse arquivo por conta própria e nunca gravam a chave em arquivo do projeto. Sem a chave, o app mostra o comando `npx flyee key set <ENV>` e o `url` de onde obtê-la. E todo app com credencial tem um modo que entrega algo sem ela, por exemplo planejar ou preparar o material, dizendo o que a chave liberaria.
+Declare `env` com o nome da chave e `fs:read` com `~/.flyee/keys.json`. O app e a skill nunca pedem a chave em texto, nunca a põem num comando, nunca abrem esse arquivo por conta própria e nunca gravam a chave em arquivo do projeto. Sem a chave, o app devolve à IA o `url` de onde obtê-la e o comando `npx flyee key set <ENV> --json`, que a própria IA roda. E todo app com credencial tem um modo que entrega algo sem ela, por exemplo planejar ou preparar o material, dizendo o que a chave liberaria.
 
-## 5. O README é o guia
+## 6. O README é o guia
 
 Escreva para quem nunca viu o app: o que ele faz, o que precisa, como usar com um prompt de exemplo ("Peça assim: …"), o que ele grava e onde, e o modo sem chave. Esse texto vira a página do app na plataforma e o `/flyee guia <app>` dentro da IA.
 
-## 6. Avaliação
+## 7. Avaliação
 
 `tests/eval.json`:
 
@@ -128,17 +134,17 @@ Escreva para quem nunca viu o app: o que ele faz, o que precisa, como usar com u
 
 Pelo menos um caso. Toda falha de suporte vira um caso novo. Os casos rodam antes de publicar e, como canário, nas IAs testadas (fase P7).
 
-## 7. Versões
+## 8. Versões
 
 - A primeira versão publicada é a que a conta sem compra recebe, marcada no console da plataforma. Num app principal, a 1.0 nasce reduzida e a 1.1 sai no mesmo dia com a fatia completa.
 - Correção é versão nova com `changelog` novo. Nunca edite uma versão publicada.
 - Tag no git: `<slug>@<versão>`.
 
-## 8. Automação
+## 9. Automação
 
 Um app `workflow` pode ter uma metade automática. Ela roda sem ninguém presente, pela CLI e por um agendador do sistema, e por isso não tem ponto de aprovação; toda decisão fica para a metade sob demanda, que recebe o material pronto em arquivo. Declare quais passos usam a IA do integrante; onde não há raciocínio, o passo é script puro. O manifesto v2 trará o campo `automation` quando o primeiro app assim chegar (fase P4).
 
-## 9. Apps que servem outros apps
+## 10. Apps que servem outros apps
 
 Um app pode ser a ferramenta de outros, como o `video-analysis`, que o app de edição chama para estudar um vídeo de referência. Enquanto o manifesto v2 não traz `requires`, a ligação é por convenção:
 
@@ -148,7 +154,7 @@ Um app pode ser a ferramenta de outros, como o `video-analysis`, que o app de ed
 - O resultado fica numa pasta do projeto fora de `.flyee/`, porque `.flyee/modules/<slug>/` é trocado a cada `update` e a IA não edita `.flyee/`. Com cache por conteúdo: o mesmo pedido de outro app devolve o que já existe.
 - O app consumidor manda o que precisa (`--instructions <arquivo do próprio app>`, `--name <slug dele>`) em vez de pedir uma versão especial do app de ferramenta.
 
-## 10. Testar antes de publicar
+## 11. Testar antes de publicar
 
 ```bash
 npm run validate <slug>

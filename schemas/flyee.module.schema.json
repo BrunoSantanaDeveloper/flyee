@@ -1,0 +1,322 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "manifest_version": {
+      "type": "number",
+      "const": 1
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,59}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d{0,4})\\.(0|[1-9]\\d{0,4})\\.(0|[1-9]\\d{0,4})(?:-[0-9A-Za-z][0-9A-Za-z.-]{0,19})?$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "skill",
+        "workflow",
+        "framework",
+        "tool"
+      ]
+    },
+    "trail": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{1,29}$"
+    },
+    "title": {
+      "type": "object",
+      "properties": {
+        "pt-BR": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      },
+      "required": [
+        "pt-BR"
+      ],
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "pt-BR": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        }
+      },
+      "required": [
+        "pt-BR"
+      ],
+      "additionalProperties": false
+    },
+    "compatible_ais": {
+      "minItems": 1,
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "claude_code",
+          "codex",
+          "gemini_cli",
+          "cursor",
+          "other"
+        ]
+      }
+    },
+    "min_core": {
+      "type": "string",
+      "pattern": "^(?:\\^|~|>=|=)?\\s*(0|[1-9]\\d{0,4})\\.(0|[1-9]\\d{0,4})\\.(0|[1-9]\\d{0,4})(?:-[0-9A-Za-z][0-9A-Za-z.-]{0,19})?$"
+    },
+    "entry": {
+      "type": "string"
+    },
+    "files": {
+      "minItems": 1,
+      "maxItems": 2000,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "external_credentials": {
+      "default": [],
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "env": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "purpose": {
+            "type": "object",
+            "properties": {
+              "pt-BR": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              }
+            },
+            "required": [
+              "pt-BR"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "name",
+          "env",
+          "required",
+          "purpose"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "permissions": {
+      "default": [],
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fs:read",
+              "fs:write",
+              "network",
+              "shell",
+              "env"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "reason": {
+            "type": "object",
+            "properties": {
+              "pt-BR": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              }
+            },
+            "required": [
+              "pt-BR"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "kind",
+          "scope",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "lessons": {
+      "type": "object",
+      "properties": {
+        "pt-BR": {
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "depth": {
+                "type": "string",
+                "enum": [
+                  "usar",
+                  "abrir_o_capo"
+                ]
+              },
+              "provider": {
+                "type": "string",
+                "const": "youtube"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{6,20}$"
+              },
+              "duration_s": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 36000
+              }
+            },
+            "required": [
+              "depth",
+              "provider",
+              "id",
+              "duration_s"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "en": {
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "depth": {
+                "type": "string",
+                "enum": [
+                  "usar",
+                  "abrir_o_capo"
+                ]
+              },
+              "provider": {
+                "type": "string",
+                "const": "youtube"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{6,20}$"
+              },
+              "duration_s": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 36000
+              }
+            },
+            "required": [
+              "depth",
+              "provider",
+              "id",
+              "duration_s"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "changelog": {
+      "type": "object",
+      "properties": {
+        "pt-BR": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      },
+      "required": [
+        "pt-BR"
+      ],
+      "additionalProperties": false
+    },
+    "license": {
+      "default": "member",
+      "type": "string",
+      "enum": [
+        "member",
+        "commercial"
+      ]
+    }
+  },
+  "required": [
+    "manifest_version",
+    "name",
+    "version",
+    "type",
+    "trail",
+    "title",
+    "summary",
+    "compatible_ais",
+    "entry",
+    "files"
+  ],
+  "additionalProperties": false,
+  "$id": "https://flyee.club/api/cli/schema/module",
+  "title": "flyee.module.json",
+  "description": "The manifest at the root of a flyee.club module package (manifest_version 1)."
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@flyee-product/core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "O core do harness que a CLI flyee escreve no projeto do integrante: bloco do AGENTS.md, skill /flyee e o registro de ferramentas de IA. Só conteúdo; viaja dentro do pacote da CLI.",
+  "type": "module",
+  "files": [
+    "assets"
+  ]
+}

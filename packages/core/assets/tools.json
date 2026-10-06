@@ -1,0 +1,89 @@
+{
+  "_note": "Registro declarativo das ferramentas de IA que o core atende. Adicionar uma ferramenta é uma linha aqui, nunca código novo. tier: tested = declarada em compatible_ais dos apps e coberta pelos testes; standard = atendida por AGENTS.md e .agents/skills, sem promessa, reportada à plataforma como `other`. instructions.mode: canonical = lê o AGENTS.md; pointer = recebe um arquivo próprio com uma linha que importa o AGENTS.md; block = só lê arquivo próprio, recebe o bloco inteiro quando é detectada. skills.standard = lê .agents/skills; skills.claude = lê .claude/skills.",
+  "always": {
+    "canonical": "AGENTS.md",
+    "skillDirs": [".agents/skills", ".claude/skills"]
+  },
+  "tools": [
+    {
+      "id": "claude_code",
+      "label": "Claude Code",
+      "tier": "tested",
+      "detect": { "projectDirs": [".claude"], "binaries": ["claude"] },
+      "instructions": { "mode": "pointer", "file": "CLAUDE.md", "pointer": "@AGENTS.md" },
+      "skills": { "standard": false, "claude": true }
+    },
+    {
+      "id": "codex",
+      "label": "Codex",
+      "tier": "tested",
+      "detect": { "projectDirs": [".codex"], "binaries": ["codex"] },
+      "instructions": { "mode": "canonical" },
+      "skills": { "standard": true, "claude": false, "openaiYaml": true }
+    },
+    {
+      "id": "gemini_cli",
+      "label": "Gemini CLI",
+      "tier": "tested",
+      "detect": { "projectDirs": [".gemini"], "binaries": ["gemini"] },
+      "instructions": { "mode": "pointer", "file": "GEMINI.md", "pointer": "@./AGENTS.md" },
+      "skills": { "standard": true, "claude": true }
+    },
+    {
+      "id": "cursor",
+      "label": "Cursor",
+      "tier": "tested",
+      "detect": { "projectDirs": [".cursor"], "binaries": ["cursor"] },
+      "instructions": { "mode": "canonical" },
+      "skills": { "standard": true, "claude": false }
+    },
+    {
+      "id": "copilot",
+      "label": "GitHub Copilot",
+      "tier": "standard",
+      "detect": { "projectDirs": [".github"], "binaries": ["copilot"] },
+      "instructions": { "mode": "canonical" },
+      "skills": { "standard": true, "claude": true }
+    },
+    {
+      "id": "opencode",
+      "label": "OpenCode",
+      "tier": "standard",
+      "detect": { "projectDirs": [".opencode"], "binaries": ["opencode"] },
+      "instructions": { "mode": "canonical" },
+      "skills": { "standard": true, "claude": true }
+    },
+    {
+      "id": "antigravity",
+      "label": "Antigravity",
+      "tier": "standard",
+      "detect": { "projectDirs": [".agents"], "binaries": [] },
+      "instructions": { "mode": "canonical" },
+      "skills": { "standard": true, "claude": false }
+    },
+    {
+      "id": "kimi",
+      "label": "Kimi Code",
+      "tier": "standard",
+      "detect": { "projectDirs": [".kimi-code"], "binaries": ["kimi"] },
+      "instructions": { "mode": "canonical" },
+      "skills": { "standard": true, "claude": false }
+    },
+    {
+      "id": "windsurf",
+      "label": "Windsurf",
+      "tier": "standard",
+      "detect": { "projectDirs": [".windsurf"], "projectFiles": [".windsurfrules"], "binaries": ["windsurf"] },
+      "instructions": { "mode": "block", "file": ".windsurfrules" },
+      "skills": { "standard": false, "claude": false }
+    },
+    {
+      "id": "aider",
+      "label": "Aider",
+      "tier": "standard",
+      "detect": { "projectFiles": [".aider.conf.yml", "CONVENTIONS.md"], "binaries": ["aider"] },
+      "instructions": { "mode": "block", "file": "CONVENTIONS.md" },
+      "skills": { "standard": false, "claude": false }
+    }
+  ]
+}

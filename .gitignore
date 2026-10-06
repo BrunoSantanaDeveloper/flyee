@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output: the CLI bundle and the packed apps. Both are rebuilt by CI.
+dist/
+packages/*/dist/
+*.tsbuildinfo
+
+# Local secrets and overrides. Real keys never enter git.
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# Local caches, test output and scratch projects used to try the CLI by hand.
+.cache/
+coverage/
+test-results/
+tmp/
+sandbox/
+
+# Editors and systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log

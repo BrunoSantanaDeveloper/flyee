@@ -1,0 +1,31 @@
+{
+  "name": "flyee-product",
+  "version": "0.0.0",
+  "private": true,
+  "description": "O produto flyee.club: a CLI publica `flyee`, o core do harness e os apps. Consome o contrato docs/CLI-CONTRACT.md da plataforma e nada mais.",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "validate": "node --experimental-strip-types --no-warnings packages/module-tools/src/cli.ts validate",
+    "pack": "node --experimental-strip-types --no-warnings packages/module-tools/src/cli.ts pack",
+    "index": "node --experimental-strip-types --no-warnings packages/module-tools/src/cli.ts index",
+    "build": "npm run build -w flyee",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "check:tarball": "node scripts/check-tarball.mjs",
+    "schema:sync": "node scripts/sync-schema.mjs",
+    "harness:sync": "node scripts/sync-agent-harness.mjs",
+    "harness:check": "node scripts/sync-agent-harness.mjs --check",
+    "harness:test": "node scripts/test-agent-harness.mjs",
+    "ci:verify": "npm run harness:check && npm run harness:test && npm run typecheck && npm test && npm run validate && npm run build && npm run check:tarball"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.0"
+  }
+}

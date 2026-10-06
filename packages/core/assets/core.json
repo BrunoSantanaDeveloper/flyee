@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "manifest_versions": [1],
+  "markers": {
+    "begin": "<!-- flyee:begin -->",
+    "end": "<!-- flyee:end -->"
+  }
+}

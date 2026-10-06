@@ -1,0 +1,42 @@
+name: Pack app
+
+# Builds the package of one app when a tag `<slug>@<version>` is pushed and
+# keeps the ZIP and its checksum as a workflow artifact. Uploading to the
+# platform stays with the operator (console) until the service token exists.
+
+on:
+  push:
+    tags: ["*@*"]
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Resolve the app and version from the tag
+        id: tag
+        run: |
+          slug="${GITHUB_REF_NAME%@*}"
+          version="${GITHUB_REF_NAME#*@}"
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - run: npm run pack -- ${{ steps.tag.outputs.slug }}
+      - name: Check the manifest version against the tag
+        run: |
+          manifest="$(node -p "require('./modules/${{ steps.tag.outputs.slug }}/flyee.module.json').version")"
+          if [ "$manifest" != "${{ steps.tag.outputs.version }}" ]; then
+            echo "Manifest version $manifest does not match tag ${{ steps.tag.outputs.version }}"; exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.tag.outputs.slug }}-${{ steps.tag.outputs.version }}
+          path: |
+            dist/modules/${{ steps.tag.outputs.slug }}-${{ steps.tag.outputs.version }}.zip
+            dist/modules/${{ steps.tag.outputs.slug }}-${{ steps.tag.outputs.version }}.zip.sha256
+          if-no-files-found: error

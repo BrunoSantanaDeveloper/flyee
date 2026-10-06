@@ -1,0 +1,36 @@
+name: Release CLI
+
+# Publishes packages/cli to npm when a tag `cli-v<version>` is pushed. The tag
+# must match the version in packages/cli/package.json. Needs the NPM_TOKEN
+# secret (automation token). Provenance ties the package to this workflow run.
+
+on:
+  push:
+    tags: ["cli-v*"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run ci:verify
+      - name: Check the tag against the package version
+        run: |
+          expected="cli-v$(node -p "require('./packages/cli/package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match $expected"; exit 1
+          fi
+      - run: npm publish -w flyee --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

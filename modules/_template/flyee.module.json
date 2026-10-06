@@ -1,0 +1,35 @@
+{
+  "manifest_version": 1,
+  "name": "meu-app",
+  "version": "1.0.0",
+  "type": "skill",
+  "trail": "divulgar",
+  "title": {
+    "pt-BR": "Meu app",
+    "en": "My app"
+  },
+  "summary": {
+    "pt-BR": "Uma frase do que o app entrega, pelo resultado e não pela técnica.",
+    "en": "One line on what the app delivers, by its result and not by its technique."
+  },
+  "compatible_ais": ["claude_code", "codex", "gemini_cli", "cursor"],
+  "min_core": ">=1.0.0",
+  "entry": "skills/meu-app/SKILL.md",
+  "files": [],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "fs:write",
+      "scope": "./saida/",
+      "reason": {
+        "pt-BR": "Grava o resultado dentro do projeto.",
+        "en": "Writes the result inside the project."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão.",
+    "en": "First version."
+  },
+  "license": "member"
+}

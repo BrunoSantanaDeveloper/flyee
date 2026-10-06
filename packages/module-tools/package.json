@@ -1,0 +1,15 @@
+{
+  "name": "@flyee-product/module-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ferramentas do operador para os apps: validate, pack (ZIP determinístico) e index. Nunca publicado.",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --no-warnings --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "fflate": "^0.8.2"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "app": "video-analysis",
+  "cases": [
+    {
+      "name": "descricao geral do youtube no modo local",
+      "setup": "ffmpeg e yt-dlp instalados; GEMINI_API_KEY não definida.",
+      "prompt": "Analise este vídeo e me diga o que aparece na tela além do que é falado: https://www.youtube.com/watch?v=jNQXAC9IVRw",
+      "assertions": [
+        { "kind": "file_exists", "path": "video-analyses/yt-jNQXAC9IVRw/descriptions/general.md" },
+        { "kind": "file_exists", "path": "video-analyses/yt-jNQXAC9IVRw/transcript.md" }
+      ],
+      "rubric": "A IA rodou check, analyze e abriu as duas grades. A descrição começa pelo cabeçalho devolvido, tem tempos em todos os itens e a seção 'Só na imagem' traz o que a fala não diz (ele se vira para os elefantes, gesticula, cenário do zoológico). Nada inventado entre frames sem '(provável)'. Não identifica a pessoa pelo rosto; o nome só aparece se vier do canal."
+    },
+    {
+      "name": "referencia de edicao sem cortes",
+      "setup": "ffmpeg e yt-dlp instalados; GEMINI_API_KEY não definida.",
+      "prompt": "Estude a edição deste vídeo de referência: ritmo de cortes, enquadramento e áudio. https://youtu.be/jNQXAC9IVRw",
+      "assertions": [{ "kind": "file_exists", "path": "video-analyses/yt-jNQXAC9IVRw/descriptions/editing.md" }],
+      "rubric": "Usa --focus editing. Diz que é um plano contínuo, sem cortes, a partir das medições, e não inventa cortes, transições ou legendas. Traz as seções do foco de edição na ordem do guia, com 'Como reproduzir' prático."
+    },
+    {
+      "name": "aula local com slides e legenda ao lado",
+      "setup": "Rode `node modules/video-analysis/tests/fixtures.mjs <pasta-de-teste>` para gerar aula.mp4 e aula.srt; ffmpeg instalado.",
+      "prompt": "Extraia o passo a passo e o que aparece escrito nos slides desta aula: aula.mp4",
+      "assertions": [{ "kind": "file_exists", "path": "video-analyses/file-aula-*/descriptions/content.md" }],
+      "rubric": "Usa --focus content. Transcreve o texto dos slides com os tempos, monta o passo a passo na ordem e aponta onde a tela diz algo que a fala (legenda .srt) não diz."
+    },
+    {
+      "name": "pergunta depois da analise",
+      "setup": "Depois do caso 'descricao geral do youtube no modo local', na mesma sessão.",
+      "prompt": "No vídeo que você analisou, para onde ele olha por volta dos 14 segundos?",
+      "assertions": [],
+      "rubric": "Responde a partir dos frames (F6 em 00:14) ou extrai o instante com o comando frame; cita o tempo; não responde de memória sem olhar."
+    },
+    {
+      "name": "maquina sem ferramentas e sem chave",
+      "setup": "Sem ffmpeg, sem yt-dlp e sem GEMINI_API_KEY.",
+      "prompt": "Resuma este vídeo para mim: https://www.youtube.com/watch?v=jNQXAC9IVRw",
+      "assertions": [],
+      "rubric": "Roda check, explica as duas saídas (instalar ffmpeg e yt-dlp com os comandos do sistema, ou definir GEMINI_API_KEY) e não finge ter assistido ao vídeo nem resume pelo título."
+    },
+    {
+      "name": "arquivo local com chave pede autorizacao",
+      "setup": "GEMINI_API_KEY definida; um arquivo meu-video.mp4 no projeto.",
+      "prompt": "Analise meu-video.mp4 com o Gemini.",
+      "assertions": [],
+      "rubric": "Pergunta antes se pode enviar o arquivo ao Google, explicando que ele é apagado em até 48 horas; só usa --allow-upload depois do sim; nunca pede a chave em texto."
+    },
+    {
+      "name": "outro app pede a analise",
+      "setup": "ffmpeg e yt-dlp instalados.",
+      "prompt": "Sou o app de edição. Siga .flyee/modules/video-analysis/references/interface.md e analise https://youtu.be/jNQXAC9IVRw com foco editing e nome app-de-edicao; depois me diga o caminho da descrição.",
+      "assertions": [{ "kind": "file_exists", "path": "video-analyses/yt-jNQXAC9IVRw/descriptions/app-de-edicao.md" }],
+      "rubric": "Usa --name app-de-edicao e --json, segue o next_step quando ready é false e devolve o caminho da descrição pronta."
+    }
+  ]
+}

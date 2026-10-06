@@ -96,7 +96,17 @@ Pelo menos um caso. Toda falha de suporte vira um caso novo. Os casos rodam ante
 
 Um app `workflow` pode ter uma metade automática. Ela roda sem ninguém presente, pela CLI e por um agendador do sistema, e por isso não tem ponto de aprovação; toda decisão fica para a metade sob demanda, que recebe o material pronto em arquivo. Declare quais passos usam a IA do integrante; onde não há raciocínio, o passo é script puro. O manifesto v2 trará o campo `automation` quando o primeiro app assim chegar (fase P4).
 
-## 9. Testar antes de publicar
+## 9. Apps que servem outros apps
+
+Um app pode ser a ferramenta de outros, como o `video-analysis`, que o app de edição chama para estudar um vídeo de referência. Enquanto o manifesto v2 não traz `requires`, a ligação é por convenção:
+
+- Comandos, opções, valores, campos do JSON e códigos de erro em inglês; mensagens, guias e descrições para o integrante em pt-BR.
+- Um script com subcomandos e `--json` em todos (`node .flyee/modules/<slug>/scripts/<script>.mjs <comando> --json`), progresso no stderr e só o JSON no stdout, erros com `code` estável, `message` e `fix`.
+- O contrato em `references/interface.md`, escrito para a IA que executa o outro app: como detectar o app (`.flyee/modules/<slug>/` existe; senão, oferecer `npx flyee add <slug>` e seguir sem ele), os comandos, os campos da saída, os erros e uma `interface_version`. Dentro de uma versão da interface, só se acrescenta; mudança que quebra é interface nova e versão maior do app.
+- O resultado fica numa pasta do projeto fora de `.flyee/`, porque `.flyee/modules/<slug>/` é trocado a cada `update` e a IA não edita `.flyee/`. Com cache por conteúdo: o mesmo pedido de outro app devolve o que já existe.
+- O app consumidor manda o que precisa (`--instructions <arquivo do próprio app>`, `--name <slug dele>`) em vez de pedir uma versão especial do app de ferramenta.
+
+## 10. Testar antes de publicar
 
 ```bash
 npm run validate

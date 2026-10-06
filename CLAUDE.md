@@ -49,4 +49,4 @@ Everything else is the operator's material and stays here: `docs/`, `.claude/`, 
 
 ## Where things stand
 
-See `docs/PLANO.md`. P0 (repository and harness), P1 (module tools) and P2 (the CLI core: login, logout, add, remove, update, status, doctor, track, dev link) were built on 2026-10-06 and tested against the fake platform; nothing has been published to npm yet and no app exists besides the template. The first app is a video-editing app the operator builds for own use before its launch video.
+See `docs/PLANO.md`. P0 (repository and harness), P1 (module tools) and P2 (the CLI core: login, logout, add, remove, update, status, doctor, track, dev link) were built on 2026-10-06 and tested against the fake platform; nothing has been published to npm yet. `modules/video-analysis` (1.0.0, built 2026-10-06, not published) analyzes videos by picture and sound and is called by other apps through its `references/interface.md`; the video-editing app the operator builds for own use before its launch video will be its first consumer. App code tests run with `npm run test:apps`.

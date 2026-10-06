@@ -1,0 +1,122 @@
+{
+  "manifest_version": 1,
+  "name": "video-analysis",
+  "version": "1.0.0",
+  "type": "tool",
+  "trail": "planejar",
+  "title": {
+    "pt-BR": "Análise de vídeo",
+    "en": "Video analysis"
+  },
+  "summary": {
+    "pt-BR": "Assiste a vídeos do YouTube ou do seu computador, com imagem e som, e entrega uma descrição com tempos do que aparece na tela, do que é dito e de como foi editado.",
+    "en": "Watches YouTube or local videos, picture and sound, and delivers a timed description of what appears on screen, what is said and how it was edited."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.0.0",
+  "entry": "skills/analyze-video/SKILL.md",
+  "files": [
+    "README.md",
+    "references/description-format.md",
+    "references/focus/content.md",
+    "references/focus/editing.md",
+    "references/focus/general.md",
+    "references/interface.md",
+    "scripts/lib/captions.mjs",
+    "scripts/lib/description.mjs",
+    "scripts/lib/frames.mjs",
+    "scripts/lib/gemini.mjs",
+    "scripts/lib/source.mjs",
+    "scripts/lib/store.mjs",
+    "scripts/lib/tools.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/lib/ytdlp.mjs",
+    "scripts/video.mjs",
+    "skills/analyze-video/SKILL.md"
+  ],
+  "external_credentials": [
+    {
+      "name": "Chave da API do Gemini",
+      "env": "GEMINI_API_KEY",
+      "url": "https://aistudio.google.com/apikey",
+      "required": false,
+      "purpose": {
+        "pt-BR": "Opcional. O Gemini assiste ao vídeo inteiro, com som, e lê vídeos públicos do YouTube sem baixar. Sem a chave, a sua IA analisa os frames que o app extrai.",
+        "en": "Optional. Gemini watches the whole video, with sound, and reads public YouTube videos without downloading. Without the key, your AI analyzes the frames the app extracts."
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/video-analysis/scripts/video.mjs",
+      "reason": {
+        "pt-BR": "O script do app prepara o vídeo, chama o Gemini quando há chave e grava a análise.",
+        "en": "The app's script prepares the video, calls Gemini when there is a key and writes the analysis."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "ffmpeg, ffprobe",
+      "reason": {
+        "pt-BR": "Lê o vídeo, mede cortes e silêncios e extrai os frames e as grades de imagens.",
+        "en": "Reads the video, measures cuts and silences and extracts frames and image grids."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "yt-dlp",
+      "reason": {
+        "pt-BR": "Baixa o vídeo, os dados e a legenda quando você passa um endereço da internet.",
+        "en": "Downloads the video, its data and captions when you pass a web address."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "youtube.com, googlevideo.com e o site do vídeo que você indicar",
+      "reason": {
+        "pt-BR": "Busca o vídeo, os dados e a legenda do endereço que você passar.",
+        "en": "Fetches the video, its data and captions from the address you pass."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "generativelanguage.googleapis.com",
+      "reason": {
+        "pt-BR": "Só com a chave do Gemini: pede a análise e, com a sua autorização, envia um arquivo local.",
+        "en": "Only with the Gemini key: requests the analysis and, with your permission, uploads a local file."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "os arquivos de vídeo e de instruções que você indicar",
+      "reason": {
+        "pt-BR": "Lê o vídeo do seu computador que você pediu para analisar e uma legenda .srt ou .vtt ao lado dele.",
+        "en": "Reads the video from your computer you asked to analyze and an .srt or .vtt caption next to it."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./video-analyses/",
+      "reason": {
+        "pt-BR": "Grava as descrições, a transcrição, os dados medidos, os frames e as grades de cada vídeo.",
+        "en": "Writes each video's descriptions, transcript, measured data, frames and grids."
+      }
+    },
+    {
+      "kind": "env",
+      "scope": "GEMINI_API_KEY",
+      "reason": {
+        "pt-BR": "Lê a chave do Gemini, quando definida. Ela nunca é gravada nem mostrada.",
+        "en": "Reads the Gemini key, when set. It is never written or shown."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: descrição com tempos de vídeos do YouTube, de outros sites e de arquivos locais; modo local sem chave (frames por mudança de cena, cortes, silêncios, grades e transcrição pela legenda) e modo Gemini com chave; focos geral, edição e conteúdo; perguntas sobre o vídeo; frames extras sob demanda; interface para outros apps.",
+    "en": "First version: timed descriptions of YouTube, other sites' and local videos; keyless local mode (frames at scene changes, cuts, silences, grids and captions as transcript) and Gemini mode with a key; general, editing and content focuses; questions about the video; extra frames on demand; an interface for other apps."
+  },
+  "license": "member"
+}

@@ -23,6 +23,9 @@
 const AI_VOCABULARY =
   /(?<![\p{L}\p{N}])(crucial|robust[oa]s?|inovador(?:a|es)?|poderos[oa]s?|transformador(?:a|es)?|disruptiv[oa]s?|vibrante|aprimorar|alavancar|potencializar|impulsionar|desbloquear|sem esfor[çc]o|jornada|incr[íi]vel|revolucion[áa]ri[oa])(?![\p{L}\p{N}])/iu;
 
+/** Dashes per thousand words in human pt-BR prose; above it, the dashes are likely decoration. */
+const HUMAN_DASHES_PER_THOUSAND = 3;
+
 /** Decorative connectors opening a paragraph. */
 const OPENING_CONNECTOR =
   /^(?:al[ée]m disso|no entanto|por outro lado|dessa forma|desse modo|nesse sentido|diante disso|adicionalmente|por conseguinte|vale ressaltar|vale destacar|[ée] importante (?:ressaltar|notar|destacar))(?![\p{L}\p{N}])/iu;
@@ -80,12 +83,19 @@ export function lintMemberText(text, options = {}) {
   if (/\p{L}—\p{L}/u.test(prose)) {
     violations.push("[travessao-colado] travessão colado entre palavras: sempre erro em português. Use vírgula, dois-pontos ou ponto.");
   }
-  const dashes = (prose.match(/\s[—–]\s|\s[—–]$|^[—–]\s/gmu) ?? []).length;
+  // Dashes in sentences only: a table cell holding "—" means "no default" and "## Nome — subtítulo" is a label,
+  // both structure. The warning starts above the human baseline, because the travessão is correct Portuguese;
+  // at "any dash" it flagged 7 app references whose 21 dashes were all cells, headings or a cited symbol.
+  const sentences = prose
+    .split("\n")
+    .filter((line) => !/^\s*(?:\||#)/.test(line))
+    .join("\n");
+  const dashes = (sentences.match(/\s[—–]\s|\s[—–]$|^[—–]\s/gmu) ?? []).length;
   if (options.teachesPatterns) return { violations, advisories, dashes, words };
-  if (dashes > 0) {
-    const density = (dashes / words) * 1000;
+  const density = (dashes / words) * 1000;
+  if (density > HUMAN_DASHES_PER_THOUSAND) {
     advisories.push(
-      `[travessao] ${dashes} travessão(ões) em ${words} palavras (${density.toFixed(1)} por mil; texto humano fica perto de 3). Se vírgula, dois-pontos ou ponto cabem sem perda, era decoração.`,
+      `[travessao] ${dashes} travessão(ões) em ${words} palavras (${density.toFixed(1)} por mil; texto humano fica perto de ${HUMAN_DASHES_PER_THOUSAND}). Se vírgula, dois-pontos ou ponto cabem sem perda, era decoração.`,
     );
   }
   for (const paragraph of prose.split(/\n\s*\n/)) {

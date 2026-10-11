@@ -26,6 +26,13 @@ describe("the pt-BR writing check", () => {
     assert.deepEqual(cited.advisories, []);
   });
 
+  it("counts dashes in sentences only, and warns above the human baseline", () => {
+    const filler = "o app grava a tela e entrega o vídeo pronto para postar nas redes ".repeat(30);
+    assert.deepEqual(lintMemberText(`${filler}— uma vez.`).advisories, [], "one dash in 400 words is human");
+    assert.deepEqual(lintMemberText("## Vitrine — limpo\n\n| campo | padrão |\n|---|---|\n| título | — |\n\nTexto.").advisories, [], "headings and table cells are structure");
+    assert.equal(lintMemberText("Isso — e aquilo — e mais isso — sempre.").dashes, 3);
+  });
+
   it("warns on a paragraph that opens with a decorative connector", () => {
     assert.ok(lintMemberText("Além disso, o app grava.").advisories.some((advisory) => advisory.startsWith("[conector]")));
   });

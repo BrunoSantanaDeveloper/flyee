@@ -114,6 +114,10 @@ Declare `env` com o nome da chave e `fs:read` com `~/.flyee/keys.json`. O app e 
 
 Escreva para quem nunca viu o app: o que ele faz, o que precisa, como usar com um prompt de exemplo ("Peça assim: …"), o que ele grava e onde, e o modo sem chave. Esse texto vira a página do app na plataforma e o `/flyee guia <app>` dentro da IA.
 
+**A escrita é conferida.** Todo `.md` que vai no pacote, e os textos do core, passam por um verificador de pt-BR depois de cada escrita e no `npm run validate`. Ele bloqueia travessão colado entre palavras e avisa sobre excesso de travessões, adjetivos de avaliação típicos de IA ("crucial", "robusto", "poderoso"…) e fórmulas como "não é só X, é Y". Texto entre aspas conta como citação e não é conferido, então um guia pode listar a fórmula que manda evitar. Para reescrever um trecho, use a skill `humanizer-pt-br`. Regra nova no verificador só entra depois de rodar contra todos os textos que já existem sem marcar o que está certo.
+
+**App que escreve pelo integrante.** Se o app produz texto para o público do integrante (roteiro, legenda, post, texto de carrossel), o último passo da skill antes de entregar manda a IA revisar o texto com a skill `texto-natural`, que o core instala em todo projeto. O perfil de voz que o app guardou manda sobre ela. Declare `"min_core": ">=1.3.0"`, o primeiro core que a instala.
+
 ## 7. Avaliação
 
 `tests/eval.json`:

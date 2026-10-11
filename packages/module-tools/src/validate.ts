@@ -7,6 +7,7 @@ import { crossFieldErrors, MAX_UNCOMPRESSED_BYTES, type Manifest, readManifest, 
 import { listModuleDirs } from "./paths.ts";
 import { PLACEHOLDER, placeholdersIn } from "./placeholders.ts";
 import { referencedApps } from "./relations.ts";
+import { lintMemberText } from "./text-lint.mjs";
 
 export type Report = {
   slug: string;
@@ -154,6 +155,10 @@ export function validateModule(dir: string): Report {
   // The member never opens a terminal: their AI installs programs (`npx flyee need`) and opens the key page.
   for (const file of files.filter((candidate) => candidate.endsWith(".md"))) {
     const text = safeRead(join(dir, ...file.split("/")));
+    // pt-BR writing (text-lint.mjs, shared with the PostToolUse hook): hard rules are errors, the rest one warning per file.
+    const writing = lintMemberText(text);
+    for (const violation of writing.violations) report.errors.push(`${file}: ${violation}`);
+    if (writing.advisories.length) report.warnings.push(`${file}: ${writing.advisories.join(" ")}`);
     if (MEMBER_INSTALL.test(text)) {
       report.errors.push(`${file}: tells someone to install a program by hand; the AI installs it with \`npx flyee need <program> --yes --json\``);
     }

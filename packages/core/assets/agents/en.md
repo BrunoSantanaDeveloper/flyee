@@ -7,6 +7,7 @@ This project uses flyee.club apps, installed and updated by the `npx flyee` CLI.
 Rules for the AI in this project:
 
 - Before doing a task an installed app covers, load its skill and follow it.
+- Portuguese text meant for an audience (a script, a post, a caption, a page): before delivering it, review it with the `texto-natural` skill, which removes the marks of AI-generated text. A voice the member defined in an app takes precedence over it.
 - Programs an app uses (ffmpeg, yt-dlp and others): install them yourself with `npx flyee need <program> --yes --json`, after saying in one sentence what you will install. Use a long time limit (10 minutes). Only when the result carries `needs_member` (an administrator password, a missing package manager), show the member the one step it gives. Never hand them install commands to run.
 - Apps' external keys (for APIs): run `npx flyee key set <NAME> --json` yourself. It opens a page in the member's browser where they paste the key; it lives in `~/.flyee/keys.json`, outside the project, and never goes through the conversation. To see what is missing, `npx flyee key list --json` (names only).
 - Never ask for a key in plain text, never put it in a command, never open `~/.flyee/keys.json` and never write a key into a project file.

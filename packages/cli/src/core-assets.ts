@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import type { Locale } from "./context.ts";
@@ -38,6 +38,12 @@ export type CoreAssets = {
   programs: Map<string, ProgramSpec>;
   agentsTemplate: (locale: Locale) => string;
   flyeeSkill: (locale: Locale) => string;
+  /**
+   * Every skill the core installs in a member project (`assets/skills/<name>`):
+   * a skill with `pt-BR`/`en` folders is written in the member's language, any
+   * other is written as it is, with every file of its folder (a LICENSE too).
+   */
+  coreSkills: (locale: Locale) => { name: string; files: Record<string, string> }[];
 };
 
 function resolveRoot(): string {
@@ -62,6 +68,22 @@ export function loadCoreAssets(): CoreAssets {
     programs: programsRegistry(JSON.parse(read("programs.json")) as ProgramsRegistry),
     agentsTemplate: (locale) => read(`agents/${locale === "en" ? "en" : "pt-BR"}.md`),
     flyeeSkill: (locale) => read(`skills/flyee/${locale === "en" ? "en" : "pt-BR"}/SKILL.md`),
+    coreSkills: (locale) => {
+      const skillsRoot = `${root}/skills`;
+      return readdirSync(skillsRoot, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => {
+          const localized = existsSync(`${skillsRoot}/${entry.name}/pt-BR`);
+          const folder = localized ? `${skillsRoot}/${entry.name}/${locale === "en" ? "en" : "pt-BR"}` : `${skillsRoot}/${entry.name}`;
+          const files: Record<string, string> = {};
+          for (const file of readdirSync(folder, { withFileTypes: true })) {
+            if (file.isFile()) files[file.name] = readFileSync(`${folder}/${file.name}`, "utf8");
+          }
+          return { name: entry.name, files };
+        })
+        .filter((skill) => "SKILL.md" in skill.files)
+        .sort((a, b) => a.name.localeCompare(b.name));
+    },
   };
   return cached;
 }

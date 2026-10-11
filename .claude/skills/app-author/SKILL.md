@@ -41,6 +41,8 @@ Present the four groups to the operator in a short table, with your recommendati
 - `README.md`: what the app does, what it needs (programs, keys, other flyee apps) said as what the AI takes care of ("a sua IA instala o ffmpeg na primeira vez", "a IA abre uma página para você colar a chave"), how to use it with one example prompt ("Peça assim: …"), what it writes and where, and the "sem a chave" section when there are credentials. This text becomes the app page on the platform.
 - `skills/<name>/SKILL.md`: frontmatter `name` (equals the folder) and `description` (what and when, under 400 characters); body with the steps, the rule that never breaks, and relative references to `references/` and `scripts/` resolved from the skill's own folder. Calls to other apps go through `.flyee/modules/<other>/…` exactly as their interface says.
 - Declare `permissions` for everything touched (`fs:read`, `fs:write`, `network`, `shell`, `env`) with a reason the member understands, including the commands of other apps the skill runs.
+- **Writing.** Everything above is pt-BR prose a member reads. The text check (hook after each write, and `validate`) blocks an em dash glued between words and warns on dash density, evaluative AI vocabulary and AI formulas; quoted text counts as citation and is skipped. Before handing over, pass the README and the skill bodies through the `humanizer-pt-br` skill.
+- **Apps that write for the member's audience** (scripts, captions, posts, carousel text): the skill's last step before delivering has the AI review the text with the core skill `texto-natural`, keeping the voice profile the app stored as the higher rule. Declare `"min_core": ">=1.3.0"`, the first core that installs it.
 
 ## 4. Write for yourself
 

@@ -11,8 +11,25 @@ command_windows = "node -e \"const{execFileSync}=require('node:child_process');c
 timeout = 30
 statusMessage = "Loading app authoring guardrails"
 
+[[hooks.PreToolUse]]
+matcher = "^(?:shell|local_shell|exec_command|Bash|PowerShell)$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = 'node "$(git rev-parse --show-toplevel)/.claude/hooks/release-guard.mjs"'
+command_windows = "node -e \"const{execFileSync}=require('node:child_process');const{join}=require('node:path');const{pathToFileURL}=require('node:url');const root=execFileSync('git',['rev-parse','--show-toplevel'],{encoding:'utf8'}).trim();import(pathToFileURL(join(root,'.claude','hooks',process.argv[1])).href)\" release-guard.mjs"
+timeout = 30
+statusMessage = "Checking for irreversible commands"
+
 [[hooks.PostToolUse]]
 matcher = "^(?:apply_patch|Edit|Write)$"
+
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = 'node "$(git rev-parse --show-toplevel)/.claude/hooks/text-lint.mjs"'
+command_windows = "node -e \"const{execFileSync}=require('node:child_process');const{join}=require('node:path');const{pathToFileURL}=require('node:url');const root=execFileSync('git',['rev-parse','--show-toplevel'],{encoding:'utf8'}).trim();import(pathToFileURL(join(root,'.claude','hooks',process.argv[1])).href)\" text-lint.mjs"
+timeout = 30
+statusMessage = "Checking the member-facing pt-BR text"
 
 [[hooks.PostToolUse.hooks]]
 type = "command"

@@ -37,7 +37,9 @@ export async function runDoctor(ctx: Context): Promise<Result> {
       adapters[tool.instructions.file] = Boolean(content && content.split(/\r?\n/).some((line) => line.trim() === tool.instructions.pointer));
     }
   }
-  for (const dir of assets.tools.always.skillDirs) adapters[`${dir}/flyee`] = existsSync(join(ctx.cwd, ...dir.split("/"), "flyee", "SKILL.md"));
+  for (const skill of assets.coreSkills(ctx.locale)) {
+    for (const dir of assets.tools.always.skillDirs) adapters[`${dir}/${skill.name}`] = existsSync(join(ctx.cwd, ...dir.split("/"), skill.name, "SKILL.md"));
+  }
   ctx.io.out(t(ctx, "doctor.adapters", { list: Object.entries(adapters).map(([name, ok]) => `${name} ${ok ? "ok" : "missing"}`).join(", ") }));
 
   const integrity: Record<string, { intact: number; changed: string[] }> = {};

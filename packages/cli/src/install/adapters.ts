@@ -121,14 +121,20 @@ export function removeBridges(ctx: Context, paths: string[]): void {
   }
 }
 
-/** The `/flyee` menu skill in both skill directories, in the member's language. */
-export function writeFlyeeSkill(ctx: Context, assets: CoreAssets): string[] {
+/**
+ * The core's own skills (the `/flyee` menu, `texto-natural`…) in both skill
+ * directories, each with every file of its folder, a LICENSE included.
+ */
+export function writeCoreSkills(ctx: Context, assets: CoreAssets): string[] {
   const written: string[] = [];
-  const content = assets.flyeeSkill(ctx.locale);
-  for (const dir of assets.tools.always.skillDirs) {
-    const relative = `${dir}/flyee/SKILL.md`;
-    writeFileAtomic(join(ctx.cwd, ...relative.split("/")), content);
-    written.push(relative);
+  for (const skill of assets.coreSkills(ctx.locale)) {
+    for (const dir of assets.tools.always.skillDirs) {
+      for (const [file, content] of Object.entries(skill.files)) {
+        const relative = `${dir}/${skill.name}/${file}`;
+        writeFileAtomic(join(ctx.cwd, ...relative.split("/")), content);
+        written.push(relative);
+      }
+    }
   }
   return written;
 }
@@ -184,7 +190,7 @@ export function applyAdapters(ctx: Context, assets: CoreAssets, lock: Lock): Ada
       }
     }
   }
-  for (const relative of writeFlyeeSkill(ctx, assets)) written.push(relative);
+  for (const relative of writeCoreSkills(ctx, assets)) written.push(relative);
 
   const managed = new Set(lock.managed_files);
   for (const path of [...written, ...unchanged]) managed.add(path);

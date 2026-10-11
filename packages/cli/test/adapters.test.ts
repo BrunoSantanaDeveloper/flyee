@@ -67,6 +67,11 @@ describe("adapters for detected tools", () => {
     assert.ok(rules.startsWith("my rules\n") && rules.includes("flyee.club"));
     assert.ok(readFileSync(join(cwd, "AGENTS.md"), "utf8").includes("No app installed yet"));
     assert.ok(readFileSync(join(cwd, ".agents", "skills", "flyee", "SKILL.md"), "utf8").includes("name: flyee"));
+    for (const dir of [".agents", ".claude"]) {
+      assert.ok(readFileSync(join(cwd, dir, "skills", "texto-natural", "SKILL.md"), "utf8").includes("name: texto-natural"), `texto-natural in ${dir}`);
+      assert.ok(readFileSync(join(cwd, dir, "skills", "texto-natural", "LICENSE"), "utf8").startsWith("MIT License"), `the MIT notice goes with the copy in ${dir}`);
+    }
+    assert.ok(readFileSync(join(cwd, "AGENTS.md"), "utf8").includes("texto-natural"));
     assert.ok(lock.managed_files.includes("AGENTS.md") && lock.managed_files.includes("CLAUDE.md"));
     const second = applyAdapters(ctx, assets, lock);
     assert.ok(second.unchanged.includes("AGENTS.md"), "idempotent on the second run");

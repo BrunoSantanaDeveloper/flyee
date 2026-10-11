@@ -62,7 +62,9 @@ Canonical skill content lives only in \`.claude/skills/*\`.
 version, link into the workspace, use, publish). Load the \`app-author\`
 skill before writing under \`modules/\` and start a new app at its step 0,
 against the apps catalog included below; \`cli-dev\` before writing under
-\`packages/cli\` or \`packages/core\`; \`app-release\` when publishing.
+\`packages/cli\` or \`packages/core\`; \`app-release\` when publishing;
+\`project-doc\` before writing a plan, audit or evaluation under \`docs/\`;
+\`humanizer-pt-br\` to rewrite pt-BR text that reaches members.
 Canonical hook implementations live only in \`.claude/hooks/*\`
 and support both agents; Codex discovers them through \`.codex/config.toml\`.
 After changing any harness source, run \`npm run harness:check\` and

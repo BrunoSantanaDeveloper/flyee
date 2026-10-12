@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
@@ -13,7 +13,7 @@ import { repoRoot } from "../src/paths.ts";
 import { PLACEHOLDER } from "../src/placeholders.ts";
 import { readInterface, referencedApps } from "../src/relations.ts";
 import { isSafePackagePath } from "../src/safe-path.ts";
-import { bumpApp, nextVersion, scaffoldApp } from "../src/scaffold.ts";
+import { bumpApp, copyDir, nextVersion, scaffoldApp } from "../src/scaffold.ts";
 import { compareSemver, isSemver, minimumOfRange } from "../src/semver.ts";
 import { validateAll, validateModule } from "../src/validate.ts";
 import { isInsideRepo, workspaceState } from "../src/workspace.ts";
@@ -48,7 +48,7 @@ before(() => {
   sandbox = mkdtempSync(join(tmpdir(), "flyee-tools-"));
   root = join(sandbox, "modules");
   mkdirSync(root, { recursive: true });
-  cpSync(join(repoRoot, "modules", "_template"), join(root, "_template"), { recursive: true });
+  copyDir(join(repoRoot, "modules", "_template"), join(root, "_template"));
 });
 after(() => {
   rmSync(sandbox, { recursive: true, force: true });
@@ -175,7 +175,7 @@ describe("validate", () => {
     const a = makeApp("app-a");
     const b = makeApp("app-b");
     for (const [dir, slug] of [[a, "app-a"], [b, "app-b"]] as const) {
-      cpSync(join(dir, "skills", slug), join(dir, "skills", "shared"), { recursive: true });
+      copyDir(join(dir, "skills", slug), join(dir, "skills", "shared"));
       const shared = join(dir, "skills", "shared", "SKILL.md");
       writeFileSync(shared, readFileSync(shared, "utf8").replace(`name: ${slug}`, "name: shared"));
       writeFilesToManifest(dir);

@@ -1,6 +1,21 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+
+/**
+ * Copies a folder file by file. `fs.cpSync` is not used on purpose: on Node 24 for
+ * Windows it writes a destination with accents ("C:\Users\João\…", common among
+ * members) into a sibling folder with a garbled name and reports no error.
+ */
+export function copyDir(source: string, target: string): void {
+  mkdirSync(target, { recursive: true });
+  for (const entry of readdirSync(source, { withFileTypes: true })) {
+    const from = join(source, entry.name);
+    const to = join(target, entry.name);
+    if (entry.isDirectory()) copyDir(from, to);
+    else if (entry.isFile()) copyFileSync(from, to);
+  }
+}
 
 export function ensureDir(path: string): void {
   mkdirSync(path, { recursive: true });

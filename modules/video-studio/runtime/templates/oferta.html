@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vídeo animado · oferta</title>
+<style>
+  html, body { margin: 0; background: #101012; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="motion.js"></script>
+<script src="studio.js"></script>
+<script id="roteiro" type="application/json">__ROTEIRO__</script>
+<script>
+  // Roteiro "oferta": gancho → o produto em destaque → o preço batendo na tela → o prazo → a chamada.
+  // Dois elementos atravessam o filme: a imagem do produto (nasce em cartão, mergulha até virar o quadro inteiro
+  // quando o preço chega) e a chapa do preço (sobe, segura o valor e encolhe até virar o botão da chamada).
+  // Tudo aqui é função do tempo: os momentos são BATIDAS contadas do início de cada cena.
+  // Guia desta página: references/pagina-do-video.md. Os textos e os tempos vêm do bloco de dados acima.
+  Studio.load();
+  const R = Studio.roteiro, TL = Studio.timeline, ST = Studio.style, Q = Studio.Q;
+  const film = Motion.setup({ title: R.title || "Oferta", duration: TL.duration, width: R.width, height: R.height, fps: 30, background: Studio.palette.background });
+  film.cuts = TL.cuts;
+  const S = Studio.stage(document.getElementById("c"));
+  document.body.style.background = Studio.palette.background;
+  window.setFormat = S.setFormat;
+  window.boxes = S.boxes;
+  window.seek = S.seek;
+
+  // A chamada acontece no fundo em que o logo nasceu.
+  S.worlds({ fechamento: "native" });
+
+  const clamp = Motion.clamp, lerp = Motion.lerp, phase = Motion.phase, ease = Motion.ease;
+  const filled = (v) => typeof v === "string" && v.trim().length > 0;
+  const scene = (role) => TL.scenes.find((s) => s.role === role) || null;
+  const PRODUCT = scene("produto"), PRICE = scene("preco"), DEADLINE = scene("prazo"), CLOSING = scene("fechamento");
+  const MOVE = Motion.SPRINGS[ST.springs.move] || Motion.SPRINGS.default;
+  const DIVE = 15;                                                         // quadros do mergulho do cartão até a tela inteira
+
+  // ---------- o plano: a imagem do produto, a chapa do preço e o botão ----------
+
+  let cache = null;
+  function plan() {
+    if (cache && cache.rev === S.rev) return cache;
+    const A = S.area, W = S.W, H = S.H;
+    const photo = PRODUCT ? Studio.image(PRODUCT.image) : null;
+    const screen = PRODUCT && !photo ? Studio.image(PRODUCT.screen) : null;
+    const kind = photo ? "photo" : screen ? "screen" : "color";
+    const frame = screen ? Studio.frameFor(screen) : null;
+    const P = { rev: S.rev, kind, record: photo || screen, frame };
+    if (S.vertical) {
+      P.label = { x: A.x, y: A.y, w: A.w, h: A.h * 0.22 };
+      // a foto do produto: cartão com margem, ou de lado a lado no estilo vitrine
+      const side = ST.frame === "bleed" ? 0 : S.px(60);
+      const top = A.y + A.h * 0.27;
+      P.card = ST.frame === "bleed"
+        ? { x: 0, y: top, w: W, h: S.H - top, r: 0 }                             // de lado a lado, até a base do quadro
+        : { x: side, y: top, w: W - 2 * side, h: A.h * 0.73, r: S.px(ST.radius) };
+      P.plate = { x: A.x - S.px(14), y: A.y + A.h * 0.47, w: A.w + S.px(28), h: A.h * 0.53, r: S.px(56) };
+      P.lockup = { x: A.x, y: A.y, w: A.w, h: A.h };
+    } else {
+      P.label = { x: A.x, y: A.y, w: A.w * 0.46, h: A.h * 0.3 };
+      P.card = { x: A.x + A.w * 0.52, y: A.y, w: A.w * 0.48, h: A.h, r: S.px(ST.radius) };
+      P.plate = { x: A.x - S.px(14), y: A.y + A.h * 0.2, w: A.w * 0.5, h: A.h * 0.8, r: S.px(56) };
+      P.lockup = { x: A.x, y: A.y, w: A.w, h: A.h };
+    }
+    if (kind === "screen") {
+      // uma tela em moldura: grande ao lado do nome, menor e mais alta quando a chapa do preço chega
+      const pose = (w, top) => {
+        if (!S.vertical) {
+          const hh = frame.kind === "phone" ? A.h * 1.15 : P.card.w * frame.aspect;
+          const ww = frame.kind === "phone" ? hh / frame.aspect : P.card.w;
+          return { x: P.card.x + (P.card.w - ww) / 2, y: frame.kind === "phone" ? A.y + A.h * 0.04 : A.y + (A.h - hh) / 2, w: ww, h: hh, r: frame.kind === "phone" ? ww * 0.105 : S.px(ST.radius) };
+        }
+        const ww = A.w * w * (frame.kind === "phone" ? 1 : 1.3);
+        return { x: W / 2 - ww / 2, y: A.y + A.h * top, w: ww, h: ww * frame.aspect, r: frame.kind === "phone" ? ww * 0.105 : S.px(ST.radius) };
+      };
+      P.card = pose(0.76, 0.29);
+      P.stage = pose(0.62, frame.kind === "phone" ? -0.02 : 0.06);
+    }
+    // a chamada: o logo em cima, o botão embaixo, juntos no meio da área
+    if (CLOSING) {
+      const c = S.context(CLOSING.index);
+      const showLogo = CLOSING.logo !== false;
+      const mark = showLogo ? Studio.logo(c, { x: P.lockup.x, y: 0, w: P.lockup.w, h: P.lockup.h * 0.36, align: "center", measure: true }) : { h: 0, kind: "none" };
+      const btn = Studio.button(c, CLOSING.text || "", { x: P.lockup.x + P.lockup.w / 2, y: 0, w: P.lockup.w, align: "center", measure: true });
+      const gap = mark.h ? S.px(84) : 0;
+      const top = P.lockup.y + (P.lockup.h - (mark.h + gap + btn.h)) / 2;
+      P.logoBox = { x: P.lockup.x, y: top, w: P.lockup.w, h: P.lockup.h * 0.36 };
+      P.button = { x: btn.x, y: top + mark.h + gap, w: btn.w, h: btn.h, r: btn.r };
+    }
+    P.below = { x: P.plate.x, y: H + S.px(60), w: P.plate.w, h: P.plate.h, r: P.plate.r };
+    cache = P;
+    return P;
+  }
+
+  const priceStart = () => (PRICE ? PRICE.start : Infinity);
+  const closingStart = () => (CLOSING ? CLOSING.start : TL.duration);
+  /** A respiração lenta do palco do preço (a tela e a chapa): até 3%, de volta a 1 quando a chamada começa. */
+  const hold = (T) => (PRICE && T >= PRICE.start && T < closingStart() ? 1 + 0.03 * Math.sin(Math.PI * clamp((T - PRICE.start) / Math.max(1e-6, closingStart() - PRICE.start))) : 1);
+
+  // ---------- a imagem do produto: nasce em cartão, mergulha até virar o quadro, sai num chicote ----------
+
+  S.under((f) => {
+    if (!PRODUCT) return;
+    const P = plan();
+    const T = f.T;
+    if (T < PRODUCT.start - Q || T >= closingStart()) return;
+    const c = f.context(PRODUCT.index);
+    const world = c.world;
+    const lastOnStage = TL.scenes[CLOSING ? CLOSING.index - 1 : TL.scenes.length - 1];
+    const cl = f.context(lastOnStage.index);
+    const out = CLOSING ? Studio.whip(cl, { at: cl.beats, dir: [0, -1], distance: S.H * 1.15 }) : { dx: 0, dy: 0, alpha: 1, echoes: [] };
+    const born = ST.hookExit === "zoom" ? Studio.born(c, 0) : 1;
+    const rise = ST.hookExit === "zoom" ? 0 : (1 - Motion.springBy(ST.springs.move, c.t)) * S.H * 0.8;
+
+    // o chicote da saída revela o mundo da chamada (que pode não ser o desta cena)
+    if (CLOSING && out.burst > 0.001) {
+      S.setAlpha(1);
+      S.g.fillStyle = f.context(CLOSING.index).world.bg;
+      S.g.fillRect(0, 0, S.W, S.H);
+    }
+    const paint = (ox, oy, alpha) => {
+      if (P.kind === "screen") {
+        const rect = Studio.rectAt(T, [[PRODUCT.start, P.card], [priceStart(), P.stage]], MOVE[0], MOVE[1]);
+        S.group({ scale: born * hold(T), about: [rect.x + rect.w / 2, rect.y + rect.h * 0.3], dx: ox, dy: oy + rise, alpha }, () => {
+          Studio.device(c, { rect, kind: P.frame.kind, image: P.record, scroll: 0, assemble: phase(c.t, 3 * Q, 3 * Q + Math.max(0.4, TL.beat_s * 0.9)), world });
+        });
+        return;
+      }
+      // foto ou cor: o cartão mergulha até cobrir o quadro e pousa na batida em que o preço começa
+      const d = PRICE ? Studio.dive(f.context(PRICE.index), { from: P.card, at: 0, frames: DIVE }) : { rect: P.card, k: 0 };
+      const full = T >= priceStart();
+      const rect = full ? { x: -4, y: -4, w: S.W + 8, h: S.H + 8, r: 0 } : d.rect;
+      const span = Math.max(1e-6, closingStart() - PRODUCT.start);
+      const zoom = 1.07 - 0.07 * clamp((T - PRODUCT.start) / Math.max(1e-6, priceStart() - PRODUCT.start)) + (full ? 0.05 * clamp((T - priceStart()) / span) : 0) + 0.008 * Studio.bump(f.context(f.index), 2, 2);
+      S.group({ scale: full ? 1 : born, about: [rect.x + rect.w / 2, rect.y + rect.h / 2], dx: ox, dy: oy + (full ? 0 : rise), alpha }, () => {
+        Studio.card(c, { rect, image: P.record, color: world.accent, zoom, shadow: full ? 0 : undefined, world });
+        // sem foto, o nome do produto mora dentro do cartão e mergulha com ele
+        if (P.kind === "color" && filled(PRODUCT.text) && !full) {
+          const k = rect.w / P.card.w;
+          const pad = S.px(64);
+          S.g.save();
+          Studio.roundRect(S.g, rect.x, rect.y, rect.w, rect.h, rect.r);
+          S.g.clip();
+          // o texto fica dentro do cartão e dentro da área útil (o cartão pode passar dela; o texto, não)
+          const tx = Math.max(P.card.x + pad, S.area.x), tr = Math.min(P.card.x + P.card.w - pad, S.area.x + S.area.w);
+          const tb = Math.min(P.card.y + P.card.h - pad, S.area.y + S.area.h);
+          S.group({ scale: k, about: [P.card.x, P.card.y], dx: rect.x - P.card.x, dy: rect.y - P.card.y, report: k < 1.02 }, () => {
+            Studio.headline(c, PRODUCT.text, {
+              x: tx, y: P.card.y + pad, w: tr - tx, h: tb - (P.card.y + pad), valign: "middle", size: S.px(170 * ST.type.scale), maxLines: 4,
+              at: c.hit("pop", c.beats <= 4 ? 0.5 : 1), by: "line", stagger: 0.25, emphasis: false, color: world.onAccent, out: { at: 1e9 },
+            });
+          });
+          S.g.restore();
+        }
+      });
+    };
+    for (const echo of out.echoes) paint(echo.dx, echo.dy, echo.alpha);
+    if (out.alpha > 0.003) paint(out.dx, out.dy, out.alpha);
+  });
+
+  // ---------- a chapa do preço: sobe, segura o valor e vira o botão da chamada ----------
+
+  S.under((f) => {
+    if (!PRICE) return;
+    const P = plan();
+    const T = f.T;
+    if (T < PRICE.start) return;
+    const cp = f.context(PRICE.index);
+    const Tc = closingStart();
+    const keys = [[PRICE.start - 1, P.below], [PRICE.start, P.plate]];
+    if (CLOSING) keys.push([Tc, P.button]);
+    const rect = Studio.rectAt(T, keys, MOVE[0], MOVE[1]);
+    const world = T >= Tc && CLOSING ? f.context(CLOSING.index).world : cp.world;
+    const turn = CLOSING ? clamp((T - Tc) / (6 * Q)) : 0;                    // a chapa ganha a cor do botão
+    const g = S.g;
+    S.group({ scale: hold(T), about: [P.plate.x + P.plate.w / 2, P.plate.y + P.plate.h / 2] }, () => {
+    g.save();
+    g.shadowColor = "rgba(0,0,0," + (0.22 * (1 - turn)).toFixed(3) + ")";
+    g.shadowBlur = S.px(60);
+    g.shadowOffsetY = S.px(20);
+    g.fillStyle = Studio.mix(cp.world.surface, world.accent, turn);
+    S.setAlpha(1);
+    Studio.roundRect(g, rect.x, rect.y, rect.w, rect.h, rect.r);
+    g.fill();
+    g.restore();
+    S.box("ui", rect.x, rect.y, rect.w, rect.h);
+
+    // o preço: o valor antigo chega, é riscado, e o valor novo bate na batida do impacto
+    const priceAlpha = CLOSING ? Motion.swapAlpha(T, PRICE.start, Tc) : 1;
+    if (priceAlpha > 0.003 && T < Tc) {
+      const pad = S.px(52);
+      const punch = cp.hit("impact", cp.beats <= 4 ? 1 : 2);
+      const landed = Motion.springBy(ST.springs.move, cp.t);
+      S.group({ alpha: priceAlpha, dy: (1 - landed) * (P.below.y - P.plate.y) }, () => {
+        const inner = { x: P.plate.x + pad, y: P.plate.y + pad * 1.1, w: P.plate.w - 2 * pad, h: P.plate.h - pad * 2.2 };
+        const caption = filled(PRICE.text) ? PRICE.text : "";
+        const captionSize = S.type(54);
+        const k = Studio.price(cp, { value: PRICE.value, old: PRICE.old_value, at: punch, oldAt: Math.max(0.25, punch - 1.5), x: inner.x, y: inner.y, w: inner.w, h: inner.h - (caption ? captionSize * 2.7 : 0), breathe: { amount: 0.025, every: 2, from: punch + 2 }, world: Object.assign({}, cp.world, { bg: cp.world.surface }) });
+        if (caption) Studio.body(cp, caption, { x: inner.x, y: k.bottom + S.px(40), w: inner.w, h: captionSize * 2.6, size: captionSize, maxLines: 2, weight: 600, color: cp.world.ink, at: punch + 1, in: "rise", out: { at: 1e9 } });
+        // o prazo: uma barra que se esvazia embaixo do preço
+        if (DEADLINE && T >= DEADLINE.start) {
+          const cd = f.context(DEADLINE.index);
+          const grow = Motion.springBy("snappy", cd.t);
+          const left = 1 - 0.72 * ease.inOutSine(clamp(cd.t / cd.dur));
+          const by = P.plate.y + P.plate.h - pad * 0.9, bh = S.px(14);
+          S.setAlpha(1);
+          g.fillStyle = Studio.rgba(cp.world.ink, 0.14);
+          Studio.roundRect(g, inner.x, by, inner.w * grow, bh, bh / 2);
+          g.fill();
+          g.fillStyle = cp.world.accent;
+          Studio.roundRect(g, inner.x, by, Math.max(bh, inner.w * grow * left), bh, bh / 2);
+          g.fill();
+        }
+      });
+    }
+    });
+    // a chamada entra no botão depois do começo da transformação
+    if (CLOSING && T >= Tc) {
+      const cc = f.context(CLOSING.index);
+      const press = cc.hit("click", Math.min(2, cc.beats - 1));
+      Studio.button(cc, CLOSING.text || "", { rect, plate: false, textAlpha: clamp((cc.t - 0.08) / 0.12), press: [press], breathe: { amount: 0.03, every: 2, from: press + 2 }, world: cc.world });
+    }
+  });
+
+  // ---------- o cursor aperta o botão ----------
+
+  S.over((f) => {
+    if (!ST.cursor || !CLOSING || f.T < CLOSING.start) return;
+    const P = plan();
+    const c = f.context(CLOSING.index);
+    const press = c.hit("click", Math.min(2, c.beats - 1));
+    const at = c.beat(press);
+    const x = P.button.x + P.button.w * 0.72, y = P.button.y + P.button.h * 0.62;
+    Studio.cursor(c, { keys: [[Math.max(4 * Q, at - Math.max(0.62, c.beat(1))) - 4 * Q, S.W * 1.05, y + S.px(380)], [Math.max(4 * Q, at - Math.max(0.62, c.beat(1))), x, y]], presses: [at] });
+  });
+
+  // ---------- as cenas ----------
+
+  /** Os textos do produto saem antes do mergulho, para não ficarem por cima dele. */
+  const productLeave = (c) => ({ at: plan().kind === "screen" || !PRICE ? c.beats : c.beats - ((DIVE + 1) * Q) / TL.beat_s, style: ST.between === "push" ? "lift" : "whip", dir: [0, -1] });
+
+  // Gancho: a frase já está pousada no quadro 0 (a capa); o soco, o destaque e a travessia acontecem em volta dela.
+  S.scene("gancho", { tail: 2 * Q }, (c) => {
+    const A = c.area;
+    S.group({ scale: Studio.drift(c), about: [A.x + A.w / 2, A.y + A.h / 2] }, () => {
+      Studio.headline(c, c.scene.text, {
+        x: A.x, y: A.y + A.h * 0.08, w: A.w, h: A.h * 0.8, valign: "middle", size: S.px(210 * ST.type.scale), maxLines: Math.max(4, ST.type.maxLines),
+        cover: true, punch: c.hit("impact", 0), breathe: { amount: 0.015, every: 2, from: c.hit("pop", c.beats > 4 ? 2 : 1) + 2 },
+        emphasis: { words: c.scene.emphasis, at: c.hit("pop", c.beats > 4 ? 2 : 1) },
+        out: { at: c.beats, style: ST.hookExit },
+      });
+    });
+  });
+
+  // O produto: o nome sobe acima do cartão; sem imagem, o nome vai dentro de um cartão na cor da marca.
+  S.scene("produto", (c) => {
+    if (!filled(c.scene.text)) return;
+    const P = plan();
+    if (P.kind === "color") return;                                       // o nome mora dentro do cartão (camada do produto)
+    Studio.headline(c, c.scene.text, {
+      x: P.label.x, y: P.label.y, w: P.label.w, h: P.label.h, valign: S.vertical ? "top" : "middle", size: S.px(150 * ST.type.scale), maxLines: 2,
+      at: c.hit("pop", c.beats <= 4 ? 0.5 : 1), by: "line", stagger: 0.25, emphasis: false, out: productLeave(c),
+    });
+  });
+
+  // O preço e o que vem com ele são desenhados pela chapa (acima); a cena só existe para marcar o tempo.
+  S.scene("preco", () => {});
+
+  // O prazo: uma etiqueta que bate em cima da chapa, e a barra da chapa começa a se esvaziar.
+  S.scene("prazo", (c) => {
+    const P = plan();
+    const size = S.type(52);
+    const tag = Studio.chip(c, c.scene.text, { x: P.plate.x + S.px(40), y: 0, size, measure: true });
+    Studio.chip(c, c.scene.text, { x: P.plate.x + S.px(40), y: P.plate.y - tag.h * 0.55, size, at: c.hit("pop", 0), color: c.world.ink, textColor: c.world.bg, out: { at: c.beats, style: "cut" } });
+  });
+
+  // A chamada: o logo entra em cima do botão (a chapa que encolheu); o cursor aperta.
+  S.scene("fechamento", (c) => {
+    const P = plan();
+    if (c.scene.logo === false) return;
+    const A = c.area;
+    S.group({ scale: Studio.drift(c), about: [A.x + A.w / 2, A.y + A.h / 2] }, () => {
+      Studio.logo(c, { x: P.logoBox.x, y: P.logoBox.y, w: P.logoBox.w, h: P.logoBox.h, align: "center", at: c.hit("impact", 0.5), plate: c.world.bg });
+    });
+  });
+</script>
+</body>
+</html>

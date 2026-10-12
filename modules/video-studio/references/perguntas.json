@@ -1,0 +1,461 @@
+{
+  "format_version": 1,
+  "note": "As perguntas do Estúdio de vídeo: o texto de cada uma, as opções (a primeira é a recomendada), o padrão, quando ela é feita e quando é pulada. As perguntas chegam prontas no resultado dos comandos intake, answer e capture (em `round`); use-as como estão. Os nomes entre chaves ({site}, {nome}) são preenchidos pelo script com o que já se sabe.",
+  "decide_line": "Responda só o que quiser; o que ficar sem resposta, eu decido pelo que já sei.",
+  "chat": {
+    "footer": "Responda só o que quiser mudar (por exemplo, {exemplo}) ou \"ok\" para seguir com os padrões.",
+    "footer_text_only": "Responda aqui mesmo, ou diga \"ok\" para eu decidir pelo que já sei.",
+    "recommended": " (recomendado)",
+    "default": " (padrão)"
+  },
+  "limits": { "per_round": 4, "total": 12, "partial": 3, "options": 4 },
+  "rounds": [
+    { "n": 1, "stage": "round1", "title": "O vídeo" },
+    { "n": 2, "stage": "round2", "title": "A história" },
+    { "n": 3, "stage": "round3", "title": "O jeito" }
+  ],
+  "partial": {
+    "title": "Antes de começar",
+    "note": "Pedido quase completo: uma rodada só, com no máximo três perguntas, nesta ordem de prioridade. O que sobra vira padrão, dito na frase do plano.",
+    "priority": ["marca", "assunto", "objetivo", "pontos", "onde", "duracao", "som"]
+  },
+  "story_order": {
+    "note": "O roteiro recomendado para cada objetivo vem primeiro; os dois seguintes são as alternativas mostradas.",
+    "apresentar": ["lancamento", "interface", "lista"],
+    "lancar": ["lancamento", "interface", "oferta"],
+    "portfolio": ["lancamento", "interface", "lista"],
+    "vender": ["oferta", "lancamento", "lista"],
+    "explicar": ["lista", "interface", "lancamento"]
+  },
+  "styles": {
+    "interface-narra": { "label": "A interface conta a história", "description": "As telas reais do seu site se montam e um cursor mostra o caminho." },
+    "interface-que-se-transforma": { "label": "Interface que se transforma", "description": "Um único elemento muda de forma a cada batida, sem cortes." },
+    "limpo": { "label": "Limpo", "description": "Muito espaço, poucos elementos e movimentos precisos." },
+    "tipografia-cinetica": { "label": "Letras em movimento", "description": "Frases grandes entrando na batida, quase sem imagens." },
+    "vitrine": { "label": "Vitrine", "description": "Os seus produtos em destaque, um por vez, com nome e preço." }
+  },
+  "unsupported": {
+    "note": "O que dizer, numa frase simples e sem link, quando o pedido inclui algo que esta versão não faz.",
+    "edit": "Nesta versão eu faço vídeos animados do zero e ainda não edito gravações. Posso fazer um vídeo animado sobre o mesmo assunto.",
+    "generated": "Nesta versão eu não gero cenas nem pessoas: o vídeo é animado com o logo, as cores, as telas e as fotos reais da sua marca. Posso fazer assim.",
+    "format": "Nesta versão o vídeo sai na vertical (9:16), o formato de Reels, TikTok e Shorts. Os outros formatos ainda não saem daqui; faço o vertical.",
+    "reference_study": "Nesta versão eu ainda não assisto a vídeos de referência. Se quiser, diga em uma frase o que você gosta nele (o ritmo, as cores, o jeito do texto) e eu sigo por aí.",
+    "long": "Nesta versão o vídeo tem até 20 segundos. Faço com 20."
+  },
+  "questions": [
+    {
+      "id": "marca",
+      "field": "brand",
+      "stage": "round1",
+      "header": "Marca",
+      "text": "De qual marca ou negócio é o vídeo? Mande o site, o @ ou só o nome, que eu procuro.",
+      "options": [
+        { "from": "candidates", "max": 3, "label": "{candidato}", "description": "{origem do candidato}" },
+        { "value": "sem-marca", "label": "Sem marca", "description": "Um vídeo neutro, de cores genéricas." }
+      ],
+      "default": { "rule": "first_candidate" },
+      "decide": "keep_open",
+      "multi": false,
+      "free_text": true,
+      "free_text_hint": "Se o vídeo não for de uma marca, diga “sem marca”: faço um vídeo neutro, de cores genéricas.",
+      "priority": 1,
+      "ask_when": { "note": "O pedido não diz a marca e não há uma marca guardada nem um site no projeto. Com mais de uma marca guardada, elas viram as opções." },
+      "skip_when": { "note": "A marca veio no pedido, numa resposta, de um site do projeto ou de uma marca guardada.", "sources": ["pedido", "resposta", "projeto", "marca"] }
+    },
+    {
+      "id": "objetivo",
+      "field": "objective",
+      "stage": "round1",
+      "header": "Objetivo",
+      "text": "O que este vídeo precisa fazer?",
+      "options": [
+        { "value": "apresentar", "label": "Apresentar e levar ao site", "description": "Mostra quem você é e convida a conhecer." },
+        { "value": "vender", "label": "Vender uma oferta ou novidade", "description": "Um produto em destaque, com preço e prazo." },
+        { "value": "explicar", "label": "Explicar como funciona", "description": "Um passo de cada vez, em poucas palavras." },
+        { "value": "portfolio", "label": "Mostrar meu trabalho", "description": "Os seus melhores resultados, um atrás do outro." }
+      ],
+      "default": "apresentar",
+      "multi": false,
+      "free_text": true,
+      "priority": 3,
+      "ask_when": { "note": "O pedido não diz para que serve o vídeo (apresentar, vender, lançar, explicar, mostrar o trabalho)." },
+      "skip_when": { "note": "O objetivo veio no pedido ou numa resposta, ou o pedido já trouxe a história (aí o objetivo é o dela).", "sources": ["pedido", "resposta", "inferido"] }
+    },
+    {
+      "id": "onde",
+      "field": "destinations",
+      "stage": "round1",
+      "header": "Onde postar",
+      "text": "Onde você vai publicar? Pode marcar mais de um. Nesta versão o vídeo sai sempre na vertical, que é o formato dos três.",
+      "options": [
+        { "value": "reels", "label": "Reels do Instagram", "description": "Com o texto longe dos botões do Instagram." },
+        { "value": "tiktok", "label": "TikTok", "description": "Com o texto longe dos botões do TikTok." },
+        { "value": "shorts", "label": "Shorts do YouTube", "description": "Com o texto longe dos botões do YouTube." }
+      ],
+      "default": ["reels", "tiktok", "shorts"],
+      "multi": true,
+      "free_text": false,
+      "priority": 5,
+      "ask_when": { "note": "O pedido não cita Reels, Instagram, TikTok, Shorts nem \"as redes\"." },
+      "skip_when": { "note": "O pedido ou uma resposta já disse onde o vídeo vai.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "duracao",
+      "field": "duration",
+      "stage": "round1",
+      "header": "Duração",
+      "text": "Quanto tempo de vídeo?",
+      "options": [
+        { "value": "15", "label": "15 segundos", "description": "Cabe uma abertura, três pontos e o fechamento." },
+        { "value": "20", "label": "20 segundos", "description": "Mais fôlego: bom para uma oferta ou para quatro pontos." },
+        { "value": "10", "label": "10 segundos", "description": "Bem direto: uma abertura, um ou dois pontos e o fechamento." }
+      ],
+      "default": { "rule": "duration" },
+      "multi": false,
+      "free_text": true,
+      "hint": "Pode ser outro tempo, de 6 a 20 segundos.",
+      "priority": 6,
+      "ask_when": { "note": "O pedido não diz o tempo. O padrão é 15 segundos; 20 quando o objetivo é vender." },
+      "skip_when": { "note": "O pedido ou uma resposta já disse o tempo.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "assunto",
+      "field": "subject",
+      "stage": "round2",
+      "header": "Assunto",
+      "text": "O que este vídeo divulga?",
+      "options": [
+        { "value": "marca", "label": "A marca em geral", "description": "O negócio como um todo, sem um produto específico.", "when": "brand" },
+        { "from": "kit.products", "max": 1, "label": "{produto}", "description": "O produto em destaque no seu site." },
+        { "from": "kit.news", "max": 1, "label": "{novidade}", "description": "Também aparece no seu site." },
+        { "value": "outro", "label": "Outro: produto ou promoção", "description": "Escreva qual é, com preço e data se houver.", "free": true }
+      ],
+      "default": { "rule": "general_subject" },
+      "multi": false,
+      "free_text": true,
+      "waits_for_capture": true,
+      "priority": 2,
+      "ask_when": { "note": "O pedido não diz o que o vídeo divulga. Depois da visita ao site, o produto em destaque e a novidade viram opções." },
+      "skip_when": { "note": "O pedido ou uma resposta já disse o assunto, ou o pedido trouxe a história inteira.", "sources": ["pedido", "resposta", "inferido"] }
+    },
+    {
+      "id": "roteiro",
+      "field": "template",
+      "stage": "round2",
+      "header": "História",
+      "text": "Que história ele conta? Eu sugiro:",
+      "options": [
+        { "from": "stories", "max": 3, "label": "{roteiro}", "description": "{descrição do roteiro}" },
+        { "value": "ideia", "label": "Tenho outra ideia", "description": "Conte em uma ou duas frases; eu adapto o roteiro mais próximo.", "free": true }
+      ],
+      "default": { "rule": "template" },
+      "multi": false,
+      "free_text": true,
+      "chat_descriptions": true,
+      "priority": 8,
+      "ask_when": { "note": "Só no briefing guiado. O roteiro recomendado vem do objetivo: vender pede a oferta, explicar pede a lista, os demais pedem o lançamento." },
+      "skip_when": { "note": "O pedido descreveu a história com as próprias palavras (uma lista de estados, \"3 dicas\", preço e prazo, um lançamento) ou uma resposta já escolheu.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "pontos",
+      "field": "points",
+      "stage": "round2",
+      "header": "Pontos",
+      "text": "Quais 3 coisas você quer mostrar?",
+      "options": [
+        { "from": "kit.points", "max": 3, "label": "{ponto}", "description": "Está no seu site." },
+        { "value": "outras", "label": "Outras: escrevo", "description": "Escreva até cinco, separadas por ponto e vírgula.", "free": true }
+      ],
+      "default": { "rule": "listed" },
+      "decide": "keep_open",
+      "multi": true,
+      "free_text": true,
+      "waits_for_capture": true,
+      "priority": 4,
+      "ask_when": { "note": "Só nos roteiros que mostram pontos um a um (lançamento e lista). As opções são os títulos das seções e os produtos do site.", "story": ["lancamento", "lista"] },
+      "skip_when": { "note": "O pedido ou uma resposta já listou o que mostrar.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "numero",
+      "field": "proof",
+      "stage": "round2",
+      "header": "Número",
+      "text": "Tem algum resultado que prove que funciona? Só uso número que você me der ou que esteja publicado.",
+      "options": [
+        { "value": "nenhum", "label": "Não mostrar números", "description": "O vídeo segue sem a cena do número." },
+        { "value": "outro", "label": "Tenho um: escrevo", "description": "Escreva o número e o que ele mede, por exemplo: +2 mil clientes atendidos.", "free": true }
+      ],
+      "default": "nenhum",
+      "variants": [
+        {
+          "when": "number",
+          "note": "A visita ao site achou um número publicado.",
+          "text": "Achei este número no seu site: “{número}”. Posso mostrar?",
+          "options": [
+            { "value": "mostrar", "label": "Pode mostrar", "description": "Entra no vídeo, com a página de onde veio." },
+            { "from": "kit.numbers.1", "max": 1, "label": "Mostre “{número 2}”", "description": "Outro número publicado no seu site." },
+            { "value": "nenhum", "label": "Não mostre números", "description": "O vídeo segue sem a cena do número." },
+            { "value": "outro", "label": "Tenho outro: escrevo", "description": "Escreva o número e o que ele mede; só uso o que você me der.", "free": true }
+          ],
+          "default": "mostrar"
+        }
+      ],
+      "multi": false,
+      "free_text": true,
+      "waits_for_capture": true,
+      "priority": 9,
+      "ask_when": { "note": "Só no roteiro de lançamento, o único com a cena do número. Nenhum número é inventado: sem resposta e sem número publicado, a cena sai.", "story": ["lancamento"] },
+      "skip_when": { "note": "O pedido ou uma resposta já deu um número, ou já disse para não mostrar.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "sentimento",
+      "field": "tone",
+      "stage": "round3",
+      "header": "Sentimento",
+      "text": "Quando o vídeo acabar, o que quem assiste deve sentir?",
+      "options": [
+        { "value": "confianca", "label": "Confiança", "description": "Isso funciona e é sério." },
+        { "value": "vontade", "label": "Vontade", "description": "Quero isso agora." },
+        { "value": "surpresa", "label": "Surpresa", "description": "Não sabia que dava para fazer isso." },
+        { "value": "proximidade", "label": "Proximidade", "description": "É gente como eu." }
+      ],
+      "default": { "rule": "tone" },
+      "multi": false,
+      "free_text": true,
+      "chat_descriptions": true,
+      "priority": 10,
+      "ask_when": { "note": "Só no briefing guiado. O padrão vem do objetivo: vender pede vontade, mostrar o trabalho pede surpresa, os demais pedem confiança." },
+      "skip_when": { "note": "O pedido ou uma resposta já disse o tom.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "referencia",
+      "field": "style",
+      "stage": "round3",
+      "header": "Referência",
+      "text": "Tem um vídeo de referência do jeito que você quer?",
+      "options": [
+        { "value": "recomendado", "label": "Não: use o estilo “{estilo recomendado}”", "description": "{descrição do estilo recomendado}" },
+        { "value": "outro", "label": "Quero escolher outro estilo pronto", "description": "Mostro os outros estilos para você escolher." },
+        { "value": "link", "label": "Tenho um vídeo de referência", "description": "Cole o link; nesta versão eu ainda não assisto, mas você me conta o que gosta nele." }
+      ],
+      "default": "recomendado",
+      "multi": false,
+      "free_text": true,
+      "priority": 11,
+      "ask_when": { "note": "Só no briefing guiado. O estilo recomendado é o do roteiro escolhido." },
+      "skip_when": { "note": "O pedido já descreveu o estilo ou trouxe um link de referência, ou uma resposta já escolheu.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "estilo",
+      "field": "style",
+      "stage": "round3",
+      "follow_up_of": "referencia",
+      "header": "Estilo",
+      "text": "Qual destes estilos combina mais com o seu vídeo?",
+      "options": [
+        { "from": "styles.others", "max": 4, "label": "{estilo}", "description": "{descrição do estilo}" }
+      ],
+      "default": { "rule": "first_option" },
+      "multi": false,
+      "free_text": true,
+      "chat_descriptions": true,
+      "priority": 12,
+      "ask_when": { "note": "Só depois de \"Quero escolher outro estilo pronto\" na pergunta da referência. Não conta no limite de doze perguntas: é a continuação daquela.", "answer": { "referencia": ["outro"] } },
+      "skip_when": { "note": "Nunca é pulada pela origem do campo: só deixa de ser feita depois de respondida.", "sources": [] }
+    },
+    {
+      "id": "referencia_descricao",
+      "field": "style",
+      "stage": "round3",
+      "follow_up_of": "referencia",
+      "header": "O que gosta",
+      "text": "Nesta versão eu ainda não assisto a vídeos de referência. Em uma frase, o que você gosta nele (o ritmo, as cores, o jeito do texto)?",
+      "options": [],
+      "free_text_only": true,
+      "default": null,
+      "variants": [
+        {
+          "when": "reference_without_link",
+          "note": "O integrante disse que tem uma referência, mas ainda não mandou o link.",
+          "text": "Nesta versão eu ainda não assisto a vídeos de referência. Cole o link, para eu guardar, e diga em uma frase o que você gosta nele (o ritmo, as cores, o jeito do texto)."
+        }
+      ],
+      "multi": false,
+      "free_text": true,
+      "priority": 13,
+      "ask_when": { "note": "Há um vídeo de referência (no pedido ou numa resposta) e ainda falta dizer o que agrada nele. Não conta no limite de doze perguntas.", "style": "reference_without_description" },
+      "skip_when": { "note": "Nunca é pulada pela origem do campo: só deixa de ser feita depois de respondida.", "sources": [] }
+    },
+    {
+      "id": "som",
+      "field": "music",
+      "stage": "round3",
+      "header": "Som",
+      "text": "E o som?",
+      "options": [
+        { "value": "trilha", "label": "Trilha original", "description": "Feita aqui, na batida do vídeo, sem música de terceiros." },
+        { "value": "efeitos", "label": "Só efeitos sonoros", "description": "Sem música, só os sons dos movimentos." },
+        { "value": "arquivo", "label": "Tenho uma música", "description": "Com direito de uso; ponho o arquivo na pasta de materiais." },
+        { "value": "sem-som", "label": "Sem som", "description": "O vídeo sai mudo." }
+      ],
+      "default": "trilha",
+      "multi": false,
+      "free_text": false,
+      "chat_descriptions": true,
+      "priority": 7,
+      "ask_when": { "note": "O pedido não fala de música, de trilha nem de efeitos." },
+      "skip_when": { "note": "O pedido ou uma resposta já disse como é o som.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "fechamento",
+      "field": "closing",
+      "stage": "round3",
+      "header": "Fechamento",
+      "text": "Como o vídeo termina?",
+      "options": [
+        { "value": "site", "label": "Logo e {site}", "description": "O endereço do seu site embaixo do logo.", "when": "site" },
+        { "value": "perfil", "label": "Logo e {@perfil}", "description": "O seu perfil embaixo do logo.", "when": "handle" },
+        { "value": "whatsapp", "label": "Logo e “Chama no WhatsApp”", "description": "O seu site tem um link de WhatsApp.", "when": "whatsapp" },
+        { "value": "bio", "label": "Logo e “Link na bio”", "description": "Para quem deixa o link no perfil.", "when": "brand", "fill": true },
+        { "value": "bio", "label": "Só “Link na bio”", "description": "Uma chamada simples, sem logo.", "when": "no_brand" },
+        { "value": "frase", "label": "Escrevo a minha", "description": "Uma chamada curta, de até 6 palavras.", "free": true }
+      ],
+      "default": { "rule": "first_option" },
+      "multi": false,
+      "free_text": true,
+      "priority": 14,
+      "ask_when": { "note": "Só no briefing guiado. Só aparecem opções com dado real: o site, o @, e o WhatsApp quando a visita ao site achou um link de WhatsApp." },
+      "skip_when": { "note": "O pedido ou uma resposta já disse como termina.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "conferir_marca",
+      "field": "brand",
+      "stage": "confirm",
+      "header": "Sua marca",
+      "text": "Achei {nome} em {site}. É esta a sua marca?",
+      "options": [
+        { "value": "sim", "label": "É esta", "description": "Sigo com o logo, as cores e as telas deste site." },
+        { "value": "outro-site", "label": "Não: o site certo é outro", "description": "Escreva o endereço certo e eu visito de novo.", "free": true },
+        { "value": "materiais", "label": "O logo ou as cores estão errados", "description": "Ponho os certos na pasta de materiais." }
+      ],
+      "default": "sim",
+      "multi": false,
+      "free_text": true,
+      "priority": 20,
+      "ask_when": { "note": "A marca foi achada só por busca (o pedido trouxe o nome ou o @, sem o site), o site visitado se apresenta com outro nome, ou a página dele é provisória (em breve, em construção)." },
+      "skip_when": { "note": "O site veio do pedido, do projeto ou de uma resposta e bate com o nome dito.", "sources": [] }
+    },
+    {
+      "id": "aprovar_briefing",
+      "field": null,
+      "target": "approvals.brief",
+      "stage": "brief",
+      "header": "Briefing",
+      "text": "Posso construir assim?",
+      "options": [
+        { "value": "pode", "label": "Pode construir", "description": "Começo o roteiro e a prévia agora." },
+        { "value": "mudar", "label": "Quero mudar algo", "description": "Diga o quê e eu ajusto antes de construir.", "free": true }
+      ],
+      "default": "pode",
+      "multi": false,
+      "free_text": true,
+      "priority": 30,
+      "ask_when": { "note": "Depois do briefing completo, no briefing guiado. O sim se registra com o comando approve, não com answer." },
+      "skip_when": { "note": "No pedido completo e no quase completo não há esta parada: a frase do plano já disse o que vai ser feito.", "sources": [] }
+    },
+    {
+      "id": "previa_ok",
+      "field": null,
+      "target": "approvals.preview",
+      "stage": "preview",
+      "header": "Prévia",
+      "text": "A prévia abriu no seu player: é um rascunho do tamanho de um celular; o final sai em alta qualidade. Posso fazer o vídeo final?",
+      "options": [
+        { "value": "pode", "label": "Pode fazer o final", "description": "Renderizo em alta qualidade e confiro de novo." },
+        { "value": "ajustar", "label": "Quero ajustar", "description": "Diga o quê; faço outra prévia antes do final.", "free": true }
+      ],
+      "default": "pode",
+      "multi": false,
+      "free_text": true,
+      "priority": 40,
+      "ask_when": { "note": "Sempre que a prévia fica pronta. O sim se registra com o comando approve, não com answer." },
+      "skip_when": { "note": "O pedido disse \"faz direto\" ou \"não precisa me mostrar\": a prévia é feita do mesmo jeito, sem a parada.", "sources": [] }
+    },
+    {
+      "id": "abertura",
+      "field": "hook",
+      "stage": "preview",
+      "header": "Abertura",
+      "text": "O vídeo abre com “{gancho 1}”. Quer trocar?",
+      "options": [
+        { "value": "manter", "label": "Manter", "description": "Fica como está na prévia." },
+        { "value": "{gancho 2}", "label": "“{gancho 2}”", "description": "Outra abertura possível." },
+        { "value": "{gancho 3}", "label": "“{gancho 3}”", "description": "Outra abertura possível." },
+        { "value": "outra", "label": "Escrevo a minha", "description": "Até 6 palavras.", "free": true }
+      ],
+      "default": "manter",
+      "multi": false,
+      "free_text": true,
+      "priority": 41,
+      "ask_when": { "note": "Junto com a prévia, quando a abertura não veio do integrante (veio do título do site ou do padrão) e há outras aberturas para oferecer." },
+      "skip_when": { "note": "O integrante escreveu a abertura no pedido ou numa resposta.", "sources": ["pedido", "resposta"] }
+    },
+    {
+      "id": "outra_marca",
+      "field": null,
+      "target": "decisions.outra_marca",
+      "stage": "preview",
+      "header": "Outra marca",
+      "text": "O vídeo mostra a marca {nome}, que não é a sua. Como sigo?",
+      "options": [
+        { "value": "texto", "label": "Troque por texto", "description": "Escrevo o nome dela, sem o logo." },
+        { "value": "mostrar", "label": "Pode mostrar", "description": "Você cuida da autorização de uso." }
+      ],
+      "default": "texto",
+      "explicit": true,
+      "multi": false,
+      "free_text": false,
+      "priority": 42,
+      "ask_when": { "note": "O vídeo mostra o logo ou o nome de uma marca de outra empresa. É uma decisão de direitos: pede resposta própria, um \"ok\" solto não vale." },
+      "skip_when": { "note": "A decisão já está guardada com a marca.", "sources": [] }
+    },
+    {
+      "id": "publi",
+      "field": null,
+      "target": "decisions.publi",
+      "stage": "preview",
+      "header": "Publicidade",
+      "text": "Este vídeo é publicidade paga por outra marca (publi ou permuta)?",
+      "options": [
+        { "value": "nao", "label": "Não", "description": "É conteúdo da sua própria marca." },
+        { "value": "sim", "label": "Sim", "description": "Ponho o aviso de publicidade no texto do post." }
+      ],
+      "default": "nao",
+      "explicit": true,
+      "multi": false,
+      "free_text": false,
+      "priority": 43,
+      "ask_when": { "note": "O vídeo divulga a marca de outra pessoa ou fala em parceria ou patrocínio. Pede resposta própria: um \"ok\" solto não vale." },
+      "skip_when": { "note": "O vídeo é da própria marca do integrante e nada indica parceria.", "sources": [] }
+    },
+    {
+      "id": "setor",
+      "field": null,
+      "target": "decisions.setor",
+      "stage": "preview",
+      "header": "Regras",
+      "text": "As regras de anúncio de {área} pedem {itens}. Achei “{texto}” no seu site. Posso usar assim?",
+      "options": [
+        { "value": "usar", "label": "Pode usar", "description": "Entra no vídeo exatamente assim." },
+        { "value": "corrigir", "label": "Corrigir", "description": "Escreva como deve sair.", "free": true }
+      ],
+      "default": "usar",
+      "explicit": true,
+      "multi": false,
+      "free_text": true,
+      "priority": 44,
+      "ask_when": { "note": "O site indica um setor com regras próprias de publicidade (saúde, odontologia, advocacia, apostas). Pede resposta própria: um \"ok\" solto não vale." },
+      "skip_when": { "note": "O setor não tem regra própria, ou a decisão já está guardada com a marca.", "sources": [] }
+    }
+  ]
+}

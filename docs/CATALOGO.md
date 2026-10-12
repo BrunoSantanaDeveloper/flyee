@@ -6,7 +6,45 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
-| [Análise de vídeo](#video-analysis) | 1.0.0 | tool | planejar | — | — |
+| [Carrossel animado](#motion-carousel) | 1.1.0 | skill | divulgar | `video-render` | — |
+| [Análise de vídeo](#video-analysis) | 1.0.0 | tool | planejar | — | `youtube-script` |
+| [Motor de vídeo](#video-render) | 1.0.0 | tool | divulgar | — | `motion-carousel`, `video-studio` |
+| [Estúdio de vídeo](#video-studio) | 1.0.0 | workflow | divulgar | `video-render` | — |
+| [Pesquisa no YouTube](#youtube-research) | 1.0.0 | tool | planejar | — | `youtube-script` |
+| [Roteiro para YouTube](#youtube-script) | 1.1.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
+
+## motion-carousel
+
+**Carrossel animado** (Motion carousel) · versão 1.1.0 · skill · trilha divulgar · testado em `claude_code`
+
+> Cria carrosséis para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida, a partir de um tema; entrega os MP4 prontos para postar e uma prévia de como fica no feed.
+
+Transforma um tema em um carrossel para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida e, se você quiser, fotos. Você diz o assunto; a sua IA escreve o roteiro, desenha e anima cada slide, gera a trilha, confere as regras do feed e entrega os MP4 prontos para postar, com uma prévia de como fica no celular.
+
+**Skills**
+
+- `motion-carousel`: Cria carrosséis animados para o Instagram a partir de um tema: cada slide é um vídeo curto em loop (4:5) com movimento, som na batida e, se quiser, fotos; entrega os MP4 prontos para postar e uma prévia do feed. Use quando pedirem "faça um carrossel animado sobre…", "carrossel em vídeo", "carrossel com fotos" ou para refazer um slide de um carrossel já criado.
+
+**Chaves externas**
+
+- `GEMINI_API_KEY` (Chave da API do Gemini), opcional
+
+**Usa** `video-render` · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/motion-carousel/scripts/carousel.mjs
+- shell: node .flyee/modules/video-render/scripts/render.mjs
+- shell: ffmpeg, ffprobe
+- shell: o navegador já instalado (Microsoft Edge, Google Chrome ou Chromium), aberto sem janela para fotografar a página
+- fs:read: a pasta de cada carrossel (./carrosseis/<nome>/), com o logo, as imagens e a música que você deixar em assets/
+- fs:write: ./carrosseis/ e a pasta temporária do sistema
+- shell: codex (o Codex do integrante, só quando ele já está instalado e conectado à conta do ChatGPT)
+- network: os servidores da OpenAI, pelo Codex do integrante (só quando ele gera as imagens)
+- network: generativelanguage.googleapis.com
+- fs:read: ~/.flyee/keys.json (só a chave GEMINI_API_KEY)
+- fs:read: ~/.codex/generated_images (só as imagens que o Codex acabou de gerar para o carrossel)
+- env: GEMINI_API_KEY, CODEX_HOME
 
 ## video-analysis
 
@@ -30,7 +68,7 @@ Assiste a vídeos por você, com imagem e som, e entrega uma descrição com tem
 - Entrada: `node .flyee/modules/video-analysis/scripts/video.mjs <comando> --json`
 - Comandos nos exemplos: `analyze`, `check`, `prepare`
 
-**Usa** — · **Usado por** —
+**Usa** — · **Usado por** `youtube-script`
 
 **Permissões declaradas**
 
@@ -43,3 +81,109 @@ Assiste a vídeos por você, com imagem e som, e entrega uma descrição com tem
 - fs:read: ~/.flyee/keys.json (só a chave GEMINI_API_KEY)
 - fs:write: ./video-analyses/
 - env: GEMINI_API_KEY
+
+## video-render
+
+**Motor de vídeo** (Video engine) · versão 1.0.0 · tool · trilha divulgar · testado em `claude_code`
+
+> Transforma uma página animada em vídeo pronto para as redes, com trilha original e efeitos na batida, prévia, a marca do seu site e conferência antes de publicar: capa, texto, área segura, volume e, por rede, formato e duração. É o motor que outros apps usam para renderizar.
+
+Transforma uma página animada em vídeo pronto para publicar. A sua IA escreve uma página que sabe desenhar qualquer instante; o Motor a fotografa quadro a quadro, junta os quadros com trilha e efeitos na batida, confere o que as redes exigem e entrega o vídeo no formato pedido. É também o motor que outros apps do flyee.club usam quando precisam renderizar, sonorizar ou conferir um vídeo: você raramente o chama direto, mas pode ("transforme esta página em vídeo", "faça uma prévia", "confira este vídeo para o Reels").
+
+**Skills**
+
+- `video-render`: Transforma uma página animada (HTML que desenha qualquer instante) em vídeo pronto para as redes, com trilha e efeitos na batida, prévia, captura da marca de um site e conferência antes de publicar. Use quando pedirem "transforme esta página em vídeo", "faça uma prévia", "coloque uma trilha na batida", "confira este vídeo para o Reels" ou quando outro app precisar renderizar.
+
+**Serve outros apps**
+
+- Guia: `modules/video-render/references/interface.md`, interface v1
+- Entrada: `node .flyee/modules/video-render/scripts/render.mjs <comando> --json`
+- Comandos nos exemplos: `accept`, `beats`, `capture`, `check`, `frames`, `help`, `loudness`, `mix`, `music`, `networks`, `open`, `preview`, `probe`, `render`, `scaffold`, `sfx`, `sheet`, `synth`
+
+**Usa** — · **Usado por** `motion-carousel`, `video-studio`
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/video-render/scripts/render.mjs
+- shell: ffmpeg, ffprobe
+- shell: o navegador já instalado, aberto sem janela: Microsoft Edge, Google Chrome, Chromium ou Brave
+- shell: cmd /c start (Windows), open (Mac) ou xdg-open (Linux), só no comando open
+- network: o site que você pedir para capturar e as imagens dele (só no comando capture)
+- fs:read: a página e o material dela, e os vídeos, áudios e listas .json que a sua IA indicar
+- fs:read: ~/.flyee/programs.json
+- fs:read: as pastas onde os programas costumam ser instalados e as fontes do sistema
+- fs:write: a pasta da página ou a que a sua IA indicar, ./capturas/ e a pasta temporária do sistema
+- env: PATH, LOCALAPPDATA, ProgramFiles e FLYEE_BROWSER
+
+## video-studio
+
+**Estúdio de vídeo** (Video studio) · versão 1.0.0 · workflow · trilha divulgar · testado em `claude_code`
+
+> Cria vídeos animados para Reels, TikTok e Shorts a partir do seu pedido: pergunta o que falta, usa o logo, as cores e as telas reais da sua marca, compõe a trilha na batida, mostra uma prévia e entrega o vídeo conferido para as redes.
+
+Transforma um pedido em um vídeo animado para Reels, TikTok e Shorts. Você diz o que quer divulgar; a sua IA pergunta só o que falta, busca o logo, as cores e as telas reais da sua marca, escreve o roteiro, compõe a trilha na batida, mostra uma prévia e entrega o vídeo conferido e pronto para postar.
+
+**Skills**
+
+- `motion-video`: Cria vídeos animados na vertical para Reels, TikTok e Shorts a partir de um pedido. Pergunta só o que falta, usa a marca real (logo, cores e telas do site), põe trilha e efeitos na batida, mostra uma prévia e entrega o vídeo conferido. Use quando pedirem "faça um vídeo animado", "um Reels da minha loja", "vídeo de lançamento", "anúncio animado" ou "vídeo para o TikTok".
+
+**Usa** `video-render` · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/video-studio/scripts/studio.mjs
+- shell: node .flyee/modules/video-render/scripts/render.mjs
+- shell: ffmpeg, ffprobe
+- shell: o navegador já instalado (Microsoft Edge, Google Chrome ou Chromium), aberto sem janela para fotografar a página
+- fs:read: README.md e package.json do projeto, e os arquivos que você puser em estudio-de-video/<vídeo>/materiais/
+- fs:write: ./estudio-de-video/ e ./capturas/
+- network: o site da marca que você indicar
+
+## youtube-research
+
+**Pesquisa no YouTube** (YouTube research) · versão 1.0.0 · tool · trilha planejar · testado em `claude_code`
+
+> Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público e o normal de qualquer canal, sem chave.
+
+Mostra, com números de verdade, quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e por quê. Assim você decide o que gravar pela demanda real, não pelo achismo.
+
+**Skills**
+
+- `youtube-research`: Pesquisa o YouTube sem chave. Acha os vídeos de um tema que fizeram muito acima do normal do próprio canal (outliers) e mede o quanto. Lê o normal de um canal, a fala de um vídeo e os comentários. Use quando pedirem "o que está funcionando no YouTube sobre X", "buscar outliers", "validar pauta", "analisar um canal", "transcrição de um vídeo" ou "o que o público pergunta".
+
+**Serve outros apps**
+
+- Guia: `modules/youtube-research/references/interface.md`, interface v1
+- Entrada: `node .flyee/modules/youtube-research/scripts/research.mjs <comando> --json`
+- Comandos nos exemplos: `channel`, `check`, `comments`, `outliers`, `titles`, `transcript`
+
+**Usa** — · **Usado por** `youtube-script`
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/youtube-research/scripts/research.mjs
+- shell: yt-dlp
+- network: youtube.com
+- fs:write: ./youtube-research/
+
+## youtube-script
+
+**Roteiro para YouTube** (YouTube script) · versão 1.1.0 · workflow · trilha divulgar · testado em `claude_code`
+
+> Escreve com você roteiros para o YouTube que prendem do começo ao fim, a partir do que já funciona no seu tema: título e thumbnail medidos, o fluxo de um vídeo de referência, o texto na sua voz e revisão antes de gravar.
+
+Escreve com você roteiros que prendem do primeiro segundo ao fim, a partir do que já funciona no seu tema: título e thumbnail medidos, o fluxo de um vídeo de referência, gancho forte, o texto na sua voz e revisão antes de gravar.
+
+**Skills**
+
+- `youtube-script`: Escreve com o criador roteiros de YouTube a partir de dados do tema, do fluxo de um vídeo de referência e da voz dele, com título e thumbnail medidos e revisão antes de gravar. Use quando pedirem "roteiro para o YouTube", "melhora meu roteiro", "o que eu gravo?", "um vídeo como este, mas em português", "roteiro de um vídeo mostrando a minha ferramenta" ou "títulos para esse vídeo".
+
+**Usa** `video-analysis`, `youtube-research` · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/youtube-script/scripts/roteiro.mjs
+- shell: node .flyee/modules/youtube-research/scripts/research.mjs
+- shell: node .flyee/modules/video-analysis/scripts/video.mjs
+- fs:read: ./roteiros/, os textos e a gravação de tela que você indicar, e a documentação dos apps em .flyee/modules/ (README, manifesto, references e skills)
+- fs:write: ./roteiros/

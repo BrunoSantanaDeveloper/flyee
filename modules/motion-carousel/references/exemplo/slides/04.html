@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>04 · ponto</title>
+<style>
+  html, body { margin: 0; background: #0C0C0E; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script src="../motion.js"></script>
+<script src="../carousel.js"></script>
+<script>
+  // Slide 4 de 5 · ponto. Edite o bloco SLIDE ou troque os helpers em seek; mantenha at: 0 no título.
+  // Os três cartões somem na batida 1,5 e voltam a cada batida e meia a partir da 3 (um "pop" em cada um no storyboard).
+  // Perto do fim, o título sai na batida 7 e volta na 9, junto com a frase de fecho: o slide não fica parado.
+  window.SLIDE = {
+    n: 4, total: 5,
+    label: "A saída",
+    title: "A regra dos\n2 minutos.",
+    cards: [
+      { n: "01", text: "Vista a roupa de treino." },
+      { n: "02", text: "Vá até a porta da academia." },
+      { n: "03", text: "Faça 2 minutos. Só isso." },
+    ],
+    text: "Pequeno demais para falhar.",
+    theme: "noir", format: "4:5",
+    bars: 3, bpm: 120, seed: 7,
+    totalBars: 16, offsetBars: 9,
+    out: 1.5, back: 3, step: 1.5, closeBack: 9,
+    titleOut: 7, titleBack: 9,
+  };
+  const S = window.SLIDE;
+  const C = Carousel.setup({ bars: S.bars, bpm: S.bpm, format: S.format, theme: S.theme, seed: S.seed, title: "04 · ponto" });
+
+  window.seek = (t) => {
+    C.begin(t);
+    C.glow({ x: 0.82, y: 0.18, alpha: 0.08 });
+    C.pulseBg(0.03);
+    C.label(S.label, { y: 96, size: 44 });
+    const title = C.headline(S.title, { y: 176, size: 140, out: S.titleOut, outStyle: "rise", back: S.titleBack, in: "rise" });
+    let y = title.bottom + 44;
+    S.cards.forEach((card, i) => {
+      const k = { out: S.out, back: S.back + i * S.step, in: "rise" };
+      C.card(Object.assign({ x: 72, y, w: 936, h: 150, radius: 24 }, k));
+      C.headline(card.n, Object.assign({ x: 112, y: y + 40, size: 64, color: "accent" }, k));
+      C.body(card.text, Object.assign({ x: 232, y: y + 48, size: 50, maxWidth: 740 }, k));
+      y += 174;
+    });
+    C.body(S.text, { y: y + 8, size: 44, color: "muted", out: S.out, back: S.closeBack });
+    C.ruler({ y: 1140, totalBars: S.totalBars, offsetBars: S.offsetBars, bars: S.bars });
+    C.progress({ step: S.n, total: S.total });
+    C.swipeHint({});
+    return C.end();
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Página inicial do Motor de vídeo</title>
+<style>
+  html, body { margin: 0; background: #141413; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="motion.js"></script>
+<script>
+  // O filme: duração, tamanho e taxa de quadros. O Motor lê isto antes de renderizar.
+  const film = Motion.setup({ title: "Página inicial", duration: 6, width: 1080, height: 1920, fps: 30, background: "#141413" });
+  const canvas = document.getElementById("c");
+  const g = canvas.getContext("2d");
+  const grid = Motion.beatGrid(120); // 120 BPM: uma batida a cada 0,5 s, um compasso a cada 2 s
+  const noise = Motion.noise1d(7);
+  const INK = "#F0EEE6";
+  const ACCENT = "#D97757";
+
+  // Uma cena por compasso, do começo ao fim do filme: três tipos de cena que se revezam.
+  // Mude a duração no Motion.setup e as cenas acompanham; troque os textos à vontade.
+  const KINDS = ["titulo", "grade", "botao"];
+  const WORDS = ["MOTOR", "RITMO", "FORMA", "CORTE"];
+  const LABELS = [["Começar", "Pronto para publicar"], ["Enviar", "Recebido"], ["Salvar", "Tudo certo"]];
+  const sceneCount = () => Math.max(1, Math.ceil(film.duration / grid.bar(1) - 1e-6));
+  const sceneAt = (t) => Math.min(sceneCount() - 1, Math.max(0, Math.floor(t / grid.bar(1))));
+  film.cuts = Array.from({ length: sceneCount() - 1 }, (_, i) => grid.bar(i + 1)); // os cortes, na batida 1 de cada compasso
+
+  // Formatos: o Motor chama setFormat quando renderiza em um tamanho diferente deste.
+  window.setFormat = ({ width, height }) => {
+    canvas.width = width;
+    canvas.height = height;
+    film.width = width;
+    film.height = height;
+  };
+
+  // A área segura do formato atual: texto, logo e rosto ficam dentro dela, longe dos botões das redes.
+  const formatOf = (W, H) => Object.keys(Motion.SAFE).find((name) => Motion.SAFE[name].width === W && Motion.SAFE[name].height === H) || "9:16";
+  const titleMetrics = (word, W, H) => {
+    const safe = Motion.safeArea(formatOf(W, H));
+    const size = Motion.fitText(g, word, safe.w, { weight: 800, max: 260, min: 40 });
+    const width = g.measureText(word).width;
+    return { safe, size, width, cx: safe.x + safe.w / 2, cy: safe.y + safe.h / 2 };
+  };
+  const buttonSize = (t, W) => ({
+    w: Math.min(W * 0.62, Motion.track(t, [[0, 320], [0.5, 640], [1.25, 440]], 170, 26)),
+    h: Motion.track(t, [[0, 96], [0.5, 280], [1.25, 96]], 170, 26),
+  });
+
+  const DRAW = {
+    // Tipografia cinética: o primeiro título já nasce no lugar (o quadro 0 é a capa); os seguintes entram com mola pesada
+    titulo(t, n, W, H) {
+      const word = WORDS[Math.floor(n / KINDS.length) % WORDS.length];
+      const title = titleMetrics(word, W, H);
+      const s = n === 0 ? 1 : Motion.springBy("heavy", t - 0.05);
+      const drift = 1 + 0.02 * Motion.clamp(t / grid.bar(1));
+      g.save();
+      g.translate(title.cx, title.cy);
+      g.scale((0.6 + 0.4 * s) * drift, (0.6 + 0.4 * s) * drift);
+      g.fillStyle = INK;
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.fillText(word, 0, -title.size * 0.1);
+      const bar = n === 0 ? Motion.springBy("snappy", t - grid.beat(1)) : s;
+      g.fillStyle = ACCENT;
+      g.fillRect((-title.width / 2) * bar, title.size * 0.55, title.width * bar, 18);
+      g.restore();
+    },
+    // Uma grade de quadrados que entra em cascata, uma linha por colcheia
+    grade(t, n, W, H) {
+      const r = Motion.rng(3 + n);
+      const safe = Motion.safeArea(formatOf(W, H));
+      const cols = 5, gap = safe.w * 0.06, size = (safe.w - gap * (cols - 1)) / cols;
+      const rows = Math.max(1, Math.min(5, Math.floor((safe.h + gap) / (size + gap))));
+      const top = safe.y + (safe.h - rows * size - (rows - 1) * gap) / 2;
+      for (let i = 0; i < cols * rows; i++) {
+        const x = safe.x + (i % cols) * (size + gap) + size / 2;
+        const y = top + Math.floor(i / cols) * (size + gap) + size / 2;
+        const s = Motion.springBy("snappy", t - Math.floor(i / cols) * grid.beat(0.5) - r() * 0.08);
+        g.fillStyle = (i + n) % 7 ? INK : ACCENT;
+        g.fillRect(x - (size / 2) * s, y - (size / 2) * s, size * s, size * s);
+      }
+    },
+    // Um contêiner que muda de tamanho com uma trilha de vários alvos; o texto troca no meio da mudança
+    botao(t, n, W, H) {
+      const [first, second] = LABELS[Math.floor(n / KINDS.length) % LABELS.length];
+      const { w, h } = buttonSize(t, W);
+      const radius = Motion.track(t, [[0, 48], [0.5, 28], [1.25, 48]], 170, 26);
+      g.fillStyle = INK;
+      Motion.roundRect(g, W / 2 - w / 2, H / 2 - h / 2, w, h, radius);
+      g.fill();
+      g.fillStyle = film.background;
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.font = "700 48px sans-serif";
+      g.globalAlpha = Motion.swapAlpha(t, 0, 0.5);
+      g.fillText(first, W / 2, H / 2);
+      g.globalAlpha = Motion.swapAlpha(t, 0.5, 1.25);
+      g.fillText(second, W / 2, H / 2);
+      g.globalAlpha = Motion.clamp((t - 1.25) * 6);
+      g.fillText(first, W / 2, H / 2);
+      g.globalAlpha = 1;
+    },
+  };
+
+  // seek(t): desenha o quadro do instante t. Sem timers, sem estado entre quadros, sem Math.random.
+  window.seek = (t) => {
+    const W = canvas.width, H = canvas.height;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalAlpha = 1;
+    g.fillStyle = film.background;
+    g.fillRect(0, 0, W, H);
+    // deriva de fundo quase imperceptível (uma forma enorme a 3% de contraste)
+    g.fillStyle = "rgba(255,255,255,0.03)";
+    g.beginPath();
+    g.arc(W * 0.5 + noise(t * 0.2) * 80, H * 0.6 + noise(t * 0.2 + 40) * 60, W * 0.7, 0, Math.PI * 2);
+    g.fill();
+    const n = sceneAt(t);
+    DRAW[KINDS[n % KINDS.length]](t - n * grid.bar(1), n, W, H);
+    return true;
+  };
+
+  // Caixas para a conferência de legibilidade e zonas seguras (opcional; esta página é de canvas).
+  window.boxes = (t) => {
+    const W = canvas.width, H = canvas.height;
+    const n = sceneAt(t);
+    const kind = KINDS[n % KINDS.length];
+    if (kind === "titulo") {
+      const word = WORDS[Math.floor(n / KINDS.length) % WORDS.length];
+      const title = titleMetrics(word, W, H);
+      return [{ role: "text", x: title.cx - title.width / 2, y: title.cy - title.size * 0.7, w: title.width, h: title.size * 1.4, size: title.size, text: word }];
+    }
+    if (kind === "botao") {
+      const { w, h } = buttonSize(t - n * grid.bar(1), W);
+      return [{ role: "ui", x: W / 2 - w / 2, y: H / 2 - h / 2, w, h }, { role: "text", x: W / 2 - w / 2 + 24, y: H / 2 - 30, w: Math.max(0, w - 48), h: 60, size: 48 }];
+    }
+    return [];
+  };
+</script>
+</body>
+</html>

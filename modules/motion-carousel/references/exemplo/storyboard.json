@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "title": "Por que todo mundo desiste da academia em fevereiro",
+  "format": "4:5",
+  "fps": 30,
+  "bpm": 120,
+  "beats_per_bar": 4,
+  "sound": { "style": "noir", "seed": 7, "intro_bars": 0, "file": null },
+  "theme": "noir",
+  "seed": 7,
+  "slides": [
+    {
+      "n": 1,
+      "role": "hook",
+      "bars": 3,
+      "file": "slides/01.html",
+      "title": "Fevereiro mata academias.",
+      "events": [
+        { "beat": 0.5, "type": "whoosh", "direction": "out", "gain_db": -10 },
+        { "beat": 2, "type": "tick" },
+        { "beat": 3, "type": "tick", "pitch": 1.12 },
+        { "beat": 4, "type": "tick", "pitch": 1.25 },
+        { "beat": 7, "type": "whoosh", "direction": "out" },
+        { "beat": 9, "type": "impact" }
+      ],
+      "notes": "Capa: título em três linhas, a primeira em dourado. As três linhas de apoio saem na batida 0,5 e voltam uma por batida (2, 3 e 4), cada uma com um tique. O título some na batida 7 e volta com impacto na 9."
+    },
+    {
+      "n": 2,
+      "role": "point",
+      "bars": 3,
+      "file": "slides/02.html",
+      "title": "Meta errada.",
+      "events": [
+        { "beat": 2, "type": "whoosh", "direction": "out", "gain_db": -6 },
+        { "beat": 4, "type": "tick" },
+        { "beat": 4.5, "type": "pop", "gain_db": -6 },
+        { "beat": 5, "type": "tick", "pitch": 1.12 },
+        { "beat": 5.5, "type": "pop", "gain_db": -6 },
+        { "beat": 6, "type": "tick", "pitch": 1.25 },
+        { "beat": 6.5, "type": "pop", "gain_db": -6 },
+        { "beat": 7, "type": "tick", "pitch": 1.4 },
+        { "beat": 7.5, "type": "pop", "gain_db": -6 },
+        { "beat": 8, "type": "ding", "gain_db": -10 },
+        { "beat": 8.5, "type": "whoosh", "direction": "in", "gain_db": -10 }
+      ],
+      "notes": "Contador 100 → 8 entre as batidas 4 e 8 (um tick por batida); as barras das quatro semanas crescem meia batida depois de cada tick. Os números são imagem retórica, não estatística."
+    },
+    {
+      "n": 3,
+      "role": "point",
+      "bars": 3,
+      "file": "slides/03.html",
+      "title": "Dor sem placar.",
+      "events": [
+        { "beat": 1.5, "type": "whoosh", "direction": "out", "gain_db": -6 },
+        { "beat": 2, "type": "tick" },
+        { "beat": 3, "type": "tick" },
+        { "beat": 4, "type": "tick" },
+        { "beat": 4, "type": "thump", "gain_db": -4 },
+        { "beat": 5.25, "type": "thump", "gain_db": -8 },
+        { "beat": 6, "type": "thump", "gain_db": -12 },
+        { "beat": 8, "type": "whoosh", "direction": "in", "gain_db": -10 },
+        { "beat": 9, "type": "thump", "gain_db": -4 },
+        { "beat": 10.25, "type": "thump", "gain_db": -8 },
+        { "beat": 11, "type": "thump", "gain_db": -12 }
+      ],
+      "notes": "Três frases, uma por batida a partir da 2. A bola pula para a direita a partir da batida 2 (pousa em 4, 5,25 e 6) e volta entre 7 e 11, cada pouso mais fraco: a dor sem placar perde impulso."
+    },
+    {
+      "n": 4,
+      "role": "point",
+      "bars": 3,
+      "file": "slides/04.html",
+      "title": "A regra dos 2 minutos.",
+      "events": [
+        { "beat": 1.5, "type": "whoosh", "direction": "out", "gain_db": -6 },
+        { "beat": 3, "type": "pop" },
+        { "beat": 4.5, "type": "pop", "pitch": 1.12 },
+        { "beat": 6, "type": "pop", "pitch": 1.25 },
+        { "beat": 7, "type": "whoosh", "direction": "out", "gain_db": -8 },
+        { "beat": 9, "type": "whoosh", "direction": "in", "gain_db": -8 }
+      ],
+      "notes": "Três cartões numerados; somem na batida 1,5 e voltam a cada batida e meia a partir da 3. Perto do fim, o título sai na 7 e volta na 9, junto com a frase de fecho."
+    },
+    {
+      "n": 5,
+      "role": "cta",
+      "bars": 4,
+      "file": "slides/05.html",
+      "title": "Quer o plano dia por dia?",
+      "events": [
+        { "beat": 0.5, "type": "whoosh", "direction": "out", "gain_db": -10 },
+        { "beat": 2, "type": "tick" },
+        { "beat": 3, "type": "tick", "pitch": 1.12 },
+        { "beat": 4, "type": "tick", "pitch": 1.25 },
+        { "beat": 7, "type": "whoosh", "direction": "out" },
+        { "beat": 9, "type": "impact" },
+        { "beat": 13, "type": "ding", "gain_db": -8 }
+      ],
+      "notes": "Quatro compassos. O texto volta uma linha por batida a partir da 2; o título sai na 7 e volta com impacto na 9; o botão \"Comente TREINO\" pulsa no tempo forte, some na 12 e estoura de novo na 13 (um sino). Sem dica de deslizar: é o último slide."
+    }
+  ]
+}

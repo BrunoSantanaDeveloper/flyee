@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>01 · gancho com foto</title>
+<style>
+  html, body { margin: 0; background: #0C0C0E; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script src="../motion.js"></script>
+<script src="../carousel.js"></script>
+<script>
+  // Slide 1 de 3 · gancho com foto. O fundo preenche o quadro e deriva devagar; o haltere recortado fica
+  // mais perto da câmera e mexe mais. O texto fica num degradê, longe do objeto. Mantenha at: 0 no título.
+  window.SLIDE = {
+    n: 1, total: 3,
+    label: "Treino em casa",
+    title: "Um peso.\n20 minutos.",
+    text: "Sem academia.\nSem fila.\nSem desculpa.",
+    images: { fundo: "../assets/fundo.jpg", assunto: "../assets/halter.webp" },
+    theme: "noir", format: "4:5",
+    bars: 3, bpm: 120, seed: 11,
+    totalBars: 10, offsetBars: 0,
+    textOut: 0.5, textBack: 2, // o texto de apoio sai na batida 0,5 e volta uma linha por batida a partir da 2
+    out: 7, back: 9,           // o título sai na batida 7 e volta com impacto na 9
+  };
+  const S = window.SLIDE;
+  const C = Carousel.setup({ bars: S.bars, bpm: S.bpm, format: S.format, theme: S.theme, seed: S.seed, title: "01 · gancho com foto" });
+  const ready = C.loadImages(S.images);
+
+  window.seek = async (t) => {
+    await ready;
+    C.begin(t);
+    C.image("fundo", { depth: 0.35, dim: 0.28 });
+    C.scrim({ side: "top", size: 0.62, alpha: 0.9 });
+    C.scrim({ side: "left", size: 0.6, alpha: 0.55 }); // atrás da coluna de texto
+    C.scrim({ side: "bottom", size: 0.3, alpha: 0.92 });
+    C.grain(0.35);
+    C.label(S.label, { y: 96, size: 44 });
+    const title = C.headline(S.title, { y: 176, size: 150, colors: ["accent", "ink"], out: S.out, outStyle: "rise", back: S.back, in: "slam" });
+    const ruleY = title.bottom + 44;
+    C.shape({ kind: "line", x: 72, y: ruleY, x2: 252, y2: ruleY, lineWidth: 8, out: S.textOut, back: S.textBack - 0.5, in: "draw" });
+    C.body(S.text, { y: ruleY + 40, size: 56, lineHeight: 1.2, maxWidth: 470, perLine: 1, out: S.textOut, back: S.textBack });
+    C.image("assunto", { x: 0.42, y: 0.42, w: 0.535, h: 0.41, fit: "contain", anchor: "bottom-right", depth: 1, shadow: true });
+    C.ruler({ y: 1140, totalBars: S.totalBars, offsetBars: S.offsetBars, bars: S.bars });
+    C.progress({ step: S.n, total: S.total });
+    C.swipeHint({});
+    return C.end();
+  };
+</script>
+</body>
+</html>

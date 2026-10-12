@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vídeo animado · lançamento</title>
+<style>
+  html, body { margin: 0; background: #101012; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="motion.js"></script>
+<script src="studio.js"></script>
+<script id="roteiro" type="application/json">__ROTEIRO__</script>
+<script>
+  // Roteiro "lançamento": gancho → o produto aparece → um recurso por cena → o número que prova → a assinatura.
+  // Uma tela só atravessa o filme: nasce na travessia do gancho, se monta, e a cada recurso a câmera sobe, muda de
+  // lugar e a tela rola. Tudo aqui é função do tempo: os momentos são BATIDAS contadas do início de cada cena.
+  // Guia desta página: references/pagina-do-video.md. Os textos e os tempos vêm do bloco de dados acima.
+  Studio.load();
+  const R = Studio.roteiro, TL = Studio.timeline, ST = Studio.style, Q = Studio.Q;
+  const film = Motion.setup({ title: R.title || "Lançamento", duration: TL.duration, width: R.width, height: R.height, fps: 30, background: Studio.palette.background });
+  film.cuts = TL.cuts;
+  const S = Studio.stage(document.getElementById("c"));
+  document.body.style.background = Studio.palette.background;
+  window.setFormat = S.setFormat;
+  window.boxes = S.boxes;
+  window.seek = S.seek;
+
+  // O número que prova acontece no outro mundo da marca; a assinatura, no fundo em que o logo nasceu.
+  S.worlds({ prova: "alt", fechamento: "native" });
+
+  const clamp = Motion.clamp, lerp = Motion.lerp, phase = Motion.phase, ease = Motion.ease;
+  const filled = (v) => typeof v === "string" && v.trim().length > 0;
+  const ONSTAGE = TL.scenes.filter((s) => s.role === "produto" || s.role === "ponto");
+  const POINTS = TL.scenes.filter((s) => s.role === "ponto");
+  const MOVE = Motion.SPRINGS[ST.springs.move] || Motion.SPRINGS.default;
+
+  // ---------- o plano: onde a tela fica em cada cena, o que ela mostra e onde o cursor aperta ----------
+
+  /** A tela no palco. Em pé: largura em fração da área útil, topo (ou base) em fração da altura. Deitado: a coluna da direita. */
+  function screenRect(frame, pose) {
+    const A = S.area;
+    const radius = (w) => (frame.kind === "phone" ? w * 0.105 : S.px(ST.radius));
+    if (!S.vertical) {
+      const colX = A.x + A.w * 0.54, colW = A.w * 0.46;
+      const w = (frame.kind === "phone" ? (A.h * 1.2) / frame.aspect : colW) * (pose.w / 0.8);
+      const h = w * frame.aspect;
+      return { x: colX + colW / 2 + colW * pose.shift * 0.5 - w / 2, y: frame.kind === "phone" ? A.y + A.h * 0.05 : A.y + (A.h - h) / 2, w, h, r: radius(w) };
+    }
+    const share = Motion.clamp(ST.visual / 0.62, 0.7, 1.12);                     // quanto a imagem ocupa, conforme o estilo
+    if (frame.kind === "card" && ST.frame === "bleed") {
+      const w = S.W, h = Math.min(w * frame.aspect, S.H - (A.y + A.h * pose.top));    // a foto sangra de lado a lado
+      return { x: 0, y: A.y + A.h * pose.top, w, h, r: 0 };
+    }
+    const w = A.w * pose.w * (frame.kind === "window" ? Math.max(share, 0.92) : share) * (frame.kind === "phone" ? 1 : frame.kind === "window" ? 1.28 : 1.06);
+    const h = w * frame.aspect;
+    return { x: S.W / 2 + A.w * pose.shift * share - w / 2, y: pose.bottom !== undefined ? A.y + A.h * pose.bottom - h : A.y + A.h * pose.top, w, h, r: radius(w) };
+  }
+
+  // Nos recursos a câmera chega perto: a tela cresce, muda de lado e sangra por baixo; o texto fica no alto.
+  const POSES = [{ w: 0.98, top: 0.47, shift: 0.04 }, { w: 1.1, top: 0.47, shift: -0.06 }, { w: 0.92, top: 0.47, shift: 0.07 }, { w: 1.04, top: 0.47, shift: -0.03 }];
+  let cache = null;
+  function plan() {
+    if (cache && cache.rev === S.rev) return cache;
+    const productScene = ONSTAGE.find((s) => s.role === "produto");
+    const productScreen = productScene ? Studio.image(productScene.screen) : null;
+    const shots = ONSTAGE.map((scene) => {
+      const isProduct = scene.role === "produto";
+      const own = Studio.image(scene.screen);
+      const photo = Studio.image(scene.image);
+      const record = own || photo || (isProduct ? null : productScreen);
+      // sem tela e sem foto não se desenha tela nenhuma: o produto vira o logo do integrante, ou só o texto
+      const shot = { scene, visual: Boolean(record), record, photo: !own && Boolean(photo) };
+      if (!shot.visual) return shot;
+      const i = POINTS.indexOf(scene);
+      shot.frame = shot.photo ? { kind: "card", aspect: clamp(record.h / record.w, 0.8, 1.25), scrollable: false } : Studio.frameFor(record);
+      shot.pose = isProduct ? { w: 0.76, top: filled(scene.text) ? 0.31 : 0.07, shift: 0 } : POSES[i % POSES.length];
+      shot.rect = screenRect(shot.frame, shot.pose);
+      // uma tela baixa reaparece um pouco mais perto (a margem da esquerda fica; a câmera anda na vertical)
+      shot.zoom = isProduct || shot.frame.scrollable || shot.photo ? 1 : 1.12;
+      // `scroll` no roteiro diz que altura da página (0 = topo, 1 = fim) fica no meio da parte visível da tela
+      shot.scroll = isProduct || shot.photo ? 0 : Studio.scrollFor(record, shot.rect, typeof scene.scroll === "number" ? scene.scroll : (i + 1) / (POINTS.length + 1), S.safe, shot.zoom);
+      // onde o cursor aperta: dentro da tela, na parte que fica na área segura
+      const top = Math.max(shot.rect.y, S.safe.y), bottom = Math.min(shot.rect.y + shot.rect.h, S.safe.y + S.safe.h);
+      const click = scene.events.find((e) => e.type === "click");
+      shot.press = { x: shot.rect.x + shot.rect.w * (i % 2 ? 0.34 : 0.62), y: lerp(top, bottom, 0.56), beat: click ? click.beat : isProduct ? Math.max(2, scene.beats - 1) : 2 };
+      return shot;
+    });
+    const visual = shots.filter((s) => s.visual);
+    // o cursor: entra pela borda, viaja até cada aperto e some com a última cena da tela
+    const keys = [], presses = [];
+    visual.forEach((shot, n) => {
+      const at = shot.scene.start + shot.press.beat * TL.beat_s;
+      const from = Math.max(shot.scene.start + (n === 0 ? TL.beat_s * 0.75 : 2 * Q), at - Math.max(0.62, TL.beat_s));
+      if (n === 0) keys.push([from - 4 * Q, S.W * 1.06, shot.press.y + S.px(420)]);
+      keys.push([from, shot.press.x, shot.press.y]);
+      presses.push(at);
+    });
+    cache = { rev: S.rev, shots, visual, keys, presses };
+    return cache;
+  }
+
+  // ---------- a tela: uma camada do filme inteiro, por baixo dos textos ----------
+
+  S.under((f) => {
+    const P = plan();
+    // a cena da tela neste instante (a primeira já é desenhada um quadro antes, por baixo da travessia do gancho)
+    const now = P.visual.find((s) => f.T >= s.scene.start - (s === P.visual[0] ? Q : 0) && f.T < s.scene.end);
+    if (!now) return;
+    const c = f.context(now.scene.index);
+    const n = P.visual.indexOf(now);
+    const joined = (a, b) => Boolean(a && b && a.scene.end === b.scene.start);
+    const before = joined(P.visual[n - 1], now) ? P.visual[n - 1] : null;
+    const after = joined(now, P.visual[n + 1]) ? P.visual[n + 1] : null;
+    const following = TL.scenes[now.scene.index + 1] || null;
+
+    // a tela muda de lugar com uma mola por cena: nada reinicia
+    const run = [now];
+    while (joined(P.visual[n - run.length], run[0])) run.unshift(P.visual[n - run.length]);
+    const rect = Studio.rectAt(f.T, run.map((s) => [s.scene.start, s.rect]), MOVE[0], MOVE[1]);
+    const scrollKeys = run.map((s) => [s.scene.start, s.scroll]);
+    const hero = run.find((s) => s.scene.role === "produto");
+    if (hero && hero.frame.scrollable) scrollKeys.push([hero.scene.start + hero.press.beat * TL.beat_s, 0.045]);
+    scrollKeys.sort((a, b) => a[0] - b[0]);
+    const scrollAt = (back) => Studio.valueAt(f.T - back * Q, scrollKeys, ST.springs.move);
+    const zoom = Studio.valueAt(f.T, run.map((s) => [s.scene.start, s.zoom]), ST.springs.move);
+    const moving = Math.abs(scrollAt(0) - scrollAt(1)) > 0.0015;
+
+    // entrada: nasce pequena depois da travessia do gancho, ou sobe de baixo
+    let scale = 1, dy = 0;
+    if (!before) {
+      if (now.scene.role === "produto" && ST.hookExit === "zoom") scale = Studio.born(c, 0);
+      else dy = (1 - Motion.springBy(ST.springs.move, c.t)) * S.H * 0.8;
+    }
+    // enquanto segura, a tela respira na batida
+    if (now.scene.role === "produto") scale *= 1 + 0.012 * Studio.bump(c, 2, 2);
+    // o aperto do cursor: a tela cede um fio
+    const pressed = c.since(now.press.beat);
+    if (pressed >= -2 * Q) scale *= 1 - 0.014 * (pressed < 0 ? ease.outQuad((pressed + 2 * Q) / (2 * Q)) : 1 - Motion.springBy("snappy", pressed));
+    // saída: vira o fundo da cena seguinte (cartão que vira a tela) ou sai num chicote
+    const worldNext = following ? S.worldOf(following) : null;
+    const floods = !after && following && worldNext !== c.world;
+    const dive = floods ? Studio.dive(c, { from: rect, at: c.beats, frames: DIVE }) : null;
+    const shown = dive ? dive.rect : rect;
+    const out = !after && !floods ? Studio.whip(c, { at: c.beats, dir: [0, -1], distance: S.H * 1.1 }) : null;
+
+    const assemble = now.scene.role === "produto" ? phase(c.t, 3 * Q, 3 * Q + Math.max(0.4, TL.beat_s * 0.9)) : 1;
+    const swap = before && before.record !== now.record ? Motion.springBy("snappy", c.t) : 1;
+    const paint = (ox, oy, alpha) => {
+      S.group({ scale, about: [rect.x + rect.w / 2, rect.y + rect.h * 0.3], dx: ox, dy: dy + oy, alpha }, () => {
+        const base = { rect: shown, kind: now.frame.kind, fill: c.world.accent, monogram: R.brand.name || c.scene.text };
+        if (now.frame.kind === "card") {
+          const photo = (record, push) => {
+            S.g.save();
+            Studio.roundRect(S.g, shown.x, shown.y, shown.w, shown.h, shown.r);
+            S.g.clip();
+            Studio.card(c, { rect: { x: shown.x, y: shown.y + push, w: shown.w, h: shown.h, r: 0 }, image: record, zoom: 1.04 + 0.03 * clamp(c.t / c.dur), color: c.world.accent, shadow: 0 });
+            S.g.restore();
+          };
+          Studio.card(c, { rect: shown, color: c.world.accent });             // a moldura e a sombra
+          if (swap < 0.999 && before) {
+            photo(before.record, -shown.h * swap * 0.35);
+            photo(now.record, shown.h * (1 - swap));
+          } else photo(now.record, 0);
+        } else if (swap < 0.999 && before.frame.kind !== "card") {
+          // outra tela entra empurrando a anterior para cima
+          Studio.device(c, Object.assign({}, base, { image: before.record, scroll: before.scroll, zoom: before.zoom, anchor: 0.35 }));
+          S.g.save();
+          S.g.beginPath();
+          S.g.rect(rect.x - 4, rect.y + rect.h * (1 - swap), rect.w + 8, rect.h * swap + 4);
+          S.g.clip();
+          Studio.device(c, Object.assign({}, base, { image: now.record, scroll: now.scroll, zoom: now.zoom, anchor: 0.35, shadow: 0 }));
+          S.g.restore();
+        } else {
+          Studio.device(c, Object.assign({}, base, { image: now.record, scroll: scrollAt, blur: moving && ST.echo, assemble, zoom, anchor: 0.35 }));
+        }
+        // o mergulho: a tela cresce até virar o quadro inteiro e ganha a cor do mundo seguinte
+        if (dive && dive.wash > 0.001) {
+          S.setAlpha(dive.wash);
+          S.g.fillStyle = worldNext.bg;
+          Studio.roundRect(S.g, shown.x, shown.y, shown.w, shown.h, shown.r);
+          S.g.fill();
+          S.setAlpha(1);
+        }
+      });
+    };
+    if (out) {
+      for (const echo of out.echoes) paint(echo.dx, echo.dy, echo.alpha);
+      if (out.alpha > 0.003) paint(out.dx, out.dy, out.alpha);
+    } else paint(0, 0, 1);
+  });
+
+  // ---------- o cursor: por cima de tudo ----------
+
+  S.over((f) => {
+    if (!ST.cursor) return;
+    const P = plan();
+    if (!P.keys.length) return;
+    Studio.cursor(f, { keys: P.keys, presses: P.presses, until: P.visual[P.visual.length - 1].scene.end - 3 * Q });
+  });
+
+  // ---------- as cenas ----------
+
+  /** A tela mergulha (vira o quadro inteiro) no fim desta cena? Então o texto sai antes, para não ficar por cima. */
+  const DIVE = 15;
+  function dives(c) {
+    const P = plan();
+    const lastShot = P.visual[P.visual.length - 1];
+    return Boolean(lastShot && lastShot.scene === c.scene && c.next && S.worldOf(c.next) !== c.world);
+  }
+  /** Em que batida os textos da cena saem. */
+  const leaveAt = (c) => (dives(c) ? c.beats - ((DIVE + 1) * Q) / TL.beat_s : c.beats);
+  /** Como um texto sai, conforme o estilo: chicote para cima, ou subindo por trás da máscara. */
+  const leave = (c) => ({ at: leaveAt(c), style: ST.between === "push" ? "lift" : "whip", dir: [0, -1] });
+
+  // Gancho: a frase já está pousada no quadro 0 (a capa); o soco, o destaque e a travessia acontecem em volta dela.
+  S.scene("gancho", { tail: 2 * Q }, (c) => {
+    const A = c.area;
+    // a travessia em zoom mergulha na tela do produto; sem tela, ela cairia num quadro vazio depois do clarão do destaque
+    const intoScreen = plan().visual.some((s) => s.scene.role === "produto");
+    const exit = ST.hookExit === "zoom" && !intoScreen ? "whip" : ST.hookExit;
+    S.group({ scale: Studio.drift(c), about: [A.x + A.w / 2, A.y + A.h / 2] }, () => {
+      Studio.headline(c, c.scene.text, {
+        x: A.x, y: A.y + A.h * 0.08, w: A.w, h: A.h * 0.8, valign: "middle", size: S.px(210 * ST.type.scale), maxLines: Math.max(4, ST.type.maxLines),
+        cover: true, punch: c.hit("impact", 0), breathe: { amount: 0.015, every: 2, from: c.hit("pop", c.beats > 4 ? 2 : 1) + 2 },
+        emphasis: { words: c.scene.emphasis, at: c.hit("pop", c.beats > 4 ? 2 : 1) },
+        out: { at: c.beats, style: exit },
+      });
+    });
+  });
+
+  // O produto aparece: a tela nasce, se monta em faixas e o nome sobe; o cursor aperta e a tela responde.
+  // Sem tela nem foto, o logo do integrante ocupa o lugar dela; sem logo, o nome é a cena inteira.
+  S.scene("produto", (c) => {
+    const A = c.area;
+    const shot = plan().shots.find((s) => s.scene === c.scene);
+    const bare = !shot || !shot.visual;
+    const hero = bare && Boolean(Studio.logoImage);
+    if (!filled(c.scene.text) && !hero) return;
+    const alone = bare && !hero;
+    const box = alone ? { x: A.x, y: A.y, w: A.w, h: A.h } : S.vertical ? { x: A.x, y: A.y, w: A.w, h: A.h * 0.27 } : { x: A.x, y: A.y, w: A.w * 0.48, h: A.h };
+    if (filled(c.scene.text)) {
+      Studio.headline(c, c.scene.text, {
+        x: box.x, y: box.y, w: box.w, h: box.h, valign: alone || !S.vertical ? "middle" : "top", size: S.px((alone ? 190 : 150) * ST.type.scale), maxLines: alone ? 3 : 2,
+        at: c.hit("pop", 1), by: "line", stagger: 0.25, emphasis: false, out: leave(c), breathe: { amount: 0.015, every: 2, from: c.hit("pop", 1) + 2 },
+      });
+    }
+    if (!hero) return;
+    const spot = S.vertical ? { x: A.x + A.w * 0.08, y: A.y + A.h * 0.36, w: A.w * 0.84, h: A.h * 0.4 } : { x: A.x + A.w * 0.54, y: A.y + A.h * 0.2, w: A.w * 0.42, h: A.h * 0.6 };
+    const out = Studio.whip(c, { at: c.beats, dir: [0, -1] });
+    const paint = (dx, dy, alpha) => S.group({ dx, dy, alpha, scale: Studio.drift(c) * (1 + 0.012 * Studio.bump(c, 2, 2)), about: [spot.x + spot.w / 2, spot.y + spot.h / 2] }, () => {
+      Studio.logo(c, { x: spot.x, y: spot.y, w: spot.w, h: spot.h, align: "center", valign: "middle", at: c.hit("whoosh", 0), plate: c.world.bg });
+    });
+    for (const echo of out.echoes) paint(echo.dx, echo.dy, echo.alpha);
+    if (out.alpha > 0.003) paint(out.dx, out.dy, out.alpha);
+  });
+
+  // Um recurso por cena: a etiqueta numerada, o nome grande, o detalhe e uma ação do cursor.
+  S.scene("ponto", { tail: 2 * Q }, (c) => {
+    const A = c.area;
+    const shot = plan().shots.find((s) => s.scene === c.scene);
+    const i = POINTS.indexOf(c.scene);
+    const solo = !shot.visual;                                           // sem imagem: a tipografia é a cena inteira
+    const press = solo ? c.hit("click", 2) : shot.press.beat;
+    const col = !S.vertical ? { x: A.x, y: A.y + A.h * 0.1, w: A.w * 0.48, h: A.h * 0.9 }
+      : solo ? { x: A.x, y: A.y + A.h * [0.12, 0.34, 0.04, 0.26][i % 4], w: A.w, h: A.h * 0.66 }
+        : { x: A.x, y: A.y, w: A.w, h: A.h * 0.44 };
+    const align = solo && S.vertical && i % 2 === 1 ? "right" : "left";
+    const hasDetail = filled(c.scene.detail) && (ST.detail || solo);
+    const detailSize = S.type(solo ? 58 : 52);
+    const detailH = hasDetail ? Studio.body(c, c.scene.detail, { x: col.x, y: 0, w: col.w, h: detailSize * 2.6, size: detailSize, maxLines: 2, measure: true }).h + S.px(solo ? 44 : 24) : 0;
+    let y = col.y;
+    if (ST.chips) {
+      const tag = Studio.chip(c, String(i + 1).padStart(2, "0"), { x: align === "right" ? col.x + col.w : col.x, align, y, at: 0, size: S.type(46), out: { at: leaveAt(c), style: ST.between === "streak" ? "streak" : ST.between === "whip" ? "whip" : "cut" } });
+      y = tag.bottom + S.px(34);
+    }
+    const title = Studio.headline(c, c.scene.text, {
+      x: col.x, y, w: col.w, h: Math.max(S.px(120), col.y + col.h - y - detailH), size: S.px((solo ? [186, 210, 176, 200][i % 4] : 132) * ST.type.scale), maxLines: solo ? 3 : 2, align,
+      at: 0, by: "line", stagger: 0.25,
+      emphasis: { words: c.scene.emphasis, at: press, style: solo ? "block" : "underline" },
+      out: leave(c),
+    });
+    if (hasDetail) Studio.body(c, c.scene.detail, { x: col.x, y: title.bottom + S.px(solo ? 44 : 24), w: col.w, h: detailSize * 2.6, size: detailSize, maxLines: 2, at: 1, align, out: leave(c) });
+    // sem tela, o cursor desenha o destaque: chega ao começo da palavra, aperta e solta no fim dela
+    if (solo && title.key && ST.cursor) {
+      const k = title.key, T = c.beat(press);
+      c.top(() => Studio.cursor(c, {
+        keys: [[T - Math.max(0.62, c.beat(1)), k.x - S.px(120), k.y + k.h + S.px(300)], [T - 0.5, k.x + S.px(8), k.y + k.h * 0.62], [T, k.x + k.w - S.px(6), k.y + k.h * 0.62]],
+        presses: [T], until: c.beat(c.beats) - 3 * Q,
+      }));
+    }
+  });
+
+  // O número que prova: rola até o valor dentro de uma batida e fica; a origem do número não entra na tela.
+  S.scene("prova", (c) => {
+    const A = c.area;
+    const ticks = c.hits("tick");
+    const at = ticks.length ? ticks[0] : 0;
+    const box = S.vertical ? { x: A.x, y: A.y + A.h * 0.3, w: A.w, h: A.h * 0.3 } : { x: A.x, y: A.y + A.h * 0.18, w: A.w * 0.62, h: A.h * 0.42 };
+    const same = filled(c.scene.suffix) && filled(c.scene.text) && c.scene.suffix.trim().toLowerCase() === c.scene.text.trim().toLowerCase();
+    const out = Studio.whip(c, { at: c.beats, dir: [0, -1] });
+    const paint = (dx, dy, alpha) => S.group({ dx, dy, alpha, scale: Studio.drift(c), about: [A.x + A.w / 2, box.y + box.h / 2] }, () => {
+      const k = Studio.counter(c, { value: c.scene.value, prefix: c.scene.prefix, suffix: same ? "" : c.scene.suffix, x: box.x, y: box.y, w: box.w, h: box.h, at, ticks, beats: 1, size: S.px(340), breathe: { amount: 0.025, every: 2, from: at + 2 } });
+      // o risco do acento cresce quando o número pousa
+      const land = Motion.springBy("snappy", c.since(at + 1));
+      if (land > 0.001) {
+        S.setAlpha(1);
+        S.g.fillStyle = c.world.accent;
+        Studio.roundRect(S.g, k.x, k.bottom + S.px(30), S.px(220) * land, S.px(14), S.px(7));
+        S.g.fill();
+      }
+      if (filled(c.scene.text)) Studio.body(c, c.scene.text, { x: box.x, y: k.bottom + S.px(96), w: box.w, h: S.type(64) * 2.6, size: S.type(64), weight: 600, color: c.world.ink, maxLines: 2, at: at + 1, in: "rise" });
+    });
+    for (const echo of out.echoes) paint(echo.dx, echo.dy, echo.alpha);
+    if (out.alpha > 0.003) paint(out.dx, out.dy, out.alpha);
+  });
+
+  // A assinatura: o logo e a chamada, parados, com uma deriva lenta até o último quadro.
+  S.scene("fechamento", (c) => {
+    const A = c.area;
+    const at = c.hit("impact", 0);
+    S.group({ scale: Studio.drift(c), about: [A.x + A.w / 2, A.y + A.h / 2] }, () => {
+      Studio.lockup(c, { text: c.scene.text, words: c.scene.emphasis, logo: c.scene.logo !== false, x: A.x, y: A.y, w: A.w, h: A.h, align: "center", at, in: "cut", textAt: at + 1, plate: c.world.bg, breathe: { amount: 0.02, every: 2, from: at + 2 } });
+    });
+  });
+</script>
+</body>
+</html>

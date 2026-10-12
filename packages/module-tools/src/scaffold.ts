@@ -1,5 +1,14 @@
-import { cpSync, existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+/** File by file: fs.cpSync on Node 24 for Windows writes a destination with accents into a garbled sibling folder. */
+export function copyDir(from: string, to: string): void {
+  mkdirSync(to, { recursive: true });
+  for (const entry of readdirSync(from, { withFileTypes: true })) {
+    if (entry.isDirectory()) copyDir(join(from, entry.name), join(to, entry.name));
+    else if (entry.isFile()) copyFileSync(join(from, entry.name), join(to, entry.name));
+  }
+}
 
 import { MANIFEST_FILE } from "./files.ts";
 import { type Manifest, MODULE_TYPES, readManifest, serializeManifest, TRAILS } from "./manifest.ts";
@@ -46,7 +55,7 @@ export function scaffoldApp(input: NewAppInput): NewAppResult {
   const template = join(root, "_template");
   if (!existsSync(join(template, MANIFEST_FILE))) throw new Error("modules/_template is missing");
 
-  cpSync(template, dir, { recursive: true });
+  copyDir(template, dir);
   renameSync(join(dir, "skills", TEMPLATE_SLUG), join(dir, "skills", input.slug));
 
   const title = input.title?.trim() || `${PLACEHOLDER} nome do app`;

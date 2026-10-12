@@ -1,0 +1,71 @@
+{
+  "format_version": 1,
+  "note": "Os roteiros do Estúdio de vídeo: as cenas de cada um, quantos compassos cada cena pode durar e o que cada cena precisa (as lacunas). `bars` é [mínimo, máximo] em compassos (múltiplos de 0.25); `repeat` é [mínimo, máximo] de cenas daquele papel; uma lacuna com `?` é opcional.",
+  "templates": {
+    "lancamento": {
+      "label": "Lançamento",
+      "description": "o problema em poucas palavras, o produto se montando na tela, os recursos um a um e a assinatura no fim",
+      "objectives": ["apresentar", "lancar", "portfolio"],
+      "default_style": "interface-narra",
+      "music_style": "energetic",
+      "scenes": [
+        { "role": "gancho", "label": "Gancho", "bars": [1, 2], "slots": ["text", "emphasis?"] },
+        { "role": "produto", "label": "O produto aparece", "bars": [1, 2], "slots": ["screen?", "text?"] },
+        { "role": "ponto", "label": "Recurso", "repeat": [2, 4], "bars": [1, 1], "slots": ["text", "detail?", "image?", "screen?", "emphasis?", "scroll?"] },
+        { "role": "prova", "label": "Número que prova", "optional": true, "bars": [1, 1], "slots": ["value", "prefix?", "suffix?", "text", "source"] },
+        { "role": "fechamento", "label": "Assinatura", "bars": [1, 2], "slots": ["text", "logo?", "emphasis?"] }
+      ]
+    },
+    "interface": {
+      "label": "Interface que se transforma",
+      "description": "um único elemento muda de estado a cada batida (botão, campo, carregando, pronto, cartão, gráfico) e conta o uso do produto",
+      "objectives": ["explicar", "apresentar", "lancar"],
+      "default_style": "interface-que-se-transforma",
+      "music_style": "clean",
+      "scenes": [
+        { "role": "abertura", "label": "Logo", "bars": [0.5, 1], "slots": ["text?", "logo?", "emphasis?"] },
+        { "role": "estado", "label": "Estado da interface", "repeat": [4, 10], "bars": [0.5, 1], "slots": ["kind", "text", "value?", "detail?"] },
+        { "role": "fechamento", "label": "Assinatura", "bars": [1, 2], "slots": ["text", "logo?", "emphasis?"] }
+      ],
+      "kinds": ["botao", "campo", "carregando", "sucesso", "cartao", "grafico", "lista", "aviso", "busca"]
+    },
+    "oferta": {
+      "label": "Oferta",
+      "description": "o gancho, o produto em destaque, o preço batendo na tela, o prazo e a chamada",
+      "objectives": ["vender"],
+      "default_style": "vitrine",
+      "music_style": "energetic",
+      "scenes": [
+        { "role": "gancho", "label": "Gancho", "bars": [1, 2], "slots": ["text", "emphasis?"] },
+        { "role": "produto", "label": "O produto", "bars": [1, 2], "slots": ["image?", "screen?", "text"] },
+        { "role": "preco", "label": "O preço", "bars": [1, 2], "slots": ["value", "old_value?", "text?"] },
+        { "role": "prazo", "label": "O prazo", "optional": true, "bars": [1, 1], "slots": ["text"] },
+        { "role": "fechamento", "label": "Chamada", "bars": [1, 2], "slots": ["text", "logo?"] }
+      ]
+    },
+    "lista": {
+      "label": "Lista",
+      "description": "um gancho e de três a cinco itens numerados, um por vez, fechando com a chamada",
+      "objectives": ["explicar"],
+      "default_style": "tipografia-cinetica",
+      "music_style": "clean",
+      "scenes": [
+        { "role": "gancho", "label": "Gancho", "bars": [1, 2], "slots": ["text", "emphasis?"] },
+        { "role": "item", "label": "Item", "repeat": [3, 5], "bars": [1, 2], "slots": ["text", "detail?", "emphasis?"] },
+        { "role": "fechamento", "label": "Chamada", "bars": [1, 2], "slots": ["text", "logo?", "emphasis?"] }
+      ]
+    }
+  },
+  "limits": {
+    "gancho": { "text_words": 6 },
+    "ponto": { "text_words": 5, "detail_words": 10 },
+    "item": { "text_words": 6, "detail_words": 10 },
+    "estado": { "text_words": 5, "detail_words": 8 },
+    "produto": { "text_words": 5 },
+    "preco": { "text_words": 5 },
+    "prazo": { "text_words": 6 },
+    "prova": { "text_words": 4 },
+    "fechamento": { "text_words": 6 },
+    "abertura": { "text_words": 4 }
+  }
+}

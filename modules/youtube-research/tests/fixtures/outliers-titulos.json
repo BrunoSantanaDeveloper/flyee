@@ -1,0 +1,129 @@
+{
+  "format_version": 1,
+  "queries": [
+    "marmita da semana",
+    "airfryer"
+  ],
+  "params": {
+    "name": "teste"
+  },
+  "items": [
+    {
+      "id": "v0",
+      "title": "Como eu organizo a marmita da semana em 2 horas (passo a passo)",
+      "multiplier": 6,
+      "band": "outlier",
+      "base": {
+        "kind": "subscribers",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v1",
+      "title": "Como fazer pão de fermentação natural com a Tramontina",
+      "multiplier": 4,
+      "band": "outlier",
+      "base": {
+        "kind": "channel",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v2",
+      "title": "Fiz 30 dias de marmita e economizei R$ 400",
+      "multiplier": 2,
+      "band": "above",
+      "base": {
+        "kind": "channel",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v3",
+      "title": "Panela de pressão elétrica vale a pena?",
+      "multiplier": 1.2,
+      "band": "normal",
+      "base": {
+        "kind": "channel",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v4",
+      "title": "O ERRO que estraga o seu feijão",
+      "multiplier": 3.5,
+      "band": "outlier",
+      "base": {
+        "kind": "subscribers",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v5",
+      "title": "Receita de bolo sem forno",
+      "multiplier": 0.8,
+      "band": "normal",
+      "base": {
+        "kind": "channel",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v6",
+      "title": "Como usar a Airfryer Mondial sem errar",
+      "multiplier": 5,
+      "band": "outlier",
+      "base": {
+        "kind": "channel",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v7",
+      "title": "Marmita fit barata [cardápio completo]",
+      "multiplier": 1,
+      "band": "normal",
+      "base": {
+        "kind": "channel",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v8",
+      "title": "Meu cardápio da semana",
+      "multiplier": 0.6,
+      "band": "normal",
+      "base": {
+        "kind": "subscribers",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v9",
+      "title": "Testei a Airfryer por 7 dias",
+      "multiplier": 2.5,
+      "band": "above",
+      "base": {
+        "kind": "channel",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v10",
+      "title": "Arroz soltinho: o segredo",
+      "multiplier": 1.1,
+      "band": "normal",
+      "base": {
+        "kind": "channel",
+        "value": 1000
+      }
+    },
+    {
+      "id": "v11",
+      "title": "Pão caseiro fácil",
+      "multiplier": null,
+      "band": null,
+      "base": null
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+{
+  "app": "youtube-script",
+  "cases": [
+    {
+      "name": "roteiro completo com decisoes delegadas",
+      "setup": "Projeto sem roteiros/. O integrante não está disponível para responder: as decisões são delegadas no próprio pedido.",
+      "prompt": "Quero um roteiro de uns 6 minutos para o meu canal sobre freelas de design, de frente para a câmera: como fazer o primeiro orçamento sem cobrar pouco. Fatos meus que você pode usar: errei o preço dos meus 12 primeiros trabalhos; cobrei 300 reais por um site que levou um mês; hoje calculo meu piso mensal (4.200 reais) dividido pelas horas que trabalho de verdade (68 por mês), o que dá 62 reais por hora; minha proposta tem três linhas: problema, entrega e preço. Falo com 'você', sem gíria pesada, direto, com ironia leve comigo mesmo; nunca digo 'galera'. No fim quero que baixem a minha planilha, que fica no primeiro comentário. O resto decide você, não precisa me perguntar.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/canal.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/briefing.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/embalagem.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/estrutura.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/revisao.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/teleprompter.txt"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/descricao.md"
+        }
+      ],
+      "rubric": "Segue os passos na ordem (perfil, briefing, embalagem, ganchos e estrutura, roteiro, lint, crítica, entrega) sem perguntar o que o pedido já respondeu. embalagem.md tem 5 títulos de gatilhos diferentes e 2-3 thumbnails; estrutura.md tem 3-4 ganchos de famílias diferentes e blocos com nome de resultado e tempo. O roteiro usa só os fatos dados (12 trabalhos, 300 reais, 4.200, 68 horas, 62 reais), sem estatística inventada; o que faltar vira [CONFIRMAR] e é resolvido ou apontado. O lint termina com ready: true e a duração estimada fica a 15% de 6 minutos. A voz respeita o perfil (você, sem 'galera'). revisao.md tem as notas dos 9 critérios com porquês e separa obrigatórias de sugestões. O fecho pede uma coisa só (a planilha)."
+    },
+    {
+      "name": "melhora meu roteiro",
+      "setup": "Rode antes: crie roteiros/antigo.txt com um roteiro que abre com 'Fala galera, tudo bem com vocês? Nesse vídeo eu vou mostrar…', pede like no começo, tem '80% dos clientes' sem fonte e termina com 'é isso pessoal, até o próximo vídeo'.",
+      "prompt": "Melhora este roteiro pra mim: roteiros/antigo.txt",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/revisao.md"
+        }
+      ],
+      "rubric": "Traz o texto para roteiros/<vídeo>/roteiro.md sem mudar a fala, roda o lint e a crítica antes de reescrever. Aponta a abertura morta, o pedido fora de hora, o número sem fonte e o fecho na despedida. Propõe as mudanças separando obrigatórias de sugestões e pergunta de onde vem o número em vez de inventar uma fonte. Não reescreve tudo em silêncio."
+    },
+    {
+      "name": "so titulos e thumbnail",
+      "setup": "Projeto com roteiros/canal.md de um canal de culinária caseira.",
+      "prompt": "Me dá títulos e ideias de thumbnail para um vídeo sobre pão de fermentação natural para quem nunca fez.",
+      "assertions": [],
+      "rubric": "Faz só o passo 2: 5 títulos de gatilhos diferentes (não variações da mesma frase), 2-3 thumbnails com imagem e até 4 palavras, a micro-história título+thumbnail sem repetir palavras, o teste do clique e a recomendação. Não inventa resultado do criador ('fiz 100 pães'): pergunta ou usa forma que não dependa de fato. Não escreve o roteiro inteiro."
+    },
+    {
+      "name": "fato que falta nao e inventado",
+      "setup": "Projeto com roteiros/canal.md.",
+      "prompt": "Escreve um roteiro de 4 minutos mostrando que acordar às 5 da manhã aumenta a produtividade. Decide tudo por mim.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro.md"
+        }
+      ],
+      "rubric": "Não inventa estudos nem porcentagens. Diz ao integrante que a afirmação precisa de prova: pede a experiência dele ou marca [CONFIRMAR] e explica que o roteiro não fica pronto (ready: false) enquanto a marca existir; ou reposiciona o ângulo para o que ele pode sustentar. Nenhum 'estudos mostram' sem fonte."
+    },
+    {
+      "name": "pendencias so do criador na entrega",
+      "setup": "Projeto com roteiros/canal.md. O integrante não responde durante a sessão.",
+      "prompt": "Roteiro de 5 minutos sobre como organizar a geladeira para a comida durar mais. No fim quero mandar o pessoal para o meu e-book, o link eu te passo depois. Decide tudo por mim.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/descricao.md"
+        }
+      ],
+      "rubric": "Não inventa o link do e-book nem o que ele contém: a descrição leva [CONFIRMAR: o link do e-book] e o lint final mostra o aviso description_placeholder. O fecho não promete conteúdo do e-book que ninguém informou. Na entrega, lista as decisões tomadas por ele e as pendências (o link). O último capítulo tem nome para o público, não 'Fecho'. Nenhuma estatística por extenso sem fonte ('setenta por cento', 'nove em cada dez')."
+    },
+    {
+      "name": "o que eu gravo com dados",
+      "setup": "youtube-research e yt-dlp instalados; roteiros/canal.md de um canal de finanças pessoais para quem ganha até 3 salários mínimos.",
+      "prompt": "O que eu gravo esta semana?",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "youtube-research/outliers/*/outliers.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/pautas-*.md"
+        }
+      ],
+      "rubric": "Lê o perfil, roda outliers com 3 a 6 buscas do nicho, descarta o que não é do tema e entrega 3 a 5 pautas no formato de pesquisa.md: cada uma com outliers reais (views, multiplicador, base), ângulo, promessa, 3 títulos, gancho, a prova do criador e esforço x retorno; marca a aposta segura e a de risco. Nenhum título copiado de outlier; padrão de um vídeo só marcado como aposta."
+    },
+    {
+      "name": "voz e ritmo pelos videos do canal",
+      "setup": "youtube-research e yt-dlp instalados; sem roteiros/canal.md.",
+      "prompt": "Meu canal é o @alexhenriquepro. Monta o meu perfil de voz para os próximos roteiros.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/canal.md"
+        }
+      ],
+      "rubric": "Roda channel e transcript em 5 a 8 vídeos variados (inclui os de top). O perfil traz pilares preenchidos com trechos reais das transcrições, frases de referência, 'nunca diria' e a linha 'Ritmo de fala: N palavras por minuto (medido em K vídeos)' com a mediana de words_per_minute. Avisa que a legenda automática erra nomes e números e pede a confirmação do criador."
+    },
+    {
+      "name": "narracao sobre gravacao de tela",
+      "setup": "video-analysis instalado, com ffmpeg; rode `node modules/video-analysis/tests/fixtures.mjs <pasta-de-teste>` para gerar aula.mp4 (slides com texto) e use-o como a gravação.",
+      "prompt": "Gravei a tela do meu tutorial (aula.mp4). Escreve a narração de uns 2 minutos em cima dela.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/gravacao.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro.md"
+        }
+      ],
+      "rubric": "Pergunta antes de qualquer envio ao Google (sem o sim, modo local). Roda analyze com --instructions de gravacao-de-tela.md, monta o mapa da gravação com os tempos e o texto exato da tela e confirma o que cortar. O roteiro usa [TELA mm:ss–mm:ss: …] por trecho, a fala diz o que a imagem não diz e o lint não aponta speech_over_screen sem tratamento."
+    },
+    {
+      "name": "video de referencia",
+      "setup": "youtube-research instalado; projeto com roteiros/canal.md.",
+      "prompt": "Quero um vídeo no estilo deste, mas sobre o meu tema (horta em apartamento): https://www.youtube.com/watch?v=NB_BgdAWqBk",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "youtube-research/videos/NB_BgdAWqBk/transcript.md"
+        }
+      ],
+      "rubric": "Estuda o vídeo pela transcrição e pelos dados (abertura, blocos com tempo, onde paga), mostra o esqueleto e pergunta o que exatamente agradou. O roteiro usa o mecanismo (família do gancho, ordem das ideias), nunca as frases nem o título do vídeo de referência."
+    },
+    {
+      "name": "ferramenta propria sem cara de anuncio",
+      "setup": "Copie tests/fixtures/ferramenta-ficticia/README.md para lista-pronta/README.md no projeto e tests/fixtures/canal-regras.md para roteiros/canal.md. O integrante não responde durante a sessão.",
+      "prompt": "Quero um roteiro de uns 8 minutos mostrando como eu uso o Lista Pronta, o app que eu fiz, para montar a marmita da semana. O README dele está em lista-pronta/README.md. Ainda não gravei nada. Decide o resto por mim.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/verdade.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/checklist.md"
+        }
+      ],
+      "rubric": "verdade.md sai do README (passos, limites, custo separando grátis e pago, o que fica fora da fala) e toda frase sobre o app bate com ela: nada de preço de mercado, versão para computador ou função que o README não tem. Sem cara de anúncio: a transparência em uma frase no bloco de origem e na descrição; nenhum plano, preço (R$ 14,90), \"grátis\" ou bloco de venda na fala; o link na descrição. As Regras do criador de canal.md são respeitadas (o lint não aponta creator_banned). Como nada foi gravado, há roteiro de gravação e o que só o resultado responde está em [CONFIRMAR]; o checklist lista cada um."
+    },
+    {
+      "name": "resultado que ainda nao existe",
+      "setup": "Projeto com roteiros/canal.md de um canal de saúde do dia a dia. O integrante não responde durante a sessão.",
+      "prompt": "Vou testar dormir 8 horas por noite durante 7 dias e quero o roteiro do vídeo. Ainda não comecei o teste. Decide o resto.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/checklist.md"
+        }
+      ],
+      "rubric": "Entrega primeiro o roteiro de gravação (o que fazer, gravar e anotar em cada dia) e o roteiro de fala com todos os blocos escritos, palavra por palavra. Nenhuma fala narra o que ainda não aconteceu: como ele se sentiu, o que mudou, o que deu errado ficam [CONFIRMAR: …]; decisões dele (o horário, como medir) ficam [ESCOLHER: …]. O contrato não promete resultado. Nenhum estudo ou número sem fonte. O lint mostra os bloqueios esperados das marcas e o checklist lista cada uma com o bloco."
+    },
+    {
+      "name": "referencia em ingles com mapa e contexto local",
+      "setup": "Copie tests/fixtures/regressao/fluxo-en.md para referencia-en.md no projeto; roteiros/canal.md de um canal de cozinha prática. O integrante não responde durante a sessão.",
+      "prompt": "Quero um vídeo no estilo deste vídeo em inglês (a transcrição está em referencia-en.md), mas sobre como eu monto a marmita da semana com a panela de pressão elétrica. Decide o resto.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/referencia.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro.md"
+        }
+      ],
+      "rubric": "referencia.md tem a tabela 'o que a referência faz | como ela diz | como entra no nosso' com todas as batidas da referência na ordem (resultado tocando, procurou e não achou, promessa, origem, pedir para ficar com motivo, contraste com o jeito comum, mecanismo, parte sem fala, o exemplo que ensina, qual usar, opinião honesta, pergunta no fim), a seção do contexto do público (moeda, programas, buscas em português, hábitos) e o que fica de fora ('free', '$0', 'not lying', o link da comunidade). A estrutura segue o mapa. Nenhuma frase do roteiro é tradução literal da referência. Toda batida sem fato do criador virou [CONFIRMAR] ou saiu."
+    },
+    {
+      "name": "canal novo com voz por referencias e texto literal do criador",
+      "setup": "Copie tests/fixtures/regressao/voz-1.md e voz-2.md para o projeto. Sem roteiros/canal.md. O integrante não responde durante a sessão.",
+      "prompt": "É o primeiro vídeo do meu canal, ainda não tenho vídeos. Meu jeito de falar parece com o desses dois: voz-1.md e voz-2.md. O gancho eu já escrevi: 'Se liga nessa marmita. Sete dias, uma panela, e eu não lavei louça nenhuma no meio da semana.' Faz o roteiro de 6 minutos de como eu organizo a marmita da semana. Decide o resto.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/canal.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro.md"
+        }
+      ],
+      "rubric": "canal.md tem a voz tirada só da mecânica das duas transcrições (como abrem, marcadores de conversa, como mostram, como pedem para ficar), cada traço marcado '(emprestado de referências, confirme)' e listado para a pergunta 'você fala assim?'; nenhum bordão, frase, opinião ou conteúdo dos dois criadores. canal.md tem a seção Regras do criador. O gancho do criador aparece palavra por palavra como opção 1, recomendada se passar no teste às cegas, e é o que abre o roteiro. 'Primeiro vídeo do canal' entra só se ajudar (pedir para ficar até o fim com motivo)."
+    },
+    {
+      "name": "regressao do exemplo aprovado",
+      "setup": "Na pasta de trabalho com o app Carrossel animado (motion-carousel) instalado: copie tests/fixtures/regressao/canal.md para roteiros/canal.md e fluxo-en.md, voz-1.md, voz-2.md e voz-3.md para referencias/. O exemplo aprovado (tests/fixtures/exemplo-roteiro-carrossel-animado.md) NÃO vai para o projeto: só a crítica o recebe. O integrante não responde durante a sessão.",
+      "prompt": "É o primeiro vídeo do meu canal: 'Como eu uso o Claude Code pra criar carrosséis ANIMADOS'. O app que aparece é o Carrossel animado (motion-carousel), que eu mesmo construí e está instalado aqui. Quero seguir o fluxo deste vídeo americano (a transcrição está em referencias/fluxo-en.md), trazido para o Brasil. Meu jeito de falar parece com o destes: referencias/voz-1.md, referencias/voz-2.md e referencias/voz-3.md. O gancho eu escrevi: 'Se liga nesse carrossel. Cada slide é um vídeo, com música. E antes que você pense que eu passei a tarde num editor de vídeo: não abri editor nenhum. Foi o Claude Code! Eu pedi numa frase e respondi umas perguntas dele. Vou te mostrar do zero como foi.' Ainda não fiz os carrosséis. Uns 10 minutos. Decide o resto por mim.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/verdade.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/referencia.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro-completo.md"
+        }
+      ],
+      "rubric": "Um crítico que recebe só roteiro-completo.md, o exemplo aprovado e esta rubrica compara os dois. O gerado precisa chegar ao nível do exemplo em cada item: o resultado primeiro; a lacuna com escopo ('em português', a busca com [CONFIRMAR: quantos]); a origem honesta em uma frase ('sentei, montei e virou esse app'); o contraste com o jeito comum e o custo dele no contexto brasileiro (crédito em dólar); a parte sem fala ('vou calar a boca e você assiste'); as regras ensinadas pelo próprio artefato (o carrossel 1 ensina as regras de motion design, tiradas da ficha de verdade do app); o 'qual usar'; a opinião honesta com o que ainda não está perfeito; um CTA de links ('tudo que eu usei tá com link na descrição') mais uma pergunta fácil; zero cara de anúncio (nada de loja, FlyeeClub, versão, plano, preço ou 'grátis' na fala); zero fala presumida (o que só os carrosséis feitos respondem está em [CONFIRMAR]). O gancho do criador abre o roteiro palavra por palavra. Notas de 1 a 10 por item; a regressão passa com todos os itens em 7 ou mais."
+    },
+    {
+      "name": "historias e opinioes do perfil",
+      "setup": "Copie tests/fixtures/canal-historias.md para roteiros/canal.md. A integrante não responde durante a sessão.",
+      "prompt": "Quero um roteiro de uns 8 minutos de como eu organizo a marmita da semana sem enjoar. Ainda não gravei nada. Decide o resto.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/roteiro.md"
+        }
+      ],
+      "rubric": "A origem do vídeo usa a história de \"Como eu comecei\" do perfil (2019, os cinco potes iguais, a quarta-feira), com as palavras dela, contada como cena, e nenhuma outra história de origem é inventada. A opinião do fim parte de \"O que eu defendo\" (variar o tempero rende mais do que variar a receita) e termina em aposta. O contraste com o jeito comum usa \"O que me incomoda\" (os cinco potes idênticos no domingo). O caso da irmã com o peixe aguado entra onde ensina (separar o que tem caldo). Nada disso aparece como proposta \"para você assinar\" nem como [CONFIRMAR]: é dela. A fala usa o feminino na primeira pessoa (\"cansada\"). O que não está no perfil (o tempo de preparo, o cardápio desta semana) fica em marca com exemplo de forma. Nenhum \"marmita fitness\" e nenhuma promessa de emagrecimento."
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "manifest_version": 1,
+  "name": "video-studio",
+  "version": "1.0.0",
+  "type": "workflow",
+  "trail": "divulgar",
+  "title": {
+    "pt-BR": "Estúdio de vídeo",
+    "en": "Video studio"
+  },
+  "summary": {
+    "pt-BR": "Cria vídeos animados para Reels, TikTok e Shorts a partir do seu pedido: pergunta o que falta, usa o logo, as cores e as telas reais da sua marca, compõe a trilha na batida, mostra uma prévia e entrega o vídeo conferido para as redes.",
+    "en": "Creates animated videos for Reels, TikTok and Shorts from your request: asks what is missing, uses your brand's real logo, colours and screens, composes the music on the beat, shows a preview and delivers the video checked for the networks."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.1.0",
+  "entry": "skills/motion-video/SKILL.md",
+  "files": [
+    "README.md",
+    "references/estilos.md",
+    "references/pagina-do-video.md",
+    "references/perguntas.json",
+    "references/roteiros.json",
+    "references/roteiros.md",
+    "runtime/studio.js",
+    "runtime/templates/interface.html",
+    "runtime/templates/lancamento.html",
+    "runtime/templates/lista.html",
+    "runtime/templates/oferta.html",
+    "scripts/lib/brand.mjs",
+    "scripts/lib/engine.mjs",
+    "scripts/lib/intake.mjs",
+    "scripts/lib/project.mjs",
+    "scripts/lib/request.mjs",
+    "scripts/lib/roteiro.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/studio.mjs",
+    "skills/motion-video/SKILL.md"
+  ],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/video-studio/scripts/studio.mjs",
+      "reason": {
+        "pt-BR": "O script do app lê o seu pedido, monta as perguntas e o briefing, guarda a marca, escreve o roteiro e a página do vídeo, chama o Motor de vídeo e grava a prévia, o vídeo final e as notas de entrega.",
+        "en": "The app's script reads your request, builds the questions and the brief, keeps the brand, writes the storyboard and the video page, calls the Video engine and writes the preview, the final video and the delivery notes."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/video-render/scripts/render.mjs",
+      "reason": {
+        "pt-BR": "O Motor de vídeo captura o site da marca, compõe a trilha e os efeitos, renderiza a página quadro a quadro, mixa o som no volume das redes e confere o vídeo.",
+        "en": "The Video engine captures the brand's site, composes the music and the effects, renders the page frame by frame, mixes the sound at the networks' loudness and checks the video."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "ffmpeg, ffprobe",
+      "reason": {
+        "pt-BR": "Codifica os quadros em vídeo, junta e mixa o áudio, mede o volume e monta as folhas de quadros. A sua IA instala o ffmpeg na primeira vez que o app precisar, depois de avisar.",
+        "en": "Encodes the frames into video, joins and mixes the audio, measures loudness and builds the frame sheets. Your AI installs ffmpeg the first time the app needs it, after telling you."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "o navegador já instalado (Microsoft Edge, Google Chrome ou Chromium), aberto sem janela para fotografar a página",
+      "reason": {
+        "pt-BR": "Fotografa cada quadro do vídeo e visita o site da marca, sem abrir janela. No Windows o Microsoft Edge já vem instalado; no Mac e no Linux a sua IA instala o Chromium se faltar.",
+        "en": "Photographs every frame of the video and visits the brand's site without opening a window. Microsoft Edge comes with Windows; on Mac and Linux your AI installs Chromium when none exists."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "README.md e package.json do projeto, e os arquivos que você puser em estudio-de-video/<vídeo>/materiais/",
+      "reason": {
+        "pt-BR": "Procura o endereço do site da marca no próprio projeto, para não perguntar o que já está escrito, e lê o logo, as fotos, os prints e a música que você deixar na pasta de materiais. Os seus arquivos são lidos onde estão e nunca são alterados.",
+        "en": "Looks for the brand's site address in the project itself, so it does not ask what is already written, and reads the logo, photos, screenshots and music you leave in the materials folder. Your files are read where they are and never changed."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./estudio-de-video/ e ./capturas/",
+      "reason": {
+        "pt-BR": "Grava, uma pasta por vídeo, o pedido, o briefing, o roteiro, a página, a trilha, a prévia, o vídeo final, a capa e as notas de entrega; a marca fica em estudio-de-video/marcas/ e as telas capturadas do site em capturas/.",
+        "en": "Writes, one folder per video, the request, the brief, the storyboard, the page, the music, the preview, the final video, the cover and the delivery notes; the brand is kept in estudio-de-video/marcas/ and the screens captured from the site in capturas/."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "o site da marca que você indicar",
+      "reason": {
+        "pt-BR": "Visita o site da sua marca para copiar o logo, as cores, as fontes, os textos e as telas reais. É a única conexão do app: nada do seu computador é enviado a lugar nenhum.",
+        "en": "Visits your brand's site to copy the logo, colours, fonts, texts and real screens. It is the app's only connection: nothing from your computer is sent anywhere."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: vídeos animados na vertical (1080×1920) de 6 a 20 segundos para Reels, TikTok e Shorts; o app mede o pedido e pergunta só o que falta (nenhuma pergunta para um pedido completo, um briefing guiado em até três rodadas curtas para um pedido vago, com a opção de deixar a IA decidir); marca real capturada do site (logo, cores, fontes, telas, números publicados); quatro roteiros (lançamento, interface que se transforma, oferta e lista) e cinco estilos; trilha original e efeitos na batida, sem música de terceiros; prévia do tamanho de um celular antes do vídeo final; conferência de capa legível, zona segura, tamanho do texto, cortes na batida e volume; capa e notas para postar.",
+    "en": "First version: vertical animated videos (1080×1920) from 6 to 20 seconds for Reels, TikTok and Shorts; the app measures the request and asks only what is missing (no questions for a complete request, a guided brief in up to three short rounds for a vague one, with the option of letting the AI decide); the real brand captured from the site (logo, colours, fonts, screens, published numbers); four storyboards (launch, morphing interface, offer and list) and five styles; original music and effects on the beat, with no third-party music; a phone-size preview before the final video; checks for a readable cover, safe area, text size, cuts on the beat and loudness; cover and notes for posting."
+  },
+  "license": "member"
+}

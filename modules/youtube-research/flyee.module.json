@@ -1,0 +1,75 @@
+{
+  "manifest_version": 1,
+  "name": "youtube-research",
+  "version": "1.0.0",
+  "type": "tool",
+  "trail": "planejar",
+  "title": {
+    "pt-BR": "Pesquisa no YouTube",
+    "en": "YouTube research"
+  },
+  "summary": {
+    "pt-BR": "Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público e o normal de qualquer canal, sem chave.",
+    "en": "Shows which videos on a topic did far better than their own channel's normal, and by how much. Also brings the videos' speech, the audience's comments and any channel's normal, with no key."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.1.0",
+  "entry": "skills/youtube-research/SKILL.md",
+  "files": [
+    "README.md",
+    "references/interface.md",
+    "references/metodologia.md",
+    "scripts/lib/captions.mjs",
+    "scripts/lib/language.mjs",
+    "scripts/lib/report.mjs",
+    "scripts/lib/score.mjs",
+    "scripts/lib/titles.mjs",
+    "scripts/lib/tools.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/lib/youtube.mjs",
+    "scripts/research.mjs",
+    "skills/youtube-research/SKILL.md"
+  ],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/youtube-research/scripts/research.mjs",
+      "reason": {
+        "pt-BR": "O script do app busca os vídeos, mede o normal de cada canal, calcula as métricas e grava o relatório.",
+        "en": "The app's script searches the videos, measures each channel's normal, computes the metrics and writes the report."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "yt-dlp",
+      "reason": {
+        "pt-BR": "Lê as páginas públicas do YouTube: a busca, os envios de um canal, os dados, a legenda e os comentários de um vídeo. Nunca baixa o vídeo.",
+        "en": "Reads YouTube's public pages: search, a channel's uploads, a video's data, captions and comments. Never downloads the video."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "youtube.com",
+      "reason": {
+        "pt-BR": "Busca os vídeos, os canais, as legendas e os comentários públicos, sem login e sem chave.",
+        "en": "Fetches public videos, channels, captions and comments, with no login and no key."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./youtube-research/",
+      "reason": {
+        "pt-BR": "Grava os relatórios, as planilhas, as transcrições e os comentários, e guarda o que já foi lido para a próxima pesquisa sair mais rápido.",
+        "en": "Writes the reports, spreadsheets, transcripts and comments, and keeps what was already read so the next search runs faster."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: outliers de um tema medidos contra o normal de cada canal, com faixas, avisos, relatório e planilha; traços de título medidos contra o multiplicador, com o tamanho de cada grupo; o normal de um canal; a fala de vídeos pela legenda, com o ritmo em palavras por minuto; os comentários mais relevantes, sem nomes; interface para outros apps.",
+    "en": "First version: a topic's outliers measured against each channel's normal, with bands, flags, report and spreadsheet; title traits measured against the multiplier, with the size of each group; a channel's normal; video speech from captions, with the pace in words per minute; the most relevant comments, without names; an interface for other apps."
+  },
+  "license": "member"
+}

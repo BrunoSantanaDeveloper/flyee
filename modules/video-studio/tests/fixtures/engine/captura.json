@@ -1,0 +1,574 @@
+{
+  "format_version": 1,
+  "url": "https://www.sorrisopleno.com.br/",
+  "final_url": "https://www.sorrisopleno.com.br/",
+  "site": "sorrisopleno.com.br",
+  "captured_at": "2026-10-07T12:00:00.000Z",
+  "http_status": 200,
+  "viewports": {
+    "desktop": {
+      "width": 1440,
+      "height": 900,
+      "scale": 1,
+      "full_height": 3325,
+      "content_height": 3325
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "scale": 2,
+      "full_height": 4696,
+      "content_height": 4696
+    }
+  },
+  "files": {
+    "desktop": "desktop.png",
+    "desktop_full": "desktop-full.png",
+    "mobile": "mobile.png",
+    "mobile_full": "mobile-full.png",
+    "scroll_desktop": "rolagem-desktop.mp4",
+    "scroll_mobile": "rolagem-mobile.mp4",
+    "capture": "captura.json",
+    "assets": [
+      "assets/logo-1.svg"
+    ]
+  },
+  "scroll": {
+    "desktop": {
+      "frames": 120,
+      "seconds": 4,
+      "fps": 30,
+      "max_scroll": 2425,
+      "width": 1440,
+      "height": 900
+    },
+    "mobile": {
+      "frames": 180,
+      "seconds": 6,
+      "fps": 30,
+      "max_scroll": 3852,
+      "width": 780,
+      "height": 1688
+    }
+  },
+  "brand": {
+    "name": "Sorriso Pleno",
+    "title": "Sorriso Pleno | Clínica odontológica em Curitiba",
+    "headline": "Seu sorriso novo em 90 dias",
+    "description": "Implantes, clareamento e alinhadores invisíveis com avaliação gratuita. Mais de 2.000 pacientes atendidos em Curitiba.",
+    "logo": {
+      "file": "assets/logo-1.svg",
+      "source": "dom",
+      "kind": "svg",
+      "width": 44,
+      "height": 44,
+      "alternatives": []
+    },
+    "colors": {
+      "primary": "#7C3AED",
+      "background": "#FFFFFF",
+      "text": "#1F2937",
+      "palette": [
+        {
+          "hex": "#FFFFFF",
+          "area": 2396641,
+          "share": 0.435,
+          "source": "background"
+        },
+        {
+          "hex": "#F5F3FF",
+          "area": 2243745,
+          "share": 0.407,
+          "source": "background"
+        },
+        {
+          "hex": "#111827",
+          "area": 817920,
+          "share": 0.148,
+          "source": "background"
+        },
+        {
+          "hex": "#1F2937",
+          "area": 415667,
+          "share": 0.49,
+          "source": "text"
+        },
+        {
+          "hex": "#F9FAFB",
+          "area": 102912,
+          "share": 0.121,
+          "source": "text"
+        },
+        {
+          "hex": "#C4B5FD",
+          "area": 91039,
+          "share": 0.107,
+          "source": "text"
+        },
+        {
+          "hex": "#7C3AED",
+          "area": 74144,
+          "share": 0.087,
+          "source": "text"
+        },
+        {
+          "hex": "#FFFFFF",
+          "area": 53865,
+          "share": 0.063,
+          "source": "text"
+        },
+        {
+          "hex": "#4B5563",
+          "area": 50400,
+          "share": 0.059,
+          "source": "text"
+        },
+        {
+          "hex": "#374151",
+          "area": 50160,
+          "share": 0.059,
+          "source": "text"
+        }
+      ]
+    },
+    "fonts": {
+      "headline": "Marca Display",
+      "body": "Inter",
+      "ui": "Inter",
+      "faces": [
+        {
+          "family": "Marca Display",
+          "weights": [
+            "700"
+          ],
+          "loaded": false,
+          "src": [
+            "https://www.sorrisopleno.com.br/fonts/marca-display.woff2"
+          ]
+        }
+      ]
+    },
+    "cta": [
+      {
+        "text": "Agendar avaliação",
+        "href": "https://www.sorrisopleno.com.br/#agendar",
+        "background": "#7C3AED",
+        "color": "#FFFFFF"
+      },
+      {
+        "text": "Agendar avaliação gratuita",
+        "href": "https://www.sorrisopleno.com.br/#agendar",
+        "background": "#7C3AED",
+        "color": "#FFFFFF"
+      },
+      {
+        "text": "Falar no WhatsApp",
+        "href": "https://wa.me/5541999998888?text=Quero%20agendar",
+        "background": "#25D366",
+        "color": "#FFFFFF"
+      },
+      {
+        "text": "Ver tratamentos",
+        "href": "https://www.sorrisopleno.com.br/#tratamentos",
+        "background": null,
+        "color": "#7C3AED"
+      },
+      {
+        "text": "Quero clarear",
+        "href": null,
+        "background": "#7C3AED",
+        "color": "#FFFFFF"
+      }
+    ],
+    "numbers": [
+      {
+        "text": "10 anos",
+        "value": 10,
+        "unit": "anos",
+        "context": "Dente fixo em uma única sessão, com planejamento digital e garantia de 10 anos na peça protética."
+      },
+      {
+        "text": "+2.000",
+        "value": 2000,
+        "unit": "+",
+        "context": "+2.000"
+      },
+      {
+        "text": "97%",
+        "value": 97,
+        "unit": "%",
+        "context": "97%"
+      },
+      {
+        "text": "15 anos",
+        "value": 15,
+        "unit": "anos",
+        "context": "15 anos"
+      }
+    ],
+    "prices": [
+      {
+        "text": "R$ 199",
+        "value": 199,
+        "currency": "BRL",
+        "product": "Clareamento a laser",
+        "context": "R$ 199 sessão única"
+      },
+      {
+        "text": "R$ 89,90",
+        "value": 89.9,
+        "currency": "BRL",
+        "product": "Plano família",
+        "context": "R$ 89,90 por mês"
+      }
+    ],
+    "products": [],
+    "social": {
+      "whatsapp": "https://wa.me/5541999998888?text=Quero%20agendar",
+      "instagram": "https://www.instagram.com/sorrisopleno",
+      "youtube": "https://www.youtube.com/@sorrisopleno"
+    },
+    "contacts": {
+      "emails": [
+        "contato@sorrisopleno.com.br"
+      ],
+      "phones": [
+        "+554133334444"
+      ],
+      "whatsapp": [
+        "5541999998888"
+      ]
+    },
+    "nav": [
+      "Tratamentos",
+      "Resultados",
+      "Planos",
+      "Depoimentos",
+      "Área do paciente",
+      "Agendar avaliação"
+    ],
+    "sector_cues": [
+      {
+        "sector": "odontologia",
+        "score": 17,
+        "keywords": [
+          "dent",
+          "sorriso",
+          "implante",
+          "clareamento",
+          "aparelho",
+          "alinhador"
+        ]
+      },
+      {
+        "sector": "saúde",
+        "score": 11,
+        "keywords": [
+          "clinica",
+          "paciente",
+          "consulta",
+          "tratamento",
+          "exame"
+        ]
+      }
+    ],
+    "language": {
+      "declared": "pt-BR",
+      "detected": "pt",
+      "counts": {
+        "pt": 19,
+        "en": 0,
+        "es": 1
+      }
+    },
+    "has_login_area": true,
+    "word_count": 232,
+    "jsonld_types": [
+      "Dentist"
+    ],
+    "address": "Rua das Flores, 100, Curitiba, PR"
+  },
+  "cookie_banner": {
+    "desktop": {
+      "dismissed": true,
+      "button": "Aceitar",
+      "hidden_after_click": true,
+      "candidates": 1
+    },
+    "mobile": {
+      "dismissed": true,
+      "button": "Aceitar",
+      "hidden_after_click": true,
+      "candidates": 1
+    }
+  },
+  "wall": {
+    "blocked": false,
+    "http_error": false,
+    "status": 200,
+    "reasons": []
+  },
+  "assets": [
+    {
+      "role": "logo",
+      "index": 1,
+      "url": null,
+      "source": "dom",
+      "kind": "svg",
+      "width": 44,
+      "height": 44,
+      "score": 10,
+      "saved": true,
+      "file": "assets/logo-1.svg",
+      "bytes": 316,
+      "content_type": "image/svg+xml",
+      "error": null,
+      "inline_svg": true
+    }
+  ],
+  "raw": {
+    "errors": [],
+    "document": {
+      "url": "https://www.sorrisopleno.com.br/",
+      "title": "Sorriso Pleno | Clínica odontológica em Curitiba",
+      "lang": "pt-BR",
+      "description": "Implantes, clareamento e alinhadores invisíveis com avaliação gratuita. Mais de 2.000 pacientes atendidos em Curitiba.",
+      "canonical": "https://www.sorrisopleno.com.br/",
+      "og": {
+        "title": "Sorriso Pleno — seu sorriso novo em 90 dias",
+        "description": "Clínica odontológica em Curitiba: implantes, clareamento e alinhadores invisíveis.",
+        "image": "https://www.sorrisopleno.com.br/og.png",
+        "site_name": "Sorriso Pleno",
+        "type": null,
+        "logo": null
+      },
+      "theme_color": "#7C3AED",
+      "viewport_meta": "width=device-width, initial-scale=1",
+      "generator": null,
+      "ready_state": "complete"
+    },
+    "icons": [],
+    "jsonld": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Dentist",
+        "name": "Sorriso Pleno",
+        "description": "Clínica odontológica em Curitiba.",
+        "url": "https://www.sorrisopleno.com.br/",
+        "logo": "https://www.sorrisopleno.com.br/logo.svg",
+        "telephone": "+55 41 3333-4444",
+        "sameAs": [
+          "https://www.instagram.com/sorrisopleno",
+          "https://www.youtube.com/@sorrisopleno"
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Rua das Flores, 100",
+          "addressLocality": "Curitiba",
+          "addressRegion": "PR"
+        }
+      }
+    ],
+    "logos": [
+      {
+        "kind": "svg",
+        "src": null,
+        "alt": null,
+        "class": "logo",
+        "id": null,
+        "hint": "logo sorriso pleno — página inicial brand",
+        "in_header": true,
+        "home_link": true,
+        "visible": true,
+        "x": 184,
+        "y": 18,
+        "width": 44,
+        "height": 44,
+        "order": 0,
+        "inline_svg": true
+      }
+    ],
+    "headings": {
+      "h1": [
+        "Seu sorriso novo em 90 dias"
+      ],
+      "h2": [
+        "Implantes dentários",
+        "Clareamento a laser",
+        "Alinhadores invisíveis",
+        "Planos e valores",
+        "Quem já passou por aqui",
+        "Agende sua avaliação gratuita"
+      ],
+      "largest": "Seu sorriso novo em 90 dias",
+      "largest_size": 56,
+      "body_size": 16
+    },
+    "cta": [],
+    "colors": {
+      "elements": {
+        "body": {
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(31, 41, 55)"
+        },
+        "button": {
+          "background": "rgb(124, 58, 237)",
+          "color": "rgb(255, 255, 255)"
+        },
+        "link": {
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "rgb(124, 58, 237)"
+        }
+      },
+      "backgrounds": [
+        {
+          "color": "rgb(255, 255, 255)",
+          "area": 2396641
+        },
+        {
+          "color": "rgb(245, 243, 255)",
+          "area": 2243745
+        },
+        {
+          "color": "rgb(17, 24, 39)",
+          "area": 817920
+        }
+      ],
+      "texts": [
+        {
+          "color": "rgb(31, 41, 55)",
+          "area": 415667
+        },
+        {
+          "color": "rgb(249, 250, 251)",
+          "area": 102912
+        },
+        {
+          "color": "rgb(196, 181, 253)",
+          "area": 91039
+        }
+      ],
+      "scanned": 83
+    },
+    "fonts": {
+      "body": "Inter, \"Segoe UI\", Arial, sans-serif",
+      "h1": "\"Marca Display\", Georgia, serif",
+      "h2": "\"Marca Display\", Georgia, serif",
+      "button": "Inter, \"Segoe UI\", Arial, sans-serif",
+      "nav": "Inter, \"Segoe UI\", Arial, sans-serif",
+      "loaded": [
+        {
+          "family": "Marca Display",
+          "weight": "700",
+          "style": "normal",
+          "status": "error"
+        }
+      ],
+      "faces": [
+        {
+          "family": "Marca Display",
+          "weight": "700",
+          "style": "normal",
+          "src": [
+            "https://www.sorrisopleno.com.br/fonts/marca-display.woff2"
+          ]
+        }
+      ]
+    },
+    "prices": [
+      {
+        "text": "R$ 199",
+        "context": "R$ 199 sessão única",
+        "product": "Clareamento a laser"
+      },
+      {
+        "text": "R$ 89,90",
+        "context": "R$ 89,90 por mês",
+        "product": "Plano família"
+      }
+    ],
+    "links": [
+      {
+        "href": "https://www.sorrisopleno.com.br/login",
+        "text": "Área do paciente",
+        "header": true
+      },
+      {
+        "href": "https://wa.me/5541999998888?text=Quero%20agendar",
+        "text": "Falar no WhatsApp",
+        "header": false
+      },
+      {
+        "href": "https://api.whatsapp.com/send?phone=5541999998888",
+        "text": "Agendar pelo WhatsApp",
+        "header": false
+      },
+      {
+        "href": "tel:+554133334444",
+        "text": "(41) 3333-4444",
+        "header": false
+      },
+      {
+        "href": "mailto:contato@sorrisopleno.com.br",
+        "text": "contato@sorrisopleno.com.br",
+        "header": false
+      },
+      {
+        "href": "https://www.instagram.com/sorrisopleno",
+        "text": "Instagram",
+        "header": false
+      },
+      {
+        "href": "https://www.youtube.com/@sorrisopleno",
+        "text": "YouTube",
+        "header": false
+      },
+      {
+        "href": "https://wa.me/5541999998888",
+        "text": "WhatsApp",
+        "header": false
+      }
+    ],
+    "nav": [
+      {
+        "text": "Tratamentos",
+        "href": "https://www.sorrisopleno.com.br/#tratamentos"
+      },
+      {
+        "text": "Resultados",
+        "href": "https://www.sorrisopleno.com.br/#numeros"
+      },
+      {
+        "text": "Planos",
+        "href": "https://www.sorrisopleno.com.br/#planos"
+      },
+      {
+        "text": "Depoimentos",
+        "href": "https://www.sorrisopleno.com.br/#depoimentos"
+      },
+      {
+        "text": "Área do paciente",
+        "href": "https://www.sorrisopleno.com.br/login"
+      },
+      {
+        "text": "Agendar avaliação",
+        "href": "https://www.sorrisopleno.com.br/#agendar"
+      }
+    ],
+    "layout": {
+      "scroll_height": 3325,
+      "scroll_width": 1440,
+      "inner_width": 1440,
+      "inner_height": 900,
+      "elements": 104,
+      "images": 1,
+      "videos": 0,
+      "iframes": 0,
+      "forms": 0
+    },
+    "text_excerpt": "Tratamentos\nResultados\nPlanos\nDepoimentos\nÁrea do paciente\nAgendar avaliação\nSeu sorriso novo em 90 dias\nImplantes, clareamento e alinhadores invisíveis com uma equipe de dentistas que acompanha você do primeiro exame ao último retorno.\nAgendar avaliação gratuita\nFalar no WhatsApp\nVer tratamentos\nImplantes dentários\nDente fixo em uma única sessão, com planejamento digital e garantia de 10 anos na peça protética.\nClareamento a laser\nAté oito tons mais claro em uma hora, sem sensibilidade, com acompanhamento do dentista durante toda a sessão.\nAlinhadores invisíveis\nAparelho transparente trocado a cada duas semanas, com previsão do resultado antes de começar o tratamento.\n+2.000\nclientes atendidos em Curitiba\n97%\nde aprovação nas avaliações\n15 anos\nde experiência clínica\nPlanos e valores\nClareamento a laser\nR$ 199 sessão única\nInclui avaliação, moldagem e kit de manutenção em casa.\nQuero clarear\nPlano família\nR$ 89,90 por mês\nConsultas, limpezas e urgências para até quatro pessoas.\nConhecer o plano\nQuem já passou por aqui\n“Fiz o clareamento e os alinhadores. Em três meses eu já sorria nas fotos sem pensar.” — Mariana, paciente desde 2022\nAgende sua avaliação gratuita\nAtendemos de segunda a sábado, das 8h às 20h. A primeira consulta com exame panorâmico é por nossa conta.\nAgendar pelo WhatsApp\nSorriso Pleno\nRua das Flores, 100 — Curitiba, PR\n(41) 3333-4444\ncontato@sorrisopleno.com.br\nRedes\nInstagram\nYouTube\nWhatsApp\nCompartilhar\nInstitucional\nInício\nEntrar na área do paciente\nPolítica de privacidade"
+  },
+  "page_errors": [],
+  "elapsed_s": 0.1,
+  "warnings": []
+}

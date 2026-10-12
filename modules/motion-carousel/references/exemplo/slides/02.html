@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>02 · ponto</title>
+<style>
+  html, body { margin: 0; background: #0C0C0E; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script src="../motion.js"></script>
+<script src="../carousel.js"></script>
+<script>
+  // Slide 2 de 5 · ponto. Edite o bloco SLIDE ou troque os helpers em seek; mantenha at: 0 no título.
+  // O número e as barras são uma imagem retórica da promessa de janeiro, não uma estatística.
+  window.SLIDE = {
+    n: 2, total: 5,
+    label: "Motivo 1 de 3",
+    title: "Meta errada.",
+    text: "treinos feitos até o fim de fevereiro.\nA promessa de janeiro era 100.",
+    theme: "noir", format: "4:5",
+    bars: 3, bpm: 120, seed: 7,
+    totalBars: 16, offsetBars: 3,
+    counter: { from: 100, to: 8, out: 2, back: 4, beats: 4 }, // some na batida 2 e volta contando de 100 a 8 entre as batidas 4 e 8
+    chart: { values: [5, 2, 1, 0], labels: ["Sem 1", "Sem 2", "Sem 3", "Sem 4"], out: 2, back: 4.5, perBar: 1 },
+  };
+  const S = window.SLIDE;
+  const C = Carousel.setup({ bars: S.bars, bpm: S.bpm, format: S.format, theme: S.theme, seed: S.seed, title: "02 · ponto" });
+
+  window.seek = (t) => {
+    C.begin(t);
+    C.glow({ x: 0.82, y: 0.18, alpha: 0.08 });
+    C.pulseBg(0.03);
+    C.label(S.label, { y: 96, size: 44 });
+    const title = C.headline(S.title, { y: 176, size: 140 });
+    const number = C.counter(Object.assign({ x: 72, y: title.bottom + 36, size: 300 }, S.counter));
+    C.body(S.text, { y: number.bottom + 20, size: 48, maxWidth: 900, out: 2, back: 8.5 });
+    C.bars(Object.assign({ x: 72, y: 800, w: 936, h: 280, labelSize: 44 }, S.chart));
+    C.ruler({ y: 1140, totalBars: S.totalBars, offsetBars: S.offsetBars, bars: S.bars });
+    C.progress({ step: S.n, total: S.total });
+    C.swipeHint({});
+    return C.end();
+  };
+</script>
+</body>
+</html>

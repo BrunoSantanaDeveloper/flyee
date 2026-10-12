@@ -1,0 +1,269 @@
+{
+  "format_version": 1,
+  "checked_on": "2026-10-07",
+  "note": "Limites e zonas seguras das redes, conferidos em fontes públicas na data acima. As redes mudam limites sem aviso: onde não foi possível confirmar o valor, a tabela usa o mais cauteloso e a nota diz. Os recuos (safe_zone) são em pixels no tamanho de referência de cada formato e dizem onde a interface da rede cobre o vídeo: nome e legenda embaixo, botões à direita, barras em cima.",
+  "loudness_note": "YouTube, Spotify e a maioria dos players normalizam para -14 LUFS. Instagram, TikTok e as demais redes não publicam o alvo; -14 LUFS com pico real de -1 dBTP toca no mesmo volume em todas.",
+  "formats": {
+    "9:16": { "label": "Vertical (9:16)", "width": 1080, "height": 1920, "safe_zone": { "top": 250, "bottom": 500, "left": 70, "right": 180 } },
+    "4:5": { "label": "Retrato (4:5)", "width": 1080, "height": 1350, "safe_zone": { "top": 120, "bottom": 200, "left": 72, "right": 72 } },
+    "3:4": { "label": "Retrato (3:4)", "width": 1080, "height": 1440, "safe_zone": { "top": 120, "bottom": 200, "left": 72, "right": 72 } },
+    "1:1": { "label": "Quadrado (1:1)", "width": 1080, "height": 1080, "safe_zone": { "top": 80, "bottom": 120, "left": 60, "right": 60 } },
+    "16:9": { "label": "Paisagem (16:9)", "width": 1920, "height": 1080, "safe_zone": { "top": 80, "bottom": 150, "left": 100, "right": 100 } }
+  },
+  "defaults_by_format": {
+    "9:16": ["reels", "tiktok", "shorts"],
+    "4:5": ["feed"],
+    "1:1": ["feed"],
+    "16:9": ["youtube"]
+  },
+  "networks": {
+    "reels": {
+      "label": "Instagram Reels",
+      "aliases": ["instagram-reels", "reel", "instagram"],
+      "formats": ["9:16"],
+      "recommended_format": "9:16",
+      "min_duration_s": 3,
+      "max_duration_s": 180,
+      "recommended_duration_s": 90,
+      "safe_zone": {
+        "9:16": { "top": 250, "bottom": 420, "left": 70, "right": 180 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 32, "lines": 2, "note": "A maioria assiste sem som: legenda gravada no vídeo, curta e alta." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 4096,
+      "notes": [
+        "Em cima ficam o nome do perfil e a faixa do áudio; embaixo, a legenda e a linha de curtir e comentar; à direita, a coluna de botões.",
+        "Até 3 minutos pelo aplicativo; algumas contas aceitam até 15 minutos por upload. Acima de 90 segundos o Instagram recomenda menos a quem não segue o perfil.",
+        "Entre 15 e 30 segundos o alcance costuma ser maior.",
+        "Um 9:16 aparece cortado em 4:5 no feed e em 1:1 na grade do perfil: o que importa fica no centro."
+      ]
+    },
+    "stories": {
+      "label": "Instagram Stories",
+      "aliases": ["story", "instagram-stories"],
+      "formats": ["9:16"],
+      "recommended_format": "9:16",
+      "min_duration_s": 1,
+      "max_duration_s": 60,
+      "recommended_duration_s": 15,
+      "safe_zone": {
+        "9:16": { "top": 250, "bottom": 340, "left": 60, "right": 60 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 30, "lines": 2, "note": "Sem som por padrão; texto grande, pouco por vez." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 4096,
+      "notes": [
+        "Em cima ficam as barras de progresso, a foto e o nome do perfil; embaixo, a caixa de resposta e as figurinhas de link.",
+        "Cada story tem até 60 segundos; um vídeo mais longo é dividido em partes de 60 segundos.",
+        "Quem toca para avançar decide em 2 ou 3 segundos: a primeira imagem precisa segurar."
+      ]
+    },
+    "feed": {
+      "label": "Instagram feed",
+      "aliases": ["instagram-feed", "post"],
+      "formats": ["4:5", "1:1", "16:9"],
+      "recommended_format": "4:5",
+      "min_duration_s": 3,
+      "max_duration_s": 900,
+      "recommended_duration_s": 60,
+      "safe_zone": {
+        "4:5": { "top": 120, "bottom": 200, "left": 60, "right": 60 },
+        "1:1": { "top": 80, "bottom": 120, "left": 60, "right": 60 },
+        "16:9": { "top": 80, "bottom": 150, "left": 100, "right": 100 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 34, "lines": 2, "note": "O feed toca sem som até o toque." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 4096,
+      "notes": [
+        "O 4:5 (1080x1350) ocupa a maior área possível do feed; o 16:9 fica pequeno na tela do celular.",
+        "Vídeos do feed são publicados como Reels e abrem em tela cheia; até 15 minutos pelo celular, e algumas contas aceitam até 60 minutos pelo computador.",
+        "No feed a interface quase não cobre o vídeo: os recuos aqui são o respiro de design, não botões."
+      ]
+    },
+    "tiktok": {
+      "label": "TikTok",
+      "aliases": ["tik-tok"],
+      "formats": ["9:16"],
+      "recommended_format": "9:16",
+      "min_duration_s": 3,
+      "max_duration_s": 600,
+      "recommended_duration_s": 60,
+      "safe_zone": {
+        "9:16": { "top": 160, "bottom": 400, "left": 60, "right": 160 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 30, "lines": 2, "note": "Legenda gravada acima da área da descrição; o TikTok também gera legendas automáticas." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 287,
+      "notes": [
+        "Em cima ficam as abas Seguindo e Para você; embaixo, a descrição, o nome do som e o disco; à direita, a coluna de curtir, comentar, salvar e compartilhar.",
+        "Até 10 minutos gravando no aplicativo; uploads pelo computador aceitam mais (até 60 minutos em contas selecionadas).",
+        "Vídeos de 21 a 34 segundos têm o maior engajamento médio.",
+        "Pelo celular o arquivo vai até 287 MB; pelo computador, até 4 GB."
+      ]
+    },
+    "shorts": {
+      "label": "YouTube Shorts",
+      "aliases": ["youtube-shorts", "short"],
+      "formats": ["9:16", "1:1"],
+      "recommended_format": "9:16",
+      "min_duration_s": 1,
+      "max_duration_s": 180,
+      "recommended_duration_s": 60,
+      "safe_zone": {
+        "9:16": { "top": 230, "bottom": 500, "left": 60, "right": 170 },
+        "1:1": { "top": 80, "bottom": 120, "left": 60, "right": 60 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 32, "lines": 2, "note": "O YouTube mostra legendas automáticas; a gravada no vídeo garante a leitura sem som." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": null,
+      "notes": [
+        "Em cima ficam o título da seção e os ícones de busca e câmera; embaixo, o canal, o título e as hashtags, uma faixa mais alta que a dos Reels; à direita, os botões de gostar, comentar, compartilhar e remixar.",
+        "Vertical ou quadrado com até 3 minutos é publicado como Short.",
+        "Entre 15 e 60 segundos a conclusão costuma ser maior.",
+        "Sem limite de arquivo que importe: o YouTube aceita até 256 GB."
+      ]
+    },
+    "youtube": {
+      "label": "YouTube",
+      "aliases": ["youtube-long", "yt"],
+      "formats": ["16:9"],
+      "recommended_format": "16:9",
+      "min_duration_s": 1,
+      "max_duration_s": 43200,
+      "recommended_duration_s": null,
+      "safe_zone": {
+        "16:9": { "top": 80, "bottom": 150, "left": 100, "right": 100 }
+      },
+      "captions": { "burn_in": false, "max_chars_per_line": 42, "lines": 2, "note": "O YouTube tem legendas próprias que o espectador liga; gravar legenda no vídeo é opcional." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 256000,
+      "notes": [
+        "Embaixo ficam a barra de progresso e os controles do player; em cima, o título no celular e na TV. Nos últimos 20 segundos o canto inferior direito recebe as telas finais.",
+        "Até 12 horas e 256 GB em contas verificadas; contas sem verificação ficam em 15 minutos.",
+        "Não há duração recomendada: o que conta é a retenção. Vídeos de 8 a 15 minutos costumam render bem.",
+        "O YouTube normaliza o áudio para -14 LUFS: um vídeo mais alto é só abaixado, um mais baixo fica baixo."
+      ]
+    },
+    "linkedin": {
+      "label": "LinkedIn",
+      "aliases": [],
+      "formats": ["9:16", "4:5", "1:1", "16:9"],
+      "recommended_format": "9:16",
+      "min_duration_s": 3,
+      "max_duration_s": 600,
+      "recommended_duration_s": 90,
+      "safe_zone": {
+        "9:16": { "top": 200, "bottom": 400, "left": 60, "right": 150 },
+        "4:5": { "top": 120, "bottom": 200, "left": 60, "right": 60 },
+        "1:1": { "top": 80, "bottom": 120, "left": 60, "right": 60 },
+        "16:9": { "top": 80, "bottom": 150, "left": 100, "right": 100 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 34, "lines": 2, "note": "O feed do LinkedIn toca sem som; a legenda gravada é o que faz parar a rolagem." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 5120,
+      "notes": [
+        "O vertical entra na aba de vídeos, onde a descrição fica embaixo e as reações à direita; 4:5 e 1:1 ocupam bem o feed comum.",
+        "Até 10 minutos pelo celular e 15 pelo computador; o arquivo vai até 5 GB. Anúncios em vídeo ficam em 200 MB.",
+        "Entre 30 e 90 segundos o alcance costuma ser maior."
+      ]
+    },
+    "x": {
+      "label": "X",
+      "aliases": ["twitter"],
+      "formats": ["16:9", "1:1", "9:16"],
+      "recommended_format": "16:9",
+      "min_duration_s": 0.5,
+      "max_duration_s": 140,
+      "recommended_duration_s": 60,
+      "safe_zone": {
+        "16:9": { "top": 60, "bottom": 120, "left": 60, "right": 60 },
+        "1:1": { "top": 80, "bottom": 120, "left": 60, "right": 60 },
+        "9:16": { "top": 180, "bottom": 380, "left": 60, "right": 150 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 36, "lines": 2, "note": "A linha do tempo toca sem som." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 512,
+      "notes": [
+        "Contas sem assinatura: até 2 minutos e 20 segundos e 512 MB. Assinantes publicam vídeos muito mais longos (até 4 horas no computador e no iPhone; 10 minutos no Android). A tabela usa o limite da conta comum.",
+        "O 16:9 e o 1:1 aparecem inteiros na linha do tempo; o 9:16 abre no modo vertical de tela cheia, com a descrição embaixo e os botões à direita."
+      ]
+    },
+    "whatsapp_status": {
+      "label": "Status do WhatsApp",
+      "aliases": ["whatsapp", "status"],
+      "formats": ["9:16"],
+      "recommended_format": "9:16",
+      "min_duration_s": 1,
+      "max_duration_s": 60,
+      "recommended_duration_s": 30,
+      "safe_zone": {
+        "9:16": { "top": 200, "bottom": 300, "left": 60, "right": 60 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 30, "lines": 2, "note": "Muita gente vê o status no silêncio." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": null,
+      "notes": [
+        "Em cima ficam a barra de progresso, o nome e a hora; embaixo, a caixa de resposta.",
+        "O limite de 90 segundos está chegando aos poucos às contas; onde ainda não chegou, o vídeo acima de 60 segundos é dividido em partes. A tabela usa 60 segundos por cautela.",
+        "O WhatsApp comprime bastante o vídeo ao publicar: letras finas e detalhes pequenos somem. Não há limite de arquivo confirmado."
+      ]
+    },
+    "kwai": {
+      "label": "Kwai",
+      "aliases": [],
+      "formats": ["9:16"],
+      "recommended_format": "9:16",
+      "min_duration_s": 3,
+      "max_duration_s": 60,
+      "recommended_duration_s": 30,
+      "safe_zone": {
+        "9:16": { "top": 160, "bottom": 400, "left": 60, "right": 160 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 30, "lines": 2, "note": "Mesma leitura do TikTok: legenda gravada, acima da descrição." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": null,
+      "notes": [
+        "Não foi possível confirmar os limites oficiais do Kwai nesta data. A tabela usa 60 segundos por cautela, que é a duração padrão dos vídeos do aplicativo; uploads mais longos podem ser aceitos.",
+        "A interface segue o desenho do TikTok: abas em cima, descrição e som embaixo, botões à direita; os recuos são os mesmos."
+      ]
+    },
+    "ads_meta": {
+      "label": "Anúncios Meta (Reels e Stories)",
+      "aliases": ["meta-ads", "ads-meta", "anuncios-meta", "facebook-ads", "instagram-ads"],
+      "formats": ["9:16"],
+      "recommended_format": "9:16",
+      "min_duration_s": 1,
+      "max_duration_s": 60,
+      "recommended_duration_s": 15,
+      "safe_zone": {
+        "9:16": { "top": 270, "bottom": 672, "left": 65, "right": 140 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 30, "lines": 2, "note": "Texto principal nos primeiros 3 segundos, dentro da zona segura." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 4096,
+      "notes": [
+        "Modelo unificado da Meta para Reels e Stories (março de 2026): 14% livres em cima (270 px), 35% embaixo (672 px) e 6% em cada lado (65 px). A coluna de botões dos Reels sobe mais que isso, por isso a tabela pede 140 px à direita.",
+        "Os posicionamentos de Stories cortam em 60 segundos; os de Reels aceitam mais, mas um anúncio de até 15 segundos é o que a Meta recomenda. A tabela usa 60 segundos por cautela."
+      ]
+    },
+    "ads_tiktok": {
+      "label": "Anúncios TikTok",
+      "aliases": ["tiktok-ads", "ads-tiktok", "anuncios-tiktok"],
+      "formats": ["9:16"],
+      "recommended_format": "9:16",
+      "min_duration_s": 5,
+      "max_duration_s": 60,
+      "recommended_duration_s": 34,
+      "safe_zone": {
+        "9:16": { "top": 150, "bottom": 480, "left": 60, "right": 140 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 30, "lines": 2, "note": "Logo, preço e chamada dentro da zona segura; o botão do anúncio ocupa a faixa de baixo." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 500,
+      "notes": [
+        "Anúncios no feed: de 5 a 60 segundos, 9:16 em 1080x1920, até 500 MB; o TikTok recomenda de 21 a 34 segundos.",
+        "Em cima ficam as abas (150 px); embaixo, a descrição, o botão do anúncio e o som (480 px); à direita, a coluna de botões (140 px)."
+      ]
+    }
+  }
+}

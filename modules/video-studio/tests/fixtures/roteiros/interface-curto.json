@@ -1,0 +1,113 @@
+{
+  "format_version": 1,
+  "format": "9:16",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "beats_per_bar": 4,
+  "loop": false,
+  "title": "Pedido Já — como funciona",
+  "template": "interface",
+  "style": "interface-narra",
+  "bpm": 140,
+  "bars": 4,
+  "duration": 6.857,
+  "music": {
+    "mode": "music",
+    "style": "clean",
+    "seed": 2,
+    "file": null
+  },
+  "palette": {
+    "background": "#101114",
+    "text": "#F2F2F2",
+    "accent": "#22C55E"
+  },
+  "fonts": {
+    "headline": "'Segoe UI', Arial, sans-serif",
+    "body": "'Segoe UI', Arial, sans-serif"
+  },
+  "brand": {
+    "name": "Pedido Já",
+    "site": "",
+    "handle": "@pedidoja",
+    "logo": null
+  },
+  "scenes": [
+    {
+      "n": 1,
+      "role": "abertura",
+      "bars": 0.5,
+      "events": [
+        {
+          "beat": 0,
+          "type": "impact"
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "role": "estado",
+      "kind": "campo",
+      "bars": 0.5,
+      "text": "2 marmitas",
+      "events": [
+        {
+          "beat": 0,
+          "type": "click"
+        }
+      ]
+    },
+    {
+      "n": 3,
+      "role": "estado",
+      "kind": "botao",
+      "bars": 0.5,
+      "text": "Pedir agora",
+      "events": [
+        {
+          "beat": 0,
+          "type": "click"
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "role": "estado",
+      "kind": "carregando",
+      "bars": 0.5,
+      "text": "Enviando",
+      "events": [
+        {
+          "beat": 0,
+          "type": "click"
+        }
+      ]
+    },
+    {
+      "n": 5,
+      "role": "estado",
+      "kind": "sucesso",
+      "bars": 1,
+      "text": "Pedido feito",
+      "events": [
+        {
+          "beat": 0,
+          "type": "ding"
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "role": "fechamento",
+      "bars": 1,
+      "text": "Peça pelo WhatsApp",
+      "events": [
+        {
+          "beat": 0,
+          "type": "impact"
+        }
+      ]
+    }
+  ]
+}

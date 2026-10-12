@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vídeo animado · interface que se transforma</title>
+<style>
+  html, body { margin: 0; background: #101012; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="motion.js"></script>
+<script src="studio.js"></script>
+<script id="roteiro" type="application/json">__ROTEIRO__</script>
+<script>
+  // Roteiro "interface que se transforma": um elemento só atravessa o filme sem nenhum corte. Ele nasce como o ícone
+  // da marca, e a cada estado muda de tamanho, de raio e de cor na batida (botão, campo, carregando, pronto, cartão,
+  // gráfico, lista, aviso, busca) enquanto o conteúdo troca por dentro: o conteúdo velho sai antes de a mudança acabar
+  // e o novo entra depois de ela começar. Um cursor aperta cada mudança. No fim, o elemento volta a ser o ícone.
+  // Tudo aqui é função do tempo. Guia desta página: references/pagina-do-video.md.
+  Studio.load();
+  const R = Studio.roteiro, TL = Studio.timeline, ST = Studio.style, Q = Studio.Q;
+  const film = Motion.setup({ title: R.title || "Interface", duration: TL.duration, width: R.width, height: R.height, fps: 30, background: Studio.palette.background });
+  film.cuts = TL.cuts;
+  const S = Studio.stage(document.getElementById("c"));
+  document.body.style.background = Studio.palette.background;
+  window.setFormat = S.setFormat;
+  window.boxes = S.boxes;
+  window.seek = S.seek;
+
+  const clamp = Motion.clamp, lerp = Motion.lerp, phase = Motion.phase, ease = Motion.ease;
+  const filled = (v) => typeof v === "string" && v.trim().length > 0;
+  const B = TL.beat_s;
+  const KINDS = ["botao", "campo", "carregando", "sucesso", "cartao", "grafico", "lista", "aviso", "busca"];
+  const INTERACTIVE = new Set(["icone", "botao", "campo", "cartao", "grafico", "lista", "aviso", "busca"]);
+  const kindOf = (scene) => (scene.role === "estado" ? (KINDS.includes(scene.kind) ? scene.kind : "cartao") : "icone");
+  const MORPH = Motion.SPRINGS[ST.springs.ui] || Motion.SPRINGS.snappy;
+
+  /** O texto que abre o filme: o da abertura, o nome da marca ou, sem nenhum dos dois, o do primeiro estado. */
+  const opening = TL.scenes[0];
+  const openingText = filled(opening && opening.text) ? opening.text : filled(R.brand.name) ? R.brand.name : (TL.scenes.find((s) => filled(s.text)) || {}).text || "";
+
+  // ---------- a geometria de cada estado ----------
+
+  /** Escala da composição: 1 no 9:16; menor quando a área útil é mais baixa ou mais estreita (4:5, 1:1, 16:9). */
+  const zoom = () => Math.min(1, S.area.h / (1130 * S.u), S.area.w / (790 * S.u));
+  const Z = (n) => S.px(n) * zoom();
+  /** O elemento passa um pouco das bordas da área útil (é interface); o texto dentro dele nunca passa. */
+  const wide = () => Math.min(S.W - S.px(40), S.area.w + 2 * Z(60));
+  const centerX = () => S.area.x + S.area.w / 2;
+  const centerY = () => S.area.y + S.area.h * 0.47;
+
+  /** Quanto o texto de abertura ou de assinatura ocupa embaixo do ícone. */
+  function captionHeight(c, text) {
+    if (!filled(text)) return 0;
+    return Studio.headline(c, text, { x: S.area.x, y: 0, w: S.area.w, h: S.area.h * 0.42, align: "center", size: Z(170 * ST.type.scale), maxLines: 3, measure: true, emphasis: false }).h;
+  }
+
+  function iconGeom(scene) {
+    const A = S.area, cx = centerX();
+    const rec = scene.logo === false ? null : Studio.logoImage;
+    let w = Z(360), h = Z(360);
+    if (rec) {
+      // o ícone abraça o logo: o logo nunca fica abaixo de 100 px de altura
+      const aspect = rec.w / Math.max(1, rec.h);
+      const lh = Math.max(S.px(100), Math.min(Z(240), (A.w * 0.94) / aspect, rec.maxH));
+      const lw = lh * aspect;
+      const pad = Math.max(Z(44), Math.min(lw, lh) * 0.24);
+      w = lw + 2 * pad;
+      h = lh + 2 * pad;
+    }
+    const text = scene.index === 0 ? openingText : scene.text;
+    const th = captionHeight(S.context(scene.index, scene.start), text);
+    const gap = th ? Z(80) : 0;
+    const top = A.y + Math.max(0, (A.h - (h + gap + th)) / 2) - Z(30);
+    return { x: cx - w / 2, y: top, w, h, r: Math.min(w, h) * 0.28 };
+  }
+
+  function geomFor(scene) {
+    const A = S.area, cx = centerX(), mid = centerY(), ww = wide();
+    const at = (w, h, r, cy) => ({ x: cx - w / 2, y: cy - h / 2, w, h, r: Math.min(r, w / 2, h / 2) });
+    switch (kindOf(scene)) {
+      case "icone": return iconGeom(scene);
+      case "botao": return at(ww * 0.94, Z(300), Z(150), mid);
+      case "campo": return at(ww, Z(380), Z(60), mid);
+      case "carregando": return at(Z(560), Z(560), Z(280), mid - Z(110));
+      case "sucesso": return at(Z(560), Z(560), Z(280), mid - Z(110));
+      case "cartao": return at(ww, Z(820), Z(64), mid);
+      case "grafico": return at(ww, Z(920), Z(64), mid);
+      case "lista": return at(ww, Z(900), Z(64), mid);
+      case "aviso": return at(ww, Z(330), Z(72), A.y + Z(40) + Z(165));
+      case "busca": return at(ww, Z(250), Z(125), mid - Z(250));
+      default: return at(ww, Z(500), Z(64), mid);
+    }
+  }
+
+  /** Quando a busca mostra o resultado (batida da cena) e o tamanho que o elemento ganha. */
+  const resultBeat = (scene) => Math.max(1, scene.beats * 0.58);
+  const grownGeom = (g) => ({ x: g.x, y: g.y, w: g.w, h: Z(760), r: Z(64) });
+
+  /** A caixa de conteúdo de um estado: dentro do elemento (com respiro) e dentro da área útil. */
+  function inner(G, pad) {
+    const A = S.area;
+    const x = Math.max(G.x + pad, A.x), r = Math.min(G.x + G.w - pad, A.x + A.w);
+    return { x, y: G.y + pad, w: r - x, h: G.h - 2 * pad, bottom: G.y + G.h - pad };
+  }
+
+  function fillFor(scene, world) {
+    switch (kindOf(scene)) {
+      case "icone": return Studio.logoImage && scene.logo !== false ? world.surface : world.accent;
+      case "botao": case "sucesso": return world.accent;
+      case "aviso": return world.ink;
+      default: return world.surface;
+    }
+  }
+
+  let cache = null;
+  function plan() {
+    if (cache && cache.rev === S.rev) return cache;
+    const keys = [];
+    const items = TL.scenes.map((scene) => {
+      const geom = geomFor(scene);
+      keys.push([scene.start, geom]);
+      const kind = kindOf(scene);
+      const item = { scene, kind, geom };
+      if (kind === "busca") {
+        item.grown = grownGeom(geom);
+        keys.push([scene.start + resultBeat(scene) * B, item.grown]);
+      }
+      return item;
+    });
+    // o cursor aperta cada mudança que nasce de um estado interativo
+    const ckeys = [], presses = [];
+    let rest = null;
+    items.forEach((item, j) => {
+      const next = items[j + 1];
+      if (!next) return;
+      const g = item.grown || item.geom;
+      const at = next.scene.start;
+      if (!INTERACTIVE.has(item.kind)) return;
+      const point = actionPoint(item.kind, g);
+      const lead = Math.max(0.45, 0.75 * B);
+      const from = Math.max(item.scene.start + (j === 0 ? 0.35 * B : 3 * Q), at - lead);
+      if (!ckeys.length) ckeys.push([Math.max(0, from - 5 * Q), S.W * 1.04, point.y + S.px(420)]);
+      ckeys.push([from, point.x, point.y]);
+      presses.push(at);
+      rest = point;
+    });
+    const last = items[items.length - 1];
+    if (ckeys.length && last.kind === "icone") ckeys.push([last.scene.start + 3 * Q, S.W * 1.08, (rest ? rest.y : S.H * 0.6) + S.px(520)]);
+    cache = { rev: S.rev, items, keys, ckeys, presses };
+    return cache;
+  }
+
+  function actionPoint(kind, g) {
+    switch (kind) {
+      case "icone": return { x: g.x + g.w * 0.62, y: g.y + g.h * 0.64 };
+      case "botao": return { x: g.x + g.w * 0.64, y: g.y + g.h * 0.6 };
+      case "campo": return { x: g.x + g.w * 0.84, y: g.y + g.h * 0.62 };
+      case "aviso": return { x: g.x + g.w * 0.9, y: g.y + g.h * 0.5 };
+      case "busca": return { x: g.x + g.w * 0.62, y: g.y + g.h * 0.72 };
+      case "grafico": return { x: g.x + g.w * 0.84, y: g.y + g.h * 0.76 };
+      default: return { x: g.x + g.w * 0.72, y: g.y + g.h * 0.66 };
+    }
+  }
+
+  // ---------- o elemento ----------
+
+  /** Transparência do conteúdo de uma cena: entra depois de a mudança começar e sai antes da próxima. */
+  function swap(item, T) {
+    const s = item.scene;
+    if (s.index === 0) return clamp((s.end - 0.1 - T) / 0.1);
+    if (s.index === TL.scenes.length - 1) return clamp((T - s.start - 0.08) / 0.12);
+    return Motion.swapAlpha(T, s.start, s.end);
+  }
+
+  S.under((f) => {
+    const P = plan();
+    const T = f.T;
+    const g = S.g;
+    let rect = Studio.rectAt(T, P.keys, MORPH[0], MORPH[1]);
+    // o aperto: o elemento cede um fio no instante da mudança
+    let squeeze = 1;
+    for (const p of P.presses) {
+      const dt = T - p;
+      if (dt >= -2 * Q && dt < 0) squeeze = Math.min(squeeze, 1 - 0.04 * ease.outQuad((dt + 2 * Q) / (2 * Q)));
+      else if (dt >= 0 && dt < 0.4) squeeze = Math.min(squeeze, 1 - 0.04 * (1 - Motion.springBy("snappy", dt)));
+    }
+    // na assinatura, a deriva lenta das seguras
+    const lastItem = P.items[P.items.length - 1];
+    if (T >= lastItem.scene.start && lastItem.kind === "icone") {
+      const cl = f.context(lastItem.scene.index);
+      squeeze *= Studio.drift(cl, 0.03) * (1 + 0.03 * Studio.bump(cl, 2, 2));
+    }
+    const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+    rect = { x: cx - (rect.w * squeeze) / 2, y: cy - (rect.h * squeeze) / 2, w: rect.w * squeeze, h: rect.h * squeeze, r: rect.r * squeeze };
+
+    const k = f.index;
+    const item = P.items[k];
+    const prev = P.items[k - 1];
+    const world = f.world;
+    const fill = prev ? Studio.mix(fillFor(prev.scene, f.context(prev.scene.index).world), fillFor(item.scene, world), phase(T, item.scene.start, item.scene.start + 5 * Q)) : fillFor(item.scene, world);
+    g.save();
+    g.shadowColor = Studio.rgba("#000000", world.light ? 0.16 : 0.4);
+    g.shadowBlur = S.px(70);
+    g.shadowOffsetY = S.px(24);
+    g.fillStyle = fill;
+    Studio.roundRect(g, rect.x, rect.y, rect.w, rect.h, rect.r);
+    g.fill();
+    g.restore();
+    if (item.kind === "campo" || item.kind === "busca") {
+      S.setAlpha(swap(item, T));
+      g.lineWidth = S.px(4);
+      g.strokeStyle = Studio.mix(world.surface, world.accent, 0.9);
+      Studio.roundRect(g, rect.x, rect.y, rect.w, rect.h, rect.r);
+      g.stroke();
+      S.setAlpha(1);
+    }
+    S.box("ui", rect.x, rect.y, rect.w, rect.h);
+
+    // o conteúdo da cena atual (e o da anterior, enquanto sai)
+    for (const j of [k - 1, k]) {
+      const it = P.items[j];
+      if (!it) continue;
+      const a = swap(it, T);
+      if (a <= 0.003) continue;
+      const c = f.context(j);
+      g.save();
+      Studio.roundRect(g, rect.x, rect.y, rect.w, rect.h, rect.r);
+      g.clip();
+      S.group({ alpha: a, dy: (1 - a) * S.px(18) }, () => content(c, it, rect));
+      g.restore();
+    }
+  });
+
+  // ---------- o conteúdo de cada estado ----------
+
+  const UI = () => ({ family: Studio.fonts.body, weight: 700, tracking: 0 });
+
+  /** Um texto de uma linha que cabe na largura, no maior tamanho até `size` (nunca abaixo do mínimo legível). */
+  function line(c, text, o) {
+    return Studio.text(c, text, Object.assign({ kind: "body", weight: 700, maxLines: 1, cover: true, size: Z(90), minSize: S.minText, color: c.world.ink, out: { at: 1e9 } }, o));
+  }
+
+  /** Quantos caracteres já foram digitados: um por subdivisão da grade, a partir de 1/4 de batida. */
+  function typed(c, text) {
+    const n = Array.from(text).length;
+    const step = clamp((c.beats * 0.55 - 0.25) / Math.max(1, n), 1 / 16, 1 / 4);
+    return clamp(Math.floor((c.b - 0.25) / step) + 1, 0, n);
+  }
+
+  /** O texto que vai sendo digitado, com o cursor de texto piscando na batida. Devolve a geometria do texto inteiro. */
+  function typing(c, full, box, size) {
+    const g = S.g, W = c.world;
+    const lay = line(c, full, { x: box.x, y: box.y, w: box.w - Z(30), h: box.h, valign: "middle", size, measure: true });
+    const n = typed(c, full);
+    const shown = Array.from(full).slice(0, n).join("");
+    const font = UI();
+    const cap = S.metrics(font).cap * lay.size;
+    const base = lay.top + cap;
+    S.setFont(font, lay.size);
+    g.textAlign = "left";
+    g.textBaseline = "alphabetic";
+    g.fillStyle = W.ink;
+    S.setAlpha(1);
+    const tw = shown ? S.measure(shown, font, lay.size) : 0;
+    if (shown) {
+      g.fillText(shown, box.x, base);
+      const ink = S.ink(shown, font, lay.size);
+      S.box("text", box.x, base - ink.asc, tw, ink.asc + ink.desc, lay.size, shown);
+    }
+    if (n < Array.from(full).length || c.b % 1 < 0.55) {
+      g.fillStyle = W.accent;
+      g.fillRect(box.x + tw + Z(8), base - lay.size * 0.8, Math.max(3, Z(8)), lay.size * 0.98);
+    }
+    return lay;
+  }
+
+  function content(c, it, rect) {
+    const g = S.g, W = c.world, sc = it.scene, G = it.geom;
+    switch (it.kind) {
+      case "icone": {
+        // o conteúdo do ícone acompanha o respiro do elemento (só cresce: o logo nunca fica abaixo do tamanho mínimo)
+        const grow = Math.max(1, rect.w / G.w);
+        if (Studio.logoImage && sc.logo !== false) {
+          const pad = Math.min(G.w, G.h) * 0.2;
+          S.group({ scale: grow, about: [G.x + G.w / 2, G.y + G.h / 2] }, () => Studio.logo(c, { x: G.x + pad, y: G.y, w: G.w - 2 * pad, h: G.h, align: "center", valign: "middle", plate: fillFor(sc, W) }));
+        } else {
+          const mono = (filled(R.brand.name) ? R.brand.name : openingText || "•").trim().slice(0, 1).toLocaleUpperCase("pt-BR");
+          Studio.text(c, mono, { kind: "headline", x: G.x, y: G.y, w: G.w, h: G.h, align: "center", valign: "middle", size: G.h * 0.6, minSize: S.minText, maxLines: 1, cover: true, emphasis: false, uppercase: false, color: W.onAccent, out: { at: 1e9 } });
+        }
+        return;
+      }
+      case "botao": {
+        const box = inner(G, Z(70));
+        const pop = 1 + 0.06 * (1 - Motion.springBy("snappy", c.t - 0.08));
+        S.group({ scale: pop, about: [G.x + G.w / 2, G.y + G.h / 2] }, () => {
+          line(c, sc.text, { kind: "headline", weight: ST.type.weight, x: box.x, y: G.y, w: box.w, h: G.h, align: "center", valign: "middle", size: Z(118), color: W.onAccent, emphasis: false });
+        });
+        return;
+      }
+      case "campo": {
+        const box = inner(G, Z(64));
+        let top = box.y, h = box.h;
+        if (filled(sc.detail)) {
+          const label = line(c, sc.detail, { x: box.x, y: box.y, w: box.w, h: Z(64), size: Math.max(S.minText, Z(56)), weight: 600, color: W.muted });
+          top = label.bottom + Z(20);
+          h = box.y + box.h - top;
+        }
+        typing(c, String(sc.text || ""), { x: box.x, y: top, w: box.w, h }, Z(112));
+        return;
+      }
+      case "carregando": {
+        const target = typeof sc.value === "number" && sc.value > 0 && sc.value <= 100 ? sc.value / 100 : 1;
+        const p = target * ease.inOutCubic(clamp((c.b - 0.25) / Math.max(0.5, c.beats - 0.75)));
+        const r = G.w * 0.37, cx = G.x + G.w / 2, cy = G.y + G.h / 2;
+        g.lineCap = "round";
+        g.lineWidth = Z(40);
+        g.strokeStyle = Studio.rgba(W.ink, 0.1);
+        g.beginPath();
+        g.arc(cx, cy, r, 0, Math.PI * 2);
+        g.stroke();
+        g.strokeStyle = W.accent;
+        g.beginPath();
+        g.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.02, p));
+        g.stroke();
+        line(c, Math.round(p * 100) + "%", { kind: "headline", weight: 800, x: G.x + G.w * 0.2, y: G.y, w: G.w * 0.6, h: G.h, align: "center", valign: "middle", size: Z(140), color: W.ink, emphasis: false });
+        return;
+      }
+      case "sucesso": {
+        Studio.check(c, { cx: G.x + G.w / 2, cy: G.y + G.h / 2 + G.h * 0.02, r: G.w * 0.3, at: 0.12, color: W.onAccent, width: Z(46) });
+        return;
+      }
+      case "cartao": {
+        // a faixa de cima: um bloco na cor da marca com uma forma simples (nada legível que não seja do projeto)
+        const band = G.h * 0.34;
+        g.fillStyle = W.accent;
+        g.fillRect(G.x, G.y, G.w, band);
+        const grow = Motion.springBy("default", c.since(0.1));
+        g.fillStyle = Studio.rgba(W.onAccent, 0.22);
+        g.beginPath();
+        g.arc(G.x + G.w * 0.78, G.y + band * 0.62, band * (0.3 + 0.32 * grow), 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = Studio.rgba(W.onAccent, 0.4);
+        g.beginPath();
+        g.arc(G.x + G.w * 0.6, G.y + band * 0.3, band * 0.13 * grow, 0, Math.PI * 2);
+        g.fill();
+        const box = inner({ x: G.x, y: G.y + band, w: G.w, h: G.h - band }, Z(60));
+        const hasValue = sc.value !== undefined && sc.value !== null && sc.value !== "";
+        const title = Studio.text(c, sc.text || "", { kind: "headline", x: box.x, y: box.y, w: box.w, h: Z(220), size: Z(100 * ST.type.scale), minSize: S.minText, maxLines: 2, cover: true, emphasis: false, out: { at: 1e9 } });
+        const y = title.bottom + Z(28);
+        if (filled(sc.detail)) Studio.text(c, sc.detail, { kind: "body", x: box.x, y, w: box.w, h: Z(64) * 2.6, size: Math.max(S.minText, Z(60)), maxLines: 2, color: W.muted, at: 0.25, in: "fade", out: { at: 1e9 } });
+        else Studio.skeleton(c, { x: box.x, y: y + Z(10), w: box.w, rows: 2, size: Z(34), at: 0.25 });
+        if (hasValue) {
+          const v = typeof sc.value === "number" ? Studio.formatNumber(sc.value) : String(sc.value);
+          line(c, v, { kind: "headline", weight: 800, x: box.x, y: box.bottom - Z(150), w: box.w, h: Z(150), valign: "bottom", size: Z(140), color: W.accentText, emphasis: false, cover: false, at: 0.5, in: "rise" });
+        }
+        return;
+      }
+      case "grafico": {
+        const box = inner(G, Z(64));
+        const title = Studio.text(c, sc.text || "", { kind: "headline", x: box.x, y: box.y, w: box.w, h: Z(220), size: Z(96 * ST.type.scale), minSize: S.minText, maxLines: 2, cover: true, emphasis: false, out: { at: 1e9 } });
+        let top = title.bottom + Z(30);
+        if (typeof sc.value === "number") {
+          const k = Studio.counter(c, { value: sc.value, x: box.x, y: top, w: box.w, h: Z(220), size: Z(210), at: 0.25, beats: 1 });
+          top = k.bottom + Z(44);
+        } else if (filled(sc.detail)) {
+          const d = Studio.text(c, sc.detail, { kind: "body", x: box.x, y: top, w: box.w, h: Z(62) * 2.6, size: Math.max(S.minText, Z(58)), maxLines: 2, color: W.muted, cover: true, out: { at: 1e9 } });
+          top = d.bottom + Z(44);
+        }
+        Studio.bars(c, { x: box.x, y: top, w: box.w, h: Math.max(Z(120), box.bottom - top), at: 0.25, stagger: Math.min(0.25, (c.beats - 1) / 6) });
+        return;
+      }
+      case "lista": {
+        const box = inner(G, Z(64));
+        const title = Studio.text(c, sc.text || "", { kind: "headline", x: box.x, y: box.y, w: box.w, h: Z(220), size: Z(96 * ST.type.scale), minSize: S.minText, maxLines: 2, cover: true, emphasis: false, out: { at: 1e9 } });
+        const labels = filled(sc.detail) ? sc.detail.split(/\s*[,;]\s*|\s+e\s+/).filter(Boolean).slice(0, 3) : [];
+        const top = title.bottom + Z(46);
+        const rowH = (box.bottom - top) / 3;
+        for (let i = 0; i < 3; i++) {
+          const at = 0.25 + i * Math.min(0.5, (c.beats - 1) / 3);
+          const sp = Motion.springBy("snappy", c.since(at));
+          if (sp <= 0.001) continue;
+          const y = top + i * rowH + (1 - sp) * Z(50);
+          const dot = Math.min(rowH * 0.62, Z(110));
+          S.setAlpha(clamp(sp * 1.6));
+          g.fillStyle = i === 0 ? W.accent : Studio.rgba(W.ink, 0.12);
+          Studio.roundRect(g, box.x, y + (rowH - dot) / 2, dot, dot, dot * 0.3);
+          g.fill();
+          S.setAlpha(1);
+          const lx = box.x + dot + Z(36);
+          if (labels[i]) S.group({ alpha: clamp(sp * 1.6) }, () => line(c, labels[i], { x: lx, y: y + (rowH - Z(80)) / 2, w: box.x + box.w - lx, h: Z(80), valign: "middle", size: Z(76), weight: 600 }));
+          else Studio.skeleton(c, { x: lx, y: y + rowH / 2 - Z(18), w: box.x + box.w - lx, rows: 1, size: Z(36), widths: [[0.84, 0.62, 0.72][i]], alpha: clamp(sp * 1.6) });
+        }
+        return;
+      }
+      case "aviso": {
+        const box = inner(G, Z(56));
+        const dot = Z(84);
+        g.fillStyle = W.accent;
+        g.beginPath();
+        g.arc(box.x + dot / 2, G.y + G.h / 2, dot / 2, 0, Math.PI * 2);
+        g.fill();
+        const tx = box.x + dot + Z(40), tw = box.x + box.w - tx;
+        if (filled(sc.detail)) {
+          // as duas linhas, juntas, no meio do aviso
+          const o1 = { x: tx, w: tw, h: Z(100), size: Z(84), color: W.bg };
+          const o2 = { x: tx, w: tw, h: Z(66), size: Math.max(S.minText, Z(54)), weight: 500, color: Studio.mix(W.bg, W.ink, 0.3) };
+          const m1 = line(c, sc.text || "", Object.assign({ y: 0, measure: true }, o1));
+          const m2 = line(c, sc.detail, Object.assign({ y: 0, measure: true }, o2));
+          const top = G.y + (G.h - (m1.h + Z(14) + m2.h)) / 2;
+          const t1 = line(c, sc.text || "", Object.assign({ y: top }, o1));
+          line(c, sc.detail, Object.assign({ y: t1.bottom + Z(14) }, o2));
+        } else line(c, sc.text || "", { x: tx, y: G.y, w: tw, h: G.h, valign: "middle", size: Z(88), color: W.bg });
+        return;
+      }
+      case "busca": {
+        const box = inner(G, Z(70));
+        const icon = G.h * 0.36, ix = box.x, iy = G.y + G.h / 2;
+        g.lineWidth = Z(13);
+        g.lineCap = "round";
+        g.strokeStyle = W.muted;
+        g.beginPath();
+        g.arc(ix + icon * 0.42, iy - icon * 0.08, icon * 0.36, 0, Math.PI * 2);
+        g.stroke();
+        g.beginPath();
+        g.moveTo(ix + icon * 0.68, iy + icon * 0.2);
+        g.lineTo(ix + icon * 0.95, iy + icon * 0.47);
+        g.stroke();
+        const tx = ix + icon * 1.35;
+        typing(c, String(sc.text || ""), { x: tx, y: G.y, w: box.x + box.w - tx, h: G.h }, Z(96));
+        // o resultado aparece embaixo quando o elemento cresce
+        const sp = Motion.springBy("snappy", c.since(resultBeat(sc)));
+        if (sp > 0.001) {
+          const grown = grownGeom(G);
+          const top = G.y + G.h;
+          const area = inner({ x: grown.x, y: top, w: grown.w, h: grown.y + grown.h - top }, Z(56));
+          S.group({ alpha: clamp(sp * 1.5), dy: (1 - sp) * Z(40) }, () => {
+            g.fillStyle = Studio.rgba(W.ink, 0.1);
+            g.fillRect(grown.x + Z(40), top, grown.w - Z(80), Math.max(2, Z(4)));
+            const th = Math.min(area.h, Z(300));
+            g.fillStyle = W.accent;
+            Studio.roundRect(g, area.x, area.y + (area.h - th) / 2, th * 0.84, th, Z(36));
+            g.fill();
+            const rx = area.x + th * 0.84 + Z(44), rw = area.x + area.w - rx;
+            if (filled(sc.detail)) Studio.text(c, sc.detail, { kind: "body", x: rx, y: area.y, w: rw, h: area.h, valign: "middle", size: Z(70), minSize: S.minText, maxLines: 3, weight: 600, color: W.ink, cover: true, out: { at: 1e9 } });
+            else Studio.skeleton(c, { x: rx, y: area.y + area.h / 2 - Z(40), w: rw, rows: 2, size: Z(34) });
+          });
+        }
+        return;
+      }
+    }
+  }
+
+  // ---------- as legendas embaixo do elemento (estados sem texto dentro dele) ----------
+
+  S.under((f) => {
+    const P = plan();
+    for (const j of [f.index - 1, f.index]) {
+      const it = P.items[j];
+      if (!it || it.kind === "icone") continue;
+      const a = swap(it, f.T);
+      if (a <= 0.003) continue;
+      const c = f.context(j);
+      const G = it.grown || it.geom;
+      const A = S.area;
+      const top = G.y + G.h + Z(80);
+      const room = A.y + A.h - top;
+      if (room < S.minText * 1.4) continue;
+      const main = it.kind === "carregando" || it.kind === "sucesso" ? it.scene.text : null;
+      const extra = it.kind === "botao" || it.kind === "carregando" || it.kind === "sucesso" ? it.scene.detail : null;
+      S.group({ alpha: a, dy: (1 - a) * Z(20) }, () => {
+        let y = top;
+        if (filled(main)) {
+          const t = Studio.text(c, main, { kind: "headline", x: A.x, y, w: A.w, h: Math.min(room, Z(320)), align: "center", size: Z(140 * ST.type.scale), maxLines: 2, cover: true, emphasis: false, out: { at: 1e9 } });
+          y = t.bottom + Z(30);
+        }
+        if (filled(extra) && A.y + A.h - y > S.minText * 1.4) {
+          Studio.text(c, extra, { kind: "body", x: A.x, y, w: A.w, h: Math.min(A.y + A.h - y, Z(66) * 2.6), align: "center", size: Math.max(S.minText, Z(64)), maxLines: 2, color: c.world.muted, cover: true, out: { at: 1e9 } });
+        }
+      });
+    }
+  });
+
+  // ---------- o cursor ----------
+
+  S.over((f) => {
+    const P = plan();
+    if (!P.ckeys.length) return;
+    Studio.cursor(f, { keys: P.ckeys, presses: P.presses, until: TL.duration });
+  });
+
+  // ---------- abertura e assinatura: o texto embaixo do ícone ----------
+
+  const leaveStyle = ST.between === "push" ? "lift" : "whip";
+
+  S.scene("abertura", { tail: 2 * Q }, (c) => {
+    const G = geomFor(c.scene), A = c.area;
+    Studio.headline(c, openingText, {
+      x: A.x, y: G.y + G.h + Z(80), w: A.w, h: A.h * 0.42, align: "center", size: Z(170 * ST.type.scale), maxLines: 3,
+      cover: true, punch: c.hit("impact", null), emphasis: filled(c.scene.text) ? { words: c.scene.emphasis, at: c.hit("pop", 1) } : false,
+      uppercase: filled(c.scene.text) ? undefined : false, out: { at: c.beats, style: leaveStyle, dir: [0, -1] },
+    });
+  });
+
+  S.scene("fechamento", (c) => {
+    const G = geomFor(c.scene), A = c.area;
+    if (!filled(c.scene.text)) return;
+    S.group({ scale: Studio.drift(c, 0.03), about: [A.x + A.w / 2, G.y + G.h / 2] }, () => {
+      const address = /[.@\/]/.test(c.scene.text) && !/\s/.test(c.scene.text.trim());
+      Studio.headline(c, c.scene.text, {
+        x: A.x, y: G.y + G.h + Z(80), w: A.w, h: A.h * 0.42, align: "center", size: Z(170 * ST.type.scale), maxLines: 3,
+        at: c.hit("pop", 1), by: "line", stagger: 0.25, in: "rise", uppercase: address ? false : undefined, breathe: { amount: 0.02, every: 2, from: c.hit("pop", 1) + 2 },
+        emphasis: address ? false : { words: c.scene.emphasis, at: c.hit("pop", 1) + 1, style: "underline" },
+      });
+    });
+  });
+
+  S.scene("estado", () => {});
+</script>
+</body>
+</html>

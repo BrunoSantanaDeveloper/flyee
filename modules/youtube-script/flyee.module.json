@@ -1,0 +1,87 @@
+{
+  "manifest_version": 1,
+  "name": "youtube-script",
+  "version": "1.1.0",
+  "type": "workflow",
+  "trail": "divulgar",
+  "title": {
+    "pt-BR": "Roteiro para YouTube",
+    "en": "YouTube script"
+  },
+  "summary": {
+    "pt-BR": "Escreve com você roteiros para o YouTube que prendem do começo ao fim, a partir do que já funciona no seu tema: título e thumbnail medidos, o fluxo de um vídeo de referência, o texto na sua voz e revisão antes de gravar.",
+    "en": "Writes YouTube scripts with you that hold attention from start to finish, starting from what already works on your topic: measured titles and thumbnails, the flow of a reference video, text in your voice and a review before you record."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.3.0",
+  "entry": "skills/youtube-script/SKILL.md",
+  "files": [
+    "README.md",
+    "references/embalagem.md",
+    "references/escrita-falada.md",
+    "references/estrutura.md",
+    "references/formato.md",
+    "references/ganchos.md",
+    "references/gravacao-de-tela.md",
+    "references/perfil-de-voz.md",
+    "references/pesquisa.md",
+    "references/revisao.md",
+    "references/tutorial-de-tela.md",
+    "scripts/lib/docx.mjs",
+    "scripts/lib/rules.mjs",
+    "scripts/lib/script.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/roteiro.mjs",
+    "skills/youtube-script/SKILL.md"
+  ],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/youtube-script/scripts/roteiro.mjs",
+      "reason": {
+        "pt-BR": "O script do app confere o roteiro antes da gravação (abertura, frases, números sem fonte, as palavras que você nunca diz, frase de anúncio, títulos, duração e capítulos) e gera o checklist, o documento completo, o teleprompter e o .docx.",
+        "en": "The app's script checks the script before recording (opening, sentences, unsourced numbers, the words you never say, ad phrases, titles, length and chapters) and writes the checklist, the full document, the teleprompter text and the .docx."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/youtube-research/scripts/research.mjs",
+      "reason": {
+        "pt-BR": "Só com o app Pesquisa no YouTube instalado: busca o que funciona no tema, a fala de vídeos (inclusive os seus) e os comentários do público. Grava em ./youtube-research/.",
+        "en": "Only with the YouTube research app installed: finds what works on the topic, the speech of videos (yours included) and the audience's comments. Writes to ./youtube-research/."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/video-analysis/scripts/video.mjs",
+      "reason": {
+        "pt-BR": "Só com o app Análise de vídeo instalado: lê a sua gravação de tela para a narração acompanhar cada passo. Grava em ./video-analyses/ e só envia o arquivo ao Google se você disser que sim.",
+        "en": "Only with the Video analysis app installed: reads your screen recording so the narration follows each step. Writes to ./video-analyses/ and only sends the file to Google if you say yes."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "./roteiros/, os textos e a gravação de tela que você indicar, e a documentação dos apps em .flyee/modules/ (README, manifesto, references e skills)",
+      "reason": {
+        "pt-BR": "Lê o perfil do canal, os roteiros em andamento, os textos e transcrições que você indicar para aprender a sua voz ou seguir uma referência, a gravação de tela de um tutorial e, quando o vídeo mostra um app instalado, a documentação dele, para a ficha de verdade.",
+        "en": "Reads the channel profile, the scripts in progress, the texts and transcripts you point to for your voice or a reference, the screen recording of a tutorial and, when the video shows an installed app, its documentation, for the truth sheet."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./roteiros/",
+      "reason": {
+        "pt-BR": "Grava o perfil do canal, as pautas e, para cada vídeo, o briefing, a ficha de verdade, a pesquisa, o mapa da referência, os títulos, a estrutura, o roteiro (também em .docx), a revisão, a descrição, o checklist, o documento completo e o teleprompter.",
+        "en": "Writes the channel profile, the topic ideas and, for each video, the brief, truth sheet, research, reference map, titles, structure, script (also as .docx), review, description, checklist, full document and teleprompter text."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Pesquisa com dados antes do roteiro, pelo app Pesquisa no YouTube, com os traços de título medidos contra o normal de cada canal; o mapa batida a batida de um vídeo de referência, até de outro país, adaptado ao público e sem o que não vale aqui; a voz tirada dos seus vídeos ou de criadores que você indicar, com \"você fala assim?\"; pautas para \"o que eu gravo?\"; narração em cima da gravação de tela, pelo app Análise de vídeo; o documento completo e o roteiro em Word. Também tudo o que entrou na 1.0.0.",
+    "en": "Data-driven research before the script, through the YouTube research app, with title traits measured against each channel's normal; a beat-by-beat map of a reference video, even from another country, adapted to the audience and without what does not hold here; your voice taken from your videos or from creators you point to, with \"do you talk like this?\"; topic ideas for \"what should I record?\"; narration over a screen recording, through the Video analysis app; the full document and the script as a Word file. Plus everything in 1.0.0."
+  },
+  "license": "member"
+}

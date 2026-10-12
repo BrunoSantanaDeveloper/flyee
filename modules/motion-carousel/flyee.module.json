@@ -1,0 +1,171 @@
+{
+  "manifest_version": 1,
+  "name": "motion-carousel",
+  "version": "1.1.0",
+  "type": "skill",
+  "trail": "divulgar",
+  "title": {
+    "pt-BR": "Carrossel animado",
+    "en": "Motion carousel"
+  },
+  "summary": {
+    "pt-BR": "Cria carrosséis para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida, a partir de um tema; entrega os MP4 prontos para postar e uma prévia de como fica no feed.",
+    "en": "Creates Instagram carousels where each slide is a short looping video with motion and sound on the beat, from a topic; delivers the MP4s ready to post and a preview of how it looks in the feed."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.1.0",
+  "entry": "skills/motion-carousel/SKILL.md",
+  "files": [
+    "README.md",
+    "references/design-rules.md",
+    "references/exemplo-foto/assets/fundo.jpg",
+    "references/exemplo-foto/assets/halter.webp",
+    "references/exemplo-foto/brief.md",
+    "references/exemplo-foto/slides/01.html",
+    "references/exemplo-foto/slides/02.html",
+    "references/exemplo-foto/slides/03.html",
+    "references/exemplo-foto/storyboard.json",
+    "references/exemplo/brief.md",
+    "references/exemplo/slides/01.html",
+    "references/exemplo/slides/02.html",
+    "references/exemplo/slides/03.html",
+    "references/exemplo/slides/04.html",
+    "references/exemplo/slides/05.html",
+    "references/exemplo/storyboard.json",
+    "references/images.md",
+    "references/slide-page.md",
+    "references/sound.md",
+    "references/storyboard.md",
+    "runtime/carousel.js",
+    "runtime/preview.html",
+    "runtime/slides/cta.html",
+    "runtime/slides/hook.html",
+    "runtime/slides/photo.html",
+    "runtime/slides/point.html",
+    "scripts/carousel.mjs",
+    "scripts/lib/engine.mjs",
+    "scripts/lib/images.mjs",
+    "scripts/lib/preview.mjs",
+    "scripts/lib/project.mjs",
+    "scripts/lib/storyboard.mjs",
+    "scripts/lib/util.mjs",
+    "skills/motion-carousel/SKILL.md"
+  ],
+  "external_credentials": [
+    {
+      "name": "Chave da API do Gemini",
+      "env": "GEMINI_API_KEY",
+      "url": "https://aistudio.google.com/apikey",
+      "required": false,
+      "purpose": {
+        "pt-BR": "Opcional, e só quando nenhuma IA sua gera imagens: cria as fotos e os recortes dos slides com fotos. Sem a chave, o app usa o Codex com a sua conta do ChatGPT, as suas fotos ou o estilo gráfico.",
+        "en": "Optional, and only when none of your AIs generates images: creates the photos and cut-outs of photo slides. Without the key, the app uses Codex with your ChatGPT account, your own photos or the graphic style."
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/motion-carousel/scripts/carousel.mjs",
+      "reason": {
+        "pt-BR": "O script do app cria a pasta do carrossel, escreve o roteiro e os slides a partir dos modelos, chama o Motor de vídeo slide a slide, monta a prévia, abre-a no seu navegador e grava o relatório da conferência.",
+        "en": "The app's script creates the carousel folder, writes the storyboard and the slides from the templates, calls the Video engine slide by slide, builds the preview, opens it in your browser and writes the check report."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/video-render/scripts/render.mjs",
+      "reason": {
+        "pt-BR": "O Motor de vídeo fotografa os quadros, renderiza cada slide, sintetiza a trilha e os efeitos, mede as batidas da sua música, mixa o som no volume das redes e confere cada slide.",
+        "en": "The Video engine photographs the frames, renders each slide, synthesizes the music and the effects, measures the beats of your own track, mixes the sound at the networks' loudness and checks each slide."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "ffmpeg, ffprobe",
+      "reason": {
+        "pt-BR": "Codifica os quadros de cada slide em vídeo, mixa o áudio, mede o volume e monta as folhas de quadros. A sua IA instala o ffmpeg na primeira vez que o app precisar, depois de avisar.",
+        "en": "Encodes each slide's frames into video, mixes the audio, measures loudness and builds the frame sheets. Your AI installs ffmpeg the first time the app needs it, after telling you."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "o navegador já instalado (Microsoft Edge, Google Chrome ou Chromium), aberto sem janela para fotografar a página",
+      "reason": {
+        "pt-BR": "Fotografa cada quadro de cada slide sem abrir janela. No Windows o Microsoft Edge já vem instalado; no Mac e no Linux a sua IA instala o Chromium se faltar.",
+        "en": "Photographs every frame of every slide without opening a window. Microsoft Edge comes with Windows; on Mac and Linux your AI installs Chromium when none exists."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "a pasta de cada carrossel (./carrosseis/<nome>/), com o logo, as imagens e a música que você deixar em assets/",
+      "reason": {
+        "pt-BR": "Lê o roteiro e as páginas dos slides, o logo e as imagens que os slides desenham e a música que você escolher. Os arquivos que você trouxer nunca são alterados.",
+        "en": "Reads the storyboard and the slide pages, the logo and images the slides draw and the track you choose. The files you bring are never changed."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./carrosseis/ e a pasta temporária do sistema",
+      "reason": {
+        "pt-BR": "Grava, uma pasta por carrossel, o briefing, o roteiro, os slides, a trilha, os efeitos, as prévias, os vídeos finais, a página da prévia e o relatório; arquivos de passagem ficam na pasta temporária e são apagados ao final.",
+        "en": "Writes, one folder per carousel, the brief, the storyboard, the slides, the music, the effects, the previews, the final videos, the preview page and the report; scratch files stay in the temporary folder and are deleted at the end."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "codex (o Codex do integrante, só quando ele já está instalado e conectado à conta do ChatGPT)",
+      "reason": {
+        "pt-BR": "Pede ao Codex que você já tem as imagens dos slides com fotos, usando o seu plano do ChatGPT. O app nunca instala o Codex.",
+        "en": "Asks the Codex you already have for the images of photo slides, using your ChatGPT plan. The app never installs Codex."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "os servidores da OpenAI, pelo Codex do integrante (só quando ele gera as imagens)",
+      "reason": {
+        "pt-BR": "Quando o Codex que você já tem gera uma imagem, ele envia a descrição (e a imagem de referência, se houver) à OpenAI, pela sua conta.",
+        "en": "When the Codex you already have generates an image, it sends the description (and the reference image, if any) to OpenAI, through your account."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "generativelanguage.googleapis.com",
+      "reason": {
+        "pt-BR": "Só com a chave do Gemini e só quando não há outra IA que gere imagens: pede as fotos e os recortes dos slides.",
+        "en": "Only with the Gemini key and only when no other AI generates images: requests the photos and cut-outs of the slides."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "~/.flyee/keys.json (só a chave GEMINI_API_KEY)",
+      "reason": {
+        "pt-BR": "Lê a chave do Gemini que você salvou pela página do navegador, quando ela existe. Ela nunca é mostrada nem gravada no projeto.",
+        "en": "Reads the Gemini key you saved through the browser page, when there is one. It is never shown or written into the project."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "~/.codex/generated_images (só as imagens que o Codex acabou de gerar para o carrossel)",
+      "reason": {
+        "pt-BR": "Copia para a pasta assets do carrossel a imagem que o Codex acabou de gerar a seu pedido.",
+        "en": "Copies into the carousel's assets folder the image Codex has just generated at your request."
+      }
+    },
+    {
+      "kind": "env",
+      "scope": "GEMINI_API_KEY, CODEX_HOME",
+      "reason": {
+        "pt-BR": "Lê a chave do Gemini de uma variável de ambiente, se você preferir defini-la assim (ela tem prioridade), e onde o Codex guarda as imagens dele. A chave nunca é pedida no chat, gravada ou mostrada.",
+        "en": "Reads the Gemini key from an environment variable, if you prefer to set it that way (it takes precedence), and where Codex keeps its images. The key is never asked for in the chat, written or shown."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Slides com fotos: fundo que preenche o quadro, assunto recortado por cima e paralaxe em 2.5D, com o texto sobre um degradê. As imagens vêm, nesta ordem, da sua própria IA, do Codex com a sua conta do ChatGPT, da chave opcional do Gemini ou das suas fotos; o recorte do fundo é automático. Novo modelo de slide com foto e um exemplo completo com fotos.",
+    "en": "Photo slides: a full-frame background, a cut-out subject on top and 2.5D parallax, with the text on a gradient. Images come, in this order, from your own AI, from Codex with your ChatGPT account, from the optional Gemini key or from your own photos; the background is cut out automatically. A new photo slide template and a complete photo example."
+  },
+  "license": "member"
+}

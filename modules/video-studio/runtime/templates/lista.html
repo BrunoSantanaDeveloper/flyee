@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vídeo animado · lista</title>
+<style>
+  html, body { margin: 0; background: #101012; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="motion.js"></script>
+<script src="studio.js"></script>
+<script id="roteiro" type="application/json">__ROTEIRO__</script>
+<script>
+  // Roteiro "lista": um gancho, de três a cinco itens numerados (um por vez) e a chamada.
+  // Cada item ganha um enquadramento próprio (o numeral gigante, a etiqueta, o bloco de cor, o centro), e a passagem
+  // de um item para o outro é feita por um elemento dele (o numeral que a câmera atravessa, a etiqueta que vira risco,
+  // o bloco que vira a tela, o chicote). Um trilho embaixo mostra em que item estamos.
+  // Tudo aqui é função do tempo. Guia desta página: references/pagina-do-video.md.
+  Studio.load();
+  const R = Studio.roteiro, TL = Studio.timeline, ST = Studio.style, Q = Studio.Q;
+  const film = Motion.setup({ title: R.title || "Lista", duration: TL.duration, width: R.width, height: R.height, fps: 30, background: Studio.palette.background });
+  film.cuts = TL.cuts;
+  const S = Studio.stage(document.getElementById("c"));
+  document.body.style.background = Studio.palette.background;
+  window.setFormat = S.setFormat;
+  window.boxes = S.boxes;
+  window.seek = S.seek;
+
+  // A chamada acontece no fundo em que o logo nasceu.
+  S.worlds({ fechamento: "native" });
+
+  const clamp = Motion.clamp, lerp = Motion.lerp, phase = Motion.phase, ease = Motion.ease;
+  const filled = (v) => typeof v === "string" && v.trim().length > 0;
+  const ITEMS = TL.scenes.filter((s) => s.role === "item");
+  const DIVE = 15;
+
+  // Os enquadramentos, em ordem; cada um diz como o item sai (o condutor da passagem para o seguinte).
+  //   giant: o numeral enorme à esquerda; sai atravessando o numeral.
+  //   chip:  a etiqueta no alto e o texto grande no meio; sai com a etiqueta virando risco.
+  //   low:   o texto no alto e o numeral embaixo, à direita; sai num chicote para cima.
+  //   block: um bloco de cor com o numeral dentro e o texto embaixo; sai com o bloco virando a tela.
+  //   center: tudo centrado; sai num chicote para a esquerda.
+  const LAYOUTS = ["giant", "chip", "low", "block", "center"];
+  const layoutOf = (scene) => LAYOUTS[ITEMS.indexOf(scene) % LAYOUTS.length];
+  const numeral = (scene) => String(ITEMS.indexOf(scene) + 1);
+
+  /** A batida em que os textos do item saem (antes do mergulho do bloco, para não ficarem por cima dele). */
+  const leaveAt = (c) => (layoutOf(c.scene) === "block" && c.next ? c.beats - ((DIVE + 1) * Q) / TL.beat_s : c.beats);
+  /** Como um texto do item sai: segue o condutor do enquadramento. */
+  function exitOf(c) {
+    const layout = layoutOf(c.scene);
+    const at = leaveAt(c);
+    if (layout === "center") return { at, style: "whip", dir: [-1, 0] };
+    if (layout === "chip" || layout === "block") return { at, style: ST.between === "push" ? "lift" : "whip", dir: [0, -1] };
+    return { at, style: ST.between === "push" ? "lift" : "whip", dir: [0, -1] };
+  }
+
+  // ---------- o trilho de progresso ----------
+
+  S.over((f) => {
+    if (!ITEMS.length) return;
+    const first = ITEMS[0], last = ITEMS[ITEMS.length - 1];
+    if (f.T < first.start || f.T >= last.end) return;
+    const A = S.area;
+    const k = ITEMS.findIndex((s) => f.T >= s.start && f.T < s.end);
+    const cur = ITEMS[k];
+    const c = f.context(cur.index);
+    const grow = Motion.springBy("snappy", f.T - first.start);
+    const out = Studio.whip(f.context(last.index), { at: last.beats, dir: [0, 1], distance: S.px(260), echo: false });
+    const w = A.w * (S.vertical ? 1 : 0.5);
+    S.group({ dy: out.dy, alpha: out.alpha }, () => {
+      Studio.rail(c, { x: A.x, y: A.y + A.h - S.px(12), w: w * grow, h: S.px(12), n: ITEMS.length, index: k, fill: clamp(c.t / c.dur), gap: S.px(14) });
+    });
+  });
+
+  // ---------- os itens ----------
+
+  /** O numeral enorme: entra com um soco que pousa, com algarismos alinhados (nunca os de texto, que sobem e descem). */
+  function bigNumber(c, o) {
+    return Studio.text(c, numeral(c.scene), Object.assign({ kind: "headline", font: S.numberFont(), maxLines: 1, at: 0, in: "slam", by: "block", emphasis: false, uppercase: false, color: c.world.accentText, size: S.px(560), minSize: S.px(200), lineHeight: 1, breathe: { amount: 0.03, every: 2, from: 2 } }, o));
+  }
+
+  const TITLE = () => S.px(176 * ST.type.scale);
+  const DETAIL = () => S.type(58);
+  const detailHeight = (c, w) => (filled(c.scene.detail) ? Studio.body(c, c.scene.detail, { x: 0, y: 0, w, h: DETAIL() * 2.6, size: DETAIL(), maxLines: 2, measure: true }).h + S.px(40) : 0);
+
+  /** O texto do item e o detalhe embaixo dele, dentro da caixa (o detalhe já descontado da altura do título). */
+  function itemText(c, box, o) {
+    const scene = c.scene;
+    const em = { words: scene.emphasis, at: c.hit("pop", 2) };
+    const dh = detailHeight(c, box.w);
+    const title = Studio.headline(c, scene.text, Object.assign({ x: box.x, y: box.y, w: box.w, h: Math.max(S.px(120), box.h - dh), size: TITLE(), maxLines: ST.type.maxLines, at: 0.5, by: "line", stagger: 0.25, emphasis: em, out: exitOf(c), breathe: { amount: 0.015, every: 2, from: 2 } }, o || {}));
+    if (filled(scene.detail)) {
+      Studio.body(c, scene.detail, { x: box.x, y: title.bottom + S.px(40), w: box.w, h: DETAIL() * 2.6, size: DETAIL(), maxLines: 2, at: 1.5, align: (o && o.align) || "left", out: exitOf(c) });
+    }
+    return title;
+  }
+
+  /** O quanto o texto do item ocupa numa caixa de largura w e altura h (para centrar o enquadramento). */
+  function textHeight(c, w, h, o) {
+    const dh = detailHeight(c, w);
+    const title = Studio.headline(c, c.scene.text, Object.assign({ x: 0, y: 0, w, h: Math.max(S.px(120), h - dh), size: TITLE(), maxLines: ST.type.maxLines, measure: true }, o || {}));
+    return title.h + dh;
+  }
+
+  S.scene("item", { tail: 2 * Q }, (c) => {
+    const A = c.area;
+    const layout = layoutOf(c.scene);
+    const T = leaveAt(c);
+    if (!S.vertical) {
+      // deitado: o numeral numa coluna, o texto na outra, alternando os lados
+      const left = ITEMS.indexOf(c.scene) % 2 === 0;
+      const nb = { x: left ? A.x : A.x + A.w * 0.62, y: A.y, w: A.w * 0.36, h: A.h };
+      const tb = { x: left ? A.x + A.w * 0.42 : A.x, y: A.y + A.h * 0.12, w: A.w * 0.56, h: A.h * 0.76 };
+      bigNumber(c, { x: nb.x, y: nb.y, w: nb.w, h: nb.h, valign: "middle", align: "center", size: S.px(620), out: { at: T, style: "whip", dir: [0, -1] } });
+      itemText(c, tb, { valign: "middle" });
+      return;
+    }
+    if (layout === "giant") {
+      const n = bigNumber(c, { x: A.x - S.px(10), y: A.y, w: A.w * 0.7, h: A.h * 0.42, out: { at: T, style: "zoom", streaks: false } });
+      itemText(c, { x: A.x, y: n.bottom + S.px(50), w: A.w, h: A.y + A.h - S.px(60) - (n.bottom + S.px(50)) });
+    } else if (layout === "chip") {
+      const tag = Studio.chip(c, numeral(c.scene).padStart(2, "0"), { x: A.x, y: A.y + A.h * 0.04, size: S.type(72), at: 0, out: { at: T, style: "streak" } });
+      const room = A.y + A.h - S.px(60) - (tag.bottom + S.px(60));
+      const h = textHeight(c, A.w, room);
+      const y = tag.bottom + S.px(60) + Math.max(0, (room - h) * 0.4);
+      itemText(c, { x: A.x, y, w: A.w, h: A.y + A.h - S.px(60) - y });
+    } else if (layout === "low") {
+      itemText(c, { x: A.x, y: A.y + A.h * 0.04, w: A.w, h: A.h * 0.52 });
+      bigNumber(c, { x: A.x + A.w * 0.3, y: A.y + A.h * 0.5, w: A.w * 0.7, h: A.h * 0.44, align: "right", valign: "bottom", color: c.world.accentText, out: { at: T, style: "whip", dir: [0, -1] } });
+    } else if (layout === "block") {
+      // o bloco de cor: sangra pelas bordas do quadro; o numeral fica dentro dele, na área útil
+      const blockH = A.y + A.h * 0.4;
+      const from = { x: -S.px(40), y: -S.px(40), w: S.W + S.px(80), h: blockH + S.px(40), r: 0 };
+      const open = Motion.springBy(ST.springs.move, c.t);
+      const d = Studio.dive(c, { from, at: c.beats, frames: DIVE });
+      const rect = c.t >= c.beat(c.beats) - DIVE * Q ? d.rect : { x: from.x, y: from.y, w: from.w, h: from.h * open, r: 0 };
+      S.setAlpha(1);
+      S.g.fillStyle = c.world.accent;
+      Studio.roundRect(S.g, rect.x, rect.y, rect.w, rect.h, rect.r);
+      S.g.fill();
+      bigNumber(c, { x: A.x, y: A.y, w: A.w, h: blockH - A.y - S.px(30), valign: "bottom", color: c.world.onAccent, in: "rise", out: { at: T, style: "whip", dir: [0, -1] } });
+      if (d.wash > 0.001 && c.next) {
+        S.setAlpha(d.wash);
+        S.g.fillStyle = S.worldOf(c.next).bg;
+        Studio.roundRect(S.g, rect.x, rect.y, rect.w, rect.h, rect.r);
+        S.g.fill();
+        S.setAlpha(1);
+      }
+      itemText(c, { x: A.x, y: blockH + S.px(60), w: A.w, h: A.y + A.h - S.px(60) - (blockH + S.px(60)) });
+    } else {
+      const nH = A.h * 0.36;
+      const room = A.h - S.px(60) - nH - S.px(40);
+      const h = textHeight(c, A.w, room, { align: "center" });
+      const top = A.y + Math.max(0, (room - h) / 2);
+      bigNumber(c, { x: A.x, y: top, w: A.w, h: nH, align: "center", valign: "bottom", size: S.px(520), out: { at: T, style: "whip", dir: [-1, 0] } });
+      itemText(c, { x: A.x, y: top + nH + S.px(40), w: A.w, h: A.y + A.h - S.px(60) - (top + nH + S.px(40)) }, { align: "center" });
+    }
+  });
+
+  // ---------- gancho e chamada ----------
+
+  // Gancho: a frase já está pousada no quadro 0 (a capa); o soco, o destaque e a travessia acontecem em volta dela.
+  S.scene("gancho", { tail: 2 * Q }, (c) => {
+    const A = c.area;
+    S.group({ scale: Studio.drift(c), about: [A.x + A.w / 2, A.y + A.h / 2] }, () => {
+      Studio.headline(c, c.scene.text, {
+        x: A.x, y: A.y + A.h * 0.06, w: A.w, h: A.h * 0.82, valign: "middle", size: S.px(210 * ST.type.scale), maxLines: Math.max(4, ST.type.maxLines),
+        cover: true, punch: c.hit("impact", 0), breathe: { amount: 0.015, every: 2, from: c.hit("pop", c.beats > 4 ? 2 : 1) + 2 },
+        emphasis: { words: c.scene.emphasis, at: c.hit("pop", c.beats > 4 ? 2 : 1) },
+        out: { at: c.beats, style: ST.hookExit },
+      });
+    });
+  });
+
+  // A chamada: o logo e o texto, parados, com uma deriva lenta até o último quadro.
+  S.scene("fechamento", (c) => {
+    const A = c.area;
+    const at = c.hit("impact", 0);
+    S.group({ scale: Studio.drift(c), about: [A.x + A.w / 2, A.y + A.h / 2] }, () => {
+      Studio.lockup(c, { text: c.scene.text, words: c.scene.emphasis, logo: c.scene.logo !== false, x: A.x, y: A.y, w: A.w, h: A.h, align: "center", at, in: "cut", textAt: at + 1, plate: c.world.bg, breathe: { amount: 0.02, every: 2, from: at + 2 } });
+    });
+  });
+</script>
+</body>
+</html>

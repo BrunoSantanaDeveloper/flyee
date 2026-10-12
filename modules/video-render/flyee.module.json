@@ -1,0 +1,139 @@
+{
+  "manifest_version": 1,
+  "name": "video-render",
+  "version": "1.0.0",
+  "type": "tool",
+  "trail": "divulgar",
+  "title": {
+    "pt-BR": "Motor de vídeo",
+    "en": "Video engine"
+  },
+  "summary": {
+    "pt-BR": "Transforma uma página animada em vídeo pronto para as redes, com trilha original e efeitos na batida, prévia, a marca do seu site e conferência antes de publicar: capa, texto, área segura, volume e, por rede, formato e duração. É o motor que outros apps usam para renderizar.",
+    "en": "Turns an animated page into a video ready for social networks, with original music and effects on the beat, a preview, your site's brand and checks before publishing: cover, text, safe area, loudness and, per network, format and length. It is the engine other apps use to render."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.1.0",
+  "entry": "skills/video-render/SKILL.md",
+  "files": [
+    "README.md",
+    "references/aceite.md",
+    "references/formatos.md",
+    "references/interface.md",
+    "references/motion.md",
+    "references/pagina.md",
+    "references/redes.json",
+    "references/som.md",
+    "runtime/exemplo.html",
+    "runtime/motion.js",
+    "scripts/commands/accept.mjs",
+    "scripts/commands/audio.mjs",
+    "scripts/commands/capture.mjs",
+    "scripts/lib/accept.mjs",
+    "scripts/lib/audio/beats.mjs",
+    "scripts/lib/audio/music.mjs",
+    "scripts/lib/audio/sfx.mjs",
+    "scripts/lib/audio/styles.mjs",
+    "scripts/lib/audio/synth.mjs",
+    "scripts/lib/audio/wav.mjs",
+    "scripts/lib/browser.mjs",
+    "scripts/lib/capture.mjs",
+    "scripts/lib/ffmpeg.mjs",
+    "scripts/lib/networks.mjs",
+    "scripts/lib/renderer.mjs",
+    "scripts/lib/tools.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/render.mjs",
+    "skills/video-render/SKILL.md"
+  ],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/video-render/scripts/render.mjs",
+      "reason": {
+        "pt-BR": "O script do app abre a página num navegador sem janela, fotografa cada quadro, monta o vídeo, gera a trilha e os efeitos, mede batidas, mixa o som, captura o site da marca e confere a peça antes de publicar.",
+        "en": "The app's script opens the page in a windowless browser, photographs each frame, assembles the video, generates music and effects, measures beats, mixes the sound, captures the brand's site and checks the piece before publishing."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "ffmpeg, ffprobe",
+      "reason": {
+        "pt-BR": "Codificam os quadros em vídeo, juntam e mixam o áudio, medem o volume, a luz e os cortes, leem arquivos de mídia e montam as folhas de contato. A sua IA instala o ffmpeg na primeira vez que o app precisar, depois de avisar.",
+        "en": "They encode the frames into video, join and mix the audio, measure loudness, light and cuts, read media files and build the contact sheets. Your AI installs ffmpeg the first time the app needs it, after telling you."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "o navegador já instalado, aberto sem janela: Microsoft Edge, Google Chrome, Chromium ou Brave",
+      "reason": {
+        "pt-BR": "Fotografa cada quadro da página, confere a página e visita o site que você pedir, sem abrir janela. No Windows o Microsoft Edge já vem instalado; no Mac e no Linux, a sua IA instala o Chromium se não houver nenhum.",
+        "en": "Photographs each frame of the page, checks the page and visits the site you ask for, without opening a window. Microsoft Edge comes with Windows; on Mac and Linux, your AI installs Chromium when there is none."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "cmd /c start (Windows), open (Mac) ou xdg-open (Linux), só no comando open",
+      "reason": {
+        "pt-BR": "Abre o vídeo ou a imagem pronta no player ou visualizador padrão do seu computador, quando a sua IA vai mostrar o resultado.",
+        "en": "Opens the finished video or image in your computer's default player or viewer, when your AI shows you the result."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "o site que você pedir para capturar e as imagens dele (só no comando capture)",
+      "reason": {
+        "pt-BR": "Abre o site da sua marca no navegador sem janela e baixa só imagens (logo, ícones, imagem de compartilhamento). Nada do seu computador é enviado. No render, a internet só entra se a própria página usar algo de fora, como uma fonte da web.",
+        "en": "Opens your brand's site in the windowless browser and downloads only images (logo, icons, share image). Nothing from your computer is sent. When rendering, the internet comes in only if the page itself uses something from outside, such as a web font."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "a página e o material dela, e os vídeos, áudios e listas .json que a sua IA indicar",
+      "reason": {
+        "pt-BR": "Lê a página que vira vídeo e as imagens, vídeos e fontes que ela usa, além dos vídeos, músicas, grades de batidas e listas de efeitos que você pede para conferir, medir ou misturar.",
+        "en": "Reads the page that becomes the video and the images, videos and fonts it uses, plus the videos, music, beat grids and effect lists you ask to check, measure or mix."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "~/.flyee/programs.json",
+      "reason": {
+        "pt-BR": "Lê onde a CLI do flyee anotou os programas que instalou, para encontrar o ffmpeg mesmo quando a IA foi aberta antes da instalação.",
+        "en": "Reads where the flyee CLI noted the programs it installed, to find ffmpeg even when the AI was opened before the install."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "as pastas onde os programas costumam ser instalados e as fontes do sistema",
+      "reason": {
+        "pt-BR": "Procura o ffmpeg e o navegador nas pastas de instalação, mesmo fora do PATH, e usa uma fonte do sistema para marcar o tempo nas folhas de contato.",
+        "en": "Looks for ffmpeg and the browser in the install folders, even outside the PATH, and uses a system font to stamp the time on the contact sheets."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "a pasta da página ou a que a sua IA indicar, ./capturas/ e a pasta temporária do sistema",
+      "reason": {
+        "pt-BR": "Grava a página inicial, o vídeo, a prévia, os quadros, as folhas, a trilha, os efeitos, a mixagem e o relatório da conferência; as capturas de sites vão para ./capturas/; o que é intermediário fica na pasta temporária e é apagado ao final.",
+        "en": "Writes the starter page, the video, the preview, the frames, the sheets, the music, the effects, the mix and the check report; site captures go to ./capturas/; intermediate files stay in the temporary folder and are deleted at the end."
+      }
+    },
+    {
+      "kind": "env",
+      "scope": "PATH, LOCALAPPDATA, ProgramFiles e FLYEE_BROWSER",
+      "reason": {
+        "pt-BR": "Lê o PATH e as pastas de programas do sistema para achar o ffmpeg e o navegador; se você definir FLYEE_BROWSER, usa o navegador que ela indica.",
+        "en": "Reads the PATH and the system's program folders to find ffmpeg and the browser; if you set FLYEE_BROWSER, it uses the browser it points to."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: render de páginas animadas em .mp4, .mov e .webm, inclusive com camada transparente, nos formatos 9:16, 4:5, 3:4, 1:1, 16:9 e sob medida, a partir de uma só linha do tempo; prévia rápida, quadros por instante ou por batida e folhas de contato com tira de quadros e teste de celular; trilha original com arco (seis estilos) e trilha em loop de compassos inteiros (cinco estilos), as duas com a grade de batidas; efeitos sintetizados na batida; medição das batidas de qualquer música; mixagem de música, efeitos e voz no volume das redes; captura da marca a partir do site (logo, cores, fontes, textos, números, preços e telas); conferência de capa legível, área segura (inclusive os cantos do carrossel do Instagram), tamanho do texto, cortes na batida, emenda do loop, piscadas, tempo parado e volume, e de formato e duração em 12 destinos (Reels, Stories, feed, TikTok, Shorts, YouTube, LinkedIn, X, Status do WhatsApp, Kwai e anúncios da Meta e do TikTok); interface para outros apps.",
+    "en": "First version: renders animated pages to .mp4, .mov and .webm, including a transparent layer, in 9:16, 4:5, 3:4, 1:1, 16:9 and custom sizes from one timeline; quick preview, frames by instant or by beat and contact sheets with a frame strip and a phone test; original music with an arc (six styles) and loop-perfect music in whole bars (five styles), both with their beat grid; sound effects synthesized on the beat; beat detection on any music; mixing of music, effects and voice at the networks' loudness; brand capture from the site (logo, colors, fonts, texts, numbers, prices and screens); checks for a readable cover, safe areas (including the Instagram carousel corners), text size, cuts on the beat, loop seam, flashes, dead time and loudness, plus format and duration for 12 destinations (Reels, Stories, feed, TikTok, Shorts, YouTube, LinkedIn, X, WhatsApp Status, Kwai, and Meta and TikTok ads); an interface for other apps."
+  },
+  "license": "member"
+}

@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync, renameSync, cpSync } from "node:fs";
+import { existsSync, readFileSync, renameSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { CliError } from "../api/errors.ts";
@@ -8,7 +8,7 @@ import type { CoreAssets } from "../core-assets.ts";
 import { localeOf } from "../i18n.ts";
 import { programsDeclared } from "../programs.ts";
 import { type Lock, type LockModule, moduleDir, modulesDir, newLock, readLock, writeLock } from "../state/lock.ts";
-import { ensureDir, removeDir, sha256Hex, walkFiles, writeFileAtomic } from "../util/fs.ts";
+import { copyDir, ensureDir, removeDir, sha256Hex, walkFiles, writeFileAtomic } from "../util/fs.ts";
 import { applyAdapters, removeBridges, type SkillInfo, writeSkillBridges } from "./adapters.ts";
 import { parseFrontmatter } from "./frontmatter.ts";
 import { type InspectedPackage, inspectPackage, isSafePackagePath, type Manifest, MANIFEST_FILE } from "./zip.ts";
@@ -69,7 +69,8 @@ function placeFiles(ctx: Context, slug: string, writeInto: (dir: string) => void
     try {
       renameSync(temp, target);
     } catch {
-      cpSync(temp, target, { recursive: true });
+      // a rename can fail (another volume, a file held open by an antivirus): copy instead, file by file
+      copyDir(temp, target);
       removeDir(temp);
     }
   } catch (error) {

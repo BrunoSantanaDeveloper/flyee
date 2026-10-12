@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Slide __N__ · chamada</title>
+<style>
+  html, body { margin: 0; background: #0C0C0E; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script src="../motion.js"></script>
+<script src="../carousel.js"></script>
+<script>
+  // Slide de chamada: o último. Edite só o bloco SLIDE ou troque os helpers dentro de seek; mantenha at: 0
+  // no título e no botão. Três momentos mantêm o slide vivo: o texto volta linha a linha, o título sai e volta
+  // com impacto, e o botão some e estoura de novo perto do fim. Não há dica de deslizar no último slide.
+  // Todos os helpers e opções: .flyee/modules/motion-carousel/references/slide-page.md; um carrossel completo: .flyee/modules/motion-carousel/references/exemplo/.
+  window.SLIDE = {
+    n: __N__, total: __TOTAL__,
+    label: "",                              // rótulo pequeno acima do título; vazio = sem rótulo
+    title: "__TITLE__",                     // use \n para quebrar as linhas (até 3)
+    text: "__TEXT__",                       // o que a pessoa ganha ao comentar; vazio = sem texto
+    button: "Comente AQUI",                 // a palavra da chamada, em maiúsculas (ex.: "Comente PLANO")
+    theme: __THEME__, format: "__FORMAT__",
+    bars: __BARS__, beatsPerBar: __BEATS_PER_BAR__, bpm: __BPM__, seed: __SEED__,
+    totalBars: __TOTAL_BARS__, offsetBars: __OFFSET_BARS__,
+    textOut: 0.5, textBack: 2,              // o texto sai logo e volta uma linha por batida
+    out: null, back: null,                  // null = o título sai uma batida antes da metade do slide e volta com impacto 2 depois
+    buttonOut: null, buttonBack: null,      // null = o botão some 4 batidas antes do fim e estoura de novo na seguinte
+  };
+  const S = window.SLIDE;
+  const BEATS = S.bars * S.beatsPerBar;
+  const OUT = S.out === null ? Math.max(4, BEATS / 2 - 1) : S.out;
+  const BACK = S.back === null ? OUT + 2 : S.back;
+  const BUTTON_OUT = S.buttonOut === null ? BEATS - 4 : S.buttonOut;
+  const BUTTON_BACK = S.buttonBack === null ? BUTTON_OUT + 1 : S.buttonBack;
+  const C = Carousel.setup({ bars: S.bars, beatsPerBar: S.beatsPerBar, bpm: S.bpm, format: S.format, theme: S.theme, seed: S.seed, title: "Slide " + S.n + " · chamada" });
+
+  window.seek = (t) => {
+    C.begin(t);
+    C.glow({ x: 0.82, y: 0.18, alpha: 0.08 });
+    C.pulseBg(0.03);
+    if (S.label) C.label(S.label, { y: 96, size: 44 });
+    const title = C.headline(S.title, { y: 176, size: 150, out: OUT, outStyle: "rise", back: BACK, in: "slam" });
+    if (S.text) C.body(S.text, { y: title.bottom + 44, size: 54, maxWidth: 900, perLine: 1, out: S.textOut, back: S.textBack });
+    C.cta(S.button, { y: 0.7, size: 58, pulse: true, out: BUTTON_OUT, outStyle: "shrink", back: BUTTON_BACK, in: "pop" });
+    C.ruler({ y: 1140, totalBars: S.totalBars, offsetBars: S.offsetBars, bars: S.bars });
+    C.progress({ step: S.n, total: S.total });
+    return C.end();
+  };
+</script>
+</body>
+</html>

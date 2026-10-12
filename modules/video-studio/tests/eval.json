@@ -1,0 +1,111 @@
+{
+  "app": "video-studio",
+  "cases": [
+    {
+      "name": "pedido vazio vira briefing guiado",
+      "setup": "Motor de vídeo ligado na pasta de trabalho; ffmpeg e navegador presentes; nenhum kit de marca salvo; sirva modules/video-render/tests/fixtures/site/ em http://127.0.0.1:8080 e responda como dono dessa marca.",
+      "prompt": "Faça um vídeo animado.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "estudio-de-video/*/pedido.json"
+        },
+        {
+          "kind": "file_exists",
+          "path": "estudio-de-video/*/briefing.md"
+        }
+      ],
+      "rubric": "A IA grava o pedido literal e roda intake. Faz a rodada 1 com as quatro perguntas do app (marca, objetivo, onde, duração), com as opções e os textos de round, sem inventar perguntas. Depois de receber o site, captura a marca antes da rodada 2, e as opções da rodada 2 trazem produtos e seções reais do site. Faz no máximo três rodadas e doze perguntas. No fim mostra o briefing completo (echo) e só constrói depois do sim. Nunca edita pedido.json à mão."
+    },
+    {
+      "name": "decida por mim encerra as perguntas",
+      "setup": "Como o caso anterior; na primeira rodada responda só o site e diga 'o resto decide você'.",
+      "prompt": "Faça um vídeo animado.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "estudio-de-video/*/briefing.md"
+        }
+      ],
+      "rubric": "Registra o site com answer e usa answer --decide para o restante. Não repete perguntas já decididas. O briefing mostrado diz, em palavras simples, o que foi decidido por padrão, e a IA espera o sim antes de construir."
+    },
+    {
+      "name": "pedido completo nao recebe pergunta",
+      "setup": "Site falso servido em http://127.0.0.1:8080.",
+      "prompt": "Faz um vídeo de motion graphics dinâmico de 20 segundos para a Loja Exemplo (http://127.0.0.1:8080), com a energia do showreel de um motion designer. História: 1. Gancho: o problema em 5 palavras de tipografia enorme. 2. O produto aparece, a interface se monta peça por peça. 3. Três recursos, cada um com um cursor fazendo uma ação real. 4. Um número que prova que funciona, tirado do próprio site; se não achar nenhum publicado, pula esta parte. 5. Assinatura com o logo e o endereço. Som: música original, cliques e whooshes de interface na batida. Formato vertical.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "estudio-de-video/*/roteiro.json"
+        },
+        {
+          "kind": "file_exists",
+          "path": "estudio-de-video/*/previa/previa.mp4"
+        }
+      ],
+      "rubric": "sufficiency é completo e nenhuma pergunta de briefing é feita: a IA mostra a linha e começa. Captura o site, constrói, faz a prévia, abre a folha de quadros e a julga antes de mostrar. O roteiro tem gancho, produto, três pontos, a prova só se o site publica um número (com a página de origem) e o fechamento. Para na pergunta da prévia antes do final."
+    },
+    {
+      "name": "nenhum numero inventado",
+      "setup": "Um site falso sem nenhum número publicado.",
+      "prompt": "Faça um vídeo de lançamento de 15 segundos do meu app (http://127.0.0.1:8081) para o Reels, mostrando que ele dá resultado.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "estudio-de-video/*/roteiro.json"
+        }
+      ],
+      "rubric": "O roteiro não tem cena de prova, ou a IA pergunta ao integrante por um resultado real (pergunta numero). Nenhum número, percentual, preço ou prazo aparece no vídeo sem estar no site ou na conversa. As cores e o logo vêm da captura; se a captura não achou logo, o nome aparece em texto e a IA diz isso."
+    },
+    {
+      "name": "pedido fora da versao",
+      "setup": "Um arquivo aula-01.mp4 no projeto.",
+      "prompt": "Edite a aula-01.mp4 para o Reels, com legendas e animações.",
+      "assertions": [],
+      "rubric": "A IA roda intake, lê unsupported e explica numa frase simples, sem link e sem tom de venda, que esta versão faz vídeos animados do zero e ainda não edita gravações. Oferece o vídeo animado sobre o mesmo assunto e só segue com o sim."
+    },
+    {
+      "name": "previa reprovada pede nova previa",
+      "setup": "Depois do caso 'pedido completo', na mesma sessão; responda à prévia: 'troca a abertura por: Chega de planilha'.",
+      "prompt": "Troca a abertura por: Chega de planilha.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "estudio-de-video/*/previa/previa.mp4"
+        }
+      ],
+      "rubric": "Edita o roteiro.json (não o pedido.json), roda build e preview de novo, olha a folha, mostra a nova prévia e pergunta de novo antes do final. Não roda final sem approve preview."
+    },
+    {
+      "name": "motor ausente",
+      "setup": "O app video-render não está instalado no projeto.",
+      "prompt": "Faça um vídeo animado da minha loja: https://exemplo.com.br",
+      "assertions": [],
+      "rubric": "check mostra video_render.installed falso. A IA diz numa frase que vai instalar o Motor de vídeo e roda ela mesma o comando de install; não manda o integrante digitar nada nem abrir o terminal. Depois repete o check e segue."
+    },
+    {
+      "name": "retomar um video parado",
+      "setup": "Um vídeo criado até o briefing aprovado, numa sessão anterior.",
+      "prompt": "Continua o vídeo da loja.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "estudio-de-video/*/pagina.html"
+        }
+      ],
+      "rubric": "Usa list e status para achar o vídeo e segue o next_step (build), sem refazer perguntas nem capturar o site de novo."
+    },
+    {
+      "name": "dominio estacionado no lugar do site",
+      "setup": "O endereço que o integrante dá ainda não tem site: o domínio está estacionado no provedor de hospedagem, com o logo, as cores e os textos do provedor.",
+      "prompt": "Faz um vídeo de lançamento do meu site minhaloja.com.br para o Reels.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "capturas/*/sem-site.png"
+        }
+      ],
+      "rubric": "A captura volta com site_placeholder. A IA diz numa frase que o endereço ainda não tem o site da marca (é uma página do provedor), pergunta se a marca tem o site em outro endereço e, sem outro, segue com o visual neutro pedindo o logo e duas ou três imagens na pasta de materiais. Nunca usa o logo, as cores ou os textos da página do provedor, nem chama o provedor de marca do integrante."
+    }
+  ]
+}

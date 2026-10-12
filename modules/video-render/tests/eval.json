@@ -1,0 +1,68 @@
+{
+  "app": "video-render",
+  "cases": [
+    {
+      "name": "previa da pagina inicial numa maquina sem ffmpeg",
+      "setup": "Sem ffmpeg e sem ffprobe; navegador presente (Edge no Windows). Projeto vazio com o app instalado.",
+      "prompt": "Crie uma página animada de exemplo com o Motor de vídeo na pasta inicial/, gere a prévia e me mostre como ficou.",
+      "assertions": [
+        { "kind": "file_exists", "path": "inicial/pagina.html" },
+        { "kind": "file_exists", "path": "inicial/motion.js" },
+        { "kind": "file_exists", "path": "inicial/previa.mp4" },
+        { "kind": "file_exists", "path": "inicial/quadros/folha.png" }
+      ],
+      "rubric": "A IA rodou check --json, viu modes.render falso e install.ffmpeg, avisou numa frase que ia instalar o ffmpeg e rodou ela mesma `npx flyee need ffmpeg --yes --json` com tempo limite longo; nunca mostrou um comando para o integrante digitar, nunca falou em terminal e não pediu para reabrir a IA (se a instalação devolvesse needs_member, mostraria só o passo único). Repetiu o check, rodou scaffold inicial e preview com --json, leu warnings, fotografou quadros com frames (--every ou --times) e abriu a folha antes de falar do resultado, e mostrou a prévia com open. Relata tamanho, duração e quadros a partir do JSON (540×960, 6 s, 180 quadros) e diz que é uma prévia em metade do tamanho, não o vídeo final."
+    },
+    {
+      "name": "slide em loop com synth, sfx e mix",
+      "setup": "ffmpeg e navegador instalados. Uma página slide/01.html em 4:5 que segue o contrato (seek, film.duration 6, film.cuts em 2 e 4, setFormat, boxes, texto a 72 px das bordas), com motion.js ao lado; o título entra na batida 1 (0,5 s) de uma grade de 120 BPM.",
+      "prompt": "Coloque uma trilha em loop na batida neste slide, estilo noir a 120 BPM, com um impacto na entrada do título, e me entregue o vídeo com som: slide/01.html",
+      "assertions": [
+        { "kind": "file_exists", "path": "slide/*.wav" },
+        { "kind": "file_exists", "path": "slide/*.beats.json" },
+        { "kind": "file_exists", "path": "slide/*.mp4" }
+      ],
+      "rubric": "Escolhe synth, não music, porque o vídeo repete: synth --bpm 120 --bars 3 --style noir --json (3 compassos = 6 s, a duração do slide) e lê o beats.json que veio junto em vez de inventar tempos. Gera o impacto na entrada do título, em t = 0.5, com sfx --events (ou --event impact@0.5) e --duration 6; renderiza a página com render --json; mixa com mix --video --music --sfx --fade-out 0 (é um loop) e relata loudness a partir do JSON devolvido, sem dizer que ouviu a trilha. Confere com accept slide/01.html --format 4:5 --safe instagram-carousel --loop --beats <a grade> --video <o vídeo final> e repassa cada item como veio (um warn ou fail não vira aprovado). Nenhuma música de terceiros é sugerida ou baixada; nada é pedido para o integrante digitar; diz onde ficou cada arquivo."
+    },
+    {
+      "name": "reels de 15 s com trilha de arco",
+      "setup": "ffmpeg e navegador instalados. Projeto vazio com o app instalado.",
+      "prompt": "Faça na pasta reel/ um Reels de 15 segundos anunciando a turma nova do curso de fotografia da Ana, que começa em 3 de novembro, com uma trilha original na batida, e confira se passa no Reels, no TikTok e no Shorts.",
+      "assertions": [
+        { "kind": "file_exists", "path": "reel/pagina.html" },
+        { "kind": "file_exists", "path": "reel/*.wav" },
+        { "kind": "file_exists", "path": "reel/*.beats.json" },
+        { "kind": "file_exists", "path": "reel/*.mp4" },
+        { "kind": "file_exists", "path": "reel/*.aceite.json" }
+      ],
+      "rubric": "Escolhe music, não synth, porque o vídeo é visto uma vez: music --duration 15 com um estilo que combina com o pedido, e usa sections, drop e hits do resultado para pôr a maior mudança no drop e o soco na pancada final, com film.cuts nas batidas. Parte do scaffold em 9:16, olha a prévia e uma folha de quadros antes do render final, confere a página com accept antes de renderizar, renderiza em 9:16, mixa e roda accept com o vídeo primeiro, --page e --networks reels,tiktok,shorts, relatando format_supported, duration e loudness de cada rede como vieram. Usa só o que o integrante disse (o curso, a Ana, 3 de novembro): nenhum número, preço ou depoimento inventado; nenhuma música de terceiros; nunca diz que ouviu a trilha."
+    },
+    {
+      "name": "captura do site sem inventar a marca",
+      "setup": "Navegador instalado. Um site de teste da marca servido localmente em http://127.0.0.1:8080, com logo, duas cores e um preço.",
+      "prompt": "Capture o site da minha marca para pegar logo, cores e telas reais: http://127.0.0.1:8080",
+      "assertions": [
+        { "kind": "file_exists", "path": "capturas/*/captura.json" }
+      ],
+      "rubric": "Roda capture com o endereço e --json e resume a marca só com o que o resultado e captura.json trouxeram: nome, frase principal, cores com o código hexadecimal (primary e palette), fontes, botões, o preço como está escrito, e onde ficaram as telas, as rolagens e o logo em assets/. O que não foi encontrado é dito como não encontrado e pedido ao integrante como arquivo, nunca inventado nem aproximado. Diz que nada do computador foi enviado. Se faltar o ffmpeg, explica que só as rolagens ficaram de fora; se o site barrar o navegador (site_blocked), explica e pede as telas."
+    },
+    {
+      "name": "conferencia de um slide pedida por outro app",
+      "setup": "ffmpeg e navegador instalados. Uma página carrosseis/teste/slides/02.html em 4:5 (6 s, com setFormat e boxes) cujo título, em t = 0, encosta no canto superior direito (dentro da área do contador \"1/N\") e cujo texto corrido tem 36 px; carrosseis/teste/audio/music.beats.json a 120 BPM.",
+      "prompt": "Sou o app de carrossel. Siga .flyee/modules/video-render/references/interface.md, confira carrosseis/teste/slides/02.html para o carrossel do Instagram (4:5, em loop, batidas em carrosseis/teste/audio/music.beats.json), grave o relatório em carrosseis/teste/aceite-02.json e me devolva o resultado da conferência.",
+      "assertions": [
+        { "kind": "file_exists", "path": "carrosseis/teste/aceite-02.json" }
+      ],
+      "rubric": "Roda check uma vez e depois accept carrosseis/teste/slides/02.html --format 4:5 --safe instagram-carousel --loop --beats carrosseis/teste/audio/music.beats.json --out carrosseis/teste/aceite-02.json --json. Relata passed falso e cada item como veio em checks: o fail de safe_area com o tempo e o canto tocado (counter, o contador \"1/N\"), o warn de text_size (36 px, abaixo do mínimo de 44 mas acima dos 26,4 que reprovam) e first_frame_readable, cuts_on_beat e loop_seamless com o status devolvido, sem inventar valores. Diz que o slide não passa, propõe as correções na página (afastar o título do canto, texto de 44 px ou mais) e oferece conferir de novo; nunca chama o slide de aprovado nem suaviza um fail como aviso. Devolve ao app chamador passed, checks e o caminho do relatório, e mantém tudo fora de .flyee/."
+    },
+    {
+      "name": "video pronto contra as redes",
+      "setup": "ffmpeg instalado. Um vídeo final/final.mp4 em 1080×1920, com 95 s e áudio a -20 LUFS; nenhuma página e nenhum beats.json.",
+      "prompt": "Confira se este vídeo passa nas regras do Reels, do TikTok e do Shorts: final/final.mp4",
+      "assertions": [
+        { "kind": "file_exists", "path": "final/final.aceite.json" }
+      ],
+      "rubric": "Roda accept final/final.mp4 --networks reels,tiktok,shorts --json, com o vídeo primeiro. Relata passed falso e o que veio em checks: o fail de loudness (-20 LUFS, 6 LU abaixo do alvo de -14) com o fix; os warn de duration nas três redes (95 s passa dos 90 s recomendados no Reels e dos 60 s no TikTok e no Shorts, dentro do máximo de cada uma); os pass de format_supported; os skip de page, first_frame_readable, safe_area, text_size e cuts_on_beat, explicando que com a página (--page) e as batidas eles seriam conferidos; e flashes e dead_time como vieram. Diz onde ficou o relatório (final/final.aceite.json), oferece refazer a mixagem no alvo de -14 LUFS e encurtar o vídeo, e nunca o chama de aprovado."
+    }
+  ]
+}

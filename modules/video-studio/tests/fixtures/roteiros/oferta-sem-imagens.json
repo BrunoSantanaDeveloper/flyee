@@ -1,0 +1,99 @@
+{
+  "format_version": 1,
+  "format": "9:16",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "beats_per_bar": 4,
+  "loop": false,
+  "title": "Pizzaria Forno — oferta",
+  "template": "oferta",
+  "style": "vitrine",
+  "bpm": 140,
+  "bars": 4,
+  "duration": 6.857,
+  "music": {
+    "mode": "music",
+    "style": "energetic",
+    "seed": 4,
+    "file": null
+  },
+  "palette": {
+    "background": "#111111",
+    "text": "#F7F3EA",
+    "accent": "#F2B705"
+  },
+  "fonts": {
+    "headline": "'Segoe UI', Arial, sans-serif",
+    "body": "'Segoe UI', Arial, sans-serif"
+  },
+  "brand": {
+    "name": "Pizzaria Forno",
+    "site": "",
+    "handle": "@pizzariaforno",
+    "logo": null
+  },
+  "scenes": [
+    {
+      "n": 1,
+      "role": "gancho",
+      "bars": 1,
+      "text": "Terça é dia de pizza",
+      "events": [
+        {
+          "beat": 0,
+          "type": "impact"
+        },
+        {
+          "beat": 1,
+          "type": "pop"
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "role": "produto",
+      "bars": 1,
+      "text": "Pizza grande de calabresa",
+      "events": [
+        {
+          "beat": 0,
+          "type": "whoosh"
+        }
+      ]
+    },
+    {
+      "n": 3,
+      "role": "preco",
+      "bars": 1,
+      "value": 49.9,
+      "events": [
+        {
+          "beat": 0,
+          "type": "thump"
+        },
+        {
+          "beat": 2,
+          "type": "impact"
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "role": "fechamento",
+      "bars": 1,
+      "text": "Peça no WhatsApp",
+      "logo": true,
+      "events": [
+        {
+          "beat": 0,
+          "type": "whoosh"
+        },
+        {
+          "beat": 2,
+          "type": "click"
+        }
+      ]
+    }
+  ]
+}

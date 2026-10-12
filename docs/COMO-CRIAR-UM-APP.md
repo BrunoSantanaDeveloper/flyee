@@ -35,6 +35,8 @@ modules/<slug>/
 
 Comece com `npm run apps -- new <slug> --type <tipo> --trail <trilha>`, que copia `modules/_template` e preenche nomes, tipo e trilha. O que falta escrever fica marcado com `[PREENCHER]`, e a validação recusa o app até não sobrar nenhum. O nome do diretório é o `name` do manifesto: minúsculas, dígitos e hífens, até 60 caracteres.
 
+**O projeto é a pasta.** Tudo o que o app aprende sobre a marca ou a voz do integrante e tudo o que entrega fica numa pasta do app na raiz do projeto (`estudio-de-video/`, `roteiros/`, `carrosseis/`), nunca na pasta do usuário nem num cache comum a todos os projetos. É isso que separa as marcas: quem atende vários clientes usa um projeto para cada um (`npx flyee new <pasta>`), e o operador faz o mesmo com MedChina, flyee e Seenaly (`npm run apps -- project new <nome>`). Em `~` só fica o que é da máquina: onde estão os programas, as chaves em `~/.flyee/keys.json`.
+
 ## 2. O manifesto
 
 | Campo | Regra |

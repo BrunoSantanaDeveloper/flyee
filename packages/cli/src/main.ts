@@ -6,6 +6,8 @@ import { runKey } from "./commands/key.ts";
 import { runLogin } from "./commands/login.ts";
 import { runLogout } from "./commands/logout.ts";
 import { runNeed } from "./commands/need.ts";
+import { runNew } from "./commands/new.ts";
+import { runProjects } from "./commands/projects.ts";
 import { runRemove } from "./commands/remove.ts";
 import { runStatus } from "./commands/status.ts";
 import { runTrack } from "./commands/track.ts";
@@ -46,6 +48,8 @@ const HELP = `flyee ${CLI_VERSION}
   npx flyee status [--quiet]
   npx flyee doctor
   npx flyee remove <app>
+  npx flyee new <pasta> [--apps a,b] [--kind own|client]   (outro projeto com os apps deste: um por marca ou cliente)
+  npx flyee projects   (os projetos com apps do flyee neste computador)
   npx flyee need <programa…> [--upgrade] [--yes]   (instala os programas que um app usa, como ffmpeg e yt-dlp)
   npx flyee key set <NOME> | key list | key remove <NOME>   (chaves dos apps: abre uma página no navegador para colar)
   npx flyee track <evento> [--module <app>] [--version <v>] [--from <v>] [--to <v>] [--reason <r>] [--origin <o>]
@@ -75,6 +79,10 @@ export async function runCommand(ctx: Context, args: ParsedArgs): Promise<Result
       return runKey(ctx, args);
     case "need":
       return runNeed(ctx, args);
+    case "new":
+      return runNew(ctx, args);
+    case "projects":
+      return runProjects(ctx);
     case "track":
       return runTrack(ctx, args);
     case "dev":

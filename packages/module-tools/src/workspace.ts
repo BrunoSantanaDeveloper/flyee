@@ -52,7 +52,7 @@ export function ensureCliBundle(): { built: boolean } {
 
 type CliResult = { ok: boolean; [key: string]: unknown };
 
-/** Runs the CLI bundle in the workspace with the operator's development mode on. */
+/** Runs the CLI bundle in the workspace, or in a project folder, with the operator's development mode on. */
 export function runCliInWorkspace(workspace: string, args: string[]): CliResult {
   const result = spawnSync(process.execPath, [CLI_BUNDLE, ...args, "--json", "--yes"], {
     cwd: workspace,

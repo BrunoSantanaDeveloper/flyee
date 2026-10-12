@@ -45,7 +45,7 @@ Estado da máquina, fora do projeto:
 ├── keys.json          chaves externas dos apps, salvas com `npx flyee key set` (mesma proteção; nunca saem da máquina)
 ├── refresh.lock       serializa a renovação do refresh token
 ├── events.jsonl       fila de eventos de telemetria, lotes de até 50
-└── projects.json      projetos conhecidos nesta máquina, para montar installed_modules
+└── projects.json      projetos conhecidos nesta máquina, para montar installed_modules e para `npx flyee projects`; nunca sai da máquina
 ```
 
 ## 4. Fluxos
@@ -55,6 +55,8 @@ Estado da máquina, fora do projeto:
 **`npx flyee add <app>`.** Sem conexão, mostra que o app faz parte do acesso flyee.club e o link que o servidor devolver em `links.module_page` (planejado), ou só o endereço base. Com conexão: `GET /api/cli/catalog`, mostra permissões, credenciais externas e checksum, pede confirmação (`--yes` pula), `GET …/download`, baixa, confere tamanho e SHA-256, confere a lista de arquivos do ZIP contra `files` do manifesto e a segurança de cada caminho, extrai para uma pasta temporária e troca atomicamente, escreve as pontes e o bloco do `AGENTS.md`, atualiza o lock, reporta `installs` e o evento `module.installed`. `add receita:<slug>` usa `GET /api/cli/recipes/<slug>` e instala cada app liberado.
 
 **`npx flyee update`.** Renova o refresh token primeiro, com lock local, porque duas renovações simultâneas revogam a família. Compara o lock com `latest` do catálogo, por app: baixa, confere e troca o que mudou, grava `module.updated` com `from_version` e `to_version`, atualiza o core quando a versão mudou, e chama `installs` com `updated: true`. Quando o catálogo devolver `newest` (planejado), mostra a distância da conta grátis.
+
+**`npx flyee new <pasta>` e `npx flyee projects`.** O projeto é a pasta: os apps, a voz e a marca que eles aprendem e o que entregam ficam nela, então quem cria para várias marcas ou clientes usa uma pasta para cada um. `new` cria outra pasta (um nome sozinho vira pasta ao lado do projeto atual; nunca dentro dele, nem ele dentro dela) com os apps deste projeto, ou só os de `--apps`. Cada app passa de novo pelo catálogo e pelo download conferido, como no `add`; o que a conta não libera hoje fica de fora com aviso e continua funcionando onde já estava, e as permissões de um app que o projeto atual não tem aparecem antes de instalar. A máquina é registrada uma vez no fim. Cópias de desenvolvimento (`dev link`) só vão junto no modo do operador, sem falar com a plataforma. `projects` lê `~/.flyee/projects.json` e o lock de cada pasta e não chama a plataforma.
 
 **`npx flyee status`.** Conexão, dias para revalidar, apps e versões, avisos (`deprecations`). `--quiet` imprime uma linha só quando há algo a fazer, para hooks de início de sessão.
 

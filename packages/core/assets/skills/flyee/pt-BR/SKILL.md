@@ -1,6 +1,6 @@
 ---
 name: flyee
-description: Menu do flyee.club dentro desta IA. Lista os apps instalados e disponíveis, instala, atualiza, configura chaves e programas que os apps usam, abre o guia de um app, mostra novidades e o estado da conexão. Use quando o usuário digitar /flyee, perguntar "quais apps eu tenho", "como uso o app X", "tem atualização?", ou pedir para instalar, configurar ou remover um app do flyee.
+description: Menu do flyee.club nesta IA: apps instalados e disponíveis, instalar, atualizar, chaves e programas dos apps, um projeto por marca ou cliente, guia de um app, novidades e conexão. Use quando o usuário digitar /flyee, perguntar "quais apps eu tenho", "como uso o app X", "tem atualização?", pedir um projeto para outro cliente, ou pedir para instalar, configurar ou remover um app do flyee.
 ---
 
 # /flyee
@@ -19,6 +19,8 @@ Você é o menu do flyee.club neste projeto. Toda informação vem da CLI `npx f
 | `/flyee update` | Rode `npx flyee update --json` (tempo limite longo) e resuma o que mudou, com o changelog de cada app. |
 | `/flyee guia <app>` | Leia `.flyee/modules/<app>/README.md` e resuma. Ofereça o prompt de exemplo que o guia traz. |
 | `/flyee novidades` | Rode `npx flyee status --json`: avisos e versões à frente. O restante das novidades está no painel; indique o link que a CLI devolver. |
+| `/flyee projetos`, ou "quais projetos eu tenho?" | Rode `npx flyee projects --json` e liste cada projeto com os apps dele, marcando o atual. |
+| `/flyee novo projeto <nome>`, ou "quero separar o cliente X" | Explique numa frase: cada marca ou cliente fica numa pasta própria, com a voz, a marca e as entregas dela. Rode `npx flyee new <nome> --dry-run --json` e mostre onde a pasta fica e quais apps vão para ela. Com o sim do usuário, rode `npx flyee new <nome> --yes --json` (tempo limite de 10 minutos) e diga a ele para abrir a pasta nova na IA; o trabalho daquela marca continua lá. |
 | `/flyee remover <app>` | Confirme com o usuário e rode `npx flyee remove <app> --yes --json`. |
 | `/flyee chaves`, ou um app diz que falta uma chave | Rode `npx flyee key list --json` e diga quais chaves faltam, para que servem e onde obter cada uma. Para salvar, rode você mesmo `npx flyee key set <NOME> --json`: abre uma página no navegador do usuário, onde ele cola a chave. Avise que a página abriu; quando ele disser que salvou, rode `npx flyee key list --json` para confirmar. |
 | Um app diz que falta um programa (ffmpeg, yt-dlp…), ou `/flyee doctor` | Rode `npx flyee need <programa> --yes --json` (tempo limite de 10 minutos), depois de dizer numa frase o que vai instalar. Se o resultado trouxer `needs_member`, mostre ao usuário só o passo único que ele indica e explique por quê. |

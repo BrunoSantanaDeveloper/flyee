@@ -15,6 +15,8 @@ npx flyee doctor                # confere a instalação, os programas e as chav
 npx flyee need <programa>       # instala um programa que um app usa (winget, Homebrew ou apt)
 npx flyee key set <NOME>        # abre uma página no navegador para colar a chave de um app
 npx flyee remove <app>
+npx flyee new <pasta>           # outro projeto com os apps deste, ao lado dele
+npx flyee projects              # os projetos com apps do flyee neste computador
 npx flyee logout
 ```
 
@@ -27,6 +29,12 @@ Todo comando aceita `--json`, para a sua IA ler a saída, e `--yes`, para pular 
 - `.flyee/`: os apps instalados e o registro do que está instalado. Não edite; `npx flyee update` substitui.
 
 Nada é instalado sem antes conferir o tamanho e o SHA-256 do pacote contra o que a plataforma publicou. As permissões que o app declara aparecem antes de instalar.
+
+## Um projeto por marca ou cliente
+
+O projeto é a pasta onde os apps estão instalados. Tudo o que eles aprendem ali, como a sua voz e a sua marca, e tudo o que entregam fica dentro dela. Se você cria conteúdo para mais de uma marca ou atende clientes, use uma pasta para cada um: peça à sua IA um projeto novo para o cliente, e ela roda `npx flyee new <nome>`, que cria uma pasta ao lado desta com os mesmos apps. Abra essa pasta na IA para trabalhar naquele cliente. Nada se mistura entre elas.
+
+Cada app passa de novo pela conferência do pacote e pelo seu acesso; um app que a sua conta não libera hoje fica de fora e continua funcionando onde já estava. A lista dos seus projetos fica só neste computador.
 
 ## Privacidade
 
@@ -43,4 +51,5 @@ Português e inglês, seguindo o idioma da sua conta.
 
 ## Mudanças
 
+- Ainda não publicado: `new` e `projects`, um projeto por marca ou cliente.
 - 1.0.0-alpha.1: primeira versão da linha 1.x: login com PKCE ou código de dispositivo, add, remove, update, status, doctor, track. A linha 0.x deste pacote pertence a um projeto anterior e não fala com o flyee.club.

@@ -8,8 +8,9 @@
 //   npm run apps -- list [--json]
 //   npm run apps -- new <slug> --type <skill|workflow|tool|framework> --trail <trail> [--title "…"] [--title-en "…"] [--summary "…"]
 //   npm run apps -- bump <slug> <patch|minor|major|x.y.z>
-//   npm run apps -- link <slug...> | --all
-//   npm run apps -- unlink <slug...>
+//   npm run apps -- link <slug...> | --all [--project <name>]     (also links the apps they call)
+//   npm run apps -- unlink <slug...> [--project <name>]
+//   npm run apps -- project list | new <name> [slug...] | sync [name...]
 //   npm run apps -- catalog [--check]
 //   npm run apps -- workspace
 //
@@ -24,12 +25,14 @@ import { packModule } from "./pack.ts";
 import { distRoot, listModuleDirs, modulesRoot, repoRoot } from "./paths.ts";
 import { bumpApp, scaffoldApp } from "./scaffold.ts";
 import { appsStatus } from "./status.ts";
+import { createProject, listProjects, projectDir, projectsRoot, readProject, withUsedApps } from "./projects.ts";
+import { referencedApps } from "./relations.ts";
 import { type Report, validateAll } from "./validate.ts";
 import { ensureCliBundle, ensureWorkspace, readWorkspaceLock, runCliInWorkspace, workspaceDir } from "./workspace.ts";
 
 const argv = process.argv.slice(2);
 const command = argv[0];
-const VALUE_FLAGS = new Set(["out", "type", "trail", "title", "title-en", "summary"]);
+const VALUE_FLAGS = new Set(["out", "type", "trail", "title", "title-en", "summary", "project"]);
 const flags: Record<string, string | boolean> = {};
 const positionals: string[] = [];
 for (let index = 1; index < argv.length; index += 1) {
@@ -82,6 +85,55 @@ function refreshCatalog(): string[] {
   return writeCatalog().written.map(rel);
 }
 
+const slugOf = (dir: string) => dir.split(/[\\/]/).pop()!;
+const isApp = (slug: string) => existsSync(join(modulesRoot, slug, "flyee.module.json"));
+
+/** Runs a step whose failure is the operator's to read, and exits with its message. */
+function guard<T>(work: () => T): T {
+  try {
+    return work();
+  } catch (error) {
+    fail((error as Error).message);
+  }
+}
+
+/** Where an app command acts: the project named by --project, or the workspace (the test bench). */
+function targetFolder(create: boolean): { path: string; project: string | null } {
+  const project = value("project");
+  if (!project) {
+    const workspace = workspaceDir();
+    guard(() => ensureWorkspace(workspace));
+    return { path: workspace, project: null };
+  }
+  if (create) return { path: guard(() => createProject(project)).path, project };
+  const path = guard(() => projectDir(project));
+  if (!existsSync(path)) fail(`No project named "${project}" in ${projectsRoot()}. Create it: npm run apps -- project new ${project} [slug...]`);
+  return { path, project };
+}
+
+type LinkResult = { slug: string; ok: boolean; needed_by?: string[]; message?: unknown; error?: unknown };
+
+/**
+ * Links apps from modules/ into a folder through the built CLI. With
+ * `withUsed`, the apps they call come first (relations.ts): an app is useless
+ * in a folder that lacks the app it calls.
+ */
+function linkApps(folder: string, slugs: string[], options: { withUsed?: boolean } = {}): LinkResult[] {
+  const missing = slugs.filter((slug) => !isApp(slug));
+  if (missing.length) fail(`No app named ${missing.map((slug) => `"${slug}"`).join(", ")} under modules/.`);
+  const uses = (slug: string) => (isApp(slug) ? referencedApps(join(modulesRoot, slug)).filter(isApp) : []);
+  const ordered = options.withUsed === false ? slugs : withUsedApps(slugs, uses);
+  guard(() => ensureCliBundle());
+  return ordered.map((slug) => ({
+    slug,
+    ...(slugs.includes(slug) ? {} : { needed_by: ordered.filter((other) => uses(other).includes(slug)) }),
+    ...runCliInWorkspace(folder, ["dev", "link", join(modulesRoot, slug)]),
+  }));
+}
+
+const resultLine = (verb: string) => (result: LinkResult) =>
+  `${result.ok ? "OK  " : "FAIL"} ${verb} ${result.slug}${result.needed_by ? ` (used by ${result.needed_by.join(", ")})` : ""}${result.ok ? "" : `: ${String(result.message ?? result.error)}`}`;
+
 if (command === "validate") {
   const dirs = selectDirs(positionals);
   if (dirs.length === 0) {
@@ -119,7 +171,7 @@ if (command === "validate") {
   console.log(`${rel(path)} written with ${dirs.length} apps.`);
 } else if (command === "list") {
   const status = appsStatus();
-  const lines = [`Workspace: ${status.workspace}`, ""];
+  const lines = [`Workspace: ${status.workspace}`, `Projects: ${status.projects_root} (${status.projects.map((project) => project.name).join(", ") || "none yet"})`, ""];
   if (status.apps.length === 0) lines.push("No app yet. Create one: npm run apps -- new <slug> --type <type> --trail <trail>");
   for (const app of status.apps) {
     const flagsLine = [
@@ -128,6 +180,9 @@ if (command === "validate") {
       app.last_tag ? `last tag ${app.last_tag}` : "never tagged",
       app.unreleased ? `${app.version} not tagged` : "",
       `workspace ${app.workspace}`,
+      Object.keys(app.projects).length
+        ? `projects ${Object.entries(app.projects).map(([project, state]) => (state === "current" ? project : `${project} (${state})`)).join(", ")}`
+        : "",
     ].filter(Boolean);
     lines.push(`${app.slug} ${app.version} · ${app.type} · ${app.trail} — ${app.title}`);
     lines.push(`   ${flagsLine.join(" · ")}`);
@@ -176,32 +231,68 @@ if (command === "validate") {
     [`${slug}: ${result.from} → ${result.to}. Write the changelog in modules/${slug}/flyee.module.json (it is [PREENCHER] now) and the README's "O que há de novo".`],
   );
 } else if (command === "link" || command === "unlink") {
-  const slugs = flags.all === true ? listModuleDirs().map((dir) => dir.split(/[\\/]/).pop()!) : positionals;
-  if (slugs.length === 0) fail(`Usage: npm run apps -- ${command} <slug...>${command === "link" ? " | --all" : ""}`);
-  const workspace = workspaceDir();
-  try {
-    ensureWorkspace(workspace);
-    ensureCliBundle();
-  } catch (error) {
-    fail((error as Error).message);
-  }
-  const results = slugs.map((slug): { slug: string; ok: boolean; message?: unknown; error?: unknown } => {
-    if (command === "link") {
-      const dir = join(modulesRoot, slug);
-      if (!existsSync(join(dir, "flyee.module.json"))) return { slug, ok: false, message: `No app named "${slug}" under modules/.` };
-      return { slug, ...runCliInWorkspace(workspace, ["dev", "link", dir]) };
-    }
-    return { slug, ...runCliInWorkspace(workspace, ["remove", slug]) };
-  });
+  const slugs = flags.all === true ? listModuleDirs().map(slugOf) : positionals;
+  if (slugs.length === 0) fail(`Usage: npm run apps -- ${command} <slug...>${command === "link" ? " | --all" : ""} [--project <name>]`);
+  const target = targetFolder(command === "link");
+  const results = command === "link" ? linkApps(target.path, slugs) : slugs.map((slug) => ({ slug, ...runCliInWorkspace(target.path, ["remove", slug]) }));
   const failed = results.filter((result) => !result.ok);
   emit(
-    { ok: failed.length === 0, workspace, results },
+    { ok: failed.length === 0, target: target.path, project: target.project, ...(target.project ? {} : { workspace: target.path }), results },
     [
-      `Workspace: ${workspace}`,
-      ...results.map((result) => `${result.ok ? "OK  " : "FAIL"} ${command} ${result.slug}${result.ok ? "" : `: ${String(result.message ?? result.error)}`}`),
-      command === "link" ? "Run an app's commands with the workspace as the working directory, or open the AI in the workspace." : "",
+      `${target.project ? `Project ${target.project}` : "Workspace"}: ${target.path}`,
+      ...results.map(resultLine(command)),
+      command === "link" ? `Run an app's commands with ${target.project ? "the project" : "the workspace"} as the working directory, or open the AI there.` : "",
     ].filter(Boolean),
   );
+} else if (command === "project") {
+  const [sub = "list", ...rest] = positionals;
+  if (sub === "list") {
+    const projects = guard(() => listProjects());
+    emit({ ok: true, root: projectsRoot(), projects }, [
+      `Projects: ${projectsRoot()}`,
+      ...(projects.length
+        ? projects.flatMap((project) => [
+            `${project.name}  ${project.path}`,
+            `   ${project.apps.map((app) => `${app.slug} ${app.version}${app.state === "current" ? "" : ` (${app.state})`}`).join(", ") || "no apps"}`,
+          ])
+        : ["No project yet. Create one: npm run apps -- project new <name> [slug...]"]),
+    ]);
+  } else if (sub === "new") {
+    const [name, ...named] = rest;
+    if (!name) fail("Usage: npm run apps -- project new <name> [slug...]");
+    const created = guard(() => createProject(name));
+    // Without names, every app that validates: a half-built app stays out of a project where real work is made.
+    const reports = named.length ? [] : validateAll(listModuleDirs());
+    const slugs = named.length ? named : reports.filter((report) => report.errors.length === 0).map((report) => report.slug);
+    const skipped = reports.filter((report) => report.errors.length > 0).map((report) => report.slug);
+    const results = linkApps(created.path, slugs);
+    const failed = results.filter((result) => !result.ok);
+    emit({ ok: failed.length === 0, project: name, path: created.path, created: created.created, skipped_invalid: skipped, results }, [
+      `Project ${name}: ${created.path}${created.created ? " (new)" : ""}`,
+      ...results.map(resultLine("link")),
+      ...skipped.map((slug) => `SKIP ${slug}: does not validate yet`),
+      `Open ${created.path} in the AI to work for ${name}: each project keeps its own apps, voice, brand and deliveries.`,
+    ]);
+  } else if (sub === "sync") {
+    const names = rest.length ? rest : guard(() => listProjects()).map((project) => project.name);
+    const synced = names.map((name) => {
+      const project = guard(() => readProject(name));
+      if (!project) fail(`No project named "${name}" in ${projectsRoot()}.`);
+      // Only stale copies are relinked; an orphan (its app left modules/) keeps working until the operator removes it.
+      const stale = project.apps.filter((app) => app.state === "stale").map((app) => app.slug);
+      const results = stale.length ? linkApps(project.path, stale, { withUsed: false }) : [];
+      return { name, path: project.path, results, orphans: project.apps.filter((app) => app.state === "orphan").map((app) => app.slug) };
+    });
+    const failed = synced.flatMap((project) => project.results).filter((result) => !result.ok);
+    emit({ ok: failed.length === 0, projects: synced }, [
+      ...synced.flatMap((project) => [
+        `${project.name}: ${project.results.length ? `${project.results.length} stale cop${project.results.length === 1 ? "y" : "ies"} relinked` : "up to date"}`,
+        ...project.results.map(resultLine("link")),
+        ...project.orphans.map((slug) => `   ${slug}: no longer in modules/; remove it with npm run apps -- unlink ${slug} --project ${project.name}`),
+      ]),
+      synced.length ? "" : "No project yet.",
+    ].filter(Boolean));
+  } else fail("Usage: npm run apps -- project list | new <name> [slug...] | sync [name...]");
 } else if (command === "catalog") {
   const result = writeCatalog({ check: flags.check === true });
   if (flags.check === true && result.stale.length) {
@@ -217,6 +308,6 @@ if (command === "validate") {
   const apps = Object.entries(lock?.modules ?? {}).map(([slug, module]) => ({ slug, version: module.version, dev: Boolean(module.dev) }));
   emit({ ok: true, workspace, exists: existsSync(workspace), apps }, [`Workspace: ${workspace}`, ...apps.map((app) => `  ${app.slug} ${app.version}${app.dev ? " (dev)" : ""}`)]);
 } else {
-  console.error("Usage: cli.ts <validate|pack|index|list|new|bump|link|unlink|catalog|workspace> …");
+  console.error("Usage: cli.ts <validate|pack|index|list|new|bump|link|unlink|project|catalog|workspace> …");
   process.exit(2);
 }

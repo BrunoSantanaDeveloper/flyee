@@ -35,7 +35,7 @@ function programsOfModule(ctx: Context, assets: CoreAssets, module: CatalogModul
   }));
 }
 
-function printReview(ctx: Context, module: CatalogModule, assets: CoreAssets): void {
+export function printReview(ctx: Context, module: CatalogModule, assets: CoreAssets): void {
   const latest = module.latest!;
   const programs = programsOfModule(ctx, assets, module);
   if (programs.length) {
@@ -63,7 +63,8 @@ function printReview(ctx: Context, module: CatalogModule, assets: CoreAssets): v
   }
 }
 
-async function installModule(ctx: Context, client: Client, assets: CoreAssets, module: CatalogModule, kind?: "own" | "client") {
+/** Downloads, verifies and installs one app into `ctx.cwd`; `new` calls it with another project's folder. */
+export async function installModule(ctx: Context, client: Client, assets: CoreAssets, module: CatalogModule, kind?: "own" | "client") {
   const latest = module.latest!;
   const download = await client.download(module.slug, latest.version);
   const bytes = await downloadBytes(ctx, download.url);
@@ -93,7 +94,7 @@ async function installModule(ctx: Context, client: Client, assets: CoreAssets, m
   return result;
 }
 
-async function billingLink(client: Client): Promise<string | undefined> {
+export async function billingLink(client: Client): Promise<string | undefined> {
   try {
     return (await client.me()).links.billing;
   } catch {

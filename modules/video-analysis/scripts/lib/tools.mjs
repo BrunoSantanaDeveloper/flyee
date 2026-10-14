@@ -151,12 +151,12 @@ export async function gridFont(tools) {
   return tools.font;
 }
 
-/** Where `npx flyee key set` saves the member's keys: one file per machine, outside every project. */
+/** Where flyee saves the keys the member pastes in the key page: one file per machine, outside every project. */
 export function keyStorePath(home = homedir()) {
   return join(home, ".flyee", "keys.json");
 }
 
-/** A key saved with `npx flyee key set` ({ "version": 1, "keys": { "NAME": "value" } }), or null. */
+/** A key saved through the flyee key page ({ "version": 1, "keys": { "NAME": "value" } }), or null. */
 export function readSavedKey(name, path = keyStorePath()) {
   try {
     const value = JSON.parse(readFileSync(path, "utf8").replace(/^﻿/, ""))?.keys?.[name];
@@ -169,7 +169,7 @@ export function readSavedKey(name, path = keyStorePath()) {
 /**
  * The Gemini key, by the flyee rule for app keys: the environment variable
  * first (one that exists but is empty means "no key" and stops the search),
- * then the key saved with `npx flyee key set`. Read on every run, so a key
+ * then the key saved through the flyee key page. Read on every run, so a key
  * saved after the AI was opened works at once. Never printed or written.
  */
 export function geminiKey(env = process.env, path = keyStorePath()) {
@@ -186,9 +186,9 @@ export function geminiKey(env = process.env, path = keyStorePath()) {
  */
 export function keySetup() {
   return {
-    command: "npx flyee key set GEMINI_API_KEY --json",
-    how: "Rode você mesmo: o comando abre uma página no navegador do integrante, onde ele cola a chave. Ela não passa pela conversa nem pelo terminal.",
-    after: "Quando ele disser que salvou, rode check --json de novo: o app enxerga a chave na hora, sem reabrir a IA.",
+    command: "npx --yes flyee@latest key set GEMINI_API_KEY --browser --json",
+    how: "Rode você mesmo: o comando volta na hora e abre uma página no navegador do integrante, onde ele cola a chave e clica em Salvar. A chave não passa pela conversa nem pelo terminal.",
+    after: "Quando ele disser que salvou, rode check --json de novo: o app enxerga a chave na hora, sem reabrir a IA. Se a página expirar antes, rode o comando de novo.",
   };
 }
 
@@ -200,9 +200,9 @@ export function keySetup() {
  */
 export function installHints() {
   return {
-    ffmpeg: "npx flyee need ffmpeg --yes --json",
-    "yt-dlp": "npx flyee need yt-dlp --yes --json",
-    update_ytdlp: "npx flyee need yt-dlp --upgrade --yes --json",
+    ffmpeg: "npx --yes flyee@latest need ffmpeg --yes --json",
+    "yt-dlp": "npx --yes flyee@latest need yt-dlp --yes --json",
+    update_ytdlp: "npx --yes flyee@latest need yt-dlp --upgrade --yes --json",
     note: "Rode você mesmo, com tempo limite longo (até 10 minutos), depois de avisar o integrante numa frase. Se o resultado trouxer needs_member, mostre a ele só o passo único indicado.",
   };
 }

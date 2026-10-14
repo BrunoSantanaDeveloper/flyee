@@ -15,7 +15,7 @@ node .flyee/modules/youtube-script/scripts/roteiro.mjs <comando> --json
 
 As pastas, os arquivos e o formato de cada um estão em `../../references/formato.md`. Leia antes do primeiro vídeo.
 
-Este app trabalha melhor com dois outros apps do flyee.club, que ele usa quando estão instalados: a **Pesquisa no YouTube** (o que funciona no tema, os traços de título medidos, a fala de outros vídeos e os comentários, sem chave) e a **Análise de vídeo** (para ler um vídeo sem legenda ou uma gravação de tela). Sem eles, tudo funciona, com menos dados.
+Este app trabalha melhor com dois outros apps do flyee.club, que ele usa quando estão instalados: a **Pesquisa no YouTube** (o que funciona no tema, os traços de título medidos, a fala de outros vídeos e os comentários, sem chave) e a **Análise de vídeo** (para ler um vídeo sem legenda ou uma gravação de tela). Sem eles, tudo funciona, com menos dados. Para instalar um deles (`youtube-research` ou `video-analysis`), rode `npx --yes flyee@latest add <app> --dry-run --json`, diga ao integrante numa frase o que o app declara e, com o sim, rode `npx --yes flyee@latest add <app> --yes --json`, com um tempo limite de 10 minutos.
 
 ## Regras que não se quebram
 
@@ -119,4 +119,4 @@ Siga `../../references/revisao.md`. Se a sua ferramenta consegue abrir um subage
 3. Rode `documento <vídeo> --json`: grava `roteiro-completo.md`, tudo junto na ordem de leitura.
 4. Rode `docx <vídeo> --json`: o roteiro em Word, com as marcas à vista, para ele ler e preencher. Quando não houver pendência, rode `teleprompter <vídeo> --json` (ele recusa enquanto houver marca).
 5. Mostre ao integrante a duração estimada, os arquivos, as decisões que você tomou por ele, as opiniões que você propôs na voz dele (para ele assinar ou trocar), o checklist e o que conferir depois da edição.
-6. Registre o uso: `npx flyee track tool.executed --module youtube-script`.
+6. Registre o uso: `npx --yes flyee@latest track tool.executed --module youtube-script`.

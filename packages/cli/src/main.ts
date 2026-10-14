@@ -13,7 +13,7 @@ import { runStatus } from "./commands/status.ts";
 import { runTrack } from "./commands/track.ts";
 import { runUpdate } from "./commands/update.ts";
 import type { Fail, ParsedArgs, Result } from "./commands/types.ts";
-import { type Context, createContext } from "./context.ts";
+import { type Context, createContext, detectLocale, type Locale } from "./context.ts";
 import { t } from "./i18n.ts";
 import { readConfig } from "./state/config.ts";
 import { openBrowser } from "./util/os.ts";
@@ -40,23 +40,52 @@ export function parseArgs(argv: string[]): ParsedArgs {
 
 const BOOLEAN_FLAGS = new Set(["json", "yes", "device", "dry-run", "quiet", "help", "version", "stdin", "browser", "wait", "upgrade"]);
 
-const HELP = `flyee ${CLI_VERSION}
+/**
+ * `npx flyee` with no command. The member's AI is who reads it, so the line
+ * that says how to run a command says it as an AI must: `--yes` for npx, which
+ * asks before downloading in a terminal, and `@latest`, as /instalar.md does.
+ */
+export function helpText(locale: Locale): string {
+  return locale === "en"
+    ? `flyee ${CLI_VERSION}
 
-  npx flyee login [--device] [--name <machine>] [--kind own|client]
-  npx flyee add <app> | add receita:<nome>   [--yes] [--dry-run] [--kind own|client]
-  npx flyee update
-  npx flyee status [--quiet]
-  npx flyee doctor
-  npx flyee remove <app>
-  npx flyee new <pasta> [--apps a,b] [--kind own|client]   (outro projeto com os apps deste: um por marca ou cliente)
-  npx flyee projects   (os projetos com apps do flyee neste computador)
-  npx flyee need <programa…> [--upgrade] [--yes]   (instala os programas que um app usa, como ffmpeg e yt-dlp)
-  npx flyee key set <NOME> | key list | key remove <NOME>   (chaves dos apps: abre uma página no navegador para colar)
-  npx flyee track <evento> [--module <app>] [--version <v>] [--from <v>] [--to <v>] [--reason <r>] [--origin <o>]
-  npx flyee logout
+Run it as: npx --yes flyee@latest <command> [options]. The member's AI runs the commands; the member only confirms in the conversation.
 
-  --json em qualquer comando imprime um objeto JSON no fim; --yes pula confirmações.
-  https://flyee.club`;
+  login [--device] [--name <computer>] [--kind own|client]   connects this computer to the account (opens the browser; --device shows a code)
+  add <app> | add receita:<name> [--dry-run] [--yes]   installs an app (or a recipe's apps) into this project
+  update                       updates the apps and renews the connection
+  status [--quiet]             the connection, the apps and the notices
+  doctor                       checks the installation, the programs and the keys
+  remove <app>                 takes an app out of this project
+  new <folder> [--apps a,b] [--kind own|client]   another project with the apps of this one: one per brand or client
+  projects                     the projects with flyee apps on this computer
+  need <program…> [--upgrade] [--yes]   installs the programs an app uses, such as ffmpeg and yt-dlp
+  key set <NAME> --browser | key list | key remove <NAME>   the apps' keys, pasted in a page in the browser
+  track <event> [--module <app>] [--version <v>] [--from <v>] [--to <v>] [--reason <r>] [--origin <o>]
+  logout                       disconnects this computer
+
+--json on any command prints one JSON object at the end; --yes confirms without asking.
+https://flyee.club`
+    : `flyee ${CLI_VERSION}
+
+Rode assim: npx --yes flyee@latest <comando> [opções]. A IA do integrante roda os comandos; o integrante só confirma na conversa.
+
+  login [--device] [--name <computador>] [--kind own|client]   conecta este computador à conta (abre o navegador; --device mostra um código)
+  add <app> | add receita:<nome> [--dry-run] [--yes]   instala um app (ou os apps de uma receita) neste projeto
+  update                       atualiza os apps e renova a conexão
+  status [--quiet]             a conexão, os apps e os avisos
+  doctor                       confere a instalação, os programas e as chaves
+  remove <app>                 tira um app deste projeto
+  new <pasta> [--apps a,b] [--kind own|client]   outro projeto com os apps deste: um por marca ou cliente
+  projects                     os projetos com apps do flyee neste computador
+  need <programa…> [--upgrade] [--yes]   instala os programas que um app usa, como ffmpeg e yt-dlp
+  key set <NOME> --browser | key list | key remove <NOME>   as chaves dos apps, coladas numa página do navegador
+  track <evento> [--module <app>] [--version <v>] [--from <v>] [--to <v>] [--reason <r>] [--origin <o>]
+  logout                       desconecta este computador
+
+--json em qualquer comando imprime um objeto JSON no fim; --yes confirma sem perguntar.
+https://flyee.club`;
+}
 
 /** Runs a command against a context; used by main() and by the tests. */
 export async function runCommand(ctx: Context, args: ParsedArgs): Promise<Result> {
@@ -88,7 +117,7 @@ export async function runCommand(ctx: Context, args: ParsedArgs): Promise<Result
     case "dev":
       return runDev(ctx, args);
     default:
-      return { ok: false, error: "usage", message: HELP };
+      return { ok: false, error: "usage", message: helpText(ctx.locale) };
   }
 }
 
@@ -124,7 +153,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     return 0;
   }
   if (!args.command || args.flags.help || args.command === "help") {
-    process.stdout.write(`${HELP}\n`);
+    process.stdout.write(`${helpText(readConfig(createContext())?.locale ?? detectLocale(process.env))}\n`);
     return args.command ? 0 : 2;
   }
   const json = args.flags.json === true;
@@ -140,7 +169,13 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     io: {
       out: (line) => (json ? lines.push(line) : process.stdout.write(`${line}\n`)),
       err: (line) => (json ? lines.push(line) : process.stderr.write(`${line}\n`)),
-      confirm: (question) => (yes ? Promise.resolve(true) : confirmOnTerminal(question, t({ locale: "pt-BR" }, "common.yes_no"))),
+      confirm: (question) => (yes ? Promise.resolve(true) : confirmOnTerminal(question, t(ctx, "common.yes_no"))),
+      // Written now and flushed, ahead of the final result: under --json as one JSON line of its own.
+      progress: (text, event) =>
+        new Promise<void>((resolve) => {
+          if (json) lines.push(text);
+          process.stdout.write(`${json ? JSON.stringify(event) : text}\n`, () => resolve());
+        }),
       openBrowser,
       secret: readSecretOnTerminal,
       stdin: readAllStdin,
@@ -173,12 +208,22 @@ const invokedDirectly = (() => {
   }
 })();
 
+/**
+ * Ends with the exit code, never with process.exit(): on Windows a process.exit()
+ * right after a fetch aborts Node while it closes the request's handle
+ * ("Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)"), and every command
+ * that spoke to the platform came back as exit 127 after printing a good
+ * result. A timer that keeps nothing alive still ends a process that something
+ * else holds open, long after that handle closed.
+ */
+export function finish(code: number): NodeJS.Timeout {
+  process.exitCode = code;
+  return setTimeout(() => process.exit(code), 3000).unref();
+}
+
 if (invokedDirectly) {
-  main().then(
-    (code) => process.exit(code),
-    (error) => {
-      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-      process.exit(1);
-    },
-  );
+  main().then(finish, (error) => {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    finish(1);
+  });
 }

@@ -18,6 +18,7 @@ import { ensurePrograms, isPresent, specsForApp } from "./need.ts";
 import { readLock, writeLock } from "../state/lock.ts";
 import { writeFileAtomic } from "../util/fs.ts";
 import { CLI_VERSION } from "../version.ts";
+import { askOrExplain } from "./confirm.ts";
 import { flag, type ParsedArgs, type Result } from "./types.ts";
 
 function localized(value: Record<string, string | undefined> | undefined, locale: string): string {
@@ -83,12 +84,14 @@ export async function installModule(ctx: Context, client: Client, assets: CoreAs
     project_kind: lock.project_kind ?? "",
   });
   ctx.io.out(t(ctx, "add.checksum", { sha: download.sha256, size: download.size_bytes, url: download.verify_url }));
-  ctx.io.out(t(ctx, "add.installed", { slug: module.slug, version: latest.version, skills: result.module.skills.join(", ") || "—" }));
+  const skills = result.module.skills.length ? ` ${t(ctx, "add.skills", { skills: result.module.skills.join(", ") })}` : "";
+  ctx.io.out(`${t(ctx, "add.installed", { slug: module.slug, version: latest.version })}${skills}`);
   // The member approved the app, and with it the programs it declares: install what is missing now.
   ensurePrograms(ctx, specsForApp(assets, result.module.programs));
   for (const credential of result.module.external_credentials) {
     if (credential.required && !keySource(ctx, credential.env)) {
-      ctx.io.out(t(ctx, "add.missing_env", { env: credential.env, name: credential.name, url: credential.url ?? "" }));
+      const where = credential.url ? t(ctx, "add.where", { url: credential.url }) : "";
+      ctx.io.out(t(ctx, "add.missing_env", { env: credential.env, name: credential.name, where }));
     }
   }
   return result;
@@ -117,7 +120,9 @@ export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
     let link: string | undefined;
     try {
       const info = await client.version();
-      link = info.links?.module_page?.replace("{slug}", encodeURIComponent(slug));
+      // The page in the reader's language when the platform serves it (CLI-CONTRACT.md 4.9, since 2026-10-08).
+      const template = (ctx.locale === "en" ? info.links?.module_page_en : undefined) ?? info.links?.module_page;
+      link = template?.replace("{slug}", encodeURIComponent(slug));
     } catch {
       link = undefined;
     }
@@ -131,7 +136,7 @@ export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
     await registerMachine(ctx, client, assets, { kind });
   });
 
-  if (recipeMatch) return runAddRecipe(ctx, client, assets, slug, kind);
+  if (recipeMatch) return runAddRecipe(ctx, client, assets, slug, kind, args);
 
   const catalog = await client.catalog(ctx.locale);
   const module = catalog.modules.find((candidate) => candidate.slug === slug);
@@ -171,7 +176,9 @@ export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
       programs: programsOfModule(ctx, assets, module),
     };
   }
-  if (!ctx.yes && !(await ctx.io.confirm(t(ctx, "add.confirm")))) {
+  const answer = await askOrExplain(ctx, t(ctx, "add.confirm"), args);
+  if (answer !== true) {
+    if (answer !== false) return answer;
     ctx.io.out(t(ctx, "add.cancelled"));
     return { ok: false, error: "cancelled", message: t(ctx, "add.cancelled") };
   }
@@ -187,7 +194,7 @@ export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
   return { ok: true, slug, version: result.module.version, changed: true, skills: result.module.skills, written: result.written };
 }
 
-async function runAddRecipe(ctx: Context, client: Client, assets: CoreAssets, slug: string, kind?: "own" | "client"): Promise<Result> {
+async function runAddRecipe(ctx: Context, client: Client, assets: CoreAssets, slug: string, kind: "own" | "client" | undefined, args: ParsedArgs): Promise<Result> {
   let recipe: Recipe;
   try {
     recipe = await client.recipe(slug);
@@ -206,7 +213,9 @@ async function runAddRecipe(ctx: Context, client: Client, assets: CoreAssets, sl
   const installable = recipe.modules.filter((module) => module.entitled && module.latest);
   for (const module of installable) printReview(ctx, module, assets);
   if (ctx.dryRun) return { ok: true, recipe: slug, modules: installable.map((module) => module.slug), dry_run: true };
-  if (!ctx.yes && !(await ctx.io.confirm(t(ctx, "add.confirm")))) {
+  const answer = await askOrExplain(ctx, t(ctx, "add.confirm"), args);
+  if (answer !== true) {
+    if (answer !== false) return answer;
     ctx.io.out(t(ctx, "add.cancelled"));
     return { ok: false, error: "cancelled", message: t(ctx, "add.cancelled") };
   }

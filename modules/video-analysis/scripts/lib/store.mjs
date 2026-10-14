@@ -117,6 +117,7 @@ export function measurementLines(analysis, lang = "pt-BR") {
   const lines = [];
   const duration = analysis.metadata?.duration_s ?? 0;
   const t = (seconds) => formatTime(seconds, duration >= 3600);
+  const range = (from, to) => `${t(from)} ${en ? "to" : "a"} ${t(to)}`;
   const window = analysis.preparation?.window;
   if (window) {
     const span = Math.max(0.001, window.end_s - window.start_s);
@@ -144,7 +145,7 @@ export function measurementLines(analysis, lang = "pt-BR") {
       lines.push(en ? "- The file has no audio." : "- O arquivo não tem áudio.");
     } else {
       const silences = (analysis.silences ?? []).filter((silence) => silence.end_s - silence.start_s >= 1);
-      const shown = silences.slice(0, 15).map((silence) => `${t(silence.start_s)}–${t(silence.end_s)}`).join(", ");
+      const shown = silences.slice(0, 15).map((silence) => range(silence.start_s, silence.end_s)).join(", ");
       const more = silences.length > 15 ? (en ? ` and ${silences.length - 15} more` : ` e mais ${silences.length - 15}`) : "";
       if (silences.length) lines.push(`- ${en ? "Silences of 1 s or more" : "Silêncios de 1 s ou mais"}: ${shown}${more}.`);
       else lines.push(en ? "- No silence of 1 s or more." : "- Nenhum silêncio de 1 s ou mais.");
@@ -152,7 +153,7 @@ export function measurementLines(analysis, lang = "pt-BR") {
   }
   const peaks = analysis.metadata?.most_replayed ?? [];
   if (peaks.length) {
-    const list = peaks.map((peak) => `${t(peak.start_s)}–${t(peak.end_s)}`).join(", ");
+    const list = peaks.map((peak) => range(peak.start_s, peak.end_s)).join(", ");
     lines.push(en ? `- Parts YouTube viewers replayed most: ${list}.` : `- Trechos mais revistos pelo público do YouTube: ${list}.`);
   }
   return lines;
@@ -208,7 +209,7 @@ export function writeIndex({ dir, analysis, root, scriptCommand }) {
     `- Fonte: ${analysis.source.url ?? displayPath(root, analysis.source.file)}`,
     ...(about.length ? [`- ${about.join(" · ")}`] : []),
     `- Duração: ${t(duration)}${m.width ? ` · ${m.width}×${m.height}` : ""}${m.fps ? ` · ${m.fps} fps` : ""}${m.has_audio === false ? " · sem áudio" : ""}`,
-    `- Trecho preparado: ${whole ? "o vídeo inteiro" : `${t(window.start_s)}–${t(window.end_s)}`}`,
+    `- Trecho preparado: ${whole ? "o vídeo inteiro" : `${t(window.start_s)} a ${t(window.end_s)}`}`,
     transcript
       ? `- Fala: ${ORIGIN_TEXT[transcript.origin] ?? transcript.origin}${transcript.language ? ` (${transcript.language})` : ""}; completa em \`${rel("transcript.md")}\` e dividida por frame abaixo.`
       : "- Fala: sem transcrição disponível. Descreva a fala só quando ela estiver escrita na tela e diga que o áudio não foi transcrito.",
@@ -247,7 +248,7 @@ export function writeIndex({ dir, analysis, root, scriptCommand }) {
         : shot.same_as_frame
           ? `mesma imagem do F${shot.same_as_frame}`
           : "sem frame próprio";
-      lines.push(`| ${shot.n} | ${t(shot.start_s)}–${t(shot.end_s)} | ${frames} |`);
+      lines.push(`| ${shot.n} | ${t(shot.start_s)} a ${t(shot.end_s)} | ${frames} |`);
     }
     if (analysis.shots.length > 300) lines.push("", `E mais ${analysis.shots.length - 300} planos em \`${rel("analysis.json")}\`.`);
     lines.push("");
@@ -258,7 +259,7 @@ export function writeIndex({ dir, analysis, root, scriptCommand }) {
     const from = index === 0 ? window.start_s : frame.time_s;
     const to = index + 1 < analysis.frames.length ? analysis.frames[index + 1].time_s : window.end_s;
     const speech = segments.length ? speechBetween(segments, from, to) : "";
-    lines.push(`### F${frame.n} · ${t(frame.time_s)} (trecho ${t(from)}–${t(to)})`, transcript ? (speech ? `Fala: "${speech}"` : "Fala: —") : "Fala: (sem transcrição)", "");
+    lines.push(`### F${frame.n} · ${t(frame.time_s)} (trecho ${t(from)} a ${t(to)})`, transcript ? (speech ? `Fala: "${speech}"` : "Fala: (nenhuma neste trecho)") : "Fala: (sem transcrição)", "");
   });
   const path = join(dir, "index.md");
   writeFileAtomic(path, `${lines.join("\n").trim()}\n`);

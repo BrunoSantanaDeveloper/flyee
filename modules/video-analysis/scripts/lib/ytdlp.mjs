@@ -30,20 +30,20 @@ export function classifyYtdlpError(stderr) {
   const detail = errorLine(text);
   const update = installHints().update_ytdlp;
   if (/confirm your age|age[- ]restricted|inappropriate for some users/i.test(text)) {
-    return new AppError("age_restricted", "O vídeo tem restrição de idade e o YouTube exige uma conta para abri-lo.", "Use a opção --cookies-from-browser com o navegador em que você está logado, ou analise um arquivo local.");
+    return new AppError("age_restricted", "O vídeo tem restrição de idade e o YouTube exige uma conta para abri-lo.", "Peça o arquivo do vídeo ao integrante; ou, se ele pedir, repita com --cookies-from-browser e o navegador em que ele está logado.");
   }
   if (/not a bot|Sign in to confirm/i.test(text)) {
     return new AppError(
       "youtube_blocked",
       "O YouTube recusou o download automático (pediu para confirmar que não é um robô).",
-      `Atualize o yt-dlp (${update}) e tente de novo. Se continuar: use o modo Gemini, que lê o vídeo público sem baixar; ou passe um arquivo local; ou, por sua conta, --cookies-from-browser (o YouTube pode marcar a conta usada).`,
+      `Rode você mesmo ${update} para atualizar o yt-dlp e tente de novo. Se continuar: use o modo Gemini, que lê o vídeo público sem baixar; ou peça o arquivo do vídeo ao integrante; ou, só se ele pedir, repita com --cookies-from-browser (o YouTube pode marcar a conta usada).`,
     );
   }
   if (/private video|this video is private/i.test(text)) {
     return new AppError("private_video", "O vídeo é privado.", "Só o dono pode abrir. Se ele for seu, baixe o arquivo pelo YouTube Studio e analise o arquivo local.");
   }
   if (/members[- ]only|join this channel|channel's members/i.test(text)) {
-    return new AppError("members_only", "O vídeo é exclusivo para membros do canal.", "Use --cookies-from-browser com uma conta que tenha acesso, ou analise um arquivo local.");
+    return new AppError("members_only", "O vídeo é exclusivo para membros do canal.", "Peça o arquivo do vídeo ao integrante; ou, se ele pedir, repita com --cookies-from-browser e o navegador de uma conta que tenha acesso.");
   }
   if (/HTTP Error 429|Too Many Requests/i.test(text)) {
     return new AppError("rate_limited", "O site limitou os pedidos desta conexão por um tempo.", "Espere alguns minutos e tente de novo, ou use o modo Gemini.");
@@ -58,15 +58,19 @@ export function classifyYtdlpError(stderr) {
     return new AppError("unsupported_url", "Este endereço não é de um site de vídeo que o yt-dlp saiba abrir.", "Passe o endereço da página do vídeo, ou baixe o arquivo e analise localmente.");
   }
   if (/Requested format is not available|No video formats found/i.test(text)) {
-    return new AppError("no_formats", "O site não entregou nenhum formato de vídeo para baixar.", `Atualize o yt-dlp (${update}); se continuar, use o modo Gemini ou um arquivo local.`);
+    return new AppError("no_formats", "O site não entregou nenhum formato de vídeo para baixar.", `Rode você mesmo ${update} para atualizar o yt-dlp; se continuar, use o modo Gemini ou o arquivo do vídeo.`);
   }
   if (/getaddrinfo|Unable to download webpage|timed out|Connection(Reset|Refused)|Network is unreachable|Temporary failure/i.test(text)) {
     return new AppError("offline", "Não consegui falar com o site do vídeo.", "Confira a conexão com a internet e tente de novo.");
   }
   if (/ffmpeg.*(not found|not installed)/i.test(text)) {
-    return new AppError("tools_missing", "O yt-dlp precisa do ffmpeg para juntar imagem e som.", `Instale o ffmpeg: ${installHints().ffmpeg}`);
+    return new AppError("tools_missing", "O yt-dlp precisa do ffmpeg para juntar imagem e som.", `Rode você mesmo ${installHints().ffmpeg} para instalar o ffmpeg e repita.`);
   }
-  return new AppError("download_failed", "O yt-dlp não conseguiu baixar o vídeo.", detail ? `Detalhe: ${detail}. Atualizar o yt-dlp costuma resolver: ${update}` : `Atualize o yt-dlp: ${update}`);
+  return new AppError(
+    "download_failed",
+    "O yt-dlp não conseguiu baixar o vídeo.",
+    `${detail ? `Detalhe: ${detail}. ` : ""}Atualizar o yt-dlp costuma resolver: rode você mesmo ${update} e tente de novo.`,
+  );
 }
 
 /** Writes `video.info.json` (UTF-8 on disk, whatever the console encoding) and returns it. */

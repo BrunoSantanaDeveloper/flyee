@@ -122,7 +122,7 @@ test("classifyYtdlpError gives stable codes", () => {
   assert.equal(classifyYtdlpError("ERROR: Unable to download webpage: <urlopen error [Errno 11001] getaddrinfo failed>").code, "offline");
   const generic = classifyYtdlpError("ERROR: something new");
   assert.equal(generic.code, "ytdlp_failed");
-  assert.match(generic.fix, /npx flyee need yt-dlp --upgrade/);
+  assert.match(generic.fix, /npx --yes flyee@latest need yt-dlp --upgrade --yes --json/);
 });
 
 test("summarizeVideo reads the fields other apps use", () => {
@@ -172,6 +172,30 @@ test("the CSV opens in a Portuguese spreadsheet and numbers read compact", () =>
   assert.equal(compact(1234567), "1,2 mi");
   assert.equal(compact(6400), "6,4 mil");
   assert.equal(compact(950), "950");
+});
+
+test("reports leave a missing value empty or say it in words, never with a dash", async () => {
+  const { channelMarkdown, outliersMarkdown, transcriptMarkdown } = await import("../scripts/lib/report.mjs");
+  const { titlesMarkdown, traitTable } = await import("../scripts/lib/titles.mjs");
+  const DASH = /[–—]/u;
+  const outliers = outliersMarkdown({
+    created_at: "2026-10-14T12:00:00Z",
+    queries: ["airfryer"],
+    params: { window: "year", format: "long", rank: "index" },
+    sample: { collected: 1, kept: 1, channels: 1, channels_measured: 0, detailed: 0 },
+    items: [{ id: "x", url: "u", title: null, channel: null, band: null, multiplier: null, views: 900, views_per_day: null, engagement: null, duration_s: null, published_at: null, flags: ["no_baseline"] }],
+  });
+  assert.doesNotMatch(outliers, DASH);
+  assert.match(outliers, /\| 1 \|  \|  \| 900 \|  \|  \| \[sem título\]\(u\) \|  \|  \|  \| sem a mediana do canal \|/);
+  assert.match(outliers, /Célula vazia/);
+  const channel = channelMarkdown({ channel: { name: "C", url: "u" }, tab: "videos", sample: 0, median_views: null, created_at: "2026-10-14T12:00:00Z", items: [] });
+  assert.match(channel, /normal \(mediana\): sem dado\./);
+  const transcript = transcriptMarkdown({ id: "x", url: "u" }, { origin: "auto", track: "pt-orig", words: 3, words_per_minute: null, segments: [] });
+  assert.match(transcript, /3 palavras\. Tempos/);
+  const titles = titlesMarkdown({ ...traitTable([], { tools: ["Airfryer"] }), queries: ["a"], suggested_tools: [] });
+  assert.doesNotMatch(titles, DASH);
+  assert.match(titles, /\| tem número \| \(n=0\) \| \(n=0\) \|/);
+  assert.match(titles, /\n\nO limite da plataforma/);
 });
 
 test("options are validated with messages for the member", () => {

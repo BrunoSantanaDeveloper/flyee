@@ -145,16 +145,16 @@ export function renderAgentsBlock(ctx: Context, assets: CoreAssets, lock: Lock):
   const apps = entries.length
     ? entries
         .map(([slug, module]) => {
-          const skills = module.skills.length ? module.skills.join(", ") : "—";
+          const skills = module.skills.length ? ` Skills: ${module.skills.join(", ")}.` : "";
           const guide = `.flyee/modules/${slug}/README.md`;
           return ctx.locale === "en"
-            ? `- **${module.title}** (\`${slug}\` ${module.version}): ${module.summary} Skills: ${skills}. Guide: \`${guide}\``
-            : `- **${module.title}** (\`${slug}\` ${module.version}): ${module.summary} Skills: ${skills}. Guia: \`${guide}\``;
+            ? `- **${module.title}** (\`${slug}\` ${module.version}): ${module.summary}${skills} Guide: \`${guide}\``
+            : `- **${module.title}** (\`${slug}\` ${module.version}): ${module.summary}${skills} Guia: \`${guide}\``;
         })
         .join("\n")
     : ctx.locale === "en"
-      ? "_No app installed yet. `npx flyee add <app>` installs one._"
-      : "_Nenhum app instalado ainda. `npx flyee add <app>` instala um._";
+      ? "_No app installed yet. The `flyee` skill installs one (/flyee add <app>)._"
+      : "_Nenhum app instalado ainda. A skill `flyee` instala um (/flyee add <app>)._";
   return template
     .replace("{{apps}}", apps)
     .replace("{{core_version}}", assets.core.version)

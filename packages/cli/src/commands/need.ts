@@ -2,6 +2,7 @@ import type { Context } from "../context.ts";
 import { type CoreAssets, loadCoreAssets } from "../core-assets.ts";
 import { type MessageKey, t } from "../i18n.ts";
 import { ensureProgram, findProgram, type InstallStep, type Manager, type ProgramResult, type ProgramSpec, recordPrograms, specFor } from "../programs.ts";
+import { askOrExplain } from "./confirm.ts";
 import { flag, has, type ParsedArgs, type Result } from "./types.ts";
 
 const MANAGER_FLAGS: Manager[] = ["winget", "brew", "apt", "dnf", "pacman", "pipx", "pip"];
@@ -87,7 +88,9 @@ export async function runNeed(ctx: Context, args: ParsedArgs): Promise<Result> {
   const toChange = upgrade ? specs : missing;
   if (toChange.length && !ctx.yes) {
     const list = toChange.map((spec) => spec.label).join(", ");
-    if (!(await ctx.io.confirm(t(ctx, "need.confirm", { list })))) {
+    const answer = await askOrExplain(ctx, t(ctx, "need.confirm", { list }), args, { plan: false });
+    if (answer !== true) {
+      if (answer !== false) return { ...answer, missing: missing.map((spec) => spec.name) };
       ctx.io.out(t(ctx, "need.cancelled"));
       return { ok: false, error: "cancelled", message: t(ctx, "need.cancelled"), missing: missing.map((spec) => spec.name) };
     }

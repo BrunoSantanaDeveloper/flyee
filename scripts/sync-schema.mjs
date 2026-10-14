@@ -21,26 +21,33 @@ const base = option("base", process.env.FLYEE_BASE_URL ?? "https://flyee.club").
 const checkOnly = args.includes("--check");
 const target = join(resolve(dirname(fileURLToPath(import.meta.url)), ".."), "schemas", "flyee.module.schema.json");
 
-const response = await fetch(`${base}/api/cli/schema/module`);
-if (!response.ok) {
-  console.error(`The platform answered ${response.status} for the module schema.`);
-  process.exit(1);
-}
-const remote = `${JSON.stringify(await response.json(), null, 2)}\n`;
-let current = null;
-try {
-  current = readFileSync(target, "utf8");
-} catch {
-  current = null;
+// The result goes in process.exitCode and the script ends on its own: process.exit() right after a
+// fetch aborts Node on Windows ("Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)", exit 127),
+// which made a successful sync look like a failure.
+async function sync() {
+  const response = await fetch(`${base}/api/cli/schema/module`);
+  if (!response.ok) {
+    console.error(`The platform answered ${response.status} for the module schema.`);
+    return 1;
+  }
+  const remote = `${JSON.stringify(await response.json(), null, 2)}\n`;
+  let current = null;
+  try {
+    current = readFileSync(target, "utf8");
+  } catch {
+    current = null;
+  }
+  if (current === remote) {
+    console.log("Schema is up to date.");
+    return 0;
+  }
+  if (checkOnly) {
+    console.error("schemas/flyee.module.schema.json differs from the platform. Run `npm run schema:sync`.");
+    return 1;
+  }
+  writeFileSync(target, remote, "utf8");
+  console.log("Schema updated from the platform.");
+  return 0;
 }
 
-if (current === remote) {
-  console.log("Schema is up to date.");
-  process.exit(0);
-}
-if (checkOnly) {
-  console.error("schemas/flyee.module.schema.json differs from the platform. Run `npm run schema:sync`.");
-  process.exit(1);
-}
-writeFileSync(target, remote, "utf8");
-console.log("Schema updated from the platform.");
+process.exitCode = await sync();

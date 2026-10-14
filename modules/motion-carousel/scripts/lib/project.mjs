@@ -20,7 +20,7 @@ export const FILES = {
 };
 export const DIRS = ["slides", "assets", "audio", "renders", "out", "previa"];
 export const PLACEHOLDERS = ["__TITLE__", "__TEXT__", "__BARS__", "__BEATS_PER_BAR__", "__BPM__", "__THEME__", "__SEED__", "__N__", "__TOTAL__", "__TOTAL_BARS__", "__OFFSET_BARS__", "__FORMAT__"];
-export const INSTALL_SELF = "npx flyee add motion-carousel --yes --json";
+export const INSTALL_SELF = "npx --yes flyee@latest add motion-carousel --yes --json";
 
 /**
  * Copies a folder file by file. fs.cpSync with `recursive` writes into a folder with a corrupted

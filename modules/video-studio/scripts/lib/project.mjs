@@ -10,7 +10,7 @@ import { AppError, displayPath, ensureDir, isDir, isFile, readJson, requireJson,
 
 export const STUDIO_DIR = "estudio-de-video";
 export const BRANDS_DIR = "marcas";
-export const INSTALL_SELF = "npx flyee add video-studio --yes --json";
+export const INSTALL_SELF = "npx --yes flyee@latest add video-studio --yes --json";
 export const STATE_VERSION = 1;
 export const FILES = {
   state: "pedido.json",
@@ -416,7 +416,7 @@ const NETWORK_NOTES = {
   tiktok: { label: "TikTok", how: "envie o mesmo arquivo. O texto do post vai na descrição; a capa pode ser o primeiro quadro." },
   shorts: { label: "YouTube Shorts", how: "envie o mesmo arquivo: vertical e com menos de 3 minutos, o YouTube publica como Short. O título é o texto do post." },
 };
-const MARKS = { pass: "✓", fail: "✗", warn: "!", skip: "–" };
+const MARKS = { pass: "✓", fail: "✗", warn: "△", skip: "○" };
 
 const decimal = (value, digits = 1) => String(Math.round(Number(value) * 10 ** digits) / 10 ** digits).replace(".", ",");
 
@@ -458,7 +458,7 @@ export function notesMarkdown({ title, files, info = {}, destinations = [], post
   lines.push("");
   for (const item of checks ?? []) lines.push(`- ${MARKS[item.status] ?? "?"} ${item.label ?? item.name}: ${item.summary ?? ""}`.trimEnd());
   if (!(checks ?? []).length) lines.push("- A conferência não devolveu itens.");
-  lines.push("", "Legenda: ✓ passou · ✗ reprovou · ! aviso · – não medido.");
+  lines.push("", "Legenda: ✓ passou · ✗ reprovou · △ aviso · ○ não medido.");
   if ((warnings ?? []).length) {
     lines.push("", "## Avisos", "");
     for (const warning of warnings) lines.push(`- ${warning}`);

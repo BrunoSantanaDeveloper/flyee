@@ -97,7 +97,7 @@ function geminiSetupText() {
   const setup = geminiSetup();
   // Written for the member's AI, one step per line: it runs the command; the member only pastes the key in the browser.
   return [
-    `O integrante cria uma chave gratuita no Google AI Studio${setup.key_url ? ` (${setup.key_url})` : ""}.`,
+    `O integrante cria a chave no Google AI Studio${setup.key_url ? ` (${setup.key_url})` : ""}, com a conta Google dele; o Google não cobra por ela no uso comum.`,
     "Para salvá-la, rode você mesmo:",
     `  ${setup.command}`,
     setup.how,
@@ -203,7 +203,7 @@ function chooseMode(opts, source, tools, key) {
   if (!missing.length) return { local: true, gemini: false, auto: true };
   if (key && source.type === "file") throw consent();
   if (key && reachable) return { local: false, gemini: true, auto: true };
-  throw toolsMissing(missing, key ? "" : " Ou ligue o modo Gemini salvando a chave com `npx flyee key set GEMINI_API_KEY` (o comando check explica).");
+  throw toolsMissing(missing, key ? "" : ` Ou ligue o modo Gemini: rode você mesmo \`${keySetup().command}\`, que abre a página da chave no navegador do integrante (o comando check explica).`);
 }
 
 const probedMetadata = (probed) => ({ width: probed.width, height: probed.height, fps: probed.fps, has_audio: probed.has_audio });
@@ -366,7 +366,7 @@ async function shrinkForUpload(ctx, file) {
   const { tools, media } = ctx;
   const size = statSync(file).size;
   const tooBig = () =>
-    new AppError("file_too_large", "O arquivo passa de 2 GB, o limite de envio ao Gemini.", `Instale o ffmpeg (${installHints().ffmpeg}) para o app reduzir o vídeo antes de enviar, ou analise por trechos.`);
+    new AppError("file_too_large", "O arquivo passa de 2 GB, o limite de envio ao Gemini.", `Rode você mesmo ${installHints().ffmpeg} para instalar o ffmpeg: com ele, o app reduz o vídeo para 720p antes de enviar.`);
   if (!tools.ffmpeg || !tools.ffprobe) {
     if (size > UPLOAD_LIMIT) throw tooBig();
     return file;
@@ -716,7 +716,7 @@ async function checkCommand() {
   };
 }
 
-const HELP = `Análise de vídeo — vê a imagem e ouve o som de um vídeo, não só a transcrição.
+const HELP = `Análise de vídeo: vê a imagem e ouve o som de um vídeo, não só a transcrição.
 
 Uso: ${SCRIPT_COMMAND} <comando> [opções] [--json]
 
@@ -739,7 +739,7 @@ Opções de analyze e prepare
   --start <tempo> --end <tempo>     Analisa só um trecho.
   --density low|normal|high         Quantos frames no modo local (24, 48 ou 96); ou --max-frames N.
   --quality 240|360|480|720|1080    Resolução do download (padrão: 720; 480 acima de 30 minutos).
-  --threshold 0.05–0.9              Sensibilidade a cortes (padrão: 0.3; menor encontra mais).
+  --threshold <n>                   Sensibilidade a cortes, de 0.05 a 0.9 (padrão: 0.3; menor encontra mais).
   --lang pt-BR|en                   Idioma da descrição (padrão: o do projeto).
   --model <modelo>                  Modelo do Gemini (padrão: ${DEFAULT_MODEL}).
   --fps <n>                         Frames por segundo que o Gemini assiste.
@@ -769,7 +769,7 @@ function humanText(result) {
       if (result.gemini_setup) {
         const setup = result.gemini_setup;
         lines.push(
-          `Para ligar o modo Gemini: crie uma chave gratuita no Google AI Studio${setup.key_url ? ` (${setup.key_url})` : ""} e salve-a com:`,
+          `Para ligar o modo Gemini, o integrante cria a chave no Google AI Studio${setup.key_url ? ` (${setup.key_url})` : ""} e você a salva com:`,
           `  ${setup.command}`,
           setup.how,
           setup.after,

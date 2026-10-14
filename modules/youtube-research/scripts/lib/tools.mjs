@@ -85,8 +85,8 @@ export async function findYtdlp({ version = false } = {}) {
  */
 export function installHints() {
   return {
-    "yt-dlp": "npx flyee need yt-dlp --yes --json",
-    update_ytdlp: "npx flyee need yt-dlp --upgrade --yes --json",
+    "yt-dlp": "npx --yes flyee@latest need yt-dlp --yes --json",
+    update_ytdlp: "npx --yes flyee@latest need yt-dlp --upgrade --yes --json",
     note: "Rode você mesmo, com tempo limite longo (até 10 minutos), depois de avisar o integrante numa frase. Se o resultado trouxer needs_member, mostre a ele só o passo único indicado.",
   };
 }

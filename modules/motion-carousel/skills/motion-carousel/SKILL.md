@@ -25,16 +25,16 @@ Os guias: `../../references/slide-page.md` (como escrever um slide: todos os hel
 - **Uma cor protagonista e um acento,** os do tema escolhido.
 - **Nada inventado.** Todo número num slide vem do integrante ou de uma fonte que ele deu. Nenhuma promessa de alcance ou de engajamento, na arte ou na conversa. Sem o @ dele e sem logo de rede social na arte.
 - **O integrante não usa o terminal.** Você roda tudo, inclusive a instalação de programas e de outros apps. O que só ele pode fazer volta como `needs_member`, com um passo único.
-- **Nunca peça uma chave na conversa.** A chave do Gemini, opcional, só entra pela página que `npx flyee key set GEMINI_API_KEY --json` abre no navegador do integrante; você nunca a lê, escreve num comando ou grava em arquivo.
+- **Nunca peça uma chave na conversa.** A chave do Gemini, opcional, só entra pela página que `npx --yes flyee@latest key set GEMINI_API_KEY --browser --json` abre no navegador do integrante; você nunca a lê, escreve num comando ou grava em arquivo.
 - **Nunca edite nada dentro de `.flyee/`.** O trabalho fica em `carrosseis/<nome>/`.
 
 ## Passo 0: conferir a máquina (uma vez por sessão)
 
 Rode `check --json`.
 
-- `video_render.installed` falso: diga numa frase que o render vem do app Motor de vídeo e rode você mesmo o comando de `video_render.install` (`npx flyee add video-render --yes --json`). Repita o `check`.
-- `modes.render` falso com o Motor instalado: falta o ffmpeg ou o navegador. Avise numa frase e rode você mesmo cada comando de `install` (`install.ffmpeg`, `install.browser`), com tempo limite de 10 minutos. Se o resultado trouxer `needs_member`, mostre só o passo único indicado e espere. No Windows o Edge já vem instalado; sem `install.browser` e sem navegador, confira com o integrante se o Edge existe.
-- `runtime.complete` falso: faltam arquivos deste app. Rode `npx flyee add motion-carousel --yes --json`.
+- `video_render.installed` falso: o render vem do app Motor de vídeo. Rode você mesmo o comando de `video_render.install_dry_run` (`npx --yes flyee@latest add video-render --dry-run --json`), que não instala nada e diz o que o app declara; conte ao integrante numa frase o que ele faz e o que acessa e, com o sim dele, rode o de `video_render.install` (`npx --yes flyee@latest add video-render --yes --json`), com tempo limite de 10 minutos. Repita o `check`.
+- `modes.render` falso com o Motor instalado: falta o ffmpeg ou o navegador. Avise numa frase e rode você mesmo cada comando de `install` (`install.ffmpeg`, `install.browser`; para o ffmpeg, `npx --yes flyee@latest need ffmpeg --yes --json`), com tempo limite de 10 minutos. Se o resultado trouxer `needs_member`, mostre só o passo único indicado e espere. No Windows o Edge já vem instalado; sem `install.browser` e sem navegador, confira com o integrante se o Edge existe.
+- `runtime.complete` falso: faltam arquivos deste app. Rode você mesmo `npx --yes flyee@latest add motion-carousel --yes --json`, com tempo limite de 10 minutos.
 - `images` diz quem pode gerar imagens nesta máquina: `images.available` (`codex`, `gemini`, na ordem em que o comando `images` os usa), `images.codex.auth` (`chatgpt`: o plano do ChatGPT do integrante; `api_key`: uma chave da OpenAI, que cobra cada imagem) e `images.gemini_key`. Guarde para o Passo 2.
 - Leia `warnings` e guarde `guides`: os caminhos dos guias e dos exemplos a partir da raiz do projeto.
 
@@ -57,7 +57,7 @@ O estilo gráfico (tipografia, formas, contadores, barras) é o padrão e não d
 4. **As fotos do integrante,** quando ele as tem (ele mesmo, o produto, o lugar) ou nenhum degrau acima existe: peça os arquivos e grave em `assets/` (`images.md`, seção 6).
 5. **Sem fotos:** o estilo gráfico.
 
-Sem os degraus 1 a 3, ofereça numa frase as três saídas: a chave gratuita do Gemini, opcional (se ele quiser, rode você mesmo `npx flyee key set GEMINI_API_KEY --json`, que abre uma página no navegador dele para colar a chave, e rode `check --json` de novo quando ele disser que salvou), as fotos dele, ou o estilo gráfico. A chave nunca passa pela conversa.
+Sem os degraus 1 a 3, ofereça numa frase as três saídas: a chave do Gemini, opcional, que o Google não cobra no uso comum (se ele quiser, rode você mesmo `npx --yes flyee@latest key set GEMINI_API_KEY --browser --json`, que volta na hora e abre uma página no navegador dele para colar a chave, e rode `check --json` de novo quando ele disser que salvou), as fotos dele, ou o estilo gráfico. A chave nunca passa pela conversa.
 
 ## Passo 3: criar a pasta e escrever
 
@@ -127,7 +127,7 @@ Mostre ao integrante: `open <nome> --json` abre a prévia no navegador dele, um 
 
    Abra `sheet` (o vídeo final, com o tempo em cada quadro) e `phone.file` (o teste de leitura no tamanho do celular).
 4. `open <nome> --json`, e entregue: a pasta, os arquivos de `out/` na ordem, como postar (pelo aplicativo do Instagram, escolhendo os MP4 na ordem, como um só carrossel), o que a conferência disse item por item e uma sugestão de legenda com a palavra da chamada. Nunca omita uma reprovação nem um aviso.
-5. Depois de uma tarefa real, registre o uso: `npx flyee track tool.executed --module motion-carousel`.
+5. Depois de uma tarefa real, registre o uso: `npx --yes flyee@latest track tool.executed --module motion-carousel`.
 
 ## Mudanças
 
@@ -142,9 +142,9 @@ Mostre ao integrante: `open <nome> --json` abre a prévia no navegador dele, um 
 
 | `error.code` | O que fazer |
 |---|---|
-| `video_render_missing` | avise numa frase e rode você mesmo `npx flyee add video-render --yes --json`; depois repita |
-| `tools_missing`, `browser_missing` | rode você mesmo os comandos de `install` do `check` (ou os de `fix`), com tempo limite longo; `needs_member`: só o passo único |
-| `runtime_missing` | faltam arquivos deste app: `npx flyee add motion-carousel --yes --json` |
+| `video_render_missing` | rode você mesmo `npx --yes flyee@latest add video-render --dry-run --json`, conte numa frase o que o Motor declara e, com o sim do integrante, rode `npx --yes flyee@latest add video-render --yes --json`, com tempo limite de 10 minutos; depois repita |
+| `tools_missing`, `browser_missing` | avise numa frase e rode você mesmo os comandos de `install` do `check` (ou os de `fix`), com tempo limite de 10 minutos; `needs_member`: só o passo único |
+| `runtime_missing` | faltam arquivos deste app: rode você mesmo `npx --yes flyee@latest add motion-carousel --yes --json`, com tempo limite de 10 minutos |
 | `storyboard_invalid`, `invalid_json` | a mensagem diz o campo: corrija o `storyboard.json` (`storyboard.md`, seção 7), inclusive quando os compassos passam dos 64 da trilha gerada |
 | `file_not_found` | uma página ou a música citada no roteiro não existe: corrija o caminho ou escreva a página |
 | `carousel_not_found`, `preview_missing`, `exists` | o nome não existe em `carrosseis/`; ainda falta um `render`; a pasta já existe |

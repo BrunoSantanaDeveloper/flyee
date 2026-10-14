@@ -43,7 +43,7 @@ O começo do roteiro do exemplo, com o primeiro slide:
 | Campo | Valor | Padrão | Para quê |
 |---|---|---|---|
 | `version` | `1` | `1` | a versão deste formato |
-| `title` | texto de até 200 caracteres, obrigatório | — | o título do carrossel; aparece na prévia |
+| `title` | texto de até 200 caracteres, obrigatório | sem padrão | o título do carrossel; aparece na prévia |
 | `format` | `"4:5"`, `"3:4"`, `"1:1"`, `"9:16"` | `"4:5"` | o tamanho de todos os slides: 1080×1350, 1080×1440, 1080×1080, 1080×1920 |
 | `fps` | inteiro de 1 a 120 | `30` | quadros por segundo |
 | `bpm` | número de 60 a 200 | `120` | o andamento: define a duração da batida e do compasso |
@@ -54,10 +54,10 @@ O começo do roteiro do exemplo, com o primeiro slide:
 | `sound.file` | caminho dentro da pasta do carrossel, ou `null` | `null` | a música do integrante no lugar da trilha gerada (seção 6) |
 | `theme` | um dos cinco temas, ou `{ bg, ink, muted, accent }` em hexadecimal de seis dígitos (com `accent2` e `grain` opcionais) | `noir` | o tema que o `new` grava nas páginas, nome ou objeto |
 | `seed` | inteiro | `7` | a semente que o `new` grava nas páginas |
-| `slides` | lista de 2 a 20 | — | um item por slide, na ordem de postagem |
+| `slides` | lista de 2 a 20 | sem padrão | um item por slide, na ordem de postagem |
 | `slides[].n` | a posição na lista | a posição | opcional; quando existe, tem de ser a posição |
-| `slides[].role` | `hook`, `point`, `photo`, `cta` | — | o papel (seção 3) |
-| `slides[].bars` | inteiro de 1 a 16 | — | os compassos do slide; a duração tem de ficar entre 3 e 60 s |
+| `slides[].role` | `hook`, `point`, `photo`, `cta` | sem padrão | o papel (seção 3) |
+| `slides[].bars` | inteiro de 1 a 16 | sem padrão | os compassos do slide; a duração tem de ficar entre 3 e 60 s |
 | `slides[].file` | caminho `.html` dentro da pasta do carrossel | `slides/NN.html` | a página do slide; nenhum arquivo se repete |
 | `slides[].title` | texto de até 300 caracteres | vazio | a frase principal do slide, para o relatório e para quem lê o roteiro |
 | `slides[].events` | lista | vazia | os efeitos sonoros (seção 4) |
@@ -198,7 +198,7 @@ Um arquivo que não é JSON válido é o erro `invalid_json`. O que passa pela v
 
 ## 8. O que a conferência lê do roteiro
 
-O `accept` confere cada página com o `format` do roteiro, as batidas de `audio/music.beats.json` (antes do primeiro `render`, a grade do `bpm`) e, quando `out/NN.mp4` existe, o vídeo final. Do roteiro saem os itens do conjunto:
+O `accept` confere cada página com o `format` e a grade do `bpm` do roteiro (cada slide começa numa cabeça de compasso da trilha, então dentro dele as batidas contam de zero) e, quando `out/NN.mp4` existe, o vídeo final. Do roteiro saem os itens do conjunto:
 
 | Item | Passa quando | Senão |
 |---|---|---|

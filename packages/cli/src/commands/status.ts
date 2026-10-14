@@ -67,8 +67,13 @@ export async function runStatus(ctx: Context): Promise<Result> {
   } else {
     if (!credentials || connectionError === "relogin") ctx.io.out(t(ctx, "status.not_logged"));
     else if (me) {
-      const name = me.member.name ?? me.workspace.name ?? "—";
-      ctx.io.out(me.access.tier ? t(ctx, "status.header", { name, tier: me.access.tier, days: days ?? "—" }) : t(ctx, "status.no_access", { name }));
+      const name = me.member.name ?? me.workspace.name;
+      const parts = [t(ctx, "status.connected", { as: name ? t(ctx, "common.as", { name }) : "" })];
+      if (me.access.tier) {
+        parts.push(me.access.tier_name ?? me.access.tier);
+        if (days !== null) parts.push(t(ctx, "status.days", { days }));
+      } else parts.push(t(ctx, "status.no_access"));
+      ctx.io.out(parts.join(" · "));
       if (days !== null && days <= REVALIDATION_WARNING_DAYS) ctx.io.out(t(ctx, "status.revalidate_soon", { days }));
     } else if (connectionError) ctx.io.out(t(ctx, "error.network", { detail: connectionError }));
     if (apps.length === 0) ctx.io.out(t(ctx, "status.no_apps"));

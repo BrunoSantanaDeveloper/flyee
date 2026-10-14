@@ -172,10 +172,10 @@ export function installHints() {
   const browser = WINDOWS
     ? null
     : MAC
-      ? "npx flyee need chromium --brew chromium --yes --json"
-      : "npx flyee need chromium --apt chromium --yes --json";
+      ? "npx --yes flyee@latest need chromium --brew chromium --yes --json"
+      : "npx --yes flyee@latest need chromium --apt chromium --yes --json";
   return {
-    ffmpeg: "npx flyee need ffmpeg --yes --json",
+    ffmpeg: "npx --yes flyee@latest need ffmpeg --yes --json",
     browser,
     note: "Rode você mesmo, com tempo limite longo (até 10 minutos), depois de avisar o integrante numa frase. Se o resultado trouxer needs_member, mostre a ele só o passo único indicado.",
   };

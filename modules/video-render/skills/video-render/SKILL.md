@@ -27,7 +27,7 @@ Só o JSON vai para o stdout; o progresso vai para o stderr. Em erro, `ok` é `f
 node .flyee/modules/video-render/scripts/render.mjs check --json
 ```
 
-- `install` com algum comando: diga numa frase que vai instalar o que falta e rode você mesmo cada comando de `install` (o do ffmpeg é `npx flyee need ffmpeg --yes --json`; no Mac e no Linux, o do navegador vem pronto ali), com tempo limite longo (até 10 minutos). Depois repita o `check`.
+- `install` com algum comando: diga numa frase que vai instalar o que falta e rode você mesmo cada comando de `install` (o do ffmpeg é `npx --yes flyee@latest need ffmpeg --yes --json`; no Mac e no Linux, o do navegador vem pronto ali), com tempo limite longo (até 10 minutos). Depois repita o `check`.
 - A instalação devolveu `needs_member`: mostre ao integrante só o passo único indicado (a senha de administrador, o Homebrew ausente) e espere.
 - No Windows, `tools.browser` nulo: o Microsoft Edge vem com o sistema; confira com o integrante se ele está instalado.
 
@@ -106,7 +106,7 @@ Num slide de carrossel em loop, troque `--networks …` por `--format 4:5 --safe
    ```
    node .flyee/modules/video-render/scripts/render.mjs open <nome>.mp4 --json
    ```
-6. Depois de uma tarefa real, registre o uso: `npx flyee track tool.executed --module video-render`.
+6. Depois de uma tarefa real, registre o uso: `npx --yes flyee@latest track tool.executed --module video-render`.
 
 ## Quando outro app pede o render
 

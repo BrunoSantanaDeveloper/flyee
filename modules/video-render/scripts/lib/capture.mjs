@@ -1746,7 +1746,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
       scroll.mobile = await recordScroll(page, { ffmpegPath, out: join(outDir, "rolagem-mobile.mp4"), seconds: scrollSeconds, fps, width: mobileWidth, height: MOBILE_HEIGHT, scale: MOBILE_SCALE, maxScroll: mobileScrollable, label: "Rolagem (celular)", onProgress });
       files.scroll_mobile = "rolagem-mobile.mp4";
     }
-    if (scrollSeconds > 0 && !ffmpegPath) warnings.push("Sem ffmpeg nesta máquina: as rolagens não foram gravadas. A IA instala com `npx flyee need ffmpeg --yes --json`.");
+    if (scrollSeconds > 0 && !ffmpegPath) warnings.push("Sem ffmpeg nesta máquina: as rolagens não foram gravadas. A IA instala com `npx --yes flyee@latest need ffmpeg --yes --json`.");
     else if (scrollSeconds > 0 && mobileScrollable < 100 && desktopScrollable < 100) warnings.push("A página não rola (ou rola só dentro de um contêiner interno): sem vídeo de rolagem.");
 
     pageErrors = [...new Set([...page.errors, ...page.console])].slice(0, 8);

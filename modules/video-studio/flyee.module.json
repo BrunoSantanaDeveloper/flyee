@@ -19,6 +19,10 @@
   "entry": "skills/motion-video/SKILL.md",
   "files": [
     "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
     "references/estilos.md",
     "references/pagina-do-video.md",
     "references/perguntas.json",

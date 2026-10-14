@@ -9,8 +9,8 @@ export type VersionInfo = {
   min_cli_version: string;
   latest_core_version: string | null;
   deprecations: unknown[];
-  /** Planned (section 9): a URL template for an app's public page, with {slug}. */
-  links?: { module_page?: string; [key: string]: string | undefined };
+  /** CLI-CONTRACT.md 4.9 (since 2026-10-08): an app's public page as a template with {slug}, in Portuguese and in English. */
+  links?: { module_page?: string; module_page_en?: string; [key: string]: string | undefined };
 };
 
 export type TokenResponse = {
@@ -34,7 +34,8 @@ export type DeviceAuthorization = {
 export type Me = {
   member: { id: string; name: string | null; segment: string | null; ai_tool: string | null; locale: string };
   workspace: { id: string; name: string | null };
-  access: { active: boolean; suspended: boolean; tier: string | null; limits: Record<string, unknown> };
+  /** `tier` is what the code decides on; `tier_name` is what the CLI shows (CLI-CONTRACT.md 4.1, since 2026-10-08). */
+  access: { active: boolean; suspended: boolean; tier: string | null; tier_name?: string | null; limits: Record<string, unknown> };
   token: { family_id: string | null; refresh_expires_at: string | null; days_until_revalidation: number | null };
   device: { device_id: string; name: string | null; registered: boolean; last_update_at: string | null } | null;
   cli: VersionInfo;

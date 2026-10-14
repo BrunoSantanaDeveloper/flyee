@@ -19,6 +19,10 @@
   "entry": "skills/motion-carousel/SKILL.md",
   "files": [
     "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
     "references/design-rules.md",
     "references/exemplo-foto/assets/fundo.jpg",
     "references/exemplo-foto/assets/halter.webp",

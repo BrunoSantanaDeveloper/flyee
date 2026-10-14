@@ -6,8 +6,18 @@ export type Locale = "pt-BR" | "en";
 export type Io = {
   out: (line: string) => void;
   err: (line: string) => void;
-  /** Asks a yes/no question; `--yes` answers true without asking. */
-  confirm: (question: string) => Promise<boolean>;
+  /**
+   * Asks a yes/no question; `--yes` answers true without asking. `null` means
+   * there was no terminal to ask on (an AI or a pipe ran the command): the
+   * caller says how to confirm with the flag instead of reading it as a "no".
+   */
+  confirm: (question: string) => Promise<boolean | null>;
+  /**
+   * A line that must reach the reader before the command finishes (the device
+   * code of a login that waits up to 10 minutes): written at once and flushed,
+   * as plain text, or as one JSON line under --json, ahead of the final result.
+   */
+  progress: (text: string, event: Record<string, unknown>) => Promise<void>;
   /** Opens a URL in the member's browser; returns false when it could not. */
   openBrowser: (url: string) => Promise<boolean>;
   /** Reads a secret typed with the echo off; null when there is no terminal to type on. */
@@ -68,6 +78,8 @@ export function createContext(options: ContextOptions = {}): Context {
     out: options.io?.out ?? ((line) => process.stdout.write(`${line}\n`)),
     err: options.io?.err ?? ((line) => process.stderr.write(`${line}\n`)),
     confirm: options.io?.confirm ?? (async () => false),
+    progress: options.io?.progress ?? (async (text) => (options.io?.out ?? ((line: string) => process.stdout.write(`${line}
+`)))(text)),
     openBrowser: options.io?.openBrowser ?? (async () => false),
     secret: options.io?.secret ?? (async () => null),
     stdin: options.io?.stdin ?? (async () => ""),

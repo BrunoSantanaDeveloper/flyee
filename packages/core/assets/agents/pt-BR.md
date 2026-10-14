@@ -1,21 +1,21 @@
 # flyee.club
 
-Este projeto usa apps do flyee.club, instalados e atualizados pela CLI `npx flyee`. Cada app é um conjunto de skills, scripts e referências em `.flyee/modules/<app>/`, com pontes em `.agents/skills/` e `.claude/skills/` para esta IA encontrá-las.
+Este projeto usa apps do flyee.club, instalados e atualizados pela CLI do flyee, que você roda sempre como `npx --yes flyee@latest <comando>`: o `--yes` responde a pergunta que o npx faz antes de baixar, e `@latest` usa sempre a mesma cópia. Cada app é um conjunto de skills, scripts e referências em `.flyee/modules/<app>/`, com pontes em `.agents/skills/` e `.claude/skills/` para esta IA encontrá-las.
 
 **O integrante não usa o terminal: você roda tudo.** Ele só confirma na conversa o que você vai fazer, aprova o login no navegador e cola chaves numa página que a CLI abre no navegador dele.
 
 Regras para a IA neste projeto:
 
 - Antes de executar uma tarefa que um app instalado cobre, carregue a skill dele e siga-a.
-- Um projeto por marca ou cliente. O que os apps aprendem aqui (a voz, a marca) e o que eles entregam fica nesta pasta. Se o integrante pedir trabalho para uma marca ou um cliente que este projeto não atende, não misture: proponha um projeto novo e, com o sim dele, rode `npx flyee new <nome> --yes --json` (tempo limite de 10 minutos), que cria uma pasta ao lado desta com os mesmos apps. Depois diga a ele para abrir essa pasta na IA. `npx flyee projects --json` lista os projetos deste computador.
+- Um projeto por marca ou cliente. O que os apps aprendem aqui (a voz, a marca) e o que eles entregam fica nesta pasta. Se o integrante pedir trabalho para uma marca ou um cliente que este projeto não atende, não misture: proponha um projeto novo e, com o sim dele, rode `npx --yes flyee@latest new <nome> --yes --json` (tempo limite de 10 minutos), que cria uma pasta ao lado desta com os mesmos apps. Depois diga a ele para abrir essa pasta na IA. `npx --yes flyee@latest projects --json` lista os projetos deste computador.
 - Texto em português que vai para o público (roteiro, post, legenda, página): antes de entregar, revise-o com a skill `texto-natural`, que tira as marcas de texto gerado por IA. A voz que o integrante definiu num app manda sobre ela.
-- Programas que um app usa (ffmpeg, yt-dlp e outros): instale você mesmo com `npx flyee need <programa> --yes --json`, depois de dizer numa frase o que vai instalar. Use um tempo limite longo (10 minutos). Só se o resultado trouxer `needs_member` (senha de administrador, gerenciador de pacotes ausente), mostre ao integrante o passo único que ele indica. Nunca entregue a ele comandos de instalação para rodar.
-- Chaves externas dos apps (de APIs): rode você mesmo `npx flyee key set <NOME> --json`. Abre uma página no navegador do integrante, onde ele cola a chave; ela fica em `~/.flyee/keys.json`, fora do projeto, e nunca passa pela conversa. Para ver o que falta, `npx flyee key list --json` (só os nomes).
+- Programas que um app usa (ffmpeg, yt-dlp e outros): instale você mesmo com `npx --yes flyee@latest need <programa> --yes --json`, depois de dizer numa frase o que vai instalar. Use um tempo limite longo (10 minutos). Só se o resultado trouxer `needs_member` (senha de administrador, gerenciador de pacotes ausente), mostre ao integrante o passo único que ele indica. Nunca entregue a ele comandos de instalação para rodar.
+- Chaves externas dos apps (de APIs): rode você mesmo `npx --yes flyee@latest key set <NOME> --browser --json`. Abre uma página no navegador do integrante, onde ele cola a chave; ela fica em `~/.flyee/keys.json`, fora do projeto, e nunca passa pela conversa. Para ver o que falta, `npx --yes flyee@latest key list --json` (só os nomes).
 - Nunca peça uma chave em texto, nunca a coloque num comando, nunca abra `~/.flyee/keys.json` e nunca grave uma chave em arquivo do projeto.
-- Conexão vencida ou máquina desconectada: rode você mesmo `npx flyee login` com tempo limite de 5 minutos; o integrante só aprova no navegador.
-- Nunca edite arquivos em `.flyee/`: eles são substituídos por `npx flyee update`. Ajustes locais ficam no projeto, não dentro do app.
-- Para ver os apps instalados, atualizar, abrir o guia de um app ou ver novidades, use a skill `flyee` (/flyee) ou rode `npx flyee status --json`.
-- Ao terminar de usar um app numa tarefa real, registre o uso com `npx flyee track tool.executed --module <app>`. Só o nome do app e a versão saem da máquina, nunca conteúdo.
+- Conexão vencida ou máquina desconectada: rode você mesmo `npx --yes flyee@latest login` com tempo limite de 5 minutos; o integrante só aprova no navegador.
+- Nunca edite arquivos em `.flyee/`: eles são substituídos por `npx --yes flyee@latest update`. Ajustes locais ficam no projeto, não dentro do app.
+- Para ver os apps instalados, atualizar, abrir o guia de um app ou ver novidades, use a skill `flyee` (/flyee) ou rode `npx --yes flyee@latest status --json`.
+- Ao terminar de usar um app numa tarefa real, registre o uso com `npx --yes flyee@latest track tool.executed --module <app>`. Só o nome do app e a versão saem da máquina, nunca conteúdo.
 
 ## Apps instalados
 

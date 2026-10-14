@@ -23,7 +23,7 @@ node .flyee/modules/youtube-research/scripts/research.mjs <comando> --json
 
 ## Passo 0: conferir a máquina (uma vez por sessão)
 
-Rode `check --json`. Com `ready: false`, diga numa frase que vai instalar o leitor do YouTube e rode você mesmo o comando de `install["yt-dlp"]`, com tempo limite longo (até 10 minutos). Se a instalação devolver `needs_member`, mostre ao integrante só o passo único que ela indica. Depois repita o `check`.
+Rode `check --json`. Com `ready: false`, diga numa frase que vai instalar o leitor do YouTube e rode você mesmo o comando de `install["yt-dlp"]` (`npx --yes flyee@latest need yt-dlp --yes --json`), com tempo limite de 10 minutos. Se a instalação devolver `needs_member`, mostre ao integrante só o passo único que ela indica. Depois repita o `check`.
 
 ## Passo 1: entender o pedido
 
@@ -72,7 +72,7 @@ Se a leitura de um vídeo falhar (sem legenda, recusa do YouTube), diga numa fra
 
 ## Ao terminar
 
-Registre o uso com `npx flyee track tool.executed --module youtube-research`. Se o integrante quiser transformar a leitura em vídeo, e o app Roteiro para YouTube estiver instalado, ofereça seguir com ele.
+Registre o uso com `npx --yes flyee@latest track tool.executed --module youtube-research`. Se o integrante quiser transformar a leitura em vídeo, e o app Roteiro para YouTube estiver instalado, ofereça seguir com ele.
 
 ## Quando outro app pede a pesquisa
 

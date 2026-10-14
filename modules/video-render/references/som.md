@@ -72,7 +72,7 @@ Corte que cai entre dois quadros tropeça. A 30 fps, estes andamentos dão tempo
 | confirmação, marca de certo, "feito" | na batida em que aparece | `success` |
 | fecho | o último tempo 1; segura até o fim | a cauda da trilha |
 
-Segure 1–2 tempos de quase-parada antes do drop e antes do soco. O soco cai a até 1 quadro da batida: a 30 fps são 33 ms de tolerância, e o `accept` mede isso pelos `film.cuts` da página, em que todos os cortes precisam cair na batida.
+Segure 1 a 2 tempos de quase-parada antes do drop e antes do soco. O soco cai a até 1 quadro da batida: a 30 fps são 33 ms de tolerância, e o `accept` mede isso pelos `film.cuts` da página, em que todos os cortes precisam cair na batida.
 
 ## 5. Efeitos: o `cues.json`
 
@@ -101,15 +101,15 @@ Segure 1–2 tempos de quase-parada antes do drop e antes do soco. O soco cai a 
 |---|---|---|
 | `impact` | o drop e o soco final; no máximo três num filme de 15 s | o mais alto |
 | `riser` | a subida antes do drop: começa no `t` e dura `duration` (padrão 1 s; na forma de eventos, `length`), então, para terminar no drop, use `t = drop − duração` | abaixo do `impact` |
-| `whoosh` | todo chicote, zoom e passagem rápida de um elemento grande (T1, T4, T6, T7) | 4–6 dB abaixo do `impact` |
-| `thump` | um cartão que pousa, uma tela que assenta: peso sem estrondo | 4–6 dB abaixo do `impact` |
-| `click` | toda etiqueta ou botão apertado, toda troca de estado | 6–8 dB abaixo |
-| `success` | confirmações: a marca de certo, o botão que vira "feito", o fecho | 6–8 dB abaixo |
-| `ding` | um sino neutro de notificação (um aviso, um sino, um alerta na tela) | 6–8 dB abaixo |
-| `notify` | uma notificação discreta: a mensagem que chega, o balão que aparece | 8–10 dB abaixo |
-| `swoosh` | uma passagem leve: o cartão que desliza um passo, a etiqueta que entra | 8–10 dB abaixo |
-| `pop` | um elemento pequeno que aparece: um selo, um ponto, um balão | 8–10 dB abaixo |
-| `typing` | texto digitado letra a letra, palavras do gancho que se montam | 8–10 dB abaixo |
+| `whoosh` | todo chicote, zoom e passagem rápida de um elemento grande (T1, T4, T6, T7) | 4 a 6 dB abaixo do `impact` |
+| `thump` | um cartão que pousa, uma tela que assenta: peso sem estrondo | 4 a 6 dB abaixo do `impact` |
+| `click` | toda etiqueta ou botão apertado, toda troca de estado | 6 a 8 dB abaixo |
+| `success` | confirmações: a marca de certo, o botão que vira "feito", o fecho | 6 a 8 dB abaixo |
+| `ding` | um sino neutro de notificação (um aviso, um sino, um alerta na tela) | 6 a 8 dB abaixo |
+| `notify` | uma notificação discreta: a mensagem que chega, o balão que aparece | 8 a 10 dB abaixo |
+| `swoosh` | uma passagem leve: o cartão que desliza um passo, a etiqueta que entra | 8 a 10 dB abaixo |
+| `pop` | um elemento pequeno que aparece: um selo, um ponto, um balão | 8 a 10 dB abaixo |
+| `typing` | texto digitado letra a letra, palavras do gancho que se montam | 8 a 10 dB abaixo |
 | `tick` | cada passo de um contador que rola, de um caça-níquel, de uma lista que passa | o mais baixo, 12 dB abaixo |
 
 Regras: uma deixa por gesto visível e nenhum som sem imagem que o justifique; `tick` e `click` nunca na mesma deixa; `riser` sempre terminando num `impact` (o `t` do riser é o do impact menos a `duration`); um filme de 15 s tem entre 8 e 25 deixas. Ajuste os níveis ouvindo a mixagem, não a faixa de efeitos sozinha.

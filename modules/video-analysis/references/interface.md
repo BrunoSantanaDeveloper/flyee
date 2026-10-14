@@ -10,7 +10,7 @@ node .flyee/modules/video-analysis/scripts/video.mjs <comando> [opções] --json
 
 ## 1. O app está instalado?
 
-Se `.flyee/modules/video-analysis/scripts/video.mjs` não existir, diga ao integrante que a análise de vídeo vem do app Análise de vídeo (`npx flyee add video-analysis`) e siga o seu app sem ela, com o que houver (por exemplo, a descrição que o integrante der).
+Se `.flyee/modules/video-analysis/scripts/video.mjs` não existir, diga ao integrante que a análise de vídeo vem do app Análise de vídeo e ofereça instalá-lo. Com o sim, rode você mesmo `npx --yes flyee@latest add video-analysis --yes --json`. Sem o sim, siga o seu app sem ela, com o que houver (por exemplo, a descrição que o integrante der).
 
 Se existir, rode uma vez por sessão:
 
@@ -24,11 +24,11 @@ node .flyee/modules/video-analysis/scripts/video.mjs check --json
 | `modes.local.files` | o ffmpeg existe: dá para analisar arquivos locais sem chave |
 | `modes.local.web` | ffmpeg e yt-dlp existem: dá para analisar endereços sem chave |
 | `gemini_key` | a chave do Gemini foi encontrada (o valor nunca aparece) |
-| `gemini_key_from` | onde: `flyee` (salva com `npx flyee key set`) ou `environment` (a variável de ambiente, que tem prioridade) |
-| `gemini_setup` | sem a chave: `key_url` (onde criar), `command` (`npx flyee key set GEMINI_API_KEY --json`, que você roda: abre uma página no navegador do integrante para ele colar a chave), `how` e `after` |
-| `install` | os comandos `npx flyee need …` que instalam o que falta; rode-os você mesmo, com tempo limite longo, depois de avisar o integrante |
+| `gemini_key_from` | onde: `flyee` (salva pela página da chave, no navegador) ou `environment` (a variável de ambiente, que tem prioridade) |
+| `gemini_setup` | sem a chave: `key_url` (onde criar), `command` (`npx --yes flyee@latest key set GEMINI_API_KEY --browser --json`, que você roda: volta na hora e abre uma página no navegador do integrante para ele colar a chave), `how` e `after` |
+| `install` | os comandos `npx --yes flyee@latest need …` que instalam o que falta; rode-os você mesmo, com tempo limite longo (até 10 minutos), depois de avisar o integrante |
 
-O integrante não usa o terminal: os programas, você instala com os comandos de `install`; a chave, ele cola numa página que `npx flyee key set` abre no navegador dele, e este app a lê sozinho. Ela nunca passa pela conversa nem pelo seu app. Nunca peça a chave em texto e nunca abra `~/.flyee/keys.json`.
+O integrante não usa o terminal: os programas, você instala com os comandos de `install`; a chave, ele cola numa página que `npx --yes flyee@latest key set GEMINI_API_KEY --browser --json` abre no navegador dele, e este app a lê sozinho. Ela nunca passa pela conversa nem pelo seu app. Nunca peça a chave em texto e nunca abra `~/.flyee/keys.json`.
 
 ## 2. Pedir a análise
 
@@ -47,7 +47,7 @@ node .flyee/modules/video-analysis/scripts/video.mjs analyze <vídeo> --focus ed
 | `--start <tempo> --end <tempo>` | só um trecho (`90`, `1:30`, `01:02:03`, `1m30s`) |
 | `--mode auto\|local\|gemini\|both` | quem assiste; `auto` escolhe sozinho (abaixo) |
 | `--density low\|normal\|high` ou `--max-frames N` | quantos frames no modo local (24, 48, 96; de 4 a 300) |
-| `--threshold 0.05–0.9` | sensibilidade a cortes (padrão 0.3; menor encontra mais) |
+| `--threshold <n>` | sensibilidade a cortes, de 0.05 a 0.9 (padrão 0.3; menor encontra mais) |
 | `--lang pt-BR\|en` | idioma da descrição (padrão: o do projeto) |
 | `--allow-upload` | autoriza enviar um arquivo local ao Gemini; **só depois de o integrante concordar** |
 | `--keep-video` | mantém o vídeo baixado na pasta da análise |

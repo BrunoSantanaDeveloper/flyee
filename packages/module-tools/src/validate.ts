@@ -7,7 +7,9 @@ import { crossFieldErrors, MAX_UNCOMPRESSED_BYTES, type Manifest, readManifest, 
 import { listModuleDirs } from "./paths.ts";
 import { PLACEHOLDER, placeholdersIn } from "./placeholders.ts";
 import { referencedApps } from "./relations.ts";
-import { lintMemberText } from "./text-lint.mjs";
+import { guideErrors } from "./guides.ts";
+import { scriptTextErrors } from "./script-text.ts";
+import { copyBreaks, DASH, EMOJI, lintMemberText, storeBreaks } from "./text-lint.mjs";
 
 export type Report = {
   slug: string;
@@ -155,7 +157,8 @@ export function validateModule(dir: string): Report {
   // The member never opens a terminal: their AI installs programs (`npx flyee need`) and opens the key page.
   for (const file of files.filter((candidate) => candidate.endsWith(".md"))) {
     const text = safeRead(join(dir, ...file.split("/")));
-    // pt-BR writing (text-lint.mjs, shared with the PostToolUse hook): hard rules are errors, the rest one warning per file.
+    // The platform's copy rules and the pt-BR style checks (text-lint.mjs, shared with the PostToolUse hook):
+    // the copy rules are errors, the style one warning per file.
     const writing = lintMemberText(text);
     for (const violation of writing.violations) report.errors.push(`${file}: ${violation}`);
     if (writing.advisories.length) report.warnings.push(`${file}: ${writing.advisories.join(" ")}`);
@@ -166,10 +169,56 @@ export function validateModule(dir: string): Report {
       report.errors.push(`${file}: sends the member to the terminal; the AI runs every command (keys go through \`npx flyee key set\`, which opens a page in the browser)`);
     }
   }
+  // What the manifest says reaches the member too: the app page, the review before installing, the changelog.
+  for (const [field, value] of manifestTexts(manifest)) {
+    for (const problem of copyBreaks(value)) report.errors.push(`${MANIFEST_FILE} ${field}: ${problem}`);
+  }
+  // What the store shows answers to two more rules (the platform's catalog import): the title and the
+  // summary, and the README, which becomes the store's description; a guide only to "grátis".
+  for (const [field, value] of manifestTexts(manifest).filter(([field]) => /^(title|summary)\./.test(field))) {
+    for (const problem of storeBreaks(value)) report.errors.push(`${MANIFEST_FILE} ${field}: ${problem}`);
+  }
+  if (actual.has("README.md")) {
+    for (const problem of storeBreaks(safeRead(join(dir, "README.md")).replace(/^\s*#\s[^\n]*\n/u, ""))) report.errors.push(`README.md: ${problem}`);
+  }
+  for (const file of files.filter((candidate) => candidate.startsWith("guides/") && candidate.endsWith(".md"))) {
+    for (const problem of storeBreaks(safeRead(join(dir, ...file.split("/"))), { pro: false })) report.errors.push(`${file}: ${problem}`);
+  }
+  // Other text the package carries (pages, data, styles): no dash or emoji anywhere.
+  for (const file of files.filter((candidate) => TEXT_ASSET.test(candidate))) {
+    const text = safeRead(join(dir, ...file.split("/")));
+    if (DASH.test(text) || EMOJI.test(text)) report.errors.push(`${file}: travessão (— ou –) ou emoji; a regra de texto do flyee.club não aceita`);
+  }
+  report.errors.push(...scriptTextErrors(dir, files));
+  report.errors.push(...guideErrors(dir, files));
   const unfilled = placeholdersIn(dir, files);
   if (unfilled.length) report.errors.push(`${PLACEHOLDER} still to be written in: ${unfilled.join(", ")}`);
   validateEval(dir, slug, report.errors);
   return report;
+}
+
+/** Text files of a package other than Markdown and scripts. */
+const TEXT_ASSET = /.(?:html?|css|json|txt|svg|ya?ml)$/i;
+
+/** Every human-readable string of the manifest, as [field, text]: titles, summaries, reasons, purposes, changelog. */
+function manifestTexts(manifest: Manifest): [string, string][] {
+  const found: [string, string][] = [];
+  const localized = (field: string, value: unknown) => {
+    if (value && typeof value === "object") {
+      for (const [locale, text] of Object.entries(value as Record<string, unknown>)) {
+        if (typeof text === "string") found.push([`${field}.${locale}`, text]);
+      }
+    }
+  };
+  localized("title", manifest.title);
+  localized("summary", manifest.summary);
+  localized("changelog", manifest.changelog);
+  (manifest.permissions ?? []).forEach((permission, index) => localized(`permissions[${index}].reason`, permission.reason));
+  (manifest.external_credentials ?? []).forEach((credential, index) => {
+    found.push([`external_credentials[${index}].name`, credential.name]);
+    localized(`external_credentials[${index}].purpose`, credential.purpose);
+  });
+  return found;
 }
 
 function safeRead(path: string): string {

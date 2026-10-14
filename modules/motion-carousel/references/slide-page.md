@@ -277,7 +277,7 @@ Um gráfico de barras que crescem uma depois da outra.
 
 | Opção | Padrão | |
 |---|---|---|
-| `values` | — | a lista de números |
+| `values` | vazia, sem barras | a lista de números |
 | `labels` | nenhum | um texto embaixo de cada barra |
 | `x`, `y`, `w`, `h` | o canto e a largura de `C.safe`; `h` 320 | a área do gráfico, já com os rótulos |
 | `max` | o maior valor | o valor que enche a altura |

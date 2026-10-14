@@ -6,9 +6,14 @@ Ela usa o app **Pesquisa no YouTube** (`youtube-research`), que lê o YouTube se
 
 ## 0. O app está instalado?
 
-Se `.flyee/modules/youtube-research/scripts/research.mjs` não existe, diga ao integrante numa frase que a pesquisa com dados vem do app Pesquisa no YouTube e ofereça instalar. Com o sim, rode você mesmo `npx flyee add youtube-research --yes --json`. Com o não, siga sem a pesquisa e escreva em `briefing.md`: "sem prova de demanda: a pauta é uma aposta".
+Se `.flyee/modules/youtube-research/scripts/research.mjs` não existe, diga ao integrante numa frase que a pesquisa com dados vem do app Pesquisa no YouTube e ofereça instalar:
 
-Com o app instalado, rode `check --json` dele uma vez por sessão e siga o `install` se faltar o yt-dlp.
+1. Rode `npx --yes flyee@latest add youtube-research --dry-run --json` e diga ao integrante numa frase o que o app declara (o que lê e grava, os programas que instala).
+2. Com o sim, rode você mesmo `npx --yes flyee@latest add youtube-research --yes --json`, com um tempo limite de 10 minutos.
+
+Com o não, siga sem a pesquisa e escreva em `briefing.md`: "sem prova de demanda: a pauta é uma aposta".
+
+Com o app instalado, rode `check --json` dele uma vez por sessão. Se faltar o yt-dlp, avise numa frase e instale você mesmo com `npx --yes flyee@latest need yt-dlp --yes --json`, com um tempo limite de 10 minutos.
 
 ## 1. O que funcionou
 

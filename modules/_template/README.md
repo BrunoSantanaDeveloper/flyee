@@ -1,6 +1,6 @@
 # Meu app
 
-[PREENCHER] Uma frase do que o app entrega. Este texto é o guia do integrante e vira a página do app no flyee.club.
+[PREENCHER] Uma frase do que o app entrega. Este texto é o guia do integrante dentro do projeto; a página do app no flyee.club lê os guias em `guides/`.
 
 ## O que ele faz
 

@@ -13,7 +13,7 @@ const TOKEN_PATTERN = /\/\*__CAROUSEL__\*\/\s*(?:null|\{\})?/g;
 const LINE_SEPARATOR = new RegExp(String.fromCharCode(0x2028), "g");
 const PARAGRAPH_SEPARATOR = new RegExp(String.fromCharCode(0x2029), "g");
 const CLOSING_TAG = /<\//g;
-export const INSTALL_SELF = "npx flyee add motion-carousel --yes --json";
+export const INSTALL_SELF = "npx --yes flyee@latest add motion-carousel --yes --json";
 
 /**
  * What the preview page receives. `files` maps a slide number to `{ file, rendered }`, with `file`

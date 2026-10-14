@@ -253,10 +253,15 @@ test("runEngine runs the Motor without a shell, passes progress through; engineS
   assert.equal(await engineSupports({ script: crash }, "--networks", { root: dir }), false, "a Motor without help supports nothing extra");
 });
 
+/** The Motor is another app: what it declares goes to the member first, the install waits for the yes. */
+const ENGINE_DRY_RUN = "npx --yes flyee@latest add video-render --dry-run --json";
+const ENGINE_INSTALL = "npx --yes flyee@latest add video-render --yes --json";
+const ENGINE_FIX = `Rode você mesmo ${ENGINE_DRY_RUN}, diga ao integrante numa frase o que o Motor de vídeo declara e, com o sim dele, rode ${ENGINE_INSTALL} com tempo limite de 10 minutos; depois repita.`;
+
 test("findVideoRender and requireVideoRender", (t) => {
   const root = scratch(t);
   assert.equal(findVideoRender(root).installed, false);
-  assert.throws(() => requireVideoRender(root), (error) => error.code === "video_render_missing" && error.fix === "Rode você mesmo: npx flyee add video-render --yes --json, depois repita.");
+  assert.throws(() => requireVideoRender(root), (error) => error.code === "video_render_missing" && error.fix === ENGINE_FIX);
   const dir = join(root, ".flyee", "modules", "video-render");
   mkdirSync(join(dir, "scripts"), { recursive: true });
   writeFileSync(join(dir, "scripts", "render.mjs"), "");
@@ -539,7 +544,7 @@ test("allocateBars: whole bars first, repeated scenes alike, extra bars to produ
 test("the first draft: scenes in template order, texts within the limits, sound by role", () => {
   const roteiro = SAMPLE;
   assert.equal(roteiro.format_version, 1);
-  assert.equal(roteiro.title, "Sorriso Pleno — lançamento");
+  assert.equal(roteiro.title, "Sorriso Pleno · lançamento");
   assert.deepEqual([roteiro.template, roteiro.style, roteiro.format, roteiro.width, roteiro.height, roteiro.fps], ["lancamento", "interface-narra", "9:16", 1080, 1920, 30]);
   assert.deepEqual([roteiro.bpm, roteiro.beats_per_bar, roteiro.bars, roteiro.duration], [128, 4, 8, 15]);
   assert.deepEqual(roteiro.music, { mode: "music", style: "energetic", seed: roteiro.music.seed, file: null });
@@ -622,7 +627,7 @@ test("the first draft: the look without a brand kit, the member's files, and wha
   const unbranded = draftRoteiro(briefState({ brand: field({ name: null, site: null, handle: null }, "resposta"), closing: field({ kind: "bio", text: "Link na bio" }, "padrao"), proof: field(null), subject: field("três dicas de escovação", "resposta") }), null, TEMPLATES);
   assert.deepEqual(unbranded.brand, { name: null, site: null, handle: null, logo: null });
   assert.deepEqual(unbranded.palette, NEUTRAL_PALETTE);
-  assert.equal(unbranded.title, "três dicas de escovação — lançamento");
+  assert.equal(unbranded.title, "três dicas de escovação · lançamento");
   assert.equal(unbranded.scenes[1].text, "três dicas de escovação", "the product scene shows the subject");
   assert.deepEqual([unbranded.scenes.at(-1).text, unbranded.scenes.at(-1).logo], ["Link na bio", false]);
   assert.deepEqual(validateRoteiro(unbranded, TEMPLATES).brand.name, null);
@@ -855,7 +860,7 @@ test("validateRoteiro normalizes: scene numbers, bars and duration from the scen
   assert.deepEqual(roteiro.scenes.map((scene) => scene.n), [1, 2, 3, 4, 5, 6, 7]);
   assert.equal(roteiro.scenes[0].notes, "abrir mais devagar");
   assert.equal(roteiro.direction, "mais calmo");
-  assert.equal(roteiro.title, "Sorriso Pleno — lançamento");
+  assert.equal(roteiro.title, "Sorriso Pleno · lançamento");
   assert.deepEqual(notes, ["duration passou de 15 para 16 s: 8 compassos a 120 BPM."]);
   const more = [];
   const longer = validateRoteiro(patch(SAMPLE, (r) => { r.scenes[0].bars = 2; }), TEMPLATES, { notes: more });
@@ -1067,7 +1072,12 @@ test("the delivery notes say where each file goes, where the music came from and
     destinations: ["reels", "shorts"],
     post,
     music: "trilha original gerada aqui; livre para usar e impulsionar.",
-    checks: [{ name: "first_frame_readable", label: "Capa legível", status: "fail", summary: "O quadro 0 não tem texto." }, { name: "safe_area", status: "pass", summary: "Tudo dentro." }],
+    checks: [
+      { name: "first_frame_readable", label: "Capa legível", status: "fail", summary: "O quadro 0 não tem texto." },
+      { name: "safe_area", status: "pass", summary: "Tudo dentro." },
+      { name: "dead_time", label: "Tempo parado", status: "warn", summary: "1,6 s sem mudança." },
+      { name: "has_audio", label: "Som", status: "skip", summary: "O roteiro não tem som." },
+    ],
     passed: false,
     pending: ["Confirme o direito de uso da música."],
     warnings: ["A prévia saiu sem som."],
@@ -1084,6 +1094,9 @@ test("the delivery notes say where each file goes, where the music came from and
     "**Há item reprovado.**",
     "- ✗ Capa legível: O quadro 0 não tem texto.",
     "- ✓ safe_area: Tudo dentro.",
+    "- △ Tempo parado: 1,6 s sem mudança.",
+    "- ○ Som: O roteiro não tem som.",
+    "Legenda: ✓ passou · ✗ reprovou · △ aviso · ○ não medido.",
     "## Antes de publicar",
     "- Confirme o direito de uso da música.",
     "- A prévia saiu sem som.",
@@ -1271,13 +1284,14 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     assert.equal(checked.interface_version, 1);
     assert.deepEqual(checked.app, { name: "video-studio", version: checked.version });
     assert.equal(checked.video_render.installed, false);
-    assert.equal(checked.video_render.install, "npx flyee add video-render --yes --json");
+    assert.equal(checked.video_render.install, ENGINE_INSTALL);
+    assert.equal(checked.video_render.dry_run, ENGINE_DRY_RUN);
     assert.equal(checked.engine, null);
     assert.equal(checked.modes.render, false);
     assert.ok(checked.features.includes("motion_video") && checked.features.includes("brand_capture"));
     assert.deepEqual(checked.limits.duration, [6, 20]);
     assert.deepEqual(checked.limits.roteiros, TEMPLATE_IDS);
-    assert.deepEqual(checked.next_step, { action: "install", command: "npx flyee add video-render --yes --json", say: checked.next_step.say });
+    assert.deepEqual(checked.next_step, { action: "install", command: ENGINE_DRY_RUN, say: checked.next_step.say, after_yes: ENGINE_INSTALL }, "what the Motor declares first, the install after the member's yes");
     assert.equal(checked.guides.roteiros_json, ".flyee/modules/video-studio/references/roteiros.json");
     assert.equal(checked.guides.perguntas, ".flyee/modules/video-studio/references/perguntas.json");
 
@@ -1287,7 +1301,7 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
       const refused = await cli(project, args);
       assert.equal(refused.code, 1, args.join(" "));
       assert.equal(refused.json.error.code, "video_render_missing", args.join(" "));
-      assert.equal(refused.json.error.fix, "Rode você mesmo: npx flyee add video-render --yes --json, depois repita.");
+      assert.equal(refused.json.error.fix, ENGINE_FIX);
     }
     const unknown = await cli(project, ["dance"]);
     assert.equal(unknown.code, 2);
@@ -1328,12 +1342,12 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     assert.deepEqual(project.calls(), [["check"]]);
     assert.equal(await cli(project, ["check"], { json: false }).then((run) => /Motor de vídeo 9\.9\.9: instalado/.test(run.stdout)), true);
 
-    project.configure({ render: false, install: { ffmpeg: "npx flyee need ffmpeg --yes --json" } });
+    project.configure({ render: false, install: { ffmpeg: "npx --yes flyee@latest need ffmpeg --yes --json" } });
     const needs = await ok(project, ["check"]);
     assert.equal(needs.modes.render, false);
-    assert.deepEqual(needs.install, { ffmpeg: "npx flyee need ffmpeg --yes --json" });
+    assert.deepEqual(needs.install, { ffmpeg: "npx --yes flyee@latest need ffmpeg --yes --json" });
     assert.equal(needs.next_step.action, "install");
-    assert.equal(needs.next_step.command, "npx flyee need ffmpeg --yes --json", "the script never installs: it hands the command to the AI");
+    assert.equal(needs.next_step.command, "npx --yes flyee@latest need ffmpeg --yes --json", "the script never installs: it hands the command to the AI");
 
     rmSync(join(project.appDir, "runtime", "templates", "lista.html"));
     project.configure({});
@@ -1341,7 +1355,7 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     assert.equal(broken.runtime.complete, false);
     assert.deepEqual(broken.runtime.missing, ["runtime/templates/lista.html"]);
     assert.equal(broken.modes.render, false);
-    assert.equal(broken.next_step.command, "npx flyee add video-studio --yes --json");
+    assert.equal(broken.next_step.command, "npx --yes flyee@latest add video-studio --yes --json");
   });
 
   test("R1, the empty request: the guided brief, the brand, the yes to the brief, the preview, the yes, the final", { timeout: 600000 }, async (t) => {
@@ -2243,7 +2257,7 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     assert.equal(noTemplate.code, 1);
     assert.equal(noTemplate.json.error.code, "runtime_missing");
     assert.match(noTemplate.json.error.message, /runtime\/templates\/lancamento\.html/);
-    assert.match(noTemplate.json.error.fix, /npx flyee add video-studio --yes --json/);
+    assert.match(noTemplate.json.error.fix, /npx --yes flyee@latest add video-studio --yes --json/);
     writeFileSync(template, saved.replace("__ROTEIRO__", ""));
     assert.equal((await cli(project, ["build", video.slug])).json.error.code, "runtime_missing", "a template without the place for the roteiro");
     writeFileSync(template, saved);
@@ -2270,7 +2284,7 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     assert.match(await human(["status", slug]), new RegExp(`^Vídeo ${slug} \\(estudio-de-video/${slug}\\) · pedido completo · modo complete`));
     assert.match(await human(["capture", slug]), /^Marca Sorriso Pleno \(sorrisopleno\.com\.br\) capturada: logo .* · destaque #7C3AED · 4 telas · 4 números\./);
     const built = await human(["build", slug]);
-    assert.match(built, /^"Sorriso Pleno — lançamento": roteiro lancamento, \d+ cenas, 15 s \(8 compassos a 128 BPM\)\./);
+    assert.match(built, /^"Sorriso Pleno · lançamento": roteiro lancamento, \d+ cenas, 15 s \(8 compassos a 128 BPM\)\./);
     assert.match(built, /\n   1 gancho\s+0 s  Seu sorriso novo em 90 dias\n/);
     assert.match(built, /\nPróximo passo: node \.flyee\/modules\/video-studio\/scripts\/studio\.mjs preview /);
     const preview = await human(["preview", slug]);
@@ -2282,7 +2296,7 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     assert.match(final, /^Vídeo final: estudio-de-video\/.*\.mp4 \(1080×1920, 15 s, -14,1 LUFS\)/);
     assert.match(final, /\nCapa: .*capa\.png\nNotas de entrega: .*notas\.md · relatório: .*relatorio\.json\nConferência: APROVADO\n/);
     assert.match(await human(["list"]), new RegExp(`^Vídeos em estudio-de-video/:\\n  ${slug}\\s+final`));
-    assert.match(await human(["help"]), /^Estúdio de vídeo — /);
+    assert.match(await human(["help"]), /^Estúdio de vídeo: /);
     const guided = await ok(project, ["intake", "--request", project.request(R1, "r1.txt")]);
     assert.match(await human(["status", guided.slug]), /pedido vazio · modo guided/);
     await ok(project, ["answer", guided.slug, "marca", "sorrisopleno.com.br"]);

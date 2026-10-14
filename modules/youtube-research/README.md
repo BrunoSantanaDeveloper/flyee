@@ -8,13 +8,13 @@ Um vídeo com 1 milhão de views num canal que sempre faz 1 milhão não ensina 
 
 A sua IA lê o resultado e entrega a leitura: os vídeos que importam e por que subiram, os padrões que se repetem, o que está saturado e as lacunas que ninguém cobriu. Você também pode pedir a fala de um vídeo (pela legenda, sem baixar nada), os comentários mais relevantes, com as dúvidas e objeções do público, e o normal de qualquer canal, inclusive o seu.
 
-Tudo é público e lido sem chave e sem custo. O relatório fica numa pasta do seu projeto, com uma planilha que abre no Excel e no Google Planilhas.
+Tudo é público e lido sem chave e sem login. O relatório fica numa pasta do seu projeto, com uma planilha que abre no Excel e no Google Planilhas.
 
 ## O que você precisa
 
 - Uma das IAs em que o app foi testado.
-- O yt-dlp, o programa gratuito que lê o YouTube. A sua IA o instala na primeira vez, sem você digitar nada.
-- Nenhuma chave e nenhuma conta paga.
+- O yt-dlp, um programa de código aberto que lê o YouTube. A sua IA o instala na primeira vez, sem você digitar nada.
+- Nenhuma chave e nenhuma conta no YouTube.
 
 ## Peça assim
 
@@ -44,7 +44,7 @@ O que já foi lido é reaproveitado: os canais por uma semana, os dados de víde
 ## Bom saber
 
 - Os comentários vêm sem o nome de quem escreveu.
-- Uma pesquisa leva de meio minuto a dois minutos, porque o app mede dezenas de canais.
+- Uma pesquisa leva de um a dez minutos, conforme o número de buscas e de canais a medir. A sua IA avisa antes de começar.
 - Se o YouTube recusar por um tempo, a sua IA atualiza o yt-dlp e tenta de novo com menos buscas.
 
 ## O que há de novo

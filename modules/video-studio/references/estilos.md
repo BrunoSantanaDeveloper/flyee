@@ -11,7 +11,7 @@ O estilo fica no campo `style` do `roteiro.json`, com um destes ids: `interface-
 - **Leitura garantida.** Texto corrido sempre com contraste de 4,5:1 ou mais sobre o fundo. Quando a cor de texto da marca não dá leitura no fundo escolhido, a página troca pela tinta que dá (quase preto ou branco) e usa a cor da marca no que não é texto. O texto sobre o acento (o botão, o bloco de destaque) também é conferido.
 - **O logo nunca some.** Quando o logo tem a mesma cor do fundo em que vai pousar, ele ganha uma chapa na outra tinta; o logo em si nunca é recolorido.
 
-## `interface-narra` — a interface narra
+## `interface-narra`: a interface narra
 
 **Como é.** Mundo escuro. Títulos grandes (peso 800), destaque em bloco de cor sobre a palavra-chave. As telas reais aparecem dentro de um celular (ou de uma janela, para telas de computador), com sombra macia; a câmera muda de lugar a cada recurso e a tela rola até a parte certa. Um cursor de verdade aperta o que importa, na batida. Cada recurso tem uma etiqueta numerada (01, 02…).
 
@@ -23,7 +23,7 @@ O estilo fica no campo `style` do `roteiro.json`, com um destes ids: `interface-
 
 **O jeito de dizer ao integrante.** "O vídeo vai mostrar as telas de verdade do seu produto dentro de um celular, com um cursor fazendo as ações, em fundo escuro e com cortes rápidos na batida."
 
-## `interface-que-se-transforma` — interface que se transforma
+## `interface-que-se-transforma`: interface que se transforma
 
 **Como é.** Mundo claro, limpo, com muito respiro. Um único elemento de interface é o protagonista: um botão que vira campo, que vira carregando, que vira um sinal de pronto, que vira um cartão. Texto em peso 700, um pouco menor, com sublinhado de cor na palavra-chave. Sombras suaves.
 
@@ -35,7 +35,7 @@ O estilo fica no campo `style` do `roteiro.json`, com um destes ids: `interface-
 
 **O jeito de dizer ao integrante.** "Um elemento só da sua interface vai se transformando na batida, de botão em campo, em carregando, em pronto, contando o uso do produto num fundo claro e limpo."
 
-## `limpo` — limpo
+## `limpo`: limpo
 
 **Como é.** O mundo da própria marca (o fundo e a cor de texto do site), pouca coisa por cena, letras médias (peso 700, escala 0,82), sublinhado discreto na palavra-chave. Imagens em cartões com cantos arredondados e sombra leve, menores, com espaço em volta. Sem cursor e sem etiquetas: o produto fala sozinho.
 
@@ -47,7 +47,7 @@ O estilo fica no campo `style` do `roteiro.json`, com um destes ids: `interface-
 
 **O jeito de dizer ao integrante.** "Um vídeo calmo e elegante, com as cores do seu site, pouca coisa por vez e as imagens com bastante respiro em volta."
 
-## `tipografia-cinetica` — tipografia cinética
+## `tipografia-cinetica`: tipografia cinética
 
 **Como é.** Mundo escuro e letras enormes em caixa alta (peso 900, escala 1,22, até cinco linhas empilhadas), com um bloco de cor sobre a palavra-chave. O texto é o protagonista; as imagens, quando existem, ficam menores, em cartões de canto pouco arredondado. Etiquetas numeradas grandes.
 
@@ -59,7 +59,7 @@ O estilo fica no campo `style` do `roteiro.json`, com um destes ids: `interface-
 
 **O jeito de dizer ao integrante.** "Um vídeo feito de palavras grandes que batem na tela no ritmo da música, em fundo escuro, com a palavra mais importante de cada cena em destaque."
 
-## `vitrine` — vitrine
+## `vitrine`: vitrine
 
 **Como é.** Mundo claro e quente, o produto em primeiro lugar: fotos grandes, que sangram de uma borda à outra, e o preço numa chapa por cima da foto. Títulos em peso 800, destaque em bloco de cor. Etiquetas e cursor para a chamada.
 

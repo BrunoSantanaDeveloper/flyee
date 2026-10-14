@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { engineArgs, findVideoRender, INSTALL_VIDEO_RENDER, requireVideoRender, runEngine } from "./lib/engine.mjs";
+import { engineArgs, findVideoRender, INSTALL_VIDEO_RENDER, INSTALL_VIDEO_RENDER_DRY_RUN, INSTALL_VIDEO_RENDER_STEPS, requireVideoRender, runEngine } from "./lib/engine.mjs";
 import { ASPECTS, generateImage, imageStatus, KEY_DEFAULTS, PROVIDERS } from "./lib/images.mjs";
 import { previewData, writePreview } from "./lib/preview.mjs";
 import {
@@ -77,7 +77,8 @@ const GUIDES = {
   example_photo: toPosix(ROOT, join(APP_DIR, "references", "exemplo-foto")),
 };
 const MIN_TEXT = 44;
-const MARKS = { pass: "✓", fail: "✗", warn: "!", skip: "–" };
+/** One mark per status in the human output: ✓ passou · ✗ reprovou · △ aviso · ○ não medido (the same as the Motor's). */
+const MARKS = { pass: "✓", fail: "✗", warn: "△", skip: "○" };
 
 const rel = (path) => displayPath(ROOT, path);
 const engineCall = (engine, args) => runEngine(engine, args, { root: ROOT });
@@ -99,7 +100,7 @@ async function checkCommand() {
   }
   const missing = missingRuntime(APP_DIR, ["carousel", "preview", "templates", "example", "example-photo"]);
   const missingCore = missingRuntime(APP_DIR, ["carousel", "preview", "templates"]);
-  if (missing.length) warnings.push(`Faltam arquivos do app Carrossel animado: ${missing.join(", ")}. Reinstale: ${INSTALL_SELF}.`);
+  if (missing.length) warnings.push(`Faltam arquivos do app Carrossel animado: ${missing.join(", ")}. Reinstale: rode você mesmo ${INSTALL_SELF}, com tempo limite de 10 minutos.`);
   return {
     project: ROOT,
     video_render: {
@@ -107,6 +108,7 @@ async function checkCommand() {
       path: engine.installed ? rel(engine.script) : null,
       version: engine.version,
       check,
+      install_dry_run: INSTALL_VIDEO_RENDER_DRY_RUN,
       install: INSTALL_VIDEO_RENDER,
     },
     modes: { render: Boolean(engine.installed && check?.modes?.render && !missingCore.length) },
@@ -714,7 +716,7 @@ function openCommand(positionals) {
 // help, text and main
 // ---------------------------------------------------------------------------
 
-const HELP = `Carrossel animado — carrosséis para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida.
+const HELP = `Carrossel animado: carrosséis para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida.
 
 Uso: ${SCRIPT_COMMAND} <comando> [opções] [--json]
 
@@ -760,7 +762,7 @@ Opções de images
   --reference <arquivo>          Uma imagem de referência de assunto ou de estilo.
   --model <modelo>               Outro modelo de imagem do Gemini (padrão: gemini-3.1-flash-image).
   --refresh                      Gera de novo em vez de devolver o arquivo que já existe.
-  --key-similarity <0–1> --key-blend <0–1> --key-color <hex> --key-mode colorkey|chromakey
+  --key-similarity <0.01 a 1> --key-blend <0 a 1> --key-color <hex> --key-mode colorkey|chromakey
                                  Ajustes do recorte quando quem gera é o Gemini (padrão: 0.35, 0.1, 00FF00, colorkey).
 
 Cada slide dura compassos inteiros: a 120 BPM, 3 compassos são 6 s e 4 compassos, 8 s. A trilha é uma só e é cortada nos compassos, de slide em slide.`;
@@ -787,7 +789,7 @@ function humanText(result) {
       if (engine.installed) {
         lines.push(`Motor de vídeo ${engine.version ?? "?"}: instalado (${engine.path}) · render ${result.modes.render ? "disponível" : "indisponível"}`);
         if (engine.check?.tools) lines.push(`ffmpeg: ${engine.check.tools.ffmpeg ?? "não encontrado"} · navegador: ${engine.check.tools.browser ? `${engine.check.tools.browser.name} (${engine.check.tools.browser.path})` : "não encontrado"}`);
-      } else lines.push(`Motor de vídeo: não instalado. Rode você mesmo: ${engine.install}`);
+      } else lines.push(`Motor de vídeo: não instalado. Para instalá-lo, ${INSTALL_VIDEO_RENDER_STEPS}.`);
       for (const [name, command] of Object.entries(result.install)) lines.push(`Instalar ${name}: ${command}`);
       if (result.install_note) lines.push(result.install_note);
       if (result.images) {
@@ -808,7 +810,7 @@ function humanText(result) {
     }
     case "new":
       return [
-        `Criado: ${result.dir} — "${result.title}", ${result.slides.length} slides (${result.slides.map((slide) => slide.role).join(", ")}), ${result.format}, ${result.bpm} BPM, ${result.total_bars} compassos (${result.total_duration} s).`,
+        `Carrossel criado em ${result.dir}: "${result.title}", ${result.slides.length} slides (${result.slides.map((slide) => slide.role).join(", ")}), ${result.format}, ${result.bpm} BPM, ${result.total_bars} compassos (${result.total_duration} s).`,
         `Edite ${result.brief}, ${result.storyboard} e as páginas em ${result.dir}/slides/.`,
         `Depois: ${result.next[0]}`,
         `E então: ${result.next[1]}`,
@@ -896,5 +898,9 @@ main(process.argv.slice(2))
       },
     };
     process.stdout.write(`${json ? JSON.stringify(result, null, 2) : humanText(result)}\n`);
-    process.exit(result.error.code === "usage" ? 2 : 1);
+    // exitCode, not process.exit(): on Windows with Node 24, exiting right after an HTTPS fetch (the
+    // Gemini request in lib/images.mjs) aborts Node on a libuv assertion with exit code 127. The process
+    // ends on its own; the unref'd timer only ends one that something unexpected keeps alive.
+    process.exitCode = result.error.code === "usage" ? 2 : 1;
+    setTimeout(() => process.exit(process.exitCode), 3000).unref();
   });

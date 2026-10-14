@@ -19,6 +19,10 @@
   "entry": "skills/youtube-script/SKILL.md",
   "files": [
     "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
     "references/embalagem.md",
     "references/escrita-falada.md",
     "references/estrutura.md",

@@ -118,7 +118,9 @@ export function traitTable(items, { tools = [], minN = 5, base = "any" } = {}) {
   };
 }
 
-const decimal = (value) => (typeof value === "number" ? `${value.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}×` : "—");
+// A missing median (an empty group) leaves the cell with just its size: "(n=0)".
+const decimal = (value) => (typeof value === "number" ? `${value.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}×` : "");
+const group = (side) => [decimal(side.median), `(n=${side.n})`].filter(Boolean).join(" ");
 
 export function titlesMarkdown(result) {
   const lines = [
@@ -131,15 +133,18 @@ export function titlesMarkdown(result) {
   ];
   for (const row of result.traits) {
     if (row.skipped) {
-      lines.push(`| ${row.label} | — | — | ${row.note} |`);
+      lines.push(`| ${row.label} |  |  | ${row.note} |`);
       continue;
     }
-    lines.push(`| ${row.label} | ${decimal(row.with.median)} (n=${row.with.n}) | ${decimal(row.without.median)} (n=${row.without.n}) | ${row.small_n ? `grupo pequeno (menos de ${result.min_n}): indício` : ""} |`);
+    lines.push(`| ${row.label} | ${group(row.with)} | ${group(row.without)} | ${row.small_n ? `grupo pequeno (menos de ${result.min_n}): indício` : ""} |`);
   }
   const length = result.length;
+  const sizes = typeof length.median_all === "number"
+    ? `Tamanho: mediana de ${length.median_all} caracteres na amostra${length.median_outliers ? ` e de ${length.median_outliers} nos outliers (n=${length.outliers_n})` : ""}. `
+    : "";
   lines.push(
     "",
-    `Tamanho: mediana de ${length.median_all ?? "—"} caracteres na amostra${length.median_outliers ? ` e de ${length.median_outliers} nos outliers (n=${length.outliers_n})` : ""}. O limite da plataforma é de 100 caracteres.`,
+    `${sizes}O limite da plataforma é de 100 caracteres.`,
     "",
     "| Tamanho | Mediana do multiplicador | n |",
     "|---|---|---|",

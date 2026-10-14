@@ -13,9 +13,9 @@ Quando a gravação ainda não existe, entregue o **roteiro de gravação** (o q
 ## 0. O que você precisa
 
 - **A gravação da tela**, um arquivo no computador do integrante (mp4, mov, mkv). Pode ter a voz dele ou não.
-- **O app Análise de vídeo.** Se `.flyee/modules/video-analysis/scripts/video.mjs` não existe, ofereça instalar e, com o sim, rode `npx flyee add video-analysis --yes --json`. Sem o app, siga pelo caminho simples: peça capturas de tela de cada passo, ou a lista dos passos, e escreva a narração com uma `[TELA: …]` por passo.
+- **O app Análise de vídeo.** Se `.flyee/modules/video-analysis/scripts/video.mjs` não existe, ofereça instalar: rode `npx --yes flyee@latest add video-analysis --dry-run --json`, diga ao integrante numa frase o que o app declara (o que lê e grava, os programas que instala) e, com o sim, rode `npx --yes flyee@latest add video-analysis --yes --json`, com um tempo limite de 10 minutos. Sem o app, siga pelo caminho simples: peça capturas de tela de cada passo, ou a lista dos passos, e escreva a narração com uma `[TELA: …]` por passo.
 
-Rode o `check --json` do Análise de vídeo uma vez por sessão e instale o que ele pedir em `install`.
+Rode o `check --json` do Análise de vídeo uma vez por sessão. Se ele listar programas em `install`, avise numa frase e instale você mesmo cada um com `npx --yes flyee@latest need <programa> --yes --json`, com um tempo limite de 10 minutos.
 
 ## 1. Assistir à gravação
 
@@ -38,9 +38,9 @@ Com a descrição lida, grave em `roteiros/<vídeo>/gravacao.md`, na parte "O ma
 
 | Tempo | O que acontece na tela | Texto exato na tela | Observação |
 |---|---|---|---|
-| 00:00–00:12 | página inicial do construtor | "Comece grátis" | |
-| 00:12–00:31 | digita o pedido no campo | "site para confeitaria com cardápio" | digitação lenta: acelerar |
-| 00:31–01:05 | o site sendo montado | barra "Gerando…" | 34 s de espera: cortar ou acelerar |
+| 00:00 a 00:12 | página inicial do construtor | "Comece grátis" | |
+| 00:12 a 00:31 | digita o pedido no campo | "site para confeitaria com cardápio" | digitação lenta: acelerar |
+| 00:31 a 01:05 | o site sendo montado | barra "Gerando…" | 34 s de espera: cortar ou acelerar |
 ```
 
 Mostre o mapa ao integrante e confirme o que ele quer manter, cortar ou acelerar. Ele conhece a gravação; você viu só alguns quadros dela. O que ficou entre dois quadros e você não viu é dedução: marque "(provável)" e pergunte.
@@ -60,9 +60,9 @@ Escreva bloco a bloco, com uma marca de tela por passo, no tempo da gravação:
 
 ```markdown
 ## 2. O site no ar com um pedido só
-[TELA 00:12–00:31: digita o pedido no campo]
+[TELA 00:12 a 00:31: digita o pedido no campo]
 Aqui você escreve o que quer como se pedisse a uma pessoa. Eu pedi um site para uma confeitaria, com cardápio.
-[TELA 00:31–01:05: o site sendo montado · acelerar]
+[TELA 00:31 a 01:05: o site sendo montado · acelerar]
 Enquanto ele monta, repare numa coisa: eu não escolhi modelo nenhum.
 ```
 
@@ -72,7 +72,7 @@ Regras:
 - **Diga o nome exato** do botão, do menu ou do campo, como está na tela.
 - **A fala cabe no tempo da ação.** No ritmo do criador, 10 segundos de tela comportam cerca de 30 palavras (a 180 por minuto). Fala maior do que a ação: peça para congelar a imagem (`[CONGELAR 3s]`) ou divida a fala. Ação maior do que a fala: acelere ou corte.
 - **Antecipe o erro comum** no passo em que ele acontece.
-- Os intervalos (`00:12–00:31`) situam a fala na gravação e não somam tempo. Só um tempo em segundos (`[CONGELAR 3s]`, `[PAUSA 2s]`) soma.
+- Os intervalos (`00:12 a 00:31`) situam a fala na gravação e não somam tempo. Só um tempo em segundos (`[CONGELAR 3s]`, `[PAUSA 2s]`) soma.
 
 ## 5. Conferir e entregar
 

@@ -29,7 +29,7 @@ window.seek = (t) => { const L = layout(canvas.width, canvas.height); /* desenhe
 
 | Muda por formato | Nunca muda |
 |---|---|
-| o tamanho do tipo (`motion.md`, §6: título 110–190 px em pé, 64–100 px deitado) | a duração, a grade de batidas e os cortes (`film.cuts`) |
+| o tamanho do tipo (`motion.md`, §6: título de 110 a 190 px em pé; deitado, de 150 a 260 px no feed e de 64 a 100 px em tela grande) | a duração, a grade de batidas e os cortes (`film.cuts`) |
 | o empilhamento: colunas deitado, linhas em pé | o som: música, efeitos e mixagem são os mesmos arquivos |
 | a posição e o tamanho da janela de câmera (PiP) e da tela dividida | a ordem das cenas e o condutor de cada transição |
 | quanto do fundo sangra fora da zona segura | o texto na tela: as mesmas palavras, nos mesmos instantes |
@@ -66,11 +66,11 @@ Fotografe com `frames pagina.html --times <t> --out entrega/capa --json` (acresc
 | Uso | Duração | O que cabe |
 |---|---|---|
 | gancho | os primeiros 2 s | algo acontece no primeiro tempo forte: a frase ou a imagem mais forte do filme; quem avança decide em 2 ou 3 segundos |
-| post padrão | 15 s | 2 capítulos, 1 drop, 1 soco; 7,5 compassos a 120 BPM; é a duração que os anúncios de Reels e Stories recomendam e a que rende mais alcance nos Reels (15–30 s) |
-| anúncio, vídeo de feed | 20–30 s | 3–4 capítulos; a oferta e o CTA ganham 1 compasso parado; é a faixa de maior engajamento no TikTok (21–34 s) |
-| filme de lançamento | 45–60 s | 5–6 capítulos; leva horas de produção, com rodadas de crítica por capítulo: avise o integrante antes de começar |
+| post padrão | 15 s | 2 capítulos, 1 drop, 1 soco; 7,5 compassos a 120 BPM; é a duração que os anúncios de Reels e Stories recomendam e a que rende mais alcance nos Reels (de 15 a 30 s) |
+| anúncio, vídeo de feed | 20 a 30 s | 3 a 4 capítulos; a oferta e o CTA ganham 1 compasso parado; é a faixa de maior engajamento no TikTok (de 21 a 34 s) |
+| filme de lançamento | 45 a 60 s | 5 a 6 capítulos; leva horas de produção, com rodadas de crítica por capítulo: avise o integrante antes de começar |
 
-Em qualquer duração, algo novo acontece a cada 2–4 s e o fecho segura parado pelo menos 1 tempo. Os limites e as durações recomendadas de cada rede estão em `redes.json`; o `accept` reprova acima do máximo e avisa acima do recomendado.
+Em qualquer duração, algo novo acontece a cada 2 a 4 s e o fecho segura parado pelo menos 1 tempo. Os limites e as durações recomendadas de cada rede estão em `redes.json`; o `accept` reprova acima do máximo e avisa acima do recomendado.
 
 ## 5. Legendas
 

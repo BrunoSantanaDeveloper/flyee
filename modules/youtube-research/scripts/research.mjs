@@ -647,6 +647,9 @@ function humanText(result) {
   if (!result.ok) return [`Erro (${result.error.code}): ${result.error.message}`, result.error.fix && `Como resolver: ${result.error.fix}`].filter(Boolean).join("\n");
   const warnings = (result.warnings ?? []).map((warning) => `Aviso: ${warning}`);
   const itemLine = (item, ok) => (item.ok ? ok(item) : `${item.id}: erro (${item.error.code}) ${item.error.message}`);
+  // A missing number is left out of the line instead of standing in for a dash.
+  const known = (value) => typeof value === "number" && Number.isFinite(value);
+  const times = (value) => (known(value) ? `${value}× ` : "");
   switch (result.command) {
     case "help":
       return result.text;
@@ -660,21 +663,27 @@ function humanText(result) {
     case "outliers":
       return [
         `${result.sample.kept} vídeos analisados de ${result.sample.channels} canais (${result.sample.channels_measured} com o normal medido). Resultado: ${result.files.md}`,
-        ...result.top.map((item, i) => `${i + 1}. ${item.multiplier === null ? "—" : `${item.multiplier}×`} ${item.title} (${item.channel})`),
+        ...result.top.map((item, i) => `${i + 1}. ${times(item.multiplier)}${item.title} (${item.channel})`),
         ...warnings,
       ].join("\n");
-    case "channel":
-      return [`${result.channel.name}: mediana de ${result.median_views ?? "—"} views nos últimos ${result.sample} envios. Resultado: ${result.files.md}`, ...warnings].join("\n");
+    case "channel": {
+      const normal = known(result.median_views)
+        ? `mediana de ${result.median_views} views nos últimos ${result.sample} envios`
+        : `últimos ${result.sample} envios, sem views para calcular a mediana`;
+      return [`${result.channel.name}: ${normal}. Resultado: ${result.files.md}`, ...warnings].join("\n");
+    }
     case "video":
-      return result.items.map((item) => itemLine(item, (ok) => `${ok.id}: ${ok.video.title} · ${ok.video.views ?? "—"} views · ${ok.video.published_at ?? "sem data"}`)).join("\n");
+      return result.items
+        .map((item) => itemLine(item, (ok) => [`${ok.id}: ${ok.video.title}`, known(ok.video.views) && `${ok.video.views} views`, ok.video.published_at ?? "sem data"].filter(Boolean).join(" · ")))
+        .join("\n");
     case "transcript":
-      return result.items.map((item) => itemLine(item, (ok) => `${ok.id}: ${ok.words} palavras, ${ok.words_per_minute ?? "—"} por minuto → ${ok.files.md}`)).join("\n");
+      return result.items.map((item) => itemLine(item, (ok) => `${ok.id}: ${ok.words} palavras${known(ok.words_per_minute) ? `, ${ok.words_per_minute} por minuto` : ""} → ${ok.files.md}`)).join("\n");
     case "comments":
       return result.items.map((item) => itemLine(item, (ok) => `${ok.id}: ${ok.count} comentários → ${ok.files.md}`)).join("\n");
     case "titles":
       return [
         `${result.sample.measured} títulos com multiplicador. Relatório: ${result.files.md}`,
-        ...result.traits.map((row) => (row.skipped ? `- ${row.label}: ${row.note}` : `- ${row.label}: ${row.with.median ?? "—"}× com (n=${row.with.n}) contra ${row.without.median ?? "—"}× sem (n=${row.without.n})${row.small_n ? " · grupo pequeno" : ""}`)),
+        ...result.traits.map((row) => (row.skipped ? `- ${row.label}: ${row.note}` : `- ${row.label}: ${times(row.with.median)}com (n=${row.with.n}) contra ${times(row.without.median)}sem (n=${row.without.n})${row.small_n ? " · grupo pequeno" : ""}`)),
         ...warnings,
       ].join("\n");
     case "list":

@@ -5,54 +5,92 @@ import { describe, it } from "node:test";
 
 import { unzipSync } from "fflate";
 
-import { repoRoot } from "../src/paths.ts";
-import { isMemberText, lintMemberText, proseOf, teachesPatterns } from "../src/text-lint.mjs";
+import { readManifest } from "../src/manifest.ts";
+import { modulesRoot, repoRoot } from "../src/paths.ts";
+import { scriptStrings } from "../src/script-text.ts";
+import { copyBreaks, isMemberText, lintMemberText, proseOf, storeBreaks, teachesPatterns } from "../src/text-lint.mjs";
 
-describe("the pt-BR writing check", () => {
-  it("blocks only an em dash glued between words", () => {
-    assert.deepEqual(lintMemberText("O app faz isso—e mais.").violations.length, 1);
-    assert.equal(lintMemberText("O app faz isso — e mais.").violations.length, 0);
-    assert.equal(lintMemberText("Entre 3–4 segundos, de 0–1 e 64–100 px.").violations.length, 0, "a range is correct typography");
-    assert.equal(lintMemberText("Rode `a—b` no código.").violations.length, 0, "inline code is not prose");
-    assert.equal(lintMemberText("```\nisso—aquilo\n```\n").violations.length, 0, "fenced code is not prose");
+const rules = (text: string) => lintMemberText(text).violations.map((violation) => violation.slice(1, violation.indexOf("]")));
+
+describe("the platform's copy rules", () => {
+  it("refuse any dash, in prose, in a range and in code alike", () => {
+    assert.deepEqual(rules("O app faz isso—e mais."), ["travessao"]);
+    assert.deepEqual(rules("O app faz isso — e mais."), ["travessao"]);
+    assert.deepEqual(rules("Entre 3–4 segundos."), ["travessao"], "the platform refuses the en dash of a range too");
+    assert.deepEqual(rules("Rode `a—b` no código."), ["travessao"]);
+    assert.deepEqual(rules("```\nisso—aquilo\n```\n"), ["travessao"]);
+    assert.deepEqual(rules("Entre 3 a 4 segundos, de 0 a 1, com `3-4` e −16 LUFS."), [], "a hyphen and a minus sign are not dashes");
   });
 
-  it("warns on dashes, AI vocabulary and formulas, but not on quoted citations", () => {
-    const warned = lintMemberText("Uma ferramenta poderosa. Não é só um app, é um sistema — de verdade.");
+  it("refuse an emoji but keep © and →, and the check marks", () => {
+    assert.deepEqual(rules("Feito ✅"), ["emoji"]);
+    assert.deepEqual(rules("Lançamos 🚀"), ["emoji"]);
+    assert.deepEqual(rules("© 2026 · Ver planos → ✓ passou · ✗ reprovou · △ aviso · ○ não medido"), []);
+  });
+
+  it("refuse the exclamation mark in prose, never in code", () => {
+    assert.deepEqual(rules("E-mail enviado!"), ["exclamacao"]);
+    assert.deepEqual(rules("Compare com `a !== b` e `<!doctype html>`.\n\n```js\nif (!ok) throw x;\n```\n"), []);
+    assert.deepEqual(rules("![logo](https://flyee.club/logo.png)"), [], "image syntax is not an exclamation");
+  });
+
+  it("refuse the banned words in both languages, as prefixes, quoted or not", () => {
+    assert.deepEqual(rules("Desbloqueie seu acesso."), ["palavra"]);
+    assert.deepEqual(rules("Potencialize o negócio sem esforço."), ["palavra"]);
+    assert.deepEqual(rules("Um motor robusto."), ["palavra"]);
+    assert.deepEqual(rules('Evite "robusto" e "seamless".'), ["palavra"], "the platform has no exception for a citation");
+    assert.deepEqual(rules("It’s not just a tool; it unlocks everything."), ["palavra"]);
+    assert.deepEqual(rules("Bloqueie o acesso e libere depois."), []);
+  });
+
+  it("add, for what the store shows, the free offer and the name of FlyeeClub Pro", () => {
+    assert.equal(storeBreaks("Crie a sua conta grátis.").length, 1);
+    assert.equal(storeBreaks("Use the free plan.").length, 1);
+    assert.deepEqual(storeBreaks("Entram no seu acesso sem custo extra, para freelancers."), []);
+    assert.equal(storeBreaks("Só no FlyeeClub Pro.").length, 1);
+    assert.deepEqual(storeBreaks("Só no FlyeeClub Pro.", { pro: false }), [], "a guide is read inside the member area");
+    assert.deepEqual(storeBreaks("Exporta em ProRes e roda no GoPro."), []);
+  });
+
+  it("say on which line the first break is", () => {
+    const [violation] = copyBreaks("linha um\nlinha dois\nlinha — três");
+    assert.ok(violation.includes("(linha 3)"), violation);
+  });
+});
+
+describe("the pt-BR style advisories", () => {
+  it("warn on AI vocabulary and formulas, but not on quoted citations", () => {
+    const warned = lintMemberText("Uma ferramenta poderosa. Não é só um app, é um sistema de verdade.");
     assert.ok(warned.advisories.some((advisory) => advisory.startsWith("[vocabulario-ia]")));
     assert.ok(warned.advisories.some((advisory) => advisory.startsWith("[formula-ia]")));
-    assert.ok(warned.advisories.some((advisory) => advisory.startsWith("[travessao]")));
     const cited = lintMemberText('Evite fórmulas como "não é só X, é Y" e palavras como "poderoso".');
     assert.deepEqual(cited.advisories, []);
   });
 
-  it("counts dashes in sentences only, and warns above the human baseline", () => {
-    const filler = "o app grava a tela e entrega o vídeo pronto para postar nas redes ".repeat(30);
-    assert.deepEqual(lintMemberText(`${filler}— uma vez.`).advisories, [], "one dash in 400 words is human");
-    assert.deepEqual(lintMemberText("## Vitrine — limpo\n\n| campo | padrão |\n|---|---|\n| título | — |\n\nTexto.").advisories, [], "headings and table cells are structure");
-    assert.equal(lintMemberText("Isso — e aquilo — e mais isso — sempre.").dashes, 3);
-  });
-
-  it("warns on a paragraph that opens with a decorative connector", () => {
+  it("warn on a paragraph that opens with a decorative connector", () => {
     assert.ok(lintMemberText("Além disso, o app grava.").advisories.some((advisory) => advisory.startsWith("[conector]")));
   });
 
-  it("applies only the hard rule to the text that teaches the patterns", () => {
+  it("skip the text that teaches the patterns, whose copy rules still hold", () => {
     assert.equal(teachesPatterns("packages/core/assets/skills/texto-natural/SKILL.md"), true);
     assert.equal(teachesPatterns("modules/youtube-script/references/voz.md"), false);
-    const catalog = "**Palavras de alerta:** crucial, vibrante. Isso muda tudo — e mais.";
+    const catalog = "**Palavras de alerta:** crucial, vibrante. Isso muda tudo.";
     assert.deepEqual(lintMemberText(catalog, { teachesPatterns: true }).advisories, []);
     assert.equal(lintMemberText("Lista—colada", { teachesPatterns: true }).violations.length, 1);
   });
+});
 
-  it("keeps prose only", () => {
-    assert.equal(proseOf("---\nname: x\n---\nTexto `code` [link](https://a.b/c—d)").includes("code"), false);
-    assert.equal(proseOf("<!-- nota—interna -->\nTexto").includes("nota"), false);
+describe("prose and member text", () => {
+  it("keeps prose only, line by line", () => {
+    const prose = proseOf("---\nname: x\n---\nTexto `code` [link](https://a.b/c)\n<!-- nota -->\n```\nx\n```\nFim");
+    assert.equal(prose.split("\n").length, 9, "one line of prose per line of the file");
+    assert.equal(prose.includes("code") || prose.includes("nota") || prose.includes("name: x"), false);
+    assert.ok(prose.split("\n")[8].includes("Fim"));
   });
 
   it("knows which files reach the member", () => {
     assert.equal(isMemberText("modules/video-render/README.md"), true);
-    assert.equal(isMemberText("modules/video-render/references/som.md"), true);
+    assert.equal(isMemberText("modules/video-render/guides/pt-BR/usar.md"), true);
     assert.equal(isMemberText("packages/core/assets/skills/texto-natural/SKILL.md"), true);
     assert.equal(isMemberText("modules/video-render/tests/fixtures/x.md"), false);
     assert.equal(isMemberText("modules/video-studio/.dev/SPEC.md"), false);
@@ -61,13 +99,19 @@ describe("the pt-BR writing check", () => {
     assert.equal(isMemberText("modules/x/scripts/run.mjs"), false);
     assert.equal(isMemberText("docs/PLANO.md"), false);
   });
+
+  it("reads the strings a script prints, never its comments or regular expressions", () => {
+    const found = scriptStrings('// um comentário — fora\nconst a = "um — dois";\nconst b = `x ${a} — y`;\nconst c = /[—–]/;\n');
+    assert.deepEqual(found.map((item) => item.line), [2, 3, 3]);
+    assert.ok(found.every((item) => !item.text.includes("comentário")));
+  });
 });
 
 /**
  * The rule that keeps the check honest: no hard finding on any text members
- * receive today, the packed ZIPs in dist/ included (a free version is rebuilt
- * from its ZIP, not from modules/). A new hard rule that fails here is a false
- * positive until proven otherwise.
+ * receive today, nor in the package of each app's current version. A ZIP of
+ * an older version is frozen history (a released version never changes), so
+ * only the current one is read.
  */
 describe("the existing member texts", () => {
   const files: string[] = [];
@@ -90,15 +134,22 @@ describe("the existing member texts", () => {
     assert.deepEqual(hard, []);
   });
 
-  it("have no hard finding in the packed apps either", () => {
+  it("have no hard finding in the package of each current version", () => {
     let zips: string[] = [];
     try {
       zips = readdirSync(join(repoRoot, "dist", "modules")).filter((name) => name.endsWith(".zip"));
     } catch {
       return; // nothing packed on this machine
     }
+    const current = new Set(
+      readdirSync(modulesRoot, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && !entry.name.startsWith("_"))
+        .map((entry) => readManifest(join(modulesRoot, entry.name, "flyee.module.json")).manifest)
+        .filter((manifest) => manifest !== null)
+        .map((manifest) => `${manifest!.name}-${manifest!.version}.zip`),
+    );
     const hard: string[] = [];
-    for (const zip of zips) {
+    for (const zip of zips.filter((name) => current.has(name))) {
       const entries = unzipSync(new Uint8Array(readFileSync(join(repoRoot, "dist", "modules", zip))));
       for (const [name, bytes] of Object.entries(entries)) {
         if (!name.endsWith(".md")) continue;

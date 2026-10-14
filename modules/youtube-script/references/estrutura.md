@@ -138,8 +138,8 @@ Escolhido: 1, porque …
 ## Blocos
 | # | Bloco | A ideia | A prova | Gancho para o próximo | Tempo |
 |---|---|---|---|---|---|
-| 1 | O resultado | … | … | … | 0:00–0:20 |
-| 2 | O que eu procurei e não achei | … | … | … | 0:20–1:10 |
+| 1 | O resultado | … | … | … | 0:00 a 0:20 |
+| 2 | O que eu procurei e não achei | … | … | … | 0:20 a 1:10 |
 
 ## Pontos de retenção
 1. a lacuna (0:20) · 2. a origem (1:10) · …

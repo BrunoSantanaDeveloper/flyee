@@ -77,8 +77,10 @@ test("local mode: prepares a lesson, waits for the AI, then serves it from cache
   assert.equal(analysis.shots.length, 3);
   const index = readFileSync(join(dir, r.files.index), "utf8");
   assert.match(index, /Cortes detectados: 2 em 00:15/);
-  assert.match(index, /Silêncios de 1 s ou mais: 00:08–00:11/);
+  assert.match(index, /Silêncios de 1 s ou mais: 00:08 a 00:11/);
   assert.match(index, /Hoje vamos exportar um vídeo\./);
+  // The platform's copy rule: the reading guide carries no dash of the script's own.
+  assert.doesNotMatch(index, /[–—]/u);
   assert.ok(existsSync(join(dir, "video-analyses", ".gitignore")));
 
   // The member's AI writes the description; from then on every app gets it at once.
@@ -173,7 +175,7 @@ test("gemini mode: asks before uploading, uploads, describes and reuses", async 
   assert.deepEqual(done.json.gemini, { model: "gemini-fake", input_tokens: 1234, output_tokens: 321, thinking_tokens: null });
   const description = readFileSync(join(dir, done.json.description), "utf8");
   assert.match(description, /mode: "gemini"/);
-  assert.match(description, /## Só na imagem\n\n- \*\*00:10\*\* — O resultado em 1080p aparece só na tela\./);
+  assert.match(description, /## Só na imagem\n\n- \*\*00:10\*\*: O resultado em 1080p aparece só na tela\./);
   assert.match(description, /## Passo a passo/);
   const generate = fake.requests.find((request) => request.url.includes(":generateContent"));
   assert.equal(generate.headers["x-goog-api-key"], "test-key");
@@ -233,7 +235,7 @@ test("local mode: a window gets its own name, and an id answers a follow-up ques
   const analysis = JSON.parse(readFileSync(join(dir, windowed.json.files.analysis), "utf8"));
   assert.deepEqual(analysis.preparation.window, { start_s: 4, end_s: 12 });
   assert.ok(analysis.frames.every((frame) => frame.time_s >= 4 && frame.time_s <= 12));
-  assert.match(readFileSync(join(dir, windowed.json.files.index), "utf8"), /Trecho preparado: 00:04–00:12/);
+  assert.match(readFileSync(join(dir, windowed.json.files.index), "utf8"), /Trecho preparado: 00:04 a 00:12/);
   assert.match(windowed.json.next_step.header, /window: "00:04-00:12"/);
 
   const followUp = await cli(["analyze", windowed.json.id, "--question", "Qual é o último passo?"], { cwd: dir });

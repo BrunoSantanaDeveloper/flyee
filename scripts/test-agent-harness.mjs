@@ -120,7 +120,7 @@ const withBom = spawnSync(process.execPath, [join(hooksRoot, "release-guard.mjs"
 });
 assert(withBom.stdout.includes('"deny"'), "release guard allowed everything when the input carried a byte-order mark");
 
-// The pt-BR text check: blocks a glued em dash in member text, ignores operator material.
+// The platform's copy rules: any dash in member text blocks; operator material is never checked.
 const textProbe = "modules/_template/README.md";
 const textHook = (file_path, content) =>
   runHook("text-lint.mjs", { cwd: repoRoot, hook_event_name: "PostToolUse", tool_input: { file_path: join(repoRoot, file_path), content } });
@@ -134,9 +134,12 @@ try {
   mkdirSync(probeDir, { recursive: true });
   writeFileSync(join(probeDir, "README.md"), "# Sonda\n\nO app faz isso—e mais aquilo.\n");
   const blocked = textHook("modules/zz-harness-probe/README.md", "");
-  assert(blocked?.decision === "block" && blocked.reason.includes("travessao-colado"), "text check did not block a glued em dash");
-  writeFileSync(join(probeDir, "README.md"), '# Sonda\n\nA faixa vai de 3–4 segundos. O guia cita "não é só X, é Y" como fórmula a evitar.\n');
-  assert(textHook("modules/zz-harness-probe/README.md", "") === null, "text check flagged a number range or a quoted citation");
+  assert(blocked?.decision === "block" && blocked.reason.includes("travessao"), "text check did not block a glued em dash");
+  writeFileSync(join(probeDir, "README.md"), "# Sonda\n\nA faixa vai de 3–4 segundos.\n");
+  const range = textHook("modules/zz-harness-probe/README.md", "");
+  assert(range?.decision === "block", "text check let the en dash of a range through; the platform refuses it");
+  writeFileSync(join(probeDir, "README.md"), '# Sonda\n\nA faixa vai de 3 a 4 segundos. O guia cita "não é só X, é Y" como fórmula a evitar.\n');
+  assert(textHook("modules/zz-harness-probe/README.md", "") === null, "text check flagged a clean range or a quoted citation");
 } finally {
   rmSync(probeDir, { recursive: true, force: true });
 }

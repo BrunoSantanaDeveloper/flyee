@@ -29,8 +29,8 @@ Os guias desta pasta: `../../references/roteiros.md` (os quatro roteiros e as la
 
 Rode `check --json`.
 
-- `video_render.installed` falso: diga numa frase que o render vem do app Motor de vídeo e rode você mesmo o comando de `video_render.install`. Depois repita o `check`.
-- `modes.render` falso: falta o ffmpeg ou o navegador. Rode você mesmo cada comando de `install`, com tempo limite longo (até 10 minutos), depois de avisar numa frase. A instalação devolveu `needs_member`: mostre só o passo único indicado e espere.
+- `video_render.installed` falso: o render vem de outro app, o Motor de vídeo. Rode você mesmo o comando de `video_render.dry_run` (`npx --yes flyee@latest add video-render --dry-run --json`) e diga ao integrante, numa frase, o que ele declara (os programas e as permissões). Com o sim dele, rode o comando de `video_render.install` (`npx --yes flyee@latest add video-render --yes --json`, o `after_yes` do `next_step`) com tempo limite de 10 minutos. Depois repita o `check`.
+- `modes.render` falso: falta o ffmpeg ou o navegador. Avise numa frase e rode você mesmo cada comando de `install` (a forma é `npx --yes flyee@latest need <programa> --yes --json`), com tempo limite de 10 minutos. A instalação devolveu `needs_member`: mostre só o passo único indicado e espere.
 - Guarde `guides` (os caminhos dos guias) e `features` (o que esta versão faz).
 
 ## Passo 1: o pedido
@@ -86,7 +86,7 @@ O pedido dizia "faz direto" ou "não precisa me mostrar"? O `next_step` pula a a
 1. `final <slug> --json` renderiza em 1080×1920 com desfoque de movimento, mixa em −14 LUFS, grava a capa e confere de novo. Sem a aprovação da prévia ele recusa (`preview_not_approved`).
 2. Leia `accept`: `passed` falso é vídeo reprovado. Corrija e refaça, ou conte ao integrante exatamente o que reprovou.
 3. `open <slug> final --json` abre o vídeo. Entregue: onde está o arquivo, a capa, o que a conferência disse, e o conteúdo de `notes` (em qual rede postar, o texto sugerido, os lembretes de publicidade quando valem).
-4. Depois de uma tarefa real, registre o uso: `npx flyee track tool.executed --module video-studio`.
+4. Depois de uma tarefa real, registre o uso: `npx --yes flyee@latest track tool.executed --module video-studio`.
 
 ## Retomar e mudar
 
@@ -99,8 +99,9 @@ O pedido dizia "faz direto" ou "não precisa me mostrar"? O `next_step` pula a a
 
 | `error.code` | O que fazer |
 |---|---|
-| `video_render_missing` | rode você mesmo `npx flyee add video-render --yes --json` (está em `fix`), depois repita |
-| `tools_missing`, `browser_missing` | rode você mesmo os comandos de `fix` (ou de `install` no `check`), com tempo limite longo; depois repita |
+| `video_render_missing` | siga o `fix`: rode você mesmo `npx --yes flyee@latest add video-render --dry-run --json`, diga numa frase o que o Motor declara e, com o sim do integrante, rode `npx --yes flyee@latest add video-render --yes --json` com tempo limite de 10 minutos; depois repita |
+| `tools_missing`, `browser_missing` | rode você mesmo os comandos de `fix` (ou de `install` no `check`, na forma `npx --yes flyee@latest need <programa> --yes --json`), com tempo limite de 10 minutos; depois repita |
+| `runtime_missing` | a instalação deste app está incompleta: rode você mesmo `npx --yes flyee@latest add video-studio --yes --json` (está em `fix`), com tempo limite de 10 minutos; depois repita |
 | `request_empty` | o arquivo do pedido está vazio: grave nele o que o integrante escreveu |
 | `question_unknown`, `answer_invalid` | o `id` não é da rodada atual ou o valor não é uma das opções: use os `id` e os `value` de `round` |
 | `brand_unknown` | falta o site da marca: pergunte ao integrante (ou procure o site oficial e confirme com ele) e registre com `answer <slug> marca <endereço>` |

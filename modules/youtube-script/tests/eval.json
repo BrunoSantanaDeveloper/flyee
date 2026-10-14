@@ -126,7 +126,7 @@
           "path": "roteiros/*/roteiro.md"
         }
       ],
-      "rubric": "Pergunta antes de qualquer envio ao Google (sem o sim, modo local). Roda analyze com --instructions de gravacao-de-tela.md, monta o mapa da gravação com os tempos e o texto exato da tela e confirma o que cortar. O roteiro usa [TELA mm:ss–mm:ss: …] por trecho, a fala diz o que a imagem não diz e o lint não aponta speech_over_screen sem tratamento."
+      "rubric": "Pergunta antes de qualquer envio ao Google (sem o sim, modo local). Roda analyze com --instructions de gravacao-de-tela.md, monta o mapa da gravação com os tempos e o texto exato da tela e confirma o que cortar. O roteiro usa [TELA mm:ss a mm:ss: …] por trecho, a fala diz o que a imagem não diz e o lint não aponta speech_over_screen sem tratamento."
     },
     {
       "name": "video de referencia",

@@ -10,7 +10,7 @@ Toda imagem vem do primeiro caminho desta lista que estiver disponível. Só des
 |---|---|---|---|
 | 1 | **Você mesmo** | Você tem uma ferramenta de gerar imagens nesta conversa (o Codex tem; outras IAs têm quando o integrante instalou uma extensão de imagem) | Gere com a sua ferramenta, em 4:5, e grave o arquivo em `carrosseis/<nome>/assets/`. Não rode o comando `images`. |
 | 2 | **O Codex do integrante** | Você não gera imagens, mas o integrante tem o Codex neste computador com a conta do ChatGPT dele conectada | Rode o comando `images` (seção 2). Ele usa o plano do ChatGPT do integrante. Não pede chave. |
-| 3 | **A chave do Gemini** | Não há Codex conectado, e o integrante salvou a chave gratuita do Gemini | O mesmo comando `images` usa a chave sozinho. |
+| 3 | **A chave do Gemini** | Não há Codex conectado, e o integrante salvou a chave do Gemini (o Google não cobra por ela no uso comum) | O mesmo comando `images` usa a chave sozinho. |
 | 4 | **As fotos do integrante** | Ele tem fotos próprias, ou nenhum caminho acima existe | Peça os arquivos e grave em `assets/` (seção 6). |
 | 5 | **Sem fotos** | Nada acima, ou o tema pede | Faça o carrossel no estilo gráfico: tipografia, formas, contador, barras. Fica bom e não depende de ninguém. |
 
@@ -37,7 +37,7 @@ Sem `--json`, o `check` resume o mesmo numa linha que começa com "Imagens:".
 
 Com `images.codex.auth` igual a `api_key`, o Codex fica fora da ordem automática: cada imagem seria cobrada na chave da OpenAI que ele usa, e não no plano do ChatGPT. O comando `images` segue para a chave do Gemini, se houver. Só use `--provider codex` se o integrante disser que quer gerar pela chave da OpenAI dele, depois de você avisar numa frase que cada imagem é cobrada nela.
 
-**A chave, quando o integrante quiser usá-la.** Ela é opcional. Diga onde criar (`images.gemini_setup.key_url`, com a conta Google dele) e rode você mesmo `npx flyee key set GEMINI_API_KEY --json`: o comando abre uma página no navegador dele, onde ele cola a chave e clica em Salvar. Nunca peça a chave no chat, nunca a escreva num comando e nunca abra `~/.flyee/keys.json`. Se ele colar a chave na conversa, não a use: diga que ela ficou no histórico e que o certo é apagá-la no Google AI Studio e criar outra.
+**A chave, quando o integrante quiser usá-la.** Ela é opcional. Diga onde criar (`images.gemini_setup.key_url`, com a conta Google dele) e rode você mesmo `npx --yes flyee@latest key set GEMINI_API_KEY --browser --json`: o comando volta na hora e abre uma página no navegador dele, onde ele cola a chave e clica em Salvar. A página vale por 15 minutos; quando ele disser que salvou, rode `check --json` de novo. Nunca peça a chave no chat, nunca a escreva num comando e nunca abra `~/.flyee/keys.json`. Se ele colar a chave na conversa, não a use: diga que ela ficou no histórico e que o certo é apagá-la no Google AI Studio e criar outra.
 
 **Vídeo gerado por IA.** Este app não usa: o movimento dos slides é desenhado. Se um dia um slide pedir um trecho de vídeo gerado, vale a mesma ordem: a ferramenta da própria IA, depois outra que o integrante já tenha, e só então uma chave.
 

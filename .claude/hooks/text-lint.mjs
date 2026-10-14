@@ -50,7 +50,7 @@ process.stdin.on("end", async () => {
     const hard = findings.filter((finding) => finding.violations.length);
     if (hard.length) {
       const reason = [
-        "TEXTO PARA O INTEGRANTE: este arquivo chega ao integrante e quebra a regra de escrita em pt-BR. Corrija agora:",
+        "TEXTO PARA O INTEGRANTE: este arquivo chega ao integrante ou à IA dele e quebra a regra de texto do flyee.club. Corrija agora:",
         ...hard.flatMap(({ rel, violations, advisories }) => [
           rel,
           ...violations.map((violation, index) => `${index + 1}. ${violation}`),

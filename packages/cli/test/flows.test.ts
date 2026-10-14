@@ -253,7 +253,7 @@ describe("the member's journey against the contract", () => {
     const broken = await run(ctx, ["status"]);
     assert.equal(broken.connected, false);
     assert.equal(broken.connection_error, "relogin");
-    assert.ok(output.some((line) => line.includes("npx flyee login")));
+    assert.ok(output.some((line) => line.includes("npx --yes flyee@latest login")), "the command is written as an AI must run it");
     const login = await run(ctx, ["login", "--device"]);
     assert.equal(login.ok, true, JSON.stringify(login));
     const recovered = await run(ctx, ["status"]);

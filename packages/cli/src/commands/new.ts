@@ -13,6 +13,7 @@ import { compareSemver } from "../semver.ts";
 import { readLock, writeLock } from "../state/lock.ts";
 import { rememberProject } from "../state/projects.ts";
 import { billingLink, installModule, printReview } from "./add.ts";
+import { askOrExplain } from "./confirm.ts";
 import { productRepoAbove } from "./dev.ts";
 import { ensurePrograms, specsForApp } from "./need.ts";
 import { flag, type ParsedArgs, type Result } from "./types.ts";
@@ -123,7 +124,7 @@ export async function runNew(ctx: Context, args: ParsedArgs): Promise<Result> {
     if (url) ctx.io.out(url);
     return { ok: false, error: "nothing_to_install", message, action_url: url, path: target, apps: lines };
   }
-  ctx.io.out(t(ctx, "new.review", { path: target, list: coming.map((line) => `${line.slug} ${line.version ?? ""}`.trim()).join(", ") || "—" }));
+  ctx.io.out(t(ctx, "new.review", { path: target, list: coming.map((line) => `${line.slug} ${line.version ?? ""}`.trim()).join(", ") }));
   // An app this project does not have is new to the member: show what it asks for, as `add` does.
   for (const item of installs) if (!source?.modules[item.line.slug]) printReview(ctx, item.module, assets);
 
@@ -131,7 +132,9 @@ export async function runNew(ctx: Context, args: ParsedArgs): Promise<Result> {
     ctx.io.out(t(ctx, "add.dry_run"));
     return { ok: true, dry_run: true, path: target, apps: lines };
   }
-  if (!ctx.yes && !(await ctx.io.confirm(t(ctx, "new.confirm")))) {
+  const answer = await askOrExplain(ctx, t(ctx, "new.confirm"), args);
+  if (answer !== true) {
+    if (answer !== false) return answer;
     ctx.io.out(t(ctx, "add.cancelled"));
     return { ok: false, error: "cancelled", message: t(ctx, "add.cancelled") };
   }

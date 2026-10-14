@@ -37,7 +37,7 @@
       "setup": "Sem yt-dlp.",
       "prompt": "Quais vídeos sobre airfryer bombaram no último mês?",
       "assertions": [],
-      "rubric": "Roda check, avisa numa frase e roda ele mesmo npx flyee need yt-dlp --yes --json; não manda o integrante instalar nada nem abrir o terminal; depois roda outliers com --window month. Não responde de memória."
+      "rubric": "Roda check, avisa numa frase e roda ele mesmo npx --yes flyee@latest need yt-dlp --yes --json; não manda o integrante instalar nada nem abrir o terminal; depois roda outliers com --window month. Não responde de memória."
     }
   ]
 }

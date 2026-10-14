@@ -34,6 +34,7 @@ import {
   loopStatus,
   loudnessCheck,
   makeCheck,
+  MARKS,
   mergeLocalChange,
   minTextFor,
   NETWORK_CHECKS,
@@ -411,10 +412,11 @@ test("makeCheck, summarize, scoreOf, checkLine, fixLine and the constants", () =
   assert.deepEqual(scoreOf(list), { passed: 1, failed: 1, warned: 1, skipped: 1 });
   assert.equal(summarize([pass, makeCheck("flashes", "warn", "w")]).passed, true);
   assert.equal(checkLine(fail), "✗ Área segura: fora");
-  assert.equal(checkLine(makeCheck("loop_seamless", "skip", "não pedido")), "– Loop sem emenda: não pedido");
-  assert.equal(checkLine(makeCheck("flashes", "warn", "w")), "! Piscadas: w");
-  assert.equal(checkLine(perNetwork, { reels: "Instagram Reels" }), "! Duração (Instagram Reels): longo");
-  assert.equal(checkLine(perNetwork), "! Duração (reels): longo", "without labels the id stands in");
+  assert.equal(checkLine(makeCheck("loop_seamless", "skip", "não pedido")), "○ Loop sem emenda: não pedido");
+  assert.equal(checkLine(makeCheck("flashes", "warn", "w")), "△ Piscadas: w");
+  assert.equal(checkLine(perNetwork, { reels: "Instagram Reels" }), "△ Duração (Instagram Reels): longo");
+  assert.equal(checkLine(perNetwork), "△ Duração (reels): longo", "without labels the id stands in");
+  assert.deepEqual(MARKS, { pass: "✓", fail: "✗", warn: "△", skip: "○" }, "the marks every flyee.club app prints: passou, reprovou, aviso, não medido");
   assert.equal(checkLine(makeCheck("format_supported", "pass", "ok", [], null, "x"), { x: "X" }), "✓ Formato (X): ok");
   assert.equal(checkLine(makeCheck("loudness", "pass", "ok")), "✓ Volume: ok");
   assert.equal(fixLine(fail), "    Como resolver: conserte");
@@ -1086,12 +1088,12 @@ test("accept on a finished video: the report next to it, the usual networks of t
 
   // a human reading: one line per check, the network in parentheses, the fix under what failed
   assert.equal(human.code, 0);
-  assert.match(human.stdout, /Aceite de .*movendo\.mp4 \(9:16, 270×480, 2 s, 30 fps\): REPROVADO · 6 ✓ · 2 ✗ · 0 ! · 7 –/);
+  assert.match(human.stdout, /Aceite de .*movendo\.mp4 \(9:16, 270×480, 2 s, 30 fps\): REPROVADO · 6 ✓ · 2 ✗ · 0 △ · 7 ○/);
   assert.match(human.stdout, /Redes: Instagram Reels, TikTok, YouTube Shorts \(as habituais do formato\)/);
   assert.match(human.stdout, /✗ Duração \(Instagram Reels\): .*\r?\n {4}Como resolver: /);
   assert.match(human.stdout, /✓ Duração \(YouTube Shorts\): /);
   assert.match(human.stdout, /✓ Formato \(TikTok\): /);
-  assert.match(human.stdout, /– Área segura: /);
+  assert.match(human.stdout, /○ Área segura: /);
   assert.match(human.stdout, /Relatório: .*movendo-texto\.json/);
 
   // networks named by the caller, one of which refuses the format; the report goes where --out says

@@ -235,7 +235,7 @@ test("geminiKey follows the flyee rule: the variable, then the key saved with `f
 
 test("keySetup gives one command the AI runs itself, the same on every system", () => {
   const setup = keySetup();
-  assert.equal(setup.command, "npx flyee key set GEMINI_API_KEY --json");
+  assert.equal(setup.command, "npx --yes flyee@latest key set GEMINI_API_KEY --browser --json");
   assert.match(setup.how, /navegador/);
   assert.doesNotMatch(setup.how, /seu terminal/);
   assert.ok(setup.after);
@@ -243,9 +243,9 @@ test("keySetup gives one command the AI runs itself, the same on every system", 
 
 test("installHints never hands the member an install command: the AI runs `npx flyee need`", () => {
   const hints = installHints();
-  assert.equal(hints.ffmpeg, "npx flyee need ffmpeg --yes --json");
-  assert.equal(hints["yt-dlp"], "npx flyee need yt-dlp --yes --json");
-  assert.equal(hints.update_ytdlp, "npx flyee need yt-dlp --upgrade --yes --json");
+  assert.equal(hints.ffmpeg, "npx --yes flyee@latest need ffmpeg --yes --json");
+  assert.equal(hints["yt-dlp"], "npx --yes flyee@latest need yt-dlp --yes --json");
+  assert.equal(hints.update_ytdlp, "npx --yes flyee@latest need yt-dlp --upgrade --yes --json");
   for (const command of [hints.ffmpeg, hints["yt-dlp"], hints.update_ytdlp]) assert.doesNotMatch(command, /winget|brew|apt|pip/);
 });
 
@@ -324,13 +324,26 @@ test("renderDescription writes the shared format and the header round-trips", ()
     measurements: ["- Nenhum corte detectado em 00:19: um plano contínuo."],
   });
   assert.deepEqual(readHeader(markdown), header);
-  for (const heading of ["## Resumo", "## Linha do tempo", "### 00:00–00:05", "## Só na imagem", "## Planos", "## Como reproduzir", "## Medições", "## Incertezas"]) {
+  for (const heading of ["## Resumo", "## Linha do tempo", "### 00:00 a 00:05", "## Só na imagem", "## Planos", "## Como reproduzir", "## Medições", "## Incertezas"]) {
     assert.ok(markdown.includes(heading), heading);
   }
+  assert.ok(markdown.includes("- **00:04**: Ele se vira para os elefantes."));
+  assert.ok(markdown.includes("| 00:00 a 00:19 | médio |"));
   assert.ok(markdown.includes("plano \\| único"));
   assert.ok(markdown.includes("Nenhuma registrada."));
-  const english = renderDescription({ data: { summary: "x" }, header, title: "T", lang: "en" });
+  // The platform's copy rule: the script writes no dash of its own.
+  assert.doesNotMatch(markdown, /[–—]/u);
+  const english = renderDescription({
+    data: { summary: "x", timeline: [{ start: "00:00", end: "00:05", visual: "A man" }], shots: [{ start: "00:00", end: "00:05", framing: "medium" }] },
+    header,
+    title: "T",
+    lang: "en",
+  });
   assert.ok(english.includes("## Summary") && english.includes("## Only in the picture"));
+  assert.ok(english.includes("### 00:00 to 00:05") && english.includes("| 00:00 to 00:05 | medium |"));
+  // A section without content stays out, except "Só na imagem" and "Incertezas".
+  const empty = renderDescription({ data: { summary: "" }, header, title: "T" });
+  assert.ok(!empty.includes("## Resumo") && empty.includes("## Só na imagem") && empty.includes("## Incertezas"));
   const raw = renderDescription({ data: null, rawText: "texto livre", header, title: "T" });
   assert.ok(raw.includes("texto livre"));
   assert.ok(descriptionHeader({ a: "1", b: null }).includes('a: "1"') && !descriptionHeader({ a: "1", b: null }).includes("b:"));
@@ -347,8 +360,11 @@ test("measurementLines summarizes cuts, silences and replayed parts", () => {
   const lines = measurementLines(analysis);
   assert.ok(lines[0].includes("Cortes detectados: 4 em 03:00; um plano a cada 36,0 s"));
   assert.ok(lines[1].includes("00:00 1 · 01:00 2 · 02:00 1"));
-  assert.ok(lines[2].includes("00:20–00:22") && !lines[2].includes("00:30"));
-  assert.ok(lines[3].includes("01:00–01:06"));
+  assert.ok(lines[2].includes("00:20 a 00:22") && !lines[2].includes("00:30"));
+  assert.ok(lines[3].includes("01:00 a 01:06"));
+  assert.ok(lines.every((line) => !/[–—]/u.test(line)));
   assert.ok(measurementLines({ ...analysis, cuts_s: [], shots: [{}] })[0].includes("Nenhum corte"));
-  assert.ok(measurementLines(analysis, "en")[0].startsWith("- Cuts detected"));
+  const english = measurementLines(analysis, "en");
+  assert.ok(english[0].startsWith("- Cuts detected"));
+  assert.ok(english[2].includes("00:20 to 00:22") && english[3].includes("01:00 to 01:06"));
 });

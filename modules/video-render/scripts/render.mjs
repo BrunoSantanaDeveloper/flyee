@@ -380,7 +380,7 @@ function openCommand(positionals) {
   return { ok: true, command: "open", interface_version: INTERFACE_VERSION, app: APP, file: rel(file) };
 }
 
-const HELP = `Motor de vídeo — transforma uma página animada (HTML com window.seek) em vídeo.
+const HELP = `Motor de vídeo: transforma uma página animada (HTML com window.seek) em vídeo.
 
 Uso: ${SCRIPT_COMMAND} <comando> [opções] [--json]
 
@@ -400,7 +400,7 @@ Opções de render e preview
   --fps <n>                      Quadros por segundo (padrão: o film.fps da página, ou 30).
   --sub <n>                      Subquadros misturados em desfoque de movimento (1, 2 ou 4; padrão: 1).
   --format 9:16|4:5|3:4|1:1|16:9|WxH Tamanho do quadro; a página precisa de window.setFormat quando difere do dela.
-  --scale 0.1–1                  Fração do tamanho (preview usa 0.5).
+  --scale <0.1 a 1>              Fração do tamanho (preview usa 0.5).
   --start <t> --end <t>          Só um trecho.
   --alpha                        Camada transparente (fundo transparente na página; saída .mov ou .webm).
   --frame-format png|jpeg        Como cada quadro é fotografado (padrão: png; preview usa jpeg).
@@ -531,5 +531,9 @@ loadExtras()
       },
     };
     process.stdout.write(`${json ? JSON.stringify(result, null, 2) : humanText(result)}\n`);
-    process.exit(result.error.code === "usage" ? 2 : 1);
+    // No process.exit() here: right after an HTTPS fetch (a capture error comes right after one) it
+    // aborts Node 24 on Windows with a libuv assertion and exit code 127. The code is set and the
+    // process ends on its own; the unref'd timer only acts if something still holds it after 3 s.
+    process.exitCode = result.error.code === "usage" ? 2 : 1;
+    setTimeout(() => process.exit(process.exitCode), 3000).unref();
   });

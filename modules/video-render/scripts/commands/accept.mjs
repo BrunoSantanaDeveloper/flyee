@@ -25,6 +25,7 @@ import {
   loopStatus,
   loudnessCheck,
   makeCheck,
+  MARKS,
   mergeLocalChange,
   minTextFor,
   parseLocalChange,
@@ -343,7 +344,7 @@ export const help = `Opções de accept
   --every <s>                    De quanto em quanto ler as caixas (padrão: 0.25); cada batida também é lida.
   --beats <beats.json> | --bpm <n>  As batidas: cortes na batida e instantes lidos.
   --tolerance <quadros>          Quanto um corte pode ficar da batida (padrão: 1 quadro nos cortes de film.cuts; 2 nos cortes achados no vídeo).
-  --min-on-beat <0–1>            Fração mínima de cortes na batida (padrão: 1 nos cortes de film.cuts; 0.7 nos achados no vídeo).
+  --min-on-beat <0 a 1>          Fração mínima de cortes na batida (padrão: 1 nos cortes de film.cuts; 0.7 nos achados no vídeo).
   --loop                         Compara o último quadro com o primeiro (SSIM pelo ffmpeg).
   --max-flashes <n>              Mudanças bruscas de luz toleradas em 1 s (padrão: 3).
   --max-still <s>                Trecho parado a partir do qual avisa (padrão: 1.5).
@@ -669,7 +670,7 @@ export const commands = {
       const score = result.score;
       const subject = result.mode === "video" ? `${result.video}${result.page ? ` com ${result.page}` : ""}` : `${result.page}${result.video ? ` com ${result.video}` : ""}`;
       const size = result.width && result.height ? `${result.format}, ${result.width}×${result.height}` : "tamanho desconhecido";
-      const lines = [`Aceite de ${subject} (${size}, ${result.duration ?? "?"} s, ${result.fps ?? "?"} fps): ${result.passed ? "APROVADO" : "REPROVADO"} · ${score.passed} ✓ · ${score.failed} ✗ · ${score.warned} ! · ${score.skipped} –`];
+      const lines = [`Aceite de ${subject} (${size}, ${result.duration ?? "?"} s, ${result.fps ?? "?"} fps): ${result.passed ? "APROVADO" : "REPROVADO"} · ${score.passed} ${MARKS.pass} · ${score.failed} ${MARKS.fail} · ${score.warned} ${MARKS.warn} · ${score.skipped} ${MARKS.skip}`];
       if (result.networks.length) lines.push(`Redes: ${result.networks.map((id) => result.network_labels[id] ?? id).join(", ")}${result.networks_default ? " (as habituais do formato)" : ""}`);
       for (const check of result.checks) {
         lines.push(checkLine(check, result.network_labels));

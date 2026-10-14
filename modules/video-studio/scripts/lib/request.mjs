@@ -303,7 +303,7 @@ export function detectDuration(low, src = low) {
   const taken = [];
   const overlaps = (index) => taken.some(([from, to]) => index >= from && index < to);
 
-  const ranges = new RegExp(`(?:\\bde\\s+(\\d{1,3})\\s+a\\s+(\\d{1,3})|\\bentre\\s+(\\d{1,3})\\s+e\\s+(\\d{1,3})|(?<![\\d.,:x])(\\d{1,3})\\s*(?:a|ate|to|-|–|—)\\s*(\\d{1,3}))\\s*${SECONDS}\\b`, "g");
+  const ranges = new RegExp(`(?:\\bde\\s+(\\d{1,3})\\s+a\\s+(\\d{1,3})|\\bentre\\s+(\\d{1,3})\\s+e\\s+(\\d{1,3})|(?<![\\d.,:x])(\\d{1,3})\\s*(?:a|ate|to|-|\\u2013|\\u2014)\\s*(\\d{1,3}))\\s*${SECONDS}\\b`, "g");
   for (const match of low.matchAll(ranges)) {
     const from = Number(match[1] ?? match[3] ?? match[5]);
     const to = Number(match[2] ?? match[4] ?? match[6]);

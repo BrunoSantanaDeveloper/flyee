@@ -48,7 +48,7 @@ export const SOURCES = ["pedido", "resposta", "captura", "marca", "projeto", "in
 export const GENERAL_SUBJECT = "marca em geral";
 
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const INSTALL_SELF = "npx flyee add video-studio --yes --json";
+const INSTALL_SELF = "npx --yes flyee@latest add video-studio --yes --json";
 const ROUND_STAGES = ["round1", "round2", "round3"];
 const FROM_MEMBER = ["pedido", "resposta"];
 const TEMPLATE_BY_OBJECTIVE = { apresentar: "lancamento", lancar: "lancamento", portfolio: "lancamento", vender: "oferta", explicar: "lista" };
@@ -1651,7 +1651,7 @@ export function echo(state, templates = null, { minutes = 12, bank = null } = {}
   const lines = [what, story, tone, sound, style, time];
   const text = lines.join("\n");
 
-  const title = `Briefing: ${brief.brand.shown ?? "vídeo animado"} — ${lowerFirst(spec.label ?? brief.view.template)}`;
+  const title = `Briefing: ${brief.brand.shown ?? "vídeo animado"} · ${lowerFirst(spec.label ?? brief.view.template)}`;
   const rows = FIELDS.map((field) => {
     const entry = entryOf(brief.filled, field);
     const origin = SOURCE_NAMES[entry?.by ?? entry?.source] ?? "padrão";

@@ -25,7 +25,9 @@ O jeito normal de trabalhar é conversar com a IA aberta neste repositório. A s
 ```
 modules/<slug>/
 ├── flyee.module.json      o manifesto (schema em schemas/flyee.module.schema.json)
-├── README.md              o guia do integrante; vira o texto da página do app na plataforma
+├── README.md              o guia do integrante dentro do projeto (e o /flyee guia)
+├── guides/pt-BR/usar.md   o guia da página do app na plataforma, para todo integrante (e guides/en/usar.md)
+├── guides/pt-BR/abrir-o-capo.md   o guia avançado, para o FlyeeClub Pro (e guides/en/abrir-o-capo.md)
 ├── skills/<nome>/SKILL.md uma ou mais skills no padrão Agent Skills
 ├── skills/<nome>/references/   material que a skill lê sob demanda
 ├── scripts/               scripts que a IA roda (exigem `shell` nas permissões)
@@ -35,14 +37,14 @@ modules/<slug>/
 
 Comece com `npm run apps -- new <slug> --type <tipo> --trail <trilha>`, que copia `modules/_template` e preenche nomes, tipo e trilha. O que falta escrever fica marcado com `[PREENCHER]`, e a validação recusa o app até não sobrar nenhum. O nome do diretório é o `name` do manifesto: minúsculas, dígitos e hífens, até 60 caracteres.
 
-**O projeto é a pasta.** Tudo o que o app aprende sobre a marca ou a voz do integrante e tudo o que entrega fica numa pasta do app na raiz do projeto (`estudio-de-video/`, `roteiros/`, `carrosseis/`), nunca na pasta do usuário nem num cache comum a todos os projetos. É isso que separa as marcas: quem atende vários clientes usa um projeto para cada um (`npx flyee new <pasta>`), e o operador faz o mesmo com MedChina, flyee e Seenaly (`npm run apps -- project new <nome>`). Em `~` só fica o que é da máquina: onde estão os programas, as chaves em `~/.flyee/keys.json`.
+**O projeto é a pasta.** Tudo o que o app aprende sobre a marca ou a voz do integrante e tudo o que entrega fica numa pasta do app na raiz do projeto (`estudio-de-video/`, `roteiros/`, `carrosseis/`), nunca na pasta do usuário nem num cache comum a todos os projetos. É isso que separa as marcas: quem atende vários clientes usa um projeto para cada um (`npx --yes flyee@latest new <pasta>`), e o operador faz o mesmo com MedChina, flyee e Seenaly (`npm run apps -- project new <nome>`). Em `~` só fica o que é da máquina: onde estão os programas, as chaves em `~/.flyee/keys.json`.
 
 ## 2. O manifesto
 
 | Campo | Regra |
 |---|---|
 | `manifest_version` | `1` |
-| `name` | igual ao diretório; é o slug no catálogo e no `npx flyee add` |
+| `name` | igual ao diretório; é o slug no catálogo e no `npx --yes flyee@latest add` |
 | `version` | `MAJOR.MINOR.PATCH`, sem zero à esquerda, prerelease opcional; imutável depois de publicada |
 | `type` | `skill`, `workflow`, `framework` ou `tool` |
 | `trail` | `planejar`, `construir`, `publicar`, `divulgar`, `vender`, `escalar` ou `manter` |
@@ -80,13 +82,13 @@ description: Encontra Reels que performaram acima do normal do próprio perfil e
 
 Esta é a regra de experiência de todo app: o integrante conversa com a IA dele, e a IA roda tudo. Ele só confirma na conversa o que a IA vai fazer, aprova o login no navegador e cola chaves numa página que abre no navegador. Nenhum texto do app manda o integrante abrir o terminal, rodar um comando ou instalar um programa. A validação recusa um `.md` do app com comando de instalação (`winget install`, `brew install`, `apt install`, `pip install`…) ou com "no seu terminal".
 
-**Programas.** Um app que usa um programa (ffmpeg, yt-dlp…) o declara numa permissão `shell` cujo escopo cita o nome dele, por exemplo `"scope": "ffmpeg, ffprobe"`. O `npx flyee add`, o `update` e o `dev link` instalam sozinhos o que faltar, pelo gerenciador de pacotes do sistema (winget, Homebrew, apt…), sem perguntas além da confirmação do próprio `add`. Se o app descobre em uso que falta algo, a skill manda a IA rodar `npx flyee need <programa> --yes --json`, com tempo limite longo, depois de avisar numa frase. Os programas conhecidos estão em `packages/core/assets/programs.json`; um programa novo entra ali, e até a CLI ser publicada com ele o app passa a receita no próprio comando (`npx flyee need <binário> --winget <id> --brew <id> --apt <id>`). Só o que exige o integrante volta como `needs_member`, com o passo único: a senha de administrador no Linux, o Homebrew ausente no Mac. O script do app procura o programa no PATH e nas pastas dos gerenciadores de pacotes, porque a IA aberta antes da instalação herda o PATH antigo; `~/.flyee/programs.json` guarda o caminho de cada programa que a CLI conferiu.
+**Programas.** Um app que usa um programa (ffmpeg, yt-dlp…) o declara numa permissão `shell` cujo escopo cita o nome dele, por exemplo `"scope": "ffmpeg, ffprobe"`. O `npx --yes flyee@latest add`, o `update` e o `dev link` instalam sozinhos o que faltar, pelo gerenciador de pacotes do sistema (winget, Homebrew, apt…), sem perguntas além da confirmação do próprio `add`. Se o app descobre em uso que falta algo, a skill manda a IA rodar `npx --yes flyee@latest need <programa> --yes --json`, com tempo limite longo, depois de avisar numa frase. Os programas conhecidos estão em `packages/core/assets/programs.json`; um programa novo entra ali, e até a CLI ser publicada com ele o app passa a receita no próprio comando (`npx --yes flyee@latest need <binário> --winget <id> --brew <id> --apt <id>`). Só o que exige o integrante volta como `needs_member`, com o passo único: a senha de administrador no Linux, o Homebrew ausente no Mac. O script do app procura o programa no PATH e nas pastas dos gerenciadores de pacotes, porque a IA aberta antes da instalação herda o PATH antigo; `~/.flyee/programs.json` guarda o caminho de cada programa que a CLI conferiu.
 
 ## 5. Permissões, credenciais e o modo sem chave
 
 Declare tudo: a IA mostra as permissões antes de instalar, e a página pública do app as exibe. Um app que grava no projeto declara `fs:write` com o escopo; um que chama uma API declara `network` com o domínio; um que roda script declara `shell` com o comando, inclusive binários externos como `ffmpeg`.
 
-Toda credencial externa se declara em `external_credentials`, e o `env` é o nome da chave. A IA do integrante roda `npx flyee key set <ENV> --json`, que abre uma página no navegador dele, numa porta local e com um endereço de uso único; ele cola a chave ali e clica em Salvar. A chave não passa pela conversa, pelo terminal nem pela linha de comando. Ela fica em `~/.flyee/keys.json`, fora de todo projeto, e serve a todos os apps que usam o mesmo nome. Quem preferir pode definir uma variável de ambiente com esse nome. Quem roda `key set` num terminal de verdade digita a chave com o eco desligado.
+Toda credencial externa se declara em `external_credentials`, e o `env` é o nome da chave. A IA do integrante roda `npx --yes flyee@latest key set <ENV> --browser --json`, que abre uma página no navegador dele, numa porta local e com um endereço de uso único; ele cola a chave ali e clica em Salvar. A chave não passa pela conversa, pelo terminal nem pela linha de comando. Ela fica em `~/.flyee/keys.json`, fora de todo projeto, e serve a todos os apps que usam o mesmo nome. Quem preferir pode definir uma variável de ambiente com esse nome. Quem roda `key set` num terminal de verdade digita a chave com o eco desligado.
 
 O script do app lê a chave sozinho, nesta ordem:
 
@@ -110,13 +112,17 @@ function appKey(name) {
 }
 ```
 
-Declare `env` com o nome da chave e `fs:read` com `~/.flyee/keys.json`. O app e a skill nunca pedem a chave em texto, nunca a põem num comando, nunca abrem esse arquivo por conta própria e nunca gravam a chave em arquivo do projeto. Sem a chave, o app devolve à IA o `url` de onde obtê-la e o comando `npx flyee key set <ENV> --json`, que a própria IA roda. E todo app com credencial tem um modo que entrega algo sem ela, por exemplo planejar ou preparar o material, dizendo o que a chave liberaria.
+Declare `env` com o nome da chave e `fs:read` com `~/.flyee/keys.json`. O app e a skill nunca pedem a chave em texto, nunca a põem num comando, nunca abrem esse arquivo por conta própria e nunca gravam a chave em arquivo do projeto. Sem a chave, o app devolve à IA o `url` de onde obtê-la e o comando `npx --yes flyee@latest key set <ENV> --browser --json`, que a própria IA roda. E todo app com credencial tem um modo que entrega algo sem ela, por exemplo planejar ou preparar o material, dizendo o que a chave liberaria.
 
-## 6. O README é o guia
+## 6. O README e os guias
 
-Escreva para quem nunca viu o app: o que ele faz, o que precisa, como usar com um prompt de exemplo ("Peça assim: …"), o que ele grava e onde, e o modo sem chave. Esse texto vira a página do app na plataforma e o `/flyee guia <app>` dentro da IA.
+O README é o guia dentro do projeto. Escreva para quem nunca viu o app: o que ele faz, o que precisa, como usar com um prompt de exemplo ("Peça assim: …"), o que ele grava e onde, e o modo sem chave. A IA o lê no `/flyee guia <app>`.
 
-**A escrita é conferida.** Todo `.md` que vai no pacote, e os textos do core, passam por um verificador de pt-BR depois de cada escrita e no `npm run validate`. Ele bloqueia travessão colado entre palavras e avisa sobre excesso de travessões, adjetivos de avaliação típicos de IA ("crucial", "robusto", "poderoso"…) e fórmulas como "não é só X, é Y". Texto entre aspas conta como citação e não é conferido, então um guia pode listar a fórmula que manda evitar. Para reescrever um trecho, use a skill `humanizer-pt-br`. Regra nova no verificador só entra depois de rodar contra todos os textos que já existem sem marcar o que está certo.
+**Os guias são a página do app.** A página do app no painel da plataforma lê só os guias do pacote, em caminhos fixos (contrato, seção 7): `guides/pt-BR/usar.md` e `guides/en/usar.md` em todo app, e `guides/pt-BR/abrir-o-capo.md` com `guides/en/abrir-o-capo.md` no app que tem profundidade para mostrar, os dois juntos ou nenhum. "Usar" é para todo integrante: o que pedir à IA e o que esperar. "Abrir o capô" é o guia avançado, que só o FlyeeClub Pro lê: como o app trabalha por dentro, os arquivos, os pedidos avançados, as conferências e a privacidade. A plataforma recusa outro nome dentro de `guides/`, um guia vazio e um acima de 200.000 bytes, e não resolve caminho relativo ao pacote: link só com endereço absoluto. Guia nunca mostra comando, porque quem roda é a IA. O `validate` confere tudo isso, e o modelo (`modules/_template/guides/`) já traz os quatro arquivos com `[PREENCHER]`. Uma versão publicada nunca muda: um guia novo ou corrigido entra numa versão nova.
+
+**A escrita segue a regra de texto do flyee.club.** É a mesma do site, do painel, dos e-mails e das mensagens da CLI: nenhum travessão (o traço longo ou a meia-risca), nem num intervalo ("3 a 4", nunca com o traço), nenhum ponto de exclamação, nenhum emoji (© e → podem) e nenhuma das palavras proibidas (desbloqueie, potencialize, sem esforço, soluções inovadoras; em inglês unlock, elevate, empower, seamless, robust, supercharge, game-changing, it's not just). Onde iria um travessão, use dois-pontos, vírgula ou ponto; "·" separa itens numa linha; um valor que falta some da linha em vez de virar um traço. O `npm run validate` confere todo `.md` do pacote, os textos do manifesto e toda string que os scripts imprimem, e um hook confere cada `.md` logo depois da escrita; os textos do core passam pela mesma conferência. Ele também avisa sobre adjetivos de avaliação típicos de IA e fórmulas como "não é só X, é Y" (nesses avisos, texto entre aspas conta como citação). Para reescrever um trecho, use a skill `humanizer-pt-br`. Um script que precisa do travessão como dado, para achar ou cortar um texto, o guarda numa expressão regular ou o monta com `String.fromCodePoint(0x2014)`, e nunca o imprime.
+
+**Comandos como a IA precisa rodar.** Toda menção a um comando do flyee num texto que a IA lê é `npx --yes flyee@latest <comando>`: o `--yes` responde a pergunta que o npx faz antes de baixar, e `@latest` mantém uma cópia só, como o `/instalar.md` da plataforma escreve. A chave é `npx --yes flyee@latest key set <ENV> --browser --json`, que nunca pede a chave no terminal. Instalar outro app é `add <app> --dry-run --json`, o sim do integrante e `add <app> --yes --json`.
 
 **App que escreve pelo integrante.** Se o app produz texto para o público do integrante (roteiro, legenda, post, texto de carrossel), o último passo da skill antes de entregar manda a IA revisar o texto com a skill `texto-natural`, que o core instala em todo projeto. O perfil de voz que o app guardou manda sobre ela. Declare `"min_core": ">=1.3.0"`, o primeiro core que a instala.
 
@@ -156,7 +162,7 @@ Um app pode ser a ferramenta de outros, como o `video-analysis`, que o app de ed
 
 - Comandos, opções, valores, campos do JSON e códigos de erro em inglês; mensagens, guias e descrições para o integrante em pt-BR.
 - Um script com subcomandos e `--json` em todos (`node .flyee/modules/<slug>/scripts/<script>.mjs <comando> --json`), progresso no stderr e só o JSON no stdout, erros com `code` estável, `message` e `fix`.
-- O contrato em `references/interface.md`, escrito para a IA que executa o outro app: como detectar o app (`.flyee/modules/<slug>/` existe; senão, oferecer `npx flyee add <slug>` e seguir sem ele), os comandos, os campos da saída, os erros e uma `interface_version`. Dentro de uma versão da interface, só se acrescenta; mudança que quebra é interface nova e versão maior do app.
+- O contrato em `references/interface.md`, escrito para a IA que executa o outro app: como detectar o app (`.flyee/modules/<slug>/` existe; senão, oferecer `npx --yes flyee@latest add <slug>` e seguir sem ele), os comandos, os campos da saída, os erros e uma `interface_version`. Dentro de uma versão da interface, só se acrescenta; mudança que quebra é interface nova e versão maior do app.
 - O resultado fica numa pasta do projeto fora de `.flyee/`, porque `.flyee/modules/<slug>/` é trocado a cada `update` e a IA não edita `.flyee/`. Com cache por conteúdo: o mesmo pedido de outro app devolve o que já existe.
 - O app consumidor manda o que precisa (`--instructions <arquivo do próprio app>`, `--name <slug dele>`) em vez de pedir uma versão especial do app de ferramenta.
 

@@ -25,9 +25,9 @@ Depois de pronto, você pede mudanças slide por slide ("troque a frase do slide
 ## O que você precisa
 
 - Uma IA que leia imagens, como o Claude Code: ela precisa olhar os quadros para julgar os slides.
-- O app **Motor de vídeo** (`video-render`), que renderiza, gera o som e confere os slides. Se ele faltar, a sua IA avisa e o instala com `npx flyee add video-render`.
+- O app **Motor de vídeo** (`video-render`), que renderiza, gera o som e confere os slides. Se ele faltar, a sua IA conta numa frase o que ele faz e o que acessa e, com o seu sim, o instala com `npx --yes flyee@latest add video-render`.
 - O **ffmpeg** e um navegador para fotografar os quadros sem abrir janela. No Windows, o Microsoft Edge já vem instalado; no Mac e no Linux servem o Chrome, o Edge ou o Chromium. Você não instala nada: a sua IA avisa numa frase e instala o que faltar na primeira vez.
-- Para fotos, nada obrigatório: servem as suas fotos, uma IA que gera imagens, o Codex conectado à sua conta do ChatGPT ou a chave gratuita do Gemini.
+- Para fotos, nada obrigatório: servem as suas fotos, uma IA que gera imagens, o Codex conectado à sua conta do ChatGPT ou a chave do Gemini, que o Google não cobra no uso comum.
 
 Nenhuma chave é obrigatória: o carrossel é renderizado no seu computador, e a música é gerada ali mesmo.
 
@@ -51,7 +51,7 @@ Cada imagem vem do primeiro caminho desta lista que existir no seu computador. A
 
 1. **A sua própria IA,** quando ela gera imagens na conversa.
 2. **O Codex,** se ele está no seu computador e conectado à sua conta do ChatGPT: as imagens contam no seu plano, sem chave nenhuma. Se o seu Codex entra com uma chave da OpenAI, a IA avisa antes que cada imagem será cobrada nela.
-3. **A chave gratuita do Gemini,** se você quiser criá-la (veja "Sem a chave").
+3. **A chave do Gemini,** se você quiser criá-la (veja "Sem a chave").
 4. **As suas fotos:** você passa os arquivos, e a IA os coloca na pasta do carrossel.
 5. **Sem fotos:** o estilo gráfico, que fica bom e não depende de nada.
 
@@ -61,7 +61,7 @@ Pelo Codex, cada imagem leva por volta de um minuto e meio; pelo Gemini, uns 15 
 
 Tudo funciona sem chave nenhuma: os slides de tipografia, formas e cor, a trilha gerada no seu computador, a prévia, a conferência e a entrega. Com fotos também: as suas, e as que a sua própria IA ou o Codex com a sua conta do ChatGPT geram. A chave do Gemini só acrescenta uma coisa: imagens geradas quando nenhuma IA sua faz isso.
 
-Se quiser usá-la, a chave é gratuita e se cria com a sua conta Google, no Google AI Studio. A sua IA abre uma página no seu navegador, onde você cola a chave e clica em Salvar. Ela fica guardada só no seu computador, fora de qualquer projeto, e não passa pela conversa. Nunca cole a chave no chat; se colar, apague-a no Google AI Studio e crie outra.
+Se quiser usá-la, a chave se cria com a sua conta Google, no Google AI Studio, e o Google não cobra por ela no uso comum. A sua IA abre uma página no seu navegador, onde você cola a chave e clica em Salvar. Ela fica guardada só no seu computador, fora de qualquer projeto, e não passa pela conversa. Nunca cole a chave no chat; se colar, apague-a no Google AI Studio e crie outra.
 
 ## Como fica no Instagram
 

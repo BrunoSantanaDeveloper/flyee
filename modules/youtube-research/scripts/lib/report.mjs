@@ -13,19 +13,22 @@ export const FLAG_LABELS = {
   short: "Short",
 };
 
-/** 1234567 → "1,2 mi"; 6400 → "6,4 mil"; 950 → "950". */
+/** 1234567 → "1,2 mi"; 6400 → "6,4 mil"; 950 → "950"; no number → "" (an empty table cell). */
 export function compact(value) {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  if (typeof value !== "number" || !Number.isFinite(value)) return "";
   const format = (n) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
   if (value >= 1e6) return `${format(value / 1e6)} mi`;
   if (value >= 1e3) return `${format(value / 1e3)} mil`;
   return format(Math.round(value));
 }
 
-const decimal = (value, digits = 1) => (typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("pt-BR", { maximumFractionDigits: digits }) : "—");
-const percent = (value) => (typeof value === "number" && Number.isFinite(value) ? `${(value * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` : "—");
-const cell = (text) => String(text ?? "—").replace(/\|/g, "/").replace(/\s+/g, " ").trim();
-const duration = (seconds) => (typeof seconds === "number" ? formatTime(seconds) : "—");
+// A missing value leaves its table cell empty; "Como ler" says what an empty cell means.
+const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
+const decimal = (value, digits = 1) => (isNumber(value) ? value.toLocaleString("pt-BR", { maximumFractionDigits: digits }) : "");
+const times = (value) => (isNumber(value) ? `${decimal(value)}×` : "");
+const percent = (value) => (isNumber(value) ? `${(value * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` : "");
+const cell = (text, missing = "") => String(text ?? missing).replace(/\|/g, "/").replace(/\s+/g, " ").trim();
+const duration = (seconds) => (typeof seconds === "number" ? formatTime(seconds) : "");
 const flags = (list) => (list?.length ? list.map((flag) => FLAG_LABELS[flag] ?? flag).join(", ") : "");
 
 export function outliersMarkdown(result, { top = 30 } = {}) {
@@ -44,7 +47,7 @@ export function outliersMarkdown(result, { top = 30 } = {}) {
   ];
   items.slice(0, top).forEach((item, i) => {
     lines.push(
-      `| ${i + 1} | ${BAND_LABELS[item.band] ?? "—"} | ${item.multiplier === null ? "—" : `${decimal(item.multiplier)}×`} | ${compact(item.views)} | ${compact(item.views_per_day)} | ${percent(item.engagement)} | [${cell(item.title)}](${item.url}) | ${cell(item.channel)} | ${duration(item.duration_s)} | ${item.published_at ?? "—"} | ${flags(item.flags)} |`,
+      `| ${i + 1} | ${BAND_LABELS[item.band] ?? ""} | ${times(item.multiplier)} | ${compact(item.views)} | ${compact(item.views_per_day)} | ${percent(item.engagement)} | [${cell(item.title, "sem título")}](${item.url}) | ${cell(item.channel)} | ${duration(item.duration_s)} | ${item.published_at ?? ""} | ${flags(item.flags)} |`,
     );
   });
   if (result.warnings?.length) lines.push("", "## Ressalvas", "", ...result.warnings.map((warning) => `- ${warning}`));
@@ -55,6 +58,7 @@ export function outliersMarkdown(result, { top = 30 } = {}) {
     "- Faixas, com a mediana do canal: explosivo a partir de 10×, outlier a partir de 3×, acima a partir de 1,5×, normal a partir de 0,5×, fraco abaixo disso. Medido por inscritos, as faixas são outras e valem como indício.",
     "- Um padrão (ângulo, promessa do título, formato) só conta quando aparece em dois ou mais outliers. Copie o mecanismo, nunca o título.",
     "- Views/dia separa o que explodiu do que acumulou em anos. \"menos de 7 dias\" ainda vai mudar; \"mais de 1 ano\" foi comparado com o normal de hoje do canal.",
+    `- Célula vazia é dado que o app não leu ou que o YouTube não mostrou. Data, views/dia e engajamento só existem nos vídeos lidos em detalhe (${sample.detailed} nesta pesquisa); sem faixa e sem multiplicador, o vídeo ficou sem base de comparação.`,
     "",
     `Dados completos: outliers.json e outliers.csv nesta pasta.`,
   );
@@ -98,13 +102,13 @@ export function channelMarkdown(result) {
   const lines = [
     `# Canal: ${channel.name ?? channel.url}`,
     "",
-    `${channel.url}${channel.subscribers ? ` · ${compact(channel.subscribers)} inscritos` : ""} · aba ${result.tab} · últimos ${result.sample} envios · normal (mediana): ${compact(result.median_views)} views. Lido em ${isoDay(new Date(result.created_at))}; as views da aba vêm arredondadas pelo YouTube.`,
+    `${channel.url}${channel.subscribers ? ` · ${compact(channel.subscribers)} inscritos` : ""} · aba ${result.tab} · últimos ${result.sample} envios · normal (mediana): ${isNumber(result.median_views) ? `${compact(result.median_views)} views` : "sem dado"}. Lido em ${isoDay(new Date(result.created_at))}; as views da aba vêm arredondadas pelo YouTube.`,
     "",
     "| # | Mult. | Faixa | Views | Duração | Título |",
     "|---|---|---|---|---|---|",
   ];
   items.forEach((item, i) => {
-    lines.push(`| ${i + 1} | ${item.multiplier === null ? "—" : `${decimal(item.multiplier)}×`} | ${BAND_LABELS[item.band] ?? "—"} | ${compact(item.views)} | ${duration(item.duration_s)} | [${cell(item.title)}](${item.url}) |`);
+    lines.push(`| ${i + 1} | ${times(item.multiplier)} | ${BAND_LABELS[item.band] ?? ""} | ${compact(item.views)} | ${duration(item.duration_s)} | [${cell(item.title, "sem título")}](${item.url}) |`);
   });
   lines.push("", "A ordem é a do canal, do mais novo para o mais antigo. Os vídeos mais recentes ainda estão acumulando views.");
   return `${lines.join("\n")}\n`;
@@ -115,7 +119,7 @@ export function transcriptMarkdown(video, transcript) {
     `# Transcrição: ${video.title ?? video.id}`,
     "",
     `${video.channel ?? ""} · ${video.url}`,
-    `Origem: legenda ${transcript.origin === "manual" ? "escrita pelo canal" : "automática do YouTube"} (${transcript.track}). ${transcript.words} palavras, cerca de ${transcript.words_per_minute ?? "—"} palavras por minuto. Tempos em MM:SS.`,
+    `Origem: legenda ${transcript.origin === "manual" ? "escrita pelo canal" : "automática do YouTube"} (${transcript.track}). ${transcript.words} palavras${isNumber(transcript.words_per_minute) ? `, cerca de ${transcript.words_per_minute} palavras por minuto` : ""}. Tempos em MM:SS.`,
     "",
   ];
   const blocks = groupSpeech(transcript.segments).map((block) => `**${formatTime(block.start_s)}** ${block.text}\n`);

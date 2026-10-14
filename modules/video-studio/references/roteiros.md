@@ -49,16 +49,16 @@ Sem o evento, a página usa uma batida padrão (dita em cada roteiro abaixo).
 
 | Cena | Compassos | Lacunas | Som que combina | O que a página faz |
 |---|---|---|---|---|
-| `gancho` | 1–2 | `text` (até 6 palavras), `emphasis`? | `impact` na 0, `pop` na 1 | o texto já está pousado no primeiro quadro (a capa); soco no `impact`; o destaque chega no `pop`; no fim, a câmera atravessa a palavra-chave |
-| `produto` | 1–2 | `screen`?, `text`? (até 5) | `whoosh` na 0, `click` perto do fim (sem ele, na última batida) | a tela real se monta dentro de um celular (ou de uma janela, se for tela de computador) e o nome sobe na batida 1; o cursor aperta no `click`; sem tela, um celular na cor da marca com a inicial dela |
+| `gancho` | 1 a 2 | `text` (até 6 palavras), `emphasis`? | `impact` na 0, `pop` na 1 | o texto já está pousado no primeiro quadro (a capa); soco no `impact`; o destaque chega no `pop`; no fim, a câmera atravessa a palavra-chave |
+| `produto` | 1 a 2 | `screen`?, `text`? (até 5) | `whoosh` na 0, `click` perto do fim (sem ele, na última batida) | a tela real se monta dentro de um celular (ou de uma janela, se for tela de computador) e o nome sobe na batida 1; o cursor aperta no `click`; sem tela, um celular na cor da marca com a inicial dela |
 | `ponto` (2 a 4) | 1 | `text` (até 5), `detail`? (até 10), `image`?, `screen`?, `emphasis`?, `scroll`? | `swish` na 0, `click` na 2 | etiqueta numerada, o nome grande, o detalhe; a tela muda de lugar e rola até `scroll` (0 = topo da página, 1 = fim; sem `scroll`, as cenas se distribuem pela página); `image` vira um cartão de foto; sem nada, a tipografia ocupa a cena e o cursor sublinha a palavra-chave |
 | `prova` (opcional) | 1 | `value` (número), `prefix`?, `suffix`?, `text` (até 4), `source` | `tick` na 0, `ding` na 1 | o número rola até o valor em uma batida e fica, no outro mundo da marca; a origem (`source`) não aparece no vídeo: ela vai para as notas da entrega |
-| `fechamento` | 1–2 | `text` (até 6), `logo`?, `emphasis`? | `impact` na 0 | o logo corta para dentro, o texto sobe uma batida depois e tudo segura até o último quadro; sem arquivo de logo, o nome da marca na fonte do título |
+| `fechamento` | 1 a 2 | `text` (até 6), `logo`?, `emphasis`? | `impact` na 0 | o logo corta para dentro, o texto sobe uma batida depois e tudo segura até o último quadro; sem arquivo de logo, o nome da marca na fonte do título |
 
 ```json
 {
   "format_version": 1,
-  "title": "Clínica Sorriso — lançamento",
+  "title": "Clínica Sorriso · lançamento",
   "template": "lancamento",
   "style": "interface-narra",
   "format": "9:16",
@@ -93,30 +93,30 @@ Sem o evento, a página usa uma batida padrão (dita em cada roteiro abaixo).
 
 | Cena | Compassos | Lacunas | Som que combina | O que a página faz |
 |---|---|---|---|---|
-| `abertura` | 0,5–1 | `text`? (até 4), `logo`?, `emphasis`? | `impact` na 0, `pop` na 1 | o elemento nasce como o ícone da marca (o logo, ou a inicial na cor da marca) e o texto fica embaixo; sem texto, o nome da marca; é a capa do vídeo |
-| `estado` (4 a 10) | 0,5–1 | `kind`, `text` (até 5), `value`?, `detail`? (até 8) | `click` na 0 (cada mudança); `ding` no `sucesso`; `blip` quando a busca mostra o resultado; `tick` no gráfico | o elemento muda de tamanho, raio e cor; o conteúdo troca por dentro; o cursor aperta o estado anterior na batida da mudança |
-| `fechamento` | 1–2 | `text` (até 6), `logo`?, `emphasis`? | `impact` na 0 | o elemento volta a ser o ícone da marca e o texto sobe embaixo; segura até o último quadro |
+| `abertura` | 0,5 a 1 | `text`? (até 4), `logo`?, `emphasis`? | `impact` na 0, `pop` na 1 | o elemento nasce como o ícone da marca (o logo, ou a inicial na cor da marca) e o texto fica embaixo; sem texto, o nome da marca; é a capa do vídeo |
+| `estado` (4 a 10) | 0,5 a 1 | `kind`, `text` (até 5), `value`?, `detail`? (até 8) | `click` na 0 (cada mudança); `ding` no `sucesso`; `blip` quando a busca mostra o resultado; `tick` no gráfico | o elemento muda de tamanho, raio e cor; o conteúdo troca por dentro; o cursor aperta o estado anterior na batida da mudança |
+| `fechamento` | 1 a 2 | `text` (até 6), `logo`?, `emphasis`? | `impact` na 0 | o elemento volta a ser o ícone da marca e o texto sobe embaixo; segura até o último quadro |
 
 Os tipos de estado (`kind`) e o que cada lacuna vira:
 
 | `kind` | O elemento vira | `text` | `detail` | `value` |
 |---|---|---|---|---|
-| `botao` | um botão na cor de destaque | o rótulo do botão | uma linha embaixo dele | — |
-| `campo` | um campo de formulário | o que é digitado, letra por letra, na grade | o rótulo do campo ("Seu nome") | — |
+| `botao` | um botão na cor de destaque | o rótulo do botão | uma linha embaixo dele | não se aplica |
+| `campo` | um campo de formulário | o que é digitado, letra por letra, na grade | o rótulo do campo ("Seu nome") | não se aplica |
 | `carregando` | um círculo que se completa | a legenda embaixo | uma linha embaixo da legenda | até onde o círculo enche (1 a 100); sem ele, 100% |
-| `sucesso` | um círculo de cor com o sinal de certo, que se desenha | a legenda embaixo | uma linha embaixo da legenda | — |
+| `sucesso` | um círculo de cor com o sinal de certo, que se desenha | a legenda embaixo | uma linha embaixo da legenda | não se aplica |
 | `cartao` | um cartão com uma faixa de cor no alto | o título | uma linha do cartão | um destaque grande ("R$ 70", "4,9") |
 | `grafico` | um cartão com barras que crescem | o título | uma linha, quando não há `value` | o número que rola (só número) |
-| `lista` | um cartão com três linhas que chegam | o título | até três itens, separados por vírgula ou "e" | — |
-| `aviso` | uma notificação no alto da tela | a mensagem | a segunda linha | — |
-| `busca` | um campo de busca, que cresce para mostrar o resultado | o que é digitado | o resultado que aparece | — |
+| `lista` | um cartão com três linhas que chegam | o título | até três itens, separados por vírgula ou "e" | não se aplica |
+| `aviso` | uma notificação no alto da tela | a mensagem | a segunda linha | não se aplica |
+| `busca` | um campo de busca, que cresce para mostrar o resultado | o que é digitado | o resultado que aparece | não se aplica |
 
 Use estados curtos (0,5 compasso) para os passos rápidos (botão, carregando, pronto) e de 1 compasso para o que precisa de leitura (campo, busca, cartão, gráfico).
 
 ```json
 {
   "format_version": 1,
-  "title": "Agenda Fácil — como funciona",
+  "title": "Agenda Fácil · como funciona",
   "template": "interface",
   "style": "interface-que-se-transforma",
   "format": "9:16",
@@ -155,18 +155,18 @@ Use estados curtos (0,5 compasso) para os passos rápidos (botão, carregando, p
 
 | Cena | Compassos | Lacunas | Som que combina | O que a página faz |
 |---|---|---|---|---|
-| `gancho` | 1–2 | `text` (até 6), `emphasis`? | `impact` na 0, `pop` na 1 | como no lançamento: a capa pousada, o soco, o destaque e a travessia |
-| `produto` | 1–2 | `image`?, `screen`?, `text` (até 5) | `whoosh` na 0, `pop` na 1 | a foto num cartão grande (no estilo vitrine, de lado a lado) com o nome em cima; uma tela dentro de um celular; sem nada, um cartão na cor da marca com o nome dentro |
-| `preco` | 1–2 | `value`, `old_value`?, `text`? (até 5) | `thump` na 0, `impact` na 2 | o cartão do produto cresce até virar a tela inteira; a chapa do preço sobe; o valor antigo chega e é riscado; o valor novo bate no `impact` (sem ele, na batida 2); o texto (por exemplo "à vista no Pix") aparece uma batida depois |
+| `gancho` | 1 a 2 | `text` (até 6), `emphasis`? | `impact` na 0, `pop` na 1 | como no lançamento: a capa pousada, o soco, o destaque e a travessia |
+| `produto` | 1 a 2 | `image`?, `screen`?, `text` (até 5) | `whoosh` na 0, `pop` na 1 | a foto num cartão grande (no estilo vitrine, de lado a lado) com o nome em cima; uma tela dentro de um celular; sem nada, um cartão na cor da marca com o nome dentro |
+| `preco` | 1 a 2 | `value`, `old_value`?, `text`? (até 5) | `thump` na 0, `impact` na 2 | o cartão do produto cresce até virar a tela inteira; a chapa do preço sobe; o valor antigo chega e é riscado; o valor novo bate no `impact` (sem ele, na batida 2); o texto (por exemplo "à vista no Pix") aparece uma batida depois |
 | `prazo` (opcional) | 1 | `text` (até 6) | `pop` na 0 | uma etiqueta pousa na chapa do preço e uma barra embaixo do preço se esvazia |
-| `fechamento` | 1–2 | `text` (até 6), `logo`? | `whoosh` na 0, `click` na 2 | a chapa encolhe até virar o botão com o texto da chamada; o logo entra em cima; o cursor aperta no `click` |
+| `fechamento` | 1 a 2 | `text` (até 6), `logo`? | `whoosh` na 0, `click` na 2 | a chapa encolhe até virar o botão com o texto da chamada; o logo entra em cima; o cursor aperta no `click` |
 
 `value` e `old_value` aceitam um número (`199.9` vira "199,90") ou o texto como o preço é escrito: `"R$ 199,90"`, `"12x de R$ 49,90"`, `"10% OFF"`. A moeda e os centavos saem menores, o resto do texto sai na linha de cima. Use sempre o preço que o integrante deu ou que o site publica.
 
 ```json
 {
   "format_version": 1,
-  "title": "Loja Aurora — oferta",
+  "title": "Loja Aurora · oferta",
   "template": "oferta",
   "style": "vitrine",
   "format": "9:16",
@@ -198,16 +198,16 @@ Use estados curtos (0,5 compasso) para os passos rápidos (botão, carregando, p
 
 | Cena | Compassos | Lacunas | Som que combina | O que a página faz |
 |---|---|---|---|---|
-| `gancho` | 1–2 | `text` (até 6), `emphasis`? | `impact` na 0, `pop` na 1 | a capa pousada, o soco, o destaque e a travessia (um número no gancho, como "5 erros", ganha o destaque sozinho) |
-| `item` (3 a 5) | 1–2 | `text` (até 6), `detail`? (até 10), `emphasis`? | `whoosh` ou `swish` na 0, `pop` na 2 | cada item tem um enquadramento próprio, nesta ordem: o numeral gigante, a etiqueta numerada, o numeral embaixo, o bloco de cor, tudo no centro; o texto sobe linha a linha, o destaque chega no `pop`, o detalhe vem depois; um trilho embaixo mostra em que item estamos |
-| `fechamento` | 1–2 | `text` (até 6), `logo`?, `emphasis`? | `impact` na 0 | o logo e a chamada, parados até o último quadro, no fundo da marca |
+| `gancho` | 1 a 2 | `text` (até 6), `emphasis`? | `impact` na 0, `pop` na 1 | a capa pousada, o soco, o destaque e a travessia (um número no gancho, como "5 erros", ganha o destaque sozinho) |
+| `item` (3 a 5) | 1 a 2 | `text` (até 6), `detail`? (até 10), `emphasis`? | `whoosh` ou `swish` na 0, `pop` na 2 | cada item tem um enquadramento próprio, nesta ordem: o numeral gigante, a etiqueta numerada, o numeral embaixo, o bloco de cor, tudo no centro; o texto sobe linha a linha, o destaque chega no `pop`, o detalhe vem depois; um trilho embaixo mostra em que item estamos |
+| `fechamento` | 1 a 2 | `text` (até 6), `logo`?, `emphasis`? | `impact` na 0 | o logo e a chamada, parados até o último quadro, no fundo da marca |
 
 Itens alternando 1 e 2 compassos dão ritmo (cortes do mesmo tamanho cansam); dê 2 compassos ao item com detalhe.
 
 ```json
 {
   "format_version": 1,
-  "title": "Clínica Sorriso — 5 erros",
+  "title": "Clínica Sorriso · 5 erros",
   "template": "lista",
   "style": "tipografia-cinetica",
   "format": "9:16",
@@ -241,10 +241,10 @@ Itens alternando 1 e 2 compassos dão ritmo (cortes do mesmo tamanho cansam); d�
 |---|---|
 | vender um produto, anunciar uma promoção, mostrar um preço | oferta |
 | lançar ou apresentar um produto, um serviço, o próprio trabalho | lançamento |
-| mostrar como um app ou um site funciona, passo a passo | interface que se transforma |
-| dar dicas, listar erros, passos ou motivos | lista |
+| mostrar um elemento da tela que muda de estado sem corte, como um app que se transforma | interface que se transforma |
+| dar dicas, listar erros, passos ou motivos, explicar como algo funciona | lista |
 
-Desempate pelo material que existe: com telas boas do produto, lançamento ou interface; com fotos de produto e preço, oferta; sem imagem nenhuma, lista (ou lançamento no estilo `tipografia-cinetica`). Pedidos com "passo a passo", "como funciona" e "estados da interface" pedem a interface; "3 dicas", "erros", "passos" pedem a lista; "preço", "promoção", "desconto" pedem a oferta.
+Desempate pelo material que existe: com telas boas do produto, lançamento ou interface; com fotos de produto e preço, oferta; sem imagem nenhuma, lista (ou lançamento no estilo `tipografia-cinetica`). Pedidos com "estados da interface", "interface que se transforma", "muda de estado" ou "mesmo elemento" pedem a interface; "passo a passo", "como funciona", "3 dicas", "erros", "passos" pedem a lista; "preço", "promoção", "desconto" pedem a oferta. Para mostrar um app por dentro com uma tela que se transforma, o pedido nomeia a interface.
 
 ## O que o vídeo nunca faz
 

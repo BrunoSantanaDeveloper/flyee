@@ -70,7 +70,7 @@ test("the order: Codex with a ChatGPT login first, then the Gemini key; a named 
 test("with nobody to generate, the error says what to do next and never asks for a key in the chat", () => {
   const none = noProviderError("auto", { codex: NO_CODEX });
   assert.equal(none.code, "no_image_provider");
-  assert.match(none.fix, /npx flyee key set GEMINI_API_KEY --json/);
+  assert.match(none.fix, /npx --yes flyee@latest key set GEMINI_API_KEY --browser --json/);
   assert.match(none.fix, /assets\//);
   assert.doesNotMatch(`${none.message} ${none.fix}`, /cole a chave (aqui|no chat)/i);
   assert.equal(noProviderError("gemini", { codex: NO_CODEX }).code, "no_gemini_key");
@@ -87,7 +87,7 @@ test("the Gemini key: the environment first (an empty one means no key), then th
   assert.deepEqual(geminiKey({ GEMINI_API_KEY: "  " }, store), { key: null, from: null });
   assert.deepEqual(geminiKey({}, join(dir, "missing.json")), { key: null, from: null });
   const setup = keySetup();
-  assert.equal(setup.command, "npx flyee key set GEMINI_API_KEY --json");
+  assert.equal(setup.command, "npx --yes flyee@latest key set GEMINI_API_KEY --browser --json");
   assert.match(setup.key_url, /^https:\/\/aistudio\.google\.com\//);
 });
 
@@ -220,7 +220,7 @@ test("imageStatus tells who can generate here, in order, without showing the key
   assert.doesNotMatch(JSON.stringify(withBoth), /secret-value/);
   const none = await imageStatus({}, { codexStatus: async () => NO_CODEX, keyStore: join(dir, "missing.json") });
   assert.deepEqual(none.available, []);
-  assert.equal(none.gemini_setup.command, "npx flyee key set GEMINI_API_KEY --json");
+  assert.equal(none.gemini_setup.command, "npx --yes flyee@latest key set GEMINI_API_KEY --browser --json");
 });
 
 test("alphaMean reads the small numbers ffmpeg prints in scientific notation (needs ffmpeg)", { timeout: 60000 }, async (t) => {

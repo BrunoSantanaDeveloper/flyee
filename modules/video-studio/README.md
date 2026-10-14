@@ -28,7 +28,7 @@ Entre a primeira e a segunda rodada a IA visita o seu site, e por isso as opçõ
 ## O que você precisa
 
 - Uma IA que leia imagens, como o Claude Code: ela precisa olhar os quadros do vídeo para julgar o resultado.
-- O app **Motor de vídeo** (`video-render`), que captura o site, compõe o som, renderiza e confere. A sua IA o instala com `npx flyee add video-render` quando faltar.
+- O app **Motor de vídeo** (`video-render`), que captura o site, compõe o som, renderiza e confere. Quando ele faltar, a sua IA diz em uma frase o que ele declara e, com o seu sim, o instala (`npx --yes flyee@latest add video-render`).
 - O **ffmpeg** e um navegador sem janela. No Windows, o Microsoft Edge já vem instalado; no Mac e no Linux servem o Chrome, o Edge ou o Chromium. Você não instala nada: a sua IA instala o que faltar na primeira vez, depois de avisar.
 
 Não há chave nem conta externa nesta versão.

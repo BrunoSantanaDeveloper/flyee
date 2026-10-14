@@ -10,7 +10,7 @@ node .flyee/modules/youtube-research/scripts/research.mjs <comando> [opções] -
 
 ## 1. O app está instalado?
 
-Se `.flyee/modules/youtube-research/scripts/research.mjs` não existir, diga ao integrante que os dados vêm do app Pesquisa no YouTube (`npx flyee add youtube-research`) e siga o seu app sem eles, dizendo o que fica de fora (por exemplo: "a pauta sai sem a prova de demanda").
+Se `.flyee/modules/youtube-research/scripts/research.mjs` não existir, diga ao integrante que os dados vêm do app Pesquisa no YouTube e ofereça instalá-lo: com o sim, rode você mesmo `npx --yes flyee@latest add youtube-research --yes --json`. Sem ele, siga o seu app sem esses dados, dizendo o que fica de fora (por exemplo: "a pauta sai sem a prova de demanda").
 
 Se existir, rode uma vez por sessão:
 
@@ -23,7 +23,7 @@ node .flyee/modules/youtube-research/scripts/research.mjs check --json
 | `interface_version` | a versão da interface instalada |
 | `ready` | o yt-dlp existe e a pesquisa funciona |
 | `tools["yt-dlp"]` | a versão do yt-dlp |
-| `install` | sem o yt-dlp: o comando `npx flyee need yt-dlp --yes --json`, que você roda, com tempo limite longo, depois de avisar o integrante |
+| `install` | sem o yt-dlp: o comando `npx --yes flyee@latest need yt-dlp --yes --json`, que você roda com tempo limite de 10 minutos, depois de avisar o integrante |
 | `update_ytdlp` | o comando que atualiza o yt-dlp quando o YouTube passa a recusar |
 
 ## 2. Outliers de um tema
@@ -118,15 +118,15 @@ Em erro do comando, `ok` é `false`, a saída termina com código 1 (2 para uso 
 
 | `code` | O que fazer |
 |---|---|
-| `tools_missing` | rode você mesmo o comando de `fix` (tempo limite longo) e repita |
+| `tools_missing` | rode você mesmo o comando de `fix` (tempo limite de 10 minutos) e repita |
 | `youtube_blocked`, `rate_limited` | o YouTube recusou por um tempo: rode `update_ytdlp`, espere alguns minutos, repita com menos buscas, canais ou vídeos |
 | `no_captions` | o YouTube não entregou a legenda (ou o vídeo não tem); diga ao integrante numa frase e ofereça três caminhos: ele colar a transcrição num arquivo, o app Análise de vídeo ler imagem e som, ou seguir sem aquele vídeo |
-
-Quando a leitura de um vídeo falha, nunca tente outro caminho por conta própria para o mesmo conteúdo (outro site, outra ferramenta, a página aberta no navegador). Diga o que falhou e deixe o integrante escolher entre os caminhos acima.
 | `no_tab` | o canal não tem essa aba; use a outra |
 | `not_youtube`, `not_found`, `video_unavailable`, `private_video`, `members_only`, `age_restricted` | o endereço não serve; repasse `fix` |
 | `offline`, `ytdlp_failed`, `unexpected` | repasse `message` e `fix` |
 | `usage` | uma opção errada: corrija o comando |
+
+Quando a leitura de um vídeo falha, nunca tente outro caminho por conta própria para o mesmo conteúdo (outro site, outra ferramenta, a página aberta no navegador). Diga o que falhou e deixe o integrante escolher entre os caminhos da linha `no_captions`.
 
 ## 8. O que não muda
 

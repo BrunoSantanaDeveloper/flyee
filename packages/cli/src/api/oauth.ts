@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { join } from "node:path";
 
 import type { Context } from "../context.ts";
+import { t } from "../i18n.ts";
 import { ensureDir } from "../util/fs.ts";
 import { ApiError, CliError } from "./errors.ts";
 import type { DeviceAuthorization, ErrorBody, TokenResponse } from "./types.ts";
@@ -122,11 +123,11 @@ export async function loginWithBrowser(ctx: Context, deviceId: string, onUrl: (u
       const error = url.searchParams.get("error");
       response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       if (error || !code || returnedState !== state) {
-        response.end("<p>flyee: login not completed. You can close this tab.</p>");
+        response.end(`<!doctype html><meta charset="utf-8"><p>${t(ctx, "login.page_failed")}</p>`);
         finish(() => reject(new CliError("login_denied", error ?? "invalid_state")));
         return;
       }
-      response.end("<p>flyee: connected. You can close this tab and go back to the terminal.</p>");
+      response.end(`<!doctype html><meta charset="utf-8"><p>${t(ctx, "login.page_done")}</p>`);
       const address = server.address();
       const port = typeof address === "object" && address ? address.port : 0;
       exchangeCode(ctx, code, verifier, `http://127.0.0.1:${port}/callback`).then(
@@ -149,7 +150,7 @@ export async function loginWithBrowser(ctx: Context, deviceId: string, onUrl: (u
 export async function loginWithDeviceCode(
   ctx: Context,
   deviceId: string,
-  onCode: (authorization: DeviceAuthorization) => void,
+  onCode: (authorization: DeviceAuthorization) => void | Promise<void>,
   sleep: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 ): Promise<TokenResponse> {
   const authorization = await postForm<DeviceAuthorization>(ctx, "/api/oauth/device", {
@@ -157,7 +158,8 @@ export async function loginWithDeviceCode(
     scope: SCOPES,
     device_id: deviceId,
   });
-  onCode(authorization);
+  // Awaited: the address and the code are flushed before the first poll starts the wait.
+  await onCode(authorization);
   let interval = Math.max(1, authorization.interval) * 1000;
   const deadline = ctx.now() + authorization.expires_in * 1000;
   while (ctx.now() < deadline) {

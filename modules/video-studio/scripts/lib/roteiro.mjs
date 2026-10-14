@@ -512,7 +512,7 @@ export function validateRoteiro(raw, templates, { notes = [] } = {}) {
   if (raw.loop !== undefined && raw.loop !== null && typeof raw.loop !== "boolean") throw invalid("loop", `precisa ser true ou false (veio ${show(raw.loop)}).`);
   return {
     format_version: ROTEIRO_VERSION,
-    title: textAt(raw.title, "title", { max: LIMITS.title, fallback: `${brand.name ?? "Vídeo animado"} — ${String(template.label ?? templateId).toLowerCase()}` }),
+    title: textAt(raw.title, "title", { max: LIMITS.title, fallback: `${brand.name ?? "Vídeo animado"} · ${String(template.label ?? templateId).toLowerCase()}` }),
     template: templateId,
     style,
     format: FORMAT.name,
@@ -1057,7 +1057,7 @@ export function draftRoteiro(state, kit, templates, options = {}) {
           break;
         default:
           if (!spec.optional && !spec.repeat) {
-            throw new AppError("runtime_missing", `O roteiro ${template.label} tem uma cena que esta versão do app não sabe escrever: ${spec.role}.`, "Reinstale o app: npx flyee add video-studio --yes --json, depois repita.");
+            throw new AppError("runtime_missing", `O roteiro ${template.label} tem uma cena que esta versão do app não sabe escrever: ${spec.role}.`, "Reinstale o app: npx --yes flyee@latest add video-studio --yes --json, depois repita.");
           }
       }
     }
@@ -1184,7 +1184,7 @@ export function draftRoteiro(state, kit, templates, options = {}) {
   const style = typeof styleField === "string" && STYLE_IDS.includes(styleField) ? styleField : STYLE_IDS.includes(template.default_style) ? template.default_style : STYLE_IDS[0];
   return {
     format_version: ROTEIRO_VERSION,
-    title: `${name || productText(subject) || "Vídeo animado"} — ${String(template.label ?? templateId).toLowerCase()}`.slice(0, LIMITS.title),
+    title: `${name || productText(subject) || "Vídeo animado"} · ${String(template.label ?? templateId).toLowerCase()}`.slice(0, LIMITS.title),
     template: templateId,
     style,
     format: FORMAT.name,

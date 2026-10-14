@@ -116,7 +116,7 @@ export function findFfmpeg(env = process.env) {
 function requireFfmpeg(env = process.env) {
   const tools = findFfmpeg(env);
   if (!tools.ffmpeg || !tools.ffprobe) {
-    throw new AppError("tools_missing", "Falta o ffmpeg nesta máquina para tratar a imagem.", "Rode você mesmo, com tempo limite longo: npx flyee need ffmpeg --yes --json, depois repita.");
+    throw new AppError("tools_missing", "Falta o ffmpeg nesta máquina para tratar a imagem.", "Avise o integrante numa frase e rode você mesmo, com tempo limite de 10 minutos: npx --yes flyee@latest need ffmpeg --yes --json, depois repita.");
   }
   return tools;
 }
@@ -140,7 +140,7 @@ export function readSavedKey(name, path = keyStorePath()) {
 
 /**
  * The environment variable first (one that exists but is empty means "no key" and stops the
- * search), then the key saved with `npx flyee key set`. Read on every run. Never printed.
+ * search), then the key saved through the page `npx --yes flyee@latest key set --browser` opens. Read on every run. Never printed.
  */
 export function geminiKey(env = process.env, path = keyStorePath()) {
   const fromEnvironment = env.GEMINI_API_KEY;
@@ -149,11 +149,13 @@ export function geminiKey(env = process.env, path = keyStorePath()) {
   return saved ? { key: saved, from: "flyee" } : { key: null, from: null };
 }
 
+export const KEY_SET_COMMAND = "npx --yes flyee@latest key set GEMINI_API_KEY --browser --json";
+
 export function keySetup() {
   return {
     key_url: GEMINI_KEY_URL,
-    command: "npx flyee key set GEMINI_API_KEY --json",
-    how: "Rode você mesmo: o comando abre uma página no navegador do integrante, onde ele cola a chave. Ela não passa pela conversa nem pelo terminal.",
+    command: KEY_SET_COMMAND,
+    how: "Rode você mesmo: o comando volta na hora e abre uma página no navegador do integrante, onde ele cola a chave e clica em Salvar. Ela não passa pela conversa nem pelo terminal.",
     after: "Quando ele disser que salvou, rode check --json de novo: o app enxerga a chave na hora, sem reabrir a IA.",
   };
 }
@@ -337,7 +339,7 @@ export function classifyGeminiError(status, body) {
   const message = String(error.message ?? "").slice(0, 300);
   const detail = message ? `Resposta do Gemini: ${message}` : `HTTP ${status}`;
   if (/API key not valid|API_KEY_INVALID|api key expired/i.test(message + JSON.stringify(error.details ?? ""))) {
-    return new AppError("gemini_invalid_key", "A chave do Gemini não foi aceita.", "O integrante confere a chave no Google AI Studio e a salva de novo pela página que `npx flyee key set GEMINI_API_KEY --json` abre.");
+    return new AppError("gemini_invalid_key", "A chave do Gemini não foi aceita.", `O integrante confere a chave no Google AI Studio e a salva de novo pela página que \`${KEY_SET_COMMAND}\` abre.`);
   }
   if (status === 429) return new AppError("gemini_quota", "O limite de uso da chave do Gemini foi atingido por agora.", `Espere e tente de novo, ou use as fotos do integrante. ${detail}`);
   if (status === 403) return new AppError("gemini_permission", "A chave do Gemini não tem permissão para gerar imagens.", detail);
@@ -360,7 +362,7 @@ export function parseGeminiImage(json) {
 }
 
 export async function generateWithGemini({ key, prompt, aspect, model = GEMINI_IMAGE_MODEL, reference = null, cutout = false, keyColor = KEY_DEFAULTS.color, baseUrl = GEMINI_BASE_URL, timeoutMs = 3 * 60 * 1000, onProgress = () => {}, fetchImpl = fetch }) {
-  if (!key) throw new AppError("no_gemini_key", "Sem a chave do Gemini, o app não gera imagens por este caminho.", "Salve a chave pela página que `npx flyee key set GEMINI_API_KEY --json` abre, ou use as fotos do integrante.");
+  if (!key) throw new AppError("no_gemini_key", "Sem a chave do Gemini, o app não gera imagens por este caminho.", `Salve a chave pela página que \`${KEY_SET_COMMAND}\` abre, ou use as fotos do integrante.`);
   const referencePart = reference ? { mime: MIME_BY_EXTENSION[extname(reference).toLowerCase()] ?? "image/png", data: readFileSync(reference).toString("base64") } : null;
   const request = geminiRequest({ prompt, aspect, model, reference: referencePart, cutout, keyColor, baseUrl });
   onProgress(`Pedindo a imagem ao Gemini (${model})…`);
@@ -453,12 +455,12 @@ export function noProviderError(requested, { codex }) {
       : new AppError("codex_missing", "O Codex não está instalado nesta máquina.", "Use --provider gemini com a chave do Gemini, ou as fotos do integrante.");
   }
   if (requested === "gemini") {
-    return new AppError("no_gemini_key", "Sem a chave do Gemini, o app não gera imagens por este caminho.", `A chave é gratuita e opcional (${GEMINI_KEY_URL}). Rode você mesmo: npx flyee key set GEMINI_API_KEY --json, que abre uma página no navegador do integrante para ele colar a chave; depois repita.`);
+    return new AppError("no_gemini_key", "Sem a chave do Gemini, o app não gera imagens por este caminho.", `A chave é opcional, se cria com a conta Google do integrante em ${GEMINI_KEY_URL}, e o Google não cobra por ela no uso comum. Rode você mesmo: ${KEY_SET_COMMAND}, que volta na hora e abre uma página no navegador do integrante para ele colar a chave; quando ele disser que salvou, repita.`);
   }
   return new AppError(
     "no_image_provider",
     "Nesta máquina o app não tem como gerar imagens: não há Codex com a conta do ChatGPT conectada nem chave do Gemini salva.",
-    `Siga a ordem: (1) se você mesmo gera imagens, gere e salve o arquivo em assets/ do carrossel; (2) se o integrante quiser, rode você mesmo npx flyee key set GEMINI_API_KEY --json (abre uma página no navegador dele; a chave é gratuita em ${GEMINI_KEY_URL}) e repita; (3) peça as fotos dele e salve em assets/; (4) ou siga no estilo gráfico, sem fotos.`,
+    `Siga a ordem: (1) se você mesmo gera imagens, gere e salve o arquivo em assets/ do carrossel; (2) se o integrante quiser, rode você mesmo ${KEY_SET_COMMAND} (abre uma página no navegador dele; a chave se cria em ${GEMINI_KEY_URL}, e o Google não cobra por ela no uso comum) e repita quando ele disser que salvou; (3) peça as fotos dele e salve em assets/; (4) ou siga no estilo gráfico, sem fotos.`,
   );
 }
 

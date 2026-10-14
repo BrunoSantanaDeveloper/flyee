@@ -125,9 +125,9 @@ Todos desenham no instante do contexto, são funções do tempo e declaram as su
 | Componente | O que desenha | Opções principais |
 |---|---|---|
 | `Studio.background(c)` | o fundo do mundo com uma forma enorme a 3% de contraste, derivando devagar (o palco já desenha) | `world` |
-| `Studio.drift(c, quanto)` | a escala de uma cena parada: de 1 até 1 + `quanto` (até 0,03) ao longo da cena; use num `S.group` | — |
-| `Studio.born(c, batida)` | a escala da cena nova depois de uma travessia (nasce em 55% e pousa em 12 quadros) | — |
-| `Studio.bump(c, every, from)` | o respiro na batida: 1 em cada batida `from`, `from + every`, … e 0 no resto; multiplique por 1 a 3% de escala para manter viva uma cena que segura | — |
+| `Studio.drift(c, quanto)` | a escala de uma cena parada: de 1 até 1 + `quanto` (até 0,03) ao longo da cena; use num `S.group` | nenhuma |
+| `Studio.born(c, batida)` | a escala da cena nova depois de uma travessia (nasce em 55% e pousa em 12 quadros) | nenhuma |
+| `Studio.bump(c, every, from)` | o respiro na batida: 1 em cada batida `from`, `from + every`, … e 0 no resto; multiplique por 1 a 3% de escala para manter viva uma cena que segura | nenhuma |
 | `Studio.chip(c, texto, o)` | uma etiqueta em pílula que nasce esticando de um círculo | `x`, `y`, `align`, `at`, `size`, `color`, `out: { at, style: "cut" \| "whip" \| "streak" }` (a etiqueta que estica até virar um risco) |
 | `Studio.device(c, o)` | uma tela real dentro de um celular (`kind: "phone"`) ou de uma janela (`"window"`), com sombra | `rect` (a tela), `image`, `scroll` (0 a 1, ou uma função para o borrão da rolagem), `blur`, `zoom`, `anchor`, `assemble` (0 a 1: a tela se monta em faixas), `fill` e `monogram` (sem imagem) |
 | `Studio.card(c, o)` | um cartão com uma foto recortada, ou de cor | `rect`, `image`, `color`, `zoom` (a deriva entra aqui), `anchor` |

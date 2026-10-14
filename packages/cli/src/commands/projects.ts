@@ -14,7 +14,7 @@ export async function runProjects(ctx: Context): Promise<Result> {
   else {
     ctx.io.out(t(ctx, "projects.header"));
     for (const project of projects) {
-      const apps = project.apps.map((app) => `${app.slug} ${app.version}${app.dev ? " (dev)" : ""}`).join(", ") || "—";
+      const apps = project.apps.map((app) => `${app.slug} ${app.version}${app.dev ? " (dev)" : ""}`).join(", ") || t(ctx, "projects.no_apps");
       ctx.io.out(t(ctx, "projects.line", { name: project.name, current: project.current ? t(ctx, "projects.current") : "", apps, path: project.path }));
     }
   }

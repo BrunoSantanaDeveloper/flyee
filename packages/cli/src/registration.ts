@@ -19,7 +19,7 @@ export function buildInstallsPayload(ctx: Context, assets: CoreAssets, options: 
     device_id: config.device_id,
     name: config.device_name,
     os: contractOs(),
-    os_version: osVersion(),
+    os_version: osVersion().trim().slice(0, 40),
     ai_tool: reportedAiTool(detected),
     cli_version: CLI_VERSION,
     core_version: assets.core.version,

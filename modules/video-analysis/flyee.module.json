@@ -19,6 +19,10 @@
   "entry": "skills/analyze-video/SKILL.md",
   "files": [
     "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
     "references/description-format.md",
     "references/focus/content.md",
     "references/focus/editing.md",
@@ -101,8 +105,8 @@
       "kind": "fs:read",
       "scope": "~/.flyee/keys.json (só a chave GEMINI_API_KEY)",
       "reason": {
-        "pt-BR": "Lê a chave do Gemini que você salvou com `npx flyee key set GEMINI_API_KEY`, quando ela existe.",
-        "en": "Reads the Gemini key you saved with `npx flyee key set GEMINI_API_KEY`, when there is one."
+        "pt-BR": "Lê a chave do Gemini que você salvou na página que a sua IA abriu no navegador, quando ela existe.",
+        "en": "Reads the Gemini key you saved in the page your AI opened in your browser, when there is one."
       }
     },
     {

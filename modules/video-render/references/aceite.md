@@ -33,7 +33,7 @@ A página abre no navegador sem janela; o vídeo é medido pelo ffmpeg. Quando f
 | `--every <s>` | de quanto em quanto as caixas da página são lidas (padrão 0,25), além de cada batida e do último quadro |
 | `--beats <beats.json>` ou `--bpm <n>` | a grade de batidas; com `--bpm`, a batida 0 fica em `t = 0` |
 | `--tolerance <quadros>` | quanto um corte pode ficar da batida (padrão 1 quadro nos cortes da página; 2 nos achados no vídeo) |
-| `--min-on-beat <0–1>` | a fração mínima de cortes na batida (padrão 1 nos cortes da página; 0,7 nos achados no vídeo) |
+| `--min-on-beat <0 a 1>` | a fração mínima de cortes na batida (padrão 1 nos cortes da página; 0,7 nos achados no vídeo) |
 | `--loop` | confere a emenda do último quadro com o primeiro |
 | `--max-flashes <n>` | mudanças bruscas de luz toleradas em 1 s (padrão 3) |
 | `--max-still <s>` | o trecho parado a partir do qual o item avisa (padrão 1,5) |
@@ -71,7 +71,7 @@ Com `--json`, a resposta traz `ok: true` mesmo quando algum item reprova: as rep
 | `warn` | não reprova, mas costuma render menos ou incomodar | repasse ao integrante e decida com ele |
 | `skip` | não deu para medir | `summary` diz o que faltou (a página, o vídeo, as batidas, `--loop`) |
 
-Sem `--json`, a saída é uma linha por item, com ✓ (`pass`), ✗ (`fail`), ! (`warn`) e – (`skip`); os itens por rede trazem o nome da rede entre parênteses, e embaixo de cada `fail` ou `warn` vem uma linha "Como resolver". Nunca entregue uma peça com item reprovado sem dizer qual e por quê.
+Sem `--json`, a primeira linha traz o veredito (APROVADO ou REPROVADO) e quantos itens ficaram com cada marca; depois vem uma linha por item, com a marca na frente: ✓ passou · ✗ reprovou · △ aviso · ○ não medido (`pass`, `fail`, `warn` e `skip`). Os itens por rede trazem o nome da rede entre parênteses, e embaixo de cada `fail` ou `warn` vem uma linha "Como resolver". Nunca entregue uma peça com item reprovado sem dizer qual e por quê.
 
 ## Os itens, um a um
 
@@ -188,7 +188,7 @@ node .flyee/modules/video-render/scripts/render.mjs networks --json
 | `reels` Instagram Reels | 9:16 | 3 s a 3 min | até 90 s | 250 px em cima, 420 embaixo, 180 à direita |
 | `stories` Instagram Stories | 9:16 | 1 s a 60 s por story | até 15 s | 250 em cima, 340 embaixo |
 | `feed` Instagram feed | 4:5 (1:1, 16:9) | 3 s a 15 min | até 60 s | pouco; os recuos são respiro |
-| `tiktok` TikTok | 9:16 | 3 s a 10 min | até 60 s (21–34 s rendem mais) | 160 em cima, 400 embaixo, 160 à direita |
+| `tiktok` TikTok | 9:16 | 3 s a 10 min | até 60 s (de 21 a 34 s rendem mais) | 160 em cima, 400 embaixo, 160 à direita |
 | `shorts` YouTube Shorts | 9:16 (1:1) | 1 s a 3 min | até 60 s | 230 em cima, 500 embaixo, 170 à direita |
 | `youtube` YouTube | 16:9 | 1 s a 12 h | sem recomendação | controles embaixo (150), título em cima (80) |
 | `linkedin` LinkedIn | 9:16 (4:5, 1:1, 16:9) | 3 s a 10 min | até 90 s | 200 em cima, 400 embaixo, 150 à direita |
@@ -196,7 +196,7 @@ node .flyee/modules/video-render/scripts/render.mjs networks --json
 | `whatsapp_status` Status do WhatsApp | 9:16 | 1 s a 60 s | até 30 s | 200 em cima, 300 embaixo |
 | `kwai` Kwai | 9:16 | 3 s a 60 s | até 30 s | como o TikTok |
 | `ads_meta` Anúncios Meta | 9:16 | 1 s a 60 s | até 15 s | 270 em cima, 672 embaixo, 140 à direita |
-| `ads_tiktok` Anúncios TikTok | 9:16 | 5 s a 60 s | 21–34 s | 150 em cima, 480 embaixo, 140 à direita |
+| `ads_tiktok` Anúncios TikTok | 9:16 | 5 s a 60 s | 21 a 34 s | 150 em cima, 480 embaixo, 140 à direita |
 
 Em `--networks`, use os `id` ou os apelidos da tabela (`instagram`, `twitter`, `whatsapp`…), separados por vírgula. Uma rede desconhecida volta como erro `unknown_network`, com a lista das conhecidas. Quando o arquivo passa do limite de upload de uma rede, `warnings` avisa.
 

@@ -6,6 +6,7 @@ import { freePort, KEY_PAGE_TTL_MS, type KeyPageInfo, serveKeyPage, waitForPort 
 import { t } from "../i18n.ts";
 import { KEY_NAME, keySource, keysPath, readKeys, writeKeys } from "../state/keys.ts";
 import { readLock } from "../state/lock.ts";
+import { askOrExplain } from "./confirm.ts";
 import { has, type ParsedArgs, type Result } from "./types.ts";
 
 /** The apps of this project that declare a key, from the lock (manifest `external_credentials`). */
@@ -83,7 +84,7 @@ async function setKeyInBrowser(ctx: Context, args: ParsedArgs, name: string): Pr
   if (!(await waitForPort(port))) return refuse(ctx, "key_page_failed", t(ctx, "key.browser_failed"));
   const url = `http://127.0.0.1:${port}/k/${token}`;
   await announce(url);
-  return { ok: true, name, waiting: true, via: "browser", url, expires_in: KEY_PAGE_TTL_MS / 1000, check: "npx flyee key list --json" };
+  return { ok: true, name, waiting: true, via: "browser", url, expires_in: KEY_PAGE_TTL_MS / 1000, check: "npx --yes flyee@latest key list --json" };
 }
 
 /** `flyee key serve <NAME>`: the detached process behind the page; not for people. */
@@ -152,14 +153,16 @@ function listKeys(ctx: Context): Result {
 }
 
 /** `flyee key remove <NAME>`: asks first, unless --yes. */
-async function removeKey(ctx: Context, name: string | undefined): Promise<Result> {
+async function removeKey(ctx: Context, name: string | undefined, args: ParsedArgs): Promise<Result> {
   if (!name || !KEY_NAME.test(name)) return { ok: false, error: "usage", message: t(ctx, "key.bad_name", { name: name ?? "" }) };
   const store = readKeys(ctx);
   if (!(name in store.keys)) {
     ctx.io.out(t(ctx, "key.not_saved", { name }));
     return { ok: true, name, removed: false };
   }
-  if (!ctx.yes && !(await ctx.io.confirm(t(ctx, "key.confirm_remove", { name })))) {
+  const answer = await askOrExplain(ctx, t(ctx, "key.confirm_remove", { name }), args, { plan: false });
+  if (answer !== true) {
+    if (answer !== false) return answer;
     ctx.io.out(t(ctx, "key.kept", { name }));
     return { ok: true, name, removed: false };
   }
@@ -180,7 +183,7 @@ export async function runKey(ctx: Context, args: ParsedArgs): Promise<Result> {
     case undefined:
       return listKeys(ctx);
     case "remove":
-      return removeKey(ctx, name);
+      return removeKey(ctx, name, args);
     default:
       return usage(ctx);
   }

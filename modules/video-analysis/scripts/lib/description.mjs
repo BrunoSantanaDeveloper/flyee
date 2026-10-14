@@ -61,6 +61,7 @@ export function buildPrompt({ focusGuide, instructions, question, context = {}, 
 
 const HEADINGS = {
   "pt-BR": {
+    until: "a",
     summary: "Resumo",
     timeline: "Linha do tempo",
     visual: "Imagem",
@@ -81,6 +82,7 @@ const HEADINGS = {
     rawNote: "A resposta não veio no formato esperado; o texto segue como o Gemini devolveu.",
   },
   en: {
+    until: "to",
     summary: "Summary",
     timeline: "Timeline",
     visual: "Picture",
@@ -142,13 +144,15 @@ export function renderDescription({ data, rawText, header, title, measurements =
     if (measurements.length) out.push(`## ${h.measurements}`, "", ...measurements, "");
     return `${out.join("\n").trim()}\n`;
   }
-  out.push(`## ${h.summary}`, "", asText(data.summary) || "—", "");
+  // A span reads "00:00 a 00:12" ("00:00 to 00:12" in English), the same notation the AI writes in local mode.
+  const span = (start, end) => `${start || "?"} ${h.until} ${end || "?"}`;
+  if (asText(data.summary)) out.push(`## ${h.summary}`, "", asText(data.summary), "");
 
   const timeline = asList(data.timeline);
   if (timeline.length) {
     out.push(`## ${h.timeline}`, "");
     for (const item of timeline) {
-      out.push(`### ${asText(item.start) || "?"}–${asText(item.end) || "?"}`);
+      out.push(`### ${span(asText(item.start), asText(item.end))}`);
       if (asText(item.visual)) out.push(`- ${h.visual}: ${asText(item.visual)}`);
       if (asText(item.speech)) out.push(`- ${h.speech}: ${asText(item.speech)}`);
       if (asText(item.on_screen_text)) out.push(`- ${h.onScreenText}: "${asText(item.on_screen_text)}"`);
@@ -158,14 +162,14 @@ export function renderDescription({ data, rawText, header, title, measurements =
 
   const visualOnly = asList(data.visual_only);
   out.push(`## ${h.visualOnly}`, "");
-  if (visualOnly.length) for (const item of visualOnly) out.push(`- **${asText(item.time) || "?"}** — ${asText(item.description)}`);
+  if (visualOnly.length) for (const item of visualOnly) out.push(`- **${asText(item.time) || "?"}**: ${asText(item.description)}`);
   else out.push(h.nothingVisualOnly);
   out.push("");
 
   const onScreen = asList(data.on_screen_text);
   if (onScreen.length) {
     out.push(`## ${h.onScreen}`, "");
-    for (const item of onScreen) out.push(`- **${asText(item.time) || "?"}** — "${asText(item.text)}"`);
+    for (const item of onScreen) out.push(`- **${asText(item.time) || "?"}**: "${asText(item.text)}"`);
     out.push("");
   }
   if (asText(data.audio)) out.push(`## ${h.audio}`, "", asText(data.audio), "");
@@ -174,7 +178,7 @@ export function renderDescription({ data, rawText, header, title, measurements =
   const shots = asList(data.shots);
   if (shots.length) {
     out.push(`## ${h.shots}`, "", h.shotsTable, "|---|---|---|---|");
-    for (const shot of shots) out.push(`| ${cell(shot.start)}–${cell(shot.end)} | ${cell(shot.framing)} | ${cell(shot.movement)} | ${cell(shot.description)} |`);
+    for (const shot of shots) out.push(`| ${span(cell(shot.start), cell(shot.end))} | ${cell(shot.framing)} | ${cell(shot.movement)} | ${cell(shot.description)} |`);
     out.push("");
   }
   for (const section of asList(data.focus_sections)) {

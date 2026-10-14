@@ -713,7 +713,7 @@ test("the guided brief of 'Faça um vídeo animado', from the first round to the
   assert.equal(brief.question.text, "Posso construir assim?");
   assert.deepEqual(brief.question.options.map((option) => option.label), ["Pode construir", "Quero mudar algo"]);
   assert.equal(brief.question.ask_user_question[0].options[0].label, "Pode construir (recomendado)");
-  assert.match(brief.markdown, /^# Briefing: Loja X — lançamento\n/);
+  assert.match(brief.markdown, /^# Briefing: Loja X · lançamento\n/);
   assert.match(brief.markdown, /\n## De onde veio cada decisão\n\n\| Decisão \| Valor \| De onde veio \|\n\|---\|---\|---\|\n/);
   assert.match(brief.markdown, /\| Marca \| Loja X \(lojax\.com\.br\) \| você respondeu \|/);
   assert.match(brief.markdown, /\| O que mostrar \| Linha Easy; Tabela de tamanhos; Frete grátis acima de R\$ 199 \| achei no site \|/);

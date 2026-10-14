@@ -277,7 +277,7 @@ export const commands = {
       };
     },
     text(result) {
-      const sections = result.sections.map((section) => `${section.name} ${round(section.start, 2)}–${round(section.end, 2)} s`).join(", ");
+      const sections = result.sections.map((section) => `${section.name} de ${round(section.start, 2)} a ${round(section.end, 2)} s`).join(", ");
       return [`Trilha pronta: ${result.file} (${result.style}, ${result.bpm} BPM, tom ${result.key}, ${result.duration} s, pico ${result.peak_dbfs} dBFS).`, `Grade: ${result.beats_file} · seções: ${sections}${result.drop !== null ? ` · virada em ${round(result.drop, 2)} s` : ""}.`].join("\n");
     },
   },

@@ -525,7 +525,9 @@ test("the CLI without the Motor: check says so, new refuses, bad input exits 2",
   assert.equal(checked.json.ok, true);
   assert.equal(checked.json.command, "check");
   assert.equal(checked.json.video_render.installed, false);
-  assert.equal(checked.json.video_render.install, "npx flyee add video-render --yes --json");
+  // first what the Motor declares, then, with the member's yes, the install itself
+  assert.equal(checked.json.video_render.install_dry_run, "npx --yes flyee@latest add video-render --dry-run --json");
+  assert.equal(checked.json.video_render.install, "npx --yes flyee@latest add video-render --yes --json");
   assert.equal(checked.json.modes.render, false);
   assert.equal(checked.json.guides.storyboard, ".flyee/modules/motion-carousel/references/storyboard.md");
   assert.equal(checked.json.guides.example, ".flyee/modules/motion-carousel/references/exemplo");
@@ -533,7 +535,8 @@ test("the CLI without the Motor: check says so, new refuses, bad input exits 2",
   assert.equal(made.code, 1);
   assert.equal(made.json.ok, false);
   assert.equal(made.json.error.code, "video_render_missing");
-  assert.match(made.json.error.fix, /npx flyee add video-render --yes --json/);
+  assert.match(made.json.error.fix, /npx --yes flyee@latest add video-render --dry-run --json/);
+  assert.match(made.json.error.fix, /npx --yes flyee@latest add video-render --yes --json/);
   const unknown = await cli(project, ["dance"]);
   assert.equal(unknown.code, 2);
   assert.equal(unknown.json.error.code, "usage");

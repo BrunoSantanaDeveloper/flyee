@@ -7,7 +7,11 @@ import { join } from "node:path";
 import { AppError, isFile, progress, readJson, toPosix } from "./util.mjs";
 
 export const VIDEO_RENDER = "video-render";
-export const INSTALL_VIDEO_RENDER = "npx flyee add video-render --yes --json";
+/** First what the Motor declares (nothing is installed), then, with the member's yes, the install itself. */
+export const INSTALL_VIDEO_RENDER_DRY_RUN = "npx --yes flyee@latest add video-render --dry-run --json";
+export const INSTALL_VIDEO_RENDER = "npx --yes flyee@latest add video-render --yes --json";
+/** How the AI installs the Motor: the two commands, in order, with the member's yes between them. */
+export const INSTALL_VIDEO_RENDER_STEPS = `rode você mesmo ${INSTALL_VIDEO_RENDER_DRY_RUN}, diga ao integrante numa frase o que o Motor de vídeo declara e, com o sim dele, rode ${INSTALL_VIDEO_RENDER} com tempo limite de 10 minutos`;
 
 /** Where the Motor lives in the member's project, and whether it is there. */
 export function findVideoRender(root) {
@@ -29,10 +33,10 @@ export function findVideoRender(root) {
 export function requireVideoRender(root) {
   const engine = findVideoRender(root);
   if (!engine.installed) {
-    throw new AppError("video_render_missing", "O Motor de vídeo não está instalado.", `Rode você mesmo: ${INSTALL_VIDEO_RENDER}, depois repita.`);
+    throw new AppError("video_render_missing", "O Motor de vídeo não está instalado.", `Para instalá-lo, ${INSTALL_VIDEO_RENDER_STEPS}; depois repita.`);
   }
   if (!isFile(engine.runtime)) {
-    throw new AppError("video_render_missing", "O Motor de vídeo está incompleto: falta runtime/motion.js.", `Reinstale o app: ${INSTALL_VIDEO_RENDER}, depois repita.`);
+    throw new AppError("video_render_missing", "O Motor de vídeo está incompleto: falta runtime/motion.js.", `Reinstale o app: rode você mesmo ${INSTALL_VIDEO_RENDER}, com tempo limite de 10 minutos, depois repita.`);
   }
   return engine;
 }

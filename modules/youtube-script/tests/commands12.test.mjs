@@ -63,7 +63,7 @@ test("the checklist takes the recording plan, every shot and the marks of the ot
     "gravacao.md": "# Gravação\n\n## O que fazer e gravar antes da fala\n- [ ] Dormir 8 horas por 7 noites e anotar a hora de deitar\n- [ ] Filmar o despertador toda manhã\n\n## O mapa da gravação\n- 00:12 a tela inicial\n",
     "verdade.md": "# Ficha\n\n## A panela\n- Tempo: [CONFIRMAR: quanto leva]\n",
     "embalagem.md": "# Embalagem\n\n## Thumbnails\n- [CONFIRMAR: se o canal tem o teste de miniaturas]\n",
-    "roteiro.md": "# Sono\n\n## Gancho\n[B-ROLL: o quarto escuro]\n[CÂMERA]\n[TELA 00:12–00:31: a tela que já foi gravada]\nSete noites.\n",
+    "roteiro.md": "# Sono\n\n## Gancho\n[B-ROLL: o quarto escuro]\n[CÂMERA]\n[TELA 00:12–00:31: a tela que já foi gravada]\n[TELA 00:40 a 00:55: outra tela já gravada]\nSete noites.\n",
   });
   writeFileSync(join(dir, "..", "canal.md"), "# Canal\n\n- Nicho e tema: [CONFIRMAR: o nicho]\n");
   try {
@@ -76,6 +76,7 @@ test("the checklist takes the recording plan, every shot and the marks of the ot
     assert.ok(!built.text.includes("Gravar (apoio"), "with a plan, the shots come from it");
     assert.equal(built.shots, 0);
     assert.ok(!built.text.includes("a tela que já foi gravada"), "a [TELA mm:ss–mm:ss] points at a recording that exists");
+    assert.ok(!built.text.includes("outra tela já gravada"), "the documented form [TELA mm:ss a mm:ss] too");
     assert.match(built.text, /ficha de verdade, bloco "A panela", linha 4: \[CONFIRMAR: quanto leva\]/);
     assert.match(built.text, /embalagem, bloco "Thumbnails"/);
     assert.match(built.text, /## Quando puder: o perfil do canal\n\n- \[ \] linha 3: \[CONFIRMAR: o nicho\]/);

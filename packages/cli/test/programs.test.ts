@@ -24,7 +24,10 @@ function fakeMachine(initial: Record<string, string>, options: { failWith?: RunR
     run: (file, args) => {
       calls.push({ file, args });
       if (options.failWith) return options.failWith;
-      const id = args[args.indexOf("--id") + 1] ?? args[args.length - 1];
+      // winget names the package after --id; apt (through sudo) and brew end with it. indexOf() is -1 for
+      // them, and args[0] read "-n" on Linux: the program never "appeared" and the test failed only in CI.
+      const at = args.indexOf("--id");
+      const id = at >= 0 ? args[at + 1] : args[args.length - 1];
       const installs: Record<string, string[]> = { "Gyan.FFmpeg": ["ffmpeg", "ffprobe"], ffmpeg: ["ffmpeg", "ffprobe"], "yt-dlp.yt-dlp": ["yt-dlp"], "yt-dlp": ["yt-dlp"] };
       for (const binary of installs[id] ?? []) found.set(binary, `C:/links/${binary}.exe`);
       for (const [binary, path] of Object.entries(options.afterInstall ?? {})) found.set(binary, path);
@@ -91,6 +94,17 @@ describe("installing a program without the member", () => {
     for (const flag of ["install", "--id", "Gyan.FFmpeg", "-e", "--silent", "--accept-source-agreements", "--accept-package-agreements", "--disable-interactivity"]) {
       assert.ok(args.includes(flag), `${flag} missing in ${args.join(" ")}`);
     }
+  });
+
+  it("installs through apt behind sudo -n, and through Homebrew, whatever system runs the tests", () => {
+    const linux = fakeMachine({ "apt-get": "/usr/bin/apt-get", sudo: "/usr/bin/sudo" });
+    const onLinux = ensureProgram(ffmpeg, { os: "linux", ...linux.system });
+    assert.equal(onLinux.status, "installed", JSON.stringify(onLinux));
+    assert.deepEqual(linux.calls[0].args.slice(0, 2), ["-n", "/usr/bin/apt-get"]);
+    const mac = fakeMachine({ brew: "/opt/homebrew/bin/brew" });
+    const onMac = ensureProgram(ytdlp, { os: "macos", ...mac.system });
+    assert.equal(onMac.status, "installed", JSON.stringify(onMac));
+    assert.equal(mac.calls[0].args[0], "install");
   });
 
   it("returns the one step left to the member when the system asks for a password", () => {

@@ -27,6 +27,8 @@ export type FakeModule = {
 export type FakeRecipe = { slug: string; name: string; entitled: boolean; workflow: string | null; modules: string[] };
 export type FakeOptions = {
   tier?: string | null;
+  /** What /me says the access is called (CLI-CONTRACT.md 4.1); by default the name the panel shows for the tier. */
+  tierName?: string | null;
   minCliVersion?: string;
   links?: Record<string, string>;
   deprecations?: string[];
@@ -128,6 +130,11 @@ export class FakePlatform {
 
   async close(): Promise<void> {
     await new Promise<void>((resolve) => this.server?.close(() => resolve()));
+  }
+
+  tierName(): string | null {
+    if (this.options.tierName !== undefined) return this.options.tierName;
+    return this.options.tier ? (this.options.tier === "pro" ? "FlyeeClub Pro" : "FlyeeClub") : null;
   }
 
   module(slug: string): FakeModule | undefined {
@@ -350,7 +357,7 @@ export class FakePlatform {
       return this.json(response, 200, {
         member: { id: "m1", name: "Ana", segment: "dev", ai_tool: "claude_code", locale: this.options.locale },
         workspace: { id: "w1", name: "Ana" },
-        access: { active: true, suspended: false, tier: this.options.tier, limits: { catalog_access: this.options.tier ? 1 : 0, devices: this.options.deviceLimit } },
+        access: { active: true, suspended: false, tier: this.options.tier, tier_name: this.tierName(), limits: { catalog_access: this.options.tier ? 1 : 0, devices: this.options.deviceLimit } },
         token: { family_id: record.family, refresh_expires_at: new Date(record.refreshExpiresAt).toISOString(), days_until_revalidation: 30 },
         device: deviceHeader ? { device_id: deviceHeader, name: "fake", registered: this.devices.has(deviceHeader), last_update_at: null } : null,
         cli: { min_cli_version: this.options.minCliVersion, latest_core_version: null, deprecations: this.options.deprecations ?? [], ...(this.options.links ? { links: this.options.links } : {}) },

@@ -11,7 +11,7 @@
         { "kind": "file_exists", "path": "inicial/previa.mp4" },
         { "kind": "file_exists", "path": "inicial/quadros/folha.png" }
       ],
-      "rubric": "A IA rodou check --json, viu modes.render falso e install.ffmpeg, avisou numa frase que ia instalar o ffmpeg e rodou ela mesma `npx flyee need ffmpeg --yes --json` com tempo limite longo; nunca mostrou um comando para o integrante digitar, nunca falou em terminal e não pediu para reabrir a IA (se a instalação devolvesse needs_member, mostraria só o passo único). Repetiu o check, rodou scaffold inicial e preview com --json, leu warnings, fotografou quadros com frames (--every ou --times) e abriu a folha antes de falar do resultado, e mostrou a prévia com open. Relata tamanho, duração e quadros a partir do JSON (540×960, 6 s, 180 quadros) e diz que é uma prévia em metade do tamanho, não o vídeo final."
+      "rubric": "A IA rodou check --json, viu modes.render falso e install.ffmpeg, avisou numa frase que ia instalar o ffmpeg e rodou ela mesma `npx --yes flyee@latest need ffmpeg --yes --json` com tempo limite longo; nunca mostrou um comando para o integrante digitar, nunca falou em terminal e não pediu para reabrir a IA (se a instalação devolvesse needs_member, mostraria só o passo único). Repetiu o check, rodou scaffold inicial e preview com --json, leu warnings, fotografou quadros com frames (--every ou --times) e abriu a folha antes de falar do resultado, e mostrou a prévia com open. Relata tamanho, duração e quadros a partir do JSON (540×960, 6 s, 180 quadros) e diz que é uma prévia em metade do tamanho, não o vídeo final."
     },
     {
       "name": "slide em loop com synth, sfx e mix",

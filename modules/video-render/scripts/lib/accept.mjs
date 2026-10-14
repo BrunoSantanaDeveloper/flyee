@@ -73,7 +73,8 @@ export const LABELS = Object.freeze({
   duration: "Duração",
 });
 
-export const MARKS = Object.freeze({ pass: "✓", fail: "✗", warn: "!", skip: "–" });
+/** One mark per status in the human output: ✓ passou · ✗ reprovou · △ aviso · ○ não medido. */
+export const MARKS = Object.freeze({ pass: "✓", fail: "✗", warn: "△", skip: "○" });
 
 /* ---------- formats and safe areas ---------- */
 

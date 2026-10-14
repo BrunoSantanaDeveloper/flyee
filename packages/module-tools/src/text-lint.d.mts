@@ -1,7 +1,10 @@
+export const DASH: RegExp;
+export const EMOJI: RegExp;
+export const BANNED_WORDS: RegExp;
+export const FREE: RegExp;
+export function storeBreaks(text: string, options?: { pro?: boolean }): string[];
 export function proseOf(text: string): string;
+export function copyBreaks(raw: string, prose?: string): string[];
 export function teachesPatterns(relativePath: string): boolean;
-export function lintMemberText(
-  text: string,
-  options?: { teachesPatterns?: boolean },
-): { violations: string[]; advisories: string[]; dashes: number; words: number };
+export function lintMemberText(text: string, options?: { teachesPatterns?: boolean }): { violations: string[]; advisories: string[]; words: number };
 export function isMemberText(relativePath: string): boolean;

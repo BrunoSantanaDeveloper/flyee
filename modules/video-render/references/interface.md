@@ -23,7 +23,7 @@ node .flyee/modules/video-render/scripts/render.mjs help --json
 
 ## 1. O app está instalado? O que a máquina tem?
 
-Se `.flyee/modules/video-render/scripts/render.mjs` não existir, diga ao integrante numa frase que o render vem do app Motor de vídeo e rode você mesmo `npx flyee add video-render --yes --json`. Se ele preferir não instalar, siga o seu app sem renderizar (entregue a página e diga o que o Motor faria com ela).
+Se `.flyee/modules/video-render/scripts/render.mjs` não existir, o render vem do app Motor de vídeo, e você mesmo o instala: rode `npx --yes flyee@latest add video-render --dry-run --json`, diga ao integrante numa frase o que o app vai poder fazer (as `permissions` e os `programs` da resposta) e, com o sim dele, rode `npx --yes flyee@latest add video-render --yes --json`. Se ele preferir não instalar, siga o seu app sem renderizar (entregue a página e diga o que o Motor faria com ela).
 
 Se existir, rode uma vez por sessão:
 
@@ -47,7 +47,7 @@ node .flyee/modules/video-render/scripts/render.mjs check --json
 | `runtime` | o caminho do `motion.js`, a biblioteca que a página inclui |
 | `guides.page`, `guides.interface` | o contrato da página (`pagina.md`) e este guia |
 
-**Instalar o que falta.** O integrante não usa o terminal: você mesmo roda cada comando de `install` (`npx flyee need ffmpeg --yes --json`; no Mac e no Linux, também o `npx flyee need chromium … --yes --json` do navegador), depois de avisar o integrante numa frase, com tempo limite longo (até 10 minutos), e repete o `check`. Quando o resultado da instalação trouxer `needs_member`, mostre a ele só o passo único indicado (a senha de administrador, o Homebrew ausente) e espere. No Windows o navegador é o Microsoft Edge, que vem com o sistema: `tools.browser` nulo ali pede que você confira com o integrante se o Edge está instalado. Nunca mostre ao integrante um comando para ele digitar.
+**Instalar o que falta.** O integrante não usa o terminal: você mesmo roda cada comando de `install` (`npx --yes flyee@latest need ffmpeg --yes --json`; no Mac e no Linux, também o `npx --yes flyee@latest need chromium … --yes --json` do navegador), depois de avisar o integrante numa frase, com tempo limite longo (até 10 minutos), e repete o `check`. Quando o resultado da instalação trouxer `needs_member`, mostre a ele só o passo único indicado (a senha de administrador, o Homebrew ausente) e espere. No Windows o navegador é o Microsoft Edge, que vem com o sistema: `tools.browser` nulo ali pede que você confira com o integrante se o Edge está instalado. Nunca mostre ao integrante um comando para ele digitar.
 
 | Funciona com | Comandos |
 |---|---|
@@ -99,13 +99,13 @@ node .flyee/modules/video-render/scripts/render.mjs preview <pagina.html> --out 
 | `--fps <n>` | quadros por segundo, de 1 a 120 (padrão: o `film.fps` da página, senão 30) |
 | `--sub <n>` | subquadros misturados em desfoque de movimento, de 1 a 8 (padrão 1; use 2 ou 4, que multiplicam o tempo do render; a prévia ignora) |
 | `--format 9:16\|4:5\|3:4\|1:1\|16:9\|LARGURAxALTURA` | outro tamanho de quadro, pela `window.setFormat` da página |
-| `--scale <0.1–1>` | fração do tamanho em pixels, com o mesmo layout (padrão 1; a prévia usa 0.5) |
+| `--scale <0.1 a 1>` | fração do tamanho em pixels, com o mesmo layout (padrão 1; a prévia usa 0.5) |
 | `--start <t>`, `--end <t>` | só um trecho; quando a página não declara `film.duration`, `--end` é a duração |
 | `--alpha` | camada transparente: a página sem fundo e `--out` `.mov` ou `.webm` (com `.mp4`, `alpha_needs_mov`) |
 | `--frame-format png\|jpeg` | como cada quadro é fotografado (padrão png; a prévia usa jpeg, menos com `--alpha`) |
-| `--quality <30–100>` | a qualidade dos quadros JPEG (padrão 92) |
-| `--crf <0–51>` | a qualidade do vídeo, menor é melhor (padrão 16; a prévia 23; no `.webm` vale `crf + 14`; o `.mov` não usa) |
-| `--parallel <1–8>` | navegadores em paralelo (padrão: um até 120 quadros ou com menos de 4 núcleos; senão até 4) |
+| `--quality <30 a 100>` | a qualidade dos quadros JPEG (padrão 92) |
+| `--crf <0 a 51>` | a qualidade do vídeo, menor é melhor (padrão 16; a prévia 23; no `.webm` vale `crf + 14`; o `.mov` não usa) |
+| `--parallel <1 a 8>` | navegadores em paralelo (padrão: um até 120 quadros ou com menos de 4 núcleos; senão até 4) |
 | `--audio <arquivo>` | junta este áudio ao vídeo como ele está, cortado no fim do vídeo, sem mixar nem ajustar o volume (para isso, `mix`) |
 | `--browser <caminho>` | outro navegador (Edge, Chrome ou Chromium) |
 
@@ -129,7 +129,7 @@ node .flyee/modules/video-render/scripts/render.mjs frames <pagina.html> --times
 node .flyee/modules/video-render/scripts/render.mjs frames <pagina.html> --beats <beats.json> --downbeats --json
 ```
 
-Fotografa a página nos instantes pedidos (até 400) e monta uma folha de contato. Os instantes: `--times` (uma lista), `--every <s>` (de 0,05 a 60; padrão 0,5, até `film.duration`, ou 15 s quando a página não a declara) ou `--beats <beats.json>` (um por batida da lista `beats` do arquivo, até a duração do filme; com `--downbeats`, só o tempo 1 de cada compasso). `--out <pasta>` (padrão `quadros/` ao lado da página; os `quadro-NNNN.png` antigos dessa pasta são apagados), `--sheet <png>` (padrão `folha.png` na pasta), `--cols <1–12>` (padrão 6) e `--tile-width <80–1080>` (padrão 270); `--format`, `--scale` (padrão 1), `--alpha` e `--browser` como no render.
+Fotografa a página nos instantes pedidos (até 400) e monta uma folha de contato. Os instantes: `--times` (uma lista), `--every <s>` (de 0,05 a 60; padrão 0,5, até `film.duration`, ou 15 s quando a página não a declara) ou `--beats <beats.json>` (um por batida da lista `beats` do arquivo, até a duração do filme; com `--downbeats`, só o tempo 1 de cada compasso). `--out <pasta>` (padrão `quadros/` ao lado da página; os `quadro-NNNN.png` antigos dessa pasta são apagados), `--sheet <png>` (padrão `folha.png` na pasta), `--cols <1 a 12>` (padrão 6) e `--tile-width <80 a 1080>` (padrão 270); `--format`, `--scale` (padrão 1), `--alpha` e `--browser` como no render.
 
 Devolve `page`, `dir`, `width` e `height` (de cada quadro), `frames[]` com `time`, `label` (`MM:SS`) e `file` (`quadro-0001.png`…), `sheet`, `sheet_cols` e `warnings` (erros da página). A folha do `frames` não carimba o tempo: a ordem dos quadrinhos é a de `frames[]`. Abra a folha antes de dizer qualquer coisa sobre o vídeo.
 
@@ -139,7 +139,7 @@ Devolve `page`, `dir`, `width` e `height` (de cada quadro), `frames[]` com `time
 node .flyee/modules/video-render/scripts/render.mjs sheet <video> --phone --strip 2.5 --json
 ```
 
-`--out <png>` (padrão `<vídeo>-folha.png`, ao lado do vídeo), `--fps <0.1–30>` (quadros por segundo de vídeo na folha; padrão 2), `--cols <1–12>` (padrão 6), `--tile-width <80–1080>` (padrão 270). `--strip <tempo>` acrescenta uma tira de 12 quadros seguidos em volta do instante, para ver uma transição (`<folha>-tira-<tempo>.png`, com `_` no lugar do ponto); `--phone` acrescenta o teste de celular, um quadro por segundo a 360 px de largura (`<folha>-celular.png`).
+`--out <png>` (padrão `<vídeo>-folha.png`, ao lado do vídeo), `--fps <0.1 a 30>` (quadros por segundo de vídeo na folha; padrão 2), `--cols <1 a 12>` (padrão 6), `--tile-width <80 a 1080>` (padrão 270). `--strip <tempo>` acrescenta uma tira de 12 quadros seguidos em volta do instante, para ver uma transição (`<folha>-tira-<tempo>.png`, com `_` no lugar do ponto); `--phone` acrescenta o teste de celular, um quadro por segundo a 360 px de largura (`<folha>-celular.png`).
 
 Devolve `video`, `duration`, `sheet`, `sheet_layout` (`cols`, `rows`, `fps`, `tile_width`, `stamped`: o tempo está carimbado em cada quadrinho), `strip` (`file`, `start`, `count`) ou `null` e `phone` (`file`, `cols`, `rows`, `width`) ou `null`.
 
@@ -421,7 +421,7 @@ A resposta vem com `ok: true` mesmo quando algum item reprova: as reprovações 
 | `--every <s>` | de quanto em quanto as caixas são lidas, de 0,05 a 60 (padrão 0,25); o quadro 0, cada batida e o último quadro também são lidos, até 1.200 instantes |
 | `--beats <beats.json>` ou `--bpm <n>` | a grade de batidas (a lista `beats` do arquivo); com `--bpm`, de 30 a 300, a batida 0 fica em `t = 0`; os dois juntos são `usage` |
 | `--tolerance <quadros>` | quanto um corte pode ficar da batida, de 0 a 30 (padrão 1 quadro nos cortes de `film.cuts`; 2 nos achados no vídeo) |
-| `--min-on-beat <0–1>` | a fração mínima de cortes na batida (padrão 1, todos, nos cortes de `film.cuts`; 0,7 nos achados no vídeo) |
+| `--min-on-beat <0 a 1>` | a fração mínima de cortes na batida (padrão 1, todos, nos cortes de `film.cuts`; 0,7 nos achados no vídeo) |
 | `--loop` | confere se o último quadro emenda com o primeiro |
 | `--max-flashes <n>` | mudanças bruscas de luz toleradas em 1 s, de 0 a 60 (padrão 3) |
 | `--max-still <s>` | o trecho parado a partir do qual avisa, de 0,1 a 3600 (padrão 1,5) |
@@ -471,7 +471,7 @@ A resposta vem com `ok: true` mesmo quando algum item reprova: as reprovações 
 | `report` | o relatório gravado (o mesmo resultado, com `app`, `interface_version` e `command`), ou `null` |
 | `guide`, `warnings` | o guia dos itens e os avisos gerais: a página sem `window.boxes`, um vídeo de duração diferente da página, um arquivo maior que o limite de envio de uma rede, um programa que falta |
 
-Sem `--json`, a saída é uma linha por item, com ✓ (`pass`), ✗ (`fail`), ! (`warn`) e – (`skip`), o nome da rede entre parênteses nos itens por rede e uma linha "Como resolver" embaixo de cada `fail` ou `warn`. Um `fail` vale mais do que `ok: true` em qualquer outro comando: aplique o `fix`, renderize de novo e confira de novo. Nunca devolva ao integrante um vídeo com item reprovado sem dizer qual.
+Sem `--json`, a primeira linha traz o veredito e quantos itens ficaram com cada marca; depois vem uma linha por item, com a marca na frente (✓ passou · ✗ reprovou · △ aviso · ○ não medido), o nome da rede entre parênteses nos itens por rede e uma linha "Como resolver" embaixo de cada `fail` ou `warn`. Um `fail` vale mais do que `ok: true` em qualquer outro comando: aplique o `fix`, renderize de novo e confira de novo. Nunca devolva ao integrante um vídeo com item reprovado sem dizer qual.
 
 ```
 node .flyee/modules/video-render/scripts/render.mjs networks --json

@@ -52,10 +52,10 @@ export function classifyGeminiError(status, body) {
   const message = String(error.message ?? "").slice(0, 400);
   const detail = message ? `Resposta do Gemini: ${message}` : `HTTP ${status}`;
   if (/API key not valid|API_KEY_INVALID|api key expired/i.test(message + JSON.stringify(error.details ?? ""))) {
-    return new AppError("gemini_invalid_key", "A chave GEMINI_API_KEY não foi aceita pelo Gemini.", "Confira a chave no Google AI Studio e a variável de ambiente.");
+    return new AppError("gemini_invalid_key", "A chave GEMINI_API_KEY não foi aceita pelo Gemini.", "Confira a chave no Google AI Studio e salve de novo a certa: rode você mesmo npx --yes flyee@latest key set GEMINI_API_KEY --browser --json, que abre a página no navegador do integrante. Se ele usa uma variável de ambiente com esse nome, é ela que vale.");
   }
   if (status === 429) {
-    return new AppError("gemini_quota", "O limite de uso da sua chave do Gemini foi atingido.", `No plano gratuito há limite diário de horas de vídeo do YouTube e de pedidos por minuto. Espere e tente de novo, ou analise um trecho com --start e --end. ${detail}`);
+    return new AppError("gemini_quota", "O limite de uso da sua chave do Gemini foi atingido.", `O Google limita os pedidos por minuto de cada chave e, no uso comum, as horas de vídeo do YouTube por dia. Espere e tente de novo, ou analise um trecho com --start e --end. ${detail}`);
   }
   if (status === 403) return new AppError("gemini_permission", "A chave não tem permissão para este pedido.", detail);
   if (status === 404) {

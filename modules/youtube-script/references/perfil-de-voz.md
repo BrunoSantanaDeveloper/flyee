@@ -22,7 +22,7 @@ Sem nenhum texto, faça três perguntas e escreva um perfil provisório, marcado
 
 ## Pelos vídeos do canal
 
-Quando o criador já tem vídeos publicados, a melhor amostra da voz dele é a fala real. O app **Pesquisa no YouTube** (`youtube-research`) traz essa fala sem baixar nada; o guia dele é `.flyee/modules/youtube-research/references/interface.md`. Se ele não estiver instalado, ofereça instalar (`npx flyee add youtube-research --yes --json`, que você roda com o sim) ou siga com os textos que o criador trouxer.
+Quando o criador já tem vídeos publicados, a melhor amostra da voz dele é a fala real. O app **Pesquisa no YouTube** (`youtube-research`) traz essa fala sem baixar nada; o guia dele é `.flyee/modules/youtube-research/references/interface.md`. Se ele não estiver instalado, ofereça instalar, como em `pesquisa.md` ("0. O app está instalado?"): `npx --yes flyee@latest add youtube-research --dry-run --json`, uma frase ao criador com o que o app declara e, com o sim, `npx --yes flyee@latest add youtube-research --yes --json`, com um tempo limite de 10 minutos. Sem o sim, siga com os textos que o criador trouxer.
 
 1. **O normal do canal e o que já funcionou:**
 
@@ -97,7 +97,7 @@ Pergunte também, uma vez, como ele fala de si: "cansado" ou "cansada". Vai para
 3. **Pares no tom e fora do tom**, sobre o mesmo conteúdo:
 
    > No tom: "Comprei, usei três meses e devolvi. Vou te contar por quê."
-   > Fora do tom: "Hoje vamos explorar os prós e contras deste produto incrível!"
+   > Fora do tom: "Hoje vamos explorar os prós e contras deste produto incrível", dito com exclamação no fim e voz de apresentador.
 
 ## Como fica em canal.md
 

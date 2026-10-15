@@ -2,8 +2,7 @@
  * Carrossel animado · biblioteca dos slides (carousel.js)
  * Carregue depois de motion.js. Monta, em cima de Motion, os elementos de um slide de carrossel:
  * título, texto, rótulo, cartão, forma, contador, gráfico de barras, régua de compassos, bola com
- * squash & stretch, pílulas de progresso, botão de chamada, dica de deslizar, pulso de fundo, grão e,
- * para slides com fotos, imagens em camadas com paralaxe e o degradê que deixa o texto legível por cima.
+ * squash & stretch, pílulas de progresso, botão de chamada, dica de deslizar, pulso de fundo e grão.
  *
  * Tudo é função pura do tempo: sem timers, sem requestAnimationFrame, sem Math.random, sem estado
  * entre quadros (só os caches de medidas de texto e do grão). Os tempos dos elementos são em
@@ -27,7 +26,7 @@
   const M = global.Motion;
   if (!M) throw new Error("carousel.js precisa de motion.js carregado antes dele.");
 
-  const VERSION = 2;
+  const VERSION = 1;
   const clamp = M.clamp;
   const lerp = M.lerp;
 
@@ -228,7 +227,7 @@
     const rand = M.rng(seed);
     const noise = M.noise1d(seed);
 
-    const state = { t: 0, b: 0, boxes: [], lastSeekT: null, layoutCache: new Map(), grainTile: null, grainPattern: null, images: new Map() };
+    const state = { t: 0, b: 0, boxes: [], lastSeekT: null, layoutCache: new Map(), grainTile: null, grainPattern: null };
 
     const C = {
       version: VERSION,
@@ -238,7 +237,6 @@
       W: size.width, H: size.height,
       safe: safeRect(size.width, size.height, formatName),
       rng: rand, noise,
-      images: {},
       t: 0, b: 0,
     };
 
@@ -1067,215 +1065,6 @@
       return { x: x + dx, y };
     }
 
-    // ----- imagens (fotos, recortes, logos) -----
-
-    /** Marca de uma imagem deixada de fora de propósito (caminho vazio em loadImages). */
-    const NO_PICTURE = { empty: true };
-
-    /**
-     * Carrega as imagens do slide uma vez e devolve uma promessa. Na página:
-     *   const ready = C.loadImages({ fundo: "../assets/fundo.jpg", assunto: "../assets/assunto.png" });
-     *   window.seek = async (t) => { await ready; C.begin(t); C.image("fundo"); … return C.end(); };
-     * Os caminhos são relativos à página. Uma imagem que não carrega fica como `null`: o slide é desenhado
-     * sem ela e um aviso vai para o console, que o Motor repassa nos avisos do render.
-     */
-    function loadImages(map) {
-      const entries = Object.entries(map || {});
-      const one = (alias, src) => new Promise((resolve) => {
-        const fail = () => {
-          state.images.set(alias, null);
-          C.images[alias] = null;
-          if (global.console && global.console.warn) global.console.warn("carousel.js: não consegui carregar a imagem \"" + alias + "\" (" + src + ")");
-          resolve();
-        };
-        // an empty path means "no picture here": nothing is drawn and nothing is reported
-        if (!src) {
-          state.images.set(alias, NO_PICTURE);
-          C.images[alias] = null;
-          resolve();
-          return;
-        }
-        if (typeof global.Image !== "function") { fail(); return; }
-        const img = new global.Image();
-        const done = () => {
-          state.images.set(alias, img);
-          C.images[alias] = img;
-          resolve();
-        };
-        img.onload = () => {
-          if (typeof img.decode === "function") img.decode().then(done, done);
-          else done();
-        };
-        img.onerror = fail;
-        img.src = src;
-      });
-      return Promise.all(entries.map(([alias, src]) => one(alias, src))).then(() => C.images);
-    }
-
-    /** Onde uma imagem que cabe inteira encosta dentro da caixa: 0 = começo, 0.5 = centro, 1 = fim. */
-    function anchorOf(anchor) {
-      const a = String(anchor || "center");
-      return {
-        ax: a.indexOf("left") >= 0 ? 0 : a.indexOf("right") >= 0 ? 1 : 0.5,
-        ay: a.indexOf("top") >= 0 ? 0 : a.indexOf("bottom") >= 0 ? 1 : 0.5,
-      };
-    }
-
-    /**
-     * Desenha uma imagem carregada com loadImages (pelo apelido) ou um <img>/<canvas>. Sem x, y, w, h ocupa o quadro inteiro.
-     *   fit: "cover" (padrão) preenche a caixa e corta o que sobra, com o foco em focusX/focusY (0 a 1; padrão 0.5);
-     *        "contain" mostra a imagem inteira dentro da caixa, encostada em `anchor` (center, bottom, top-left, bottom-right…).
-     *   depth 0 a 1: paralaxe em laço fechado. A imagem deriva e respira ao longo do slide e volta exatamente ao lugar no fim;
-     *        fundo perto de 0.3, assunto perto de 0.7, objetos soltos perto de 1. `drift` multiplica a deriva.
-     *   dim 0 a 1 escurece a imagem com a cor de fundo do tema (texto por cima pede 0.35 ou mais); alpha, radius e shadow
-     *        (sombra suave que segue o contorno de um recorte) completam.
-     *   at, in (fade, rise, drop, pop, wipe, none), inBeats, out, outStyle, back: como nos outros elementos.
-     *   role: "logo" ou "face" registram a caixa para a conferência da zona segura; sem role, a imagem não é conferida.
-     * Devolve a caixa realmente desenhada ({ x, y, w, h, bottom, right, loaded }), para apoiar texto ao lado dela.
-     */
-    function image(source, options) {
-      const o = options || {};
-      const img = typeof source === "string" ? state.images.get(source) : source;
-      const bx = dimX(o.x, 0);
-      const by = dimY(o.y, 0);
-      const bw = dimX(o.w, C.W - bx);
-      const bh = dimY(o.h, C.H - by);
-      // a picture left out on purpose (an empty path in loadImages) draws nothing at all
-      if (img === NO_PICTURE) return { x: bx, y: by, w: bw, h: bh, bottom: by + bh, right: bx + bw, loaded: false, empty: true };
-      const iw = img ? (img.naturalWidth || img.videoWidth || img.width || 0) : 0;
-      const ih = img ? (img.naturalHeight || img.videoHeight || img.height || 0) : 0;
-      const loaded = Boolean(img && iw > 0 && ih > 0);
-      const cover = (o.fit || "cover") !== "contain";
-      const depth = clamp(Number(o.depth) || 0);
-      const amp = depth * (o.drift === undefined ? 1 : Number(o.drift));
-      let dx = bx;
-      let dy = by;
-      let dw = bw;
-      let dh = bh;
-      if (loaded) {
-        const scale = cover ? Math.max(bw / iw, bh / ih) : Math.min(bw / iw, bh / ih);
-        dw = iw * scale;
-        dh = ih * scale;
-        if (cover) {
-          dx = bx + (bw - dw) * clamp(o.focusX === undefined ? 0.5 : Number(o.focusX));
-          dy = by + (bh - dh) * clamp(o.focusY === undefined ? 0.5 : Number(o.focusY));
-        } else {
-          const a = anchorOf(o.anchor);
-          dx = bx + (bw - dw) * a.ax;
-          dy = by + (bh - dh) * a.ay;
-        }
-      }
-      const geometry = cover || !loaded ? { x: bx, y: by, w: bw, h: bh, bottom: by + bh, right: bx + bw, loaded } : { x: dx, y: dy, w: dw, h: dh, bottom: dy + dh, right: dx + dw, loaded };
-      const full = bx <= 0 && by <= 0 && bw >= C.W && bh >= C.H;
-      const style = o.in || (full ? "fade" : "rise");
-      const L = life(o, o.inBeats === undefined ? 1 : Number(o.inBeats), o.outBeats === undefined ? 0.5 : Number(o.outBeats), o.spring || "default");
-      if (!L.visible) return geometry;
-      const P = pose(style, L.p, L.q, o.outStyle || "fade", 50);
-      const alpha = P.alpha * (o.alpha === undefined ? 1 : clamp(Number(o.alpha)));
-      if (alpha <= 0.002) return geometry;
-
-      // closed-loop parallax: zero at t = 0 and back to zero at the end of the slide
-      const ang = (state.t / T) * Math.PI * 2;
-      const px = Math.sin(ang) * 0.012 * C.W * amp;
-      const py = (1 - Math.cos(ang)) * 0.006 * C.H * amp;
-      const breathe = 1 + 0.03 * amp * (1 - Math.cos(ang)) / 2;
-      const overscan = cover ? 1 + 0.03 * amp : 1; // a covering picture never shows its edge while it drifts
-      const cx = geometry.x + geometry.w / 2;
-      const cy = geometry.y + geometry.h / 2;
-      const radius = o.radius === undefined ? 0 : Number(o.radius);
-
-      g.save();
-      g.globalAlpha = alpha;
-      g.translate(cx + P.dx, cy + P.dy);
-      g.scale(P.scale, P.scale);
-      g.translate(-cx, -cy);
-      if (cover || radius > 0 || P.wipe !== null) {
-        const clipW = P.wipe !== null ? geometry.w * P.wipe : geometry.w;
-        M.roundRect(g, geometry.x, geometry.y, clipW, geometry.h, radius);
-        g.clip();
-      }
-      if (loaded) {
-        if (o.shadow && !cover) {
-          g.shadowColor = "rgba(0,0,0,0.5)";
-          g.shadowBlur = Math.round(C.W * 0.045);
-          g.shadowOffsetY = Math.round(C.W * 0.02);
-        }
-        const k = overscan * breathe;
-        const icx = dx + dw / 2 + px;
-        const icy = dy + dh / 2 + py;
-        g.drawImage(img, icx - (dw * k) / 2, icy - (dh * k) / 2, dw * k, dh * k);
-        g.shadowColor = "rgba(0,0,0,0)";
-        g.shadowBlur = 0;
-        g.shadowOffsetY = 0;
-      } else if (!full) {
-        // the picture is missing: a quiet placeholder keeps the layout readable
-        g.fillStyle = theme.surface;
-        M.roundRect(g, geometry.x, geometry.y, geometry.w, geometry.h, radius || 24);
-        g.fill();
-      }
-      const dim = clamp(Number(o.dim) || 0);
-      if (dim > 0 && loaded) {
-        g.globalAlpha = alpha * dim;
-        g.fillStyle = theme.bg;
-        g.fillRect(geometry.x, geometry.y, geometry.w, geometry.h);
-      }
-      g.restore();
-      if (o.role && alpha > 0.05) register(o.role, cx + P.dx - (geometry.w / 2) * P.scale, cy + P.dy - (geometry.h / 2) * P.scale, geometry.w * P.scale, geometry.h * P.scale, null);
-      return geometry;
-    }
-
-    /**
-     * Várias imagens em camadas, da mais distante para a mais próxima: cada item é { src, …opções de image }.
-     * Sem `depth`, a profundidade cresce de 0.3 (a primeira) a 1 (a última), o que dá o efeito de palco em 2.5D.
-     */
-    function layers(list, shared) {
-      const items = Array.isArray(list) ? list : [];
-      const n = items.length;
-      return items.map((layer, i) => {
-        const depth = n > 1 ? 0.3 + (0.7 * i) / (n - 1) : 0.3;
-        return image(layer.src, Object.assign({ depth }, shared || {}, layer));
-      });
-    }
-
-    /**
-     * Degradê da cor de fundo do tema sobre uma foto, para o texto ficar legível: `side` top, bottom, left, right
-     * (de onde ele parte, opaco, até sumir) ou full (véu uniforme); `size` é a fração do quadro que ele cobre
-     * (padrão 0.6) e `alpha` a opacidade na borda (padrão 0.9). Nunca escreva texto sobre foto sem um destes ou sem `dim`.
-     */
-    function scrim(options) {
-      const o = options || {};
-      const side = o.side || "bottom";
-      const size = clamp(o.size === undefined ? 0.6 : Number(o.size));
-      const alpha = clamp(o.alpha === undefined ? 0.9 : Number(o.alpha));
-      const color = themeColor(o.color, theme.bg);
-      const L = life(o, o.inBeats === undefined ? 1 : Number(o.inBeats), o.outBeats === undefined ? 0.5 : Number(o.outBeats), "default", true);
-      if (!L.visible) return;
-      const a = alpha * (L.q > 0 ? 1 - L.q : L.p);
-      if (a <= 0.002) return;
-      g.save();
-      if (side === "full") {
-        g.globalAlpha = a;
-        g.fillStyle = color;
-        g.fillRect(0, 0, C.W, C.H);
-        g.restore();
-        return;
-      }
-      const vertical = side === "top" || side === "bottom";
-      const length = (vertical ? C.H : C.W) * size;
-      const x0 = side === "right" ? C.W : 0;
-      const y0 = side === "bottom" ? C.H : 0;
-      const x1 = side === "right" ? C.W - length : side === "left" ? length : 0;
-      const y1 = side === "bottom" ? C.H - length : side === "top" ? length : 0;
-      const grd = g.createLinearGradient(x0, y0, vertical ? x0 : x1, vertical ? y1 : y0);
-      grd.addColorStop(0, rgba(color, a));
-      grd.addColorStop(0.45, rgba(color, a * 0.72));
-      grd.addColorStop(1, rgba(color, 0));
-      g.fillStyle = grd;
-      if (vertical) g.fillRect(0, Math.min(y0, y1), C.W, length);
-      else g.fillRect(Math.min(x0, x1), 0, length, C.H);
-      g.restore();
-    }
-
     // ----- montagem -----
 
     global.setFormat = setFormat;
@@ -1285,7 +1074,6 @@
       setFormat, begin, end, boxes, beat, bar, beats: beat, loopT: (t) => M.loopT(t, T),
       beatPulse, downbeat, downbeatBump, life, pose, entrance, layoutText,
       headline, body, label, card, shape, counter, bars, ruler, ball, progress, cta, swipeHint, pulseBg, grain, glow,
-      loadImages, image, layers, scrim,
       rgba, mix, formatNumber,
     });
     return C;

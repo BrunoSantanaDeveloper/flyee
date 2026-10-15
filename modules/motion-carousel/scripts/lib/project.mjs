@@ -2,11 +2,11 @@
 // `new` command writes (storyboard, brief, slides from the templates or the worked example, the
 // two runtimes), and the state the `render` command keeps to reuse what has not changed.
 
-import { copyFileSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, readFileSync, rmSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 
 import { pad, timing, validateStoryboard } from "./storyboard.mjs";
-import { AppError, displayPath, ensureDir, isDir, isFile, readJson, requireJson, round, slugify, toPosix, usage, writeFileAtomic, writeJson } from "./util.mjs";
+import { AppError, displayPath, ensureDir, isFile, readJson, requireJson, round, slugify, toPosix, usage, writeFileAtomic, writeJson } from "./util.mjs";
 
 export const CAROUSELS_DIR = "carrosseis";
 export const FILES = {
@@ -22,23 +22,7 @@ export const DIRS = ["slides", "assets", "audio", "renders", "out", "previa"];
 export const PLACEHOLDERS = ["__TITLE__", "__TEXT__", "__BARS__", "__BEATS_PER_BAR__", "__BPM__", "__THEME__", "__SEED__", "__N__", "__TOTAL__", "__TOTAL_BARS__", "__OFFSET_BARS__", "__FORMAT__"];
 export const INSTALL_SELF = "npx --yes flyee@latest add motion-carousel --yes --json";
 
-/**
- * Copies a folder file by file. fs.cpSync with `recursive` writes into a folder with a corrupted
- * name on Windows when the destination has accents (a project under C:\\Users\\João…), and says nothing.
- * `skip(name, path)` leaves an entry out.
- */
-export function copyTree(from, to, skip = () => false) {
-  mkdirSync(to, { recursive: true });
-  for (const entry of readdirSync(from, { withFileTypes: true })) {
-    const source = join(from, entry.name);
-    const target = join(to, entry.name);
-    if (skip(entry.name, source)) continue;
-    if (entry.isDirectory()) copyTree(source, target, skip);
-    else if (entry.isFile()) copyFileSync(source, target);
-  }
-}
-
-const ROLE_NAMES = { hook: "Gancho", point: "Ponto", photo: "Foto", cta: "Chamada final" };
+const ROLE_NAMES = { hook: "Gancho", point: "Ponto", cta: "Chamada final" };
 
 /** The files this app ships that the commands copy or fill. */
 export function runtimeFiles(appDir) {
@@ -48,11 +32,9 @@ export function runtimeFiles(appDir) {
     templates: {
       hook: join(appDir, "runtime", "slides", "hook.html"),
       point: join(appDir, "runtime", "slides", "point.html"),
-      photo: join(appDir, "runtime", "slides", "photo.html"),
       cta: join(appDir, "runtime", "slides", "cta.html"),
     },
     example: join(appDir, "references", "exemplo"),
-    examplePhoto: join(appDir, "references", "exemplo-foto"),
   };
 }
 
@@ -65,7 +47,6 @@ export function missingRuntime(appDir, parts = ["carousel", "preview", "template
     else if (part === "preview") wanted.push(files.preview);
     else if (part === "templates") wanted.push(...Object.values(files.templates));
     else if (part === "example") wanted.push(join(files.example, "brief.md"), join(files.example, "storyboard.json"));
-    else if (part === "example-photo") wanted.push(join(files.examplePhoto, "brief.md"), join(files.examplePhoto, "storyboard.json"));
   }
   return wanted.filter((file) => !isFile(file)).map((file) => toPosix(appDir, file));
 }
@@ -193,9 +174,9 @@ A palavra que a pessoa comenta e o que ela recebe em troca.
 `;
 }
 
-/** A worked example the app ships (`default`: type and shapes; `photo`: with pictures), validated; a packaging error when it is incomplete. */
-export function loadExample(appDir, which = "default") {
-  const dir = which === "photo" ? runtimeFiles(appDir).examplePhoto : runtimeFiles(appDir).example;
+/** The worked example the app ships, validated; a packaging error when it is incomplete. */
+export function loadExample(appDir) {
+  const dir = runtimeFiles(appDir).example;
   const reinstall = `Reinstale o app: ${INSTALL_SELF}, depois repita.`;
   const raw = readJson(join(dir, "storyboard.json"), null);
   if (!raw) throw new AppError("runtime_missing", "O exemplo do app não tem um storyboard.json legível.", reinstall);
@@ -234,8 +215,6 @@ export function createCarousel({ dir, appDir, engine, storyboard, texts = {}, fr
       ensureDir(join(target, ".."));
       copyFileSync(join(source, slide.file), target);
     }
-    // an example with pictures brings them along
-    if (isDir(join(source, "assets"))) copyTree(join(source, "assets"), paths.assets);
   } else {
     writeFileAtomic(paths.brief, briefTemplate({ title: storyboard.title, storyboard, times }));
     for (const slide of storyboard.slides) {

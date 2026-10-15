@@ -11,7 +11,6 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { engineArgs, findVideoRender, INSTALL_VIDEO_RENDER, INSTALL_VIDEO_RENDER_DRY_RUN, INSTALL_VIDEO_RENDER_STEPS, requireVideoRender, runEngine } from "./lib/engine.mjs";
-import { ASPECTS, generateImage, imageStatus, KEY_DEFAULTS, PROVIDERS } from "./lib/images.mjs";
 import { previewData, writePreview } from "./lib/preview.mjs";
 import {
   CAROUSELS_DIR,
@@ -43,7 +42,6 @@ import {
   projectRoot,
   readJson,
   removeDir,
-  resolveInput,
   round,
   sha256File,
   sha256Text,
@@ -61,20 +59,15 @@ const MANIFEST = readJson(join(APP_DIR, "flyee.module.json"), {});
 const APP = { name: MANIFEST.name ?? "motion-carousel", version: MANIFEST.version ?? "0.0.0" };
 const SCRIPT_COMMAND = `node ${toPosix(ROOT, join(SCRIPTS_DIR, "carousel.mjs"))}`;
 const ARG_SPEC = {
-  flags: ["json", "preview", "refresh", "force", "from-example", "from-photo-example", "cutout"],
-  options: [
-    "title", "slides", "roles", "bars", "cta-bars", "bpm", "theme", "style", "format", "seed", "sub",
-    "prompt", "out", "provider", "aspect", "reference", "model", "key-color", "key-similarity", "key-blend", "key-mode",
-  ],
+  flags: ["json", "preview", "refresh", "force", "from-example"],
+  options: ["title", "slides", "roles", "bars", "cta-bars", "bpm", "theme", "style", "format", "seed", "sub"],
 };
 const GUIDES = {
   storyboard: toPosix(ROOT, join(APP_DIR, "references", "storyboard.md")),
   slide_page: toPosix(ROOT, join(APP_DIR, "references", "slide-page.md")),
   design_rules: toPosix(ROOT, join(APP_DIR, "references", "design-rules.md")),
   sound: toPosix(ROOT, join(APP_DIR, "references", "sound.md")),
-  images: toPosix(ROOT, join(APP_DIR, "references", "images.md")),
   example: toPosix(ROOT, join(APP_DIR, "references", "exemplo")),
-  example_photo: toPosix(ROOT, join(APP_DIR, "references", "exemplo-foto")),
 };
 const MIN_TEXT = 44;
 /** One mark per status in the human output: ✓ passou · ✗ reprovou · △ aviso · ○ não medido (the same as the Motor's). */
@@ -98,7 +91,7 @@ async function checkCommand() {
       warnings.push(`O Motor de vídeo não respondeu ao check: ${error.message}${error.fix ? ` ${error.fix}` : ""}`);
     }
   }
-  const missing = missingRuntime(APP_DIR, ["carousel", "preview", "templates", "example", "example-photo"]);
+  const missing = missingRuntime(APP_DIR, ["carousel", "preview", "templates", "example"]);
   const missingCore = missingRuntime(APP_DIR, ["carousel", "preview", "templates"]);
   if (missing.length) warnings.push(`Faltam arquivos do app Carrossel animado: ${missing.join(", ")}. Reinstale: rode você mesmo ${INSTALL_SELF}, com tempo limite de 10 minutos.`);
   return {
@@ -116,7 +109,6 @@ async function checkCommand() {
     install_note: check?.install_note ?? null,
     runtime: { complete: missing.length === 0, missing },
     formats: Object.fromEntries(Object.entries(FORMATS).map(([name, size]) => [name, `${size.width}x${size.height}`])),
-    images: await imageStatus(),
     guides: GUIDES,
     warnings,
   };
@@ -135,16 +127,14 @@ const titleFromSlug = (slug) => {
 function sampleTexts(role, { title, hookTitle = title, point }) {
   if (role === "hook") return { title: hookTitle, text: "" };
   if (role === "cta") return { title: "Comente PALAVRA e eu te mando", text: "Salve para rever depois." };
-  if (role === "photo") return { title: `Ponto ${point}: uma ideia só`, text: "Uma linha curta.\nOutra linha curta." };
   return { title: `Ponto ${point}: uma ideia só`, text: "Duas linhas curtas que explicam a ideia." };
 }
 
 function newCommand(positionals, values) {
   const slug = slugOf(positionals[0]);
   const engine = requireVideoRender(ROOT);
-  const photoExample = Boolean(values["from-photo-example"]);
-  const fromExample = Boolean(values["from-example"]) || photoExample;
-  requireRuntime(APP_DIR, fromExample ? ["carousel", photoExample ? "example-photo" : "example"] : ["carousel", "templates"]);
+  const fromExample = Boolean(values["from-example"]);
+  requireRuntime(APP_DIR, fromExample ? ["carousel", "example"] : ["carousel", "templates"]);
   const dir = join(ROOT, CAROUSELS_DIR, slug);
   const paths = layout(dir);
   if (isFile(paths.storyboard) && !values.force) {
@@ -162,7 +152,7 @@ function newCommand(positionals, values) {
     for (const option of ["roles", "bars", "cta-bars", "bpm", "theme", "style", "format", "seed"]) {
       if (values[option] !== undefined) warnings.push(`A opção --${option} é ignorada com --from-example: o exemplo traz os próprios valores.`);
     }
-    const example = loadExample(APP_DIR, photoExample ? "photo" : "default");
+    const example = loadExample(APP_DIR);
     exampleDir = example.dir;
     storyboard = example.storyboard;
     if (count !== null && count > storyboard.slides.length) {
@@ -193,7 +183,7 @@ function newCommand(positionals, values) {
     const carouselTitle = title ?? titleFromSlug(slug);
     let point = 0;
     const slides = roles.map((role, index) => {
-      if (role === "point" || role === "photo") point++;
+      if (role === "point") point++;
       const sample = sampleTexts(role, { title: carouselTitle, hookTitle: titleLines ?? carouselTitle, point });
       texts[index + 1] = sample.text;
       return { role, bars: role === "cta" ? ctaBars : bars, title: sample.title };
@@ -606,9 +596,10 @@ async function acceptCommand(positionals, values) {
   const engine = requireVideoRender(ROOT);
   const { storyboard, times, paths, dir, slug } = carousel;
   const selected = parseSlideSelection(values.slides, storyboard.slides.length);
-  // every slide starts on a bar of the track, so inside a slide the beats are the storyboard's grid from
-  // zero: --bpm is exact for each page, while the track's own beats.json is in the track's time
+  const beatsFile = join(paths.audio, "music.beats.json");
+  const hasBeats = isFile(beatsFile);
   const warnings = [];
+  if (!hasBeats) warnings.push(`Ainda não existe ${rel(beatsFile)}: as batidas foram conferidas pela grade de ${storyboard.bpm} BPM, não pela trilha. Rode render antes para conferir com a trilha.`);
   const slides = [];
   for (const slide of storyboard.slides) {
     if (!selected.includes(slide.n)) continue;
@@ -618,7 +609,7 @@ async function acceptCommand(positionals, values) {
     const video = join(paths.out, `${nn}.mp4`);
     const hasVideo = isFile(video);
     progress(`Slide ${nn}: conferindo ${rel(page)}${hasVideo ? ` e ${rel(video)}` : ""}`);
-    const result = await engineCall(engine, engineArgs.accept({ page: rel(page), format: storyboard.format, bpm: storyboard.bpm, video: hasVideo ? rel(video) : null, minText: MIN_TEXT }));
+    const result = await engineCall(engine, engineArgs.accept({ page: rel(page), format: storyboard.format, beats: hasBeats ? rel(beatsFile) : null, bpm: storyboard.bpm, video: hasVideo ? rel(video) : null, minText: MIN_TEXT }));
     const checks = Array.isArray(result.checks) ? result.checks : [];
     const failed = checks.filter((item) => item.status === "fail").map((item) => item.name ?? item.id);
     slides.push({
@@ -646,51 +637,6 @@ async function acceptCommand(positionals, values) {
   const report = { app: APP, command: "accept", generated_at: new Date().toISOString(), slug, dir: rel(dir), passed, slides, checks, warnings };
   writeJson(paths.report, report);
   return { dir: rel(dir), slug, passed, slides, checks, report: rel(paths.report), warnings };
-}
-
-// ---------------------------------------------------------------------------
-// images
-// ---------------------------------------------------------------------------
-
-/**
- * One image for a carousel, into its assets folder. Who generates it follows the app's order:
- * the Codex CLI with the member's ChatGPT login, then the Gemini API with the member's optional
- * key. The member's own AI, when it generates images itself, never needs this command.
- */
-async function imagesCommand(positionals, values) {
-  const carousel = readCarousel(ROOT, positionals[0], { scriptCommand: SCRIPT_COMMAND });
-  const { dir, slug, storyboard, paths } = carousel;
-  const prompt = values.prompt?.trim();
-  if (!prompt) throw usage("Descreva a imagem com --prompt.", 'Por exemplo: --prompt "empty gym at dawn, moody window light, no people" (em inglês os modelos entendem melhor).');
-  if (!values.out) throw usage("Diga onde gravar com --out, dentro da pasta assets do carrossel.", "Por exemplo: --out assets/fundo.jpg (ou .png / .webp para um recorte).");
-  const out = resolve(dir, values.out);
-  const inside = toPosix(paths.assets, out);
-  if (inside.startsWith("..") || /^[A-Za-z]:/.test(inside) || inside === ".") {
-    throw usage(`A imagem precisa ficar na pasta assets do carrossel: ${values.out}.`, "Use --out assets/<nome>.jpg (ou .png / .webp para um recorte).");
-  }
-  const aspect = values.aspect ?? (ASPECTS.includes(storyboard.format) ? storyboard.format : "4:5");
-  const key = {
-    color: String(values["key-color"] ?? KEY_DEFAULTS.color).replace(/^#/, "").toUpperCase(),
-    similarity: parseNumber(values["key-similarity"], { name: "key-similarity", min: 0.01, max: 1, fallback: KEY_DEFAULTS.similarity }),
-    blend: parseNumber(values["key-blend"], { name: "key-blend", min: 0, max: 1, fallback: KEY_DEFAULTS.blend }),
-    mode: values["key-mode"] ?? KEY_DEFAULTS.mode,
-  };
-  if (!/^[0-9A-F]{6}$/.test(key.color)) throw usage(`Cor inválida em --key-color: ${values["key-color"]}.`, "Use seis dígitos hexadecimais, por exemplo 00FF00 (verde) ou 0000FF (azul).");
-  if (!["colorkey", "chromakey"].includes(key.mode)) throw usage(`Modo desconhecido em --key-mode: ${key.mode}.`, "Use colorkey ou chromakey.");
-  const reference = values.reference ? resolveInput(ROOT, values.reference, { what: "a imagem de referência" }) : null;
-  const result = await generateImage({
-    out,
-    prompt,
-    aspect,
-    provider: values.provider ?? "auto",
-    model: values.model ?? null,
-    reference,
-    cutout: Boolean(values.cutout),
-    key,
-    refresh: Boolean(values.refresh),
-    onProgress: progress,
-  });
-  return { dir: rel(dir), slug, file: rel(out), page_path: `../${toPosix(dir, out)}`, prompt, ...result };
 }
 
 // ---------------------------------------------------------------------------
@@ -725,14 +671,13 @@ Comandos
   new <nome>                     Cria carrosseis/<nome>/ com o briefing, o roteiro (storyboard.json) e um slide por papel, prontos para editar.
   render <nome>                  Gera a trilha, renderiza cada slide, mixa o som e monta a prévia (previa/ com --preview; out/ no final).
   accept <nome>                  Confere cada slide (capa legível, zona segura, texto, loop, batida) e o conjunto; grava relatorio.json.
-  images <nome>                  Gera uma imagem em assets/ do carrossel: pelo Codex do integrante (conta do ChatGPT) ou pela chave do Gemini.
   open <nome>                    Abre a prévia (preview.html) no navegador do integrante.
   help                           Esta ajuda.
 
 Opções de new
   --title "…"                    O título do carrossel (e a frase do gancho).
   --slides <n>                   Quantos slides, de ${LIMITS.slides[0]} a ${LIMITS.slides[1]} (padrão: 5); com --from-example, fica com os n primeiros do exemplo.
-  --roles hook,point,photo,cta   O papel de cada slide, na ordem (padrão: hook, point…, cta); photo é o slide com foto.
+  --roles hook,point,…,cta       O papel de cada slide, na ordem (padrão: hook, point…, cta).
   --bars <n> --cta-bars <n>      Compassos por slide (padrão: 3) e do slide final (padrão: 4).
   --bpm <n>                      O andamento, de ${LIMITS.bpm[0]} a ${LIMITS.bpm[1]} (padrão: 120).
   --theme ${THEMES.join("|")}   As cores (padrão: noir).
@@ -740,7 +685,6 @@ Opções de new
   --format ${Object.keys(FORMATS).join("|")}      O formato (padrão: 4:5).
   --seed <n>                     A semente da textura e da trilha (padrão: 7).
   --from-example                 Copia o exemplo completo (5 slides, tema noir) em vez dos modelos.
-  --from-photo-example           Copia o exemplo com fotos (3 slides, com as imagens em assets/).
   --force                        Recria por cima de um carrossel que já existe.
 
 Opções de render
@@ -751,19 +695,6 @@ Opções de render
 
 Opções de accept
   --slides 1,3 ou 2-4            Só estes slides (o conjunto é conferido sempre).
-
-Opções de images
-  --prompt "…"                   A descrição da imagem (em inglês os modelos entendem melhor).
-  --out assets/<arquivo>         Onde gravar, dentro de assets/ do carrossel: .jpg, .png ou .webp.
-  --cutout                       Recorte com fundo transparente (saída .png ou .webp).
-  --aspect <proporção>           ${ASPECTS.join(", ")} (padrão: a do carrossel).
-  --provider ${PROVIDERS.join("|")}   Quem gera (padrão: auto, que tenta o Codex conectado à conta do ChatGPT e depois a chave do Gemini;
-                                 o Codex conectado por chave de API só entra com --provider codex).
-  --reference <arquivo>          Uma imagem de referência de assunto ou de estilo.
-  --model <modelo>               Outro modelo de imagem do Gemini (padrão: gemini-3.1-flash-image).
-  --refresh                      Gera de novo em vez de devolver o arquivo que já existe.
-  --key-similarity <0.01 a 1> --key-blend <0 a 1> --key-color <hex> --key-mode colorkey|chromakey
-                                 Ajustes do recorte quando quem gera é o Gemini (padrão: 0.35, 0.1, 00FF00, colorkey).
 
 Cada slide dura compassos inteiros: a 120 BPM, 3 compassos são 6 s e 4 compassos, 8 s. A trilha é uma só e é cortada nos compassos, de slide em slide.`;
 
@@ -792,19 +723,6 @@ function humanText(result) {
       } else lines.push(`Motor de vídeo: não instalado. Para instalá-lo, ${INSTALL_VIDEO_RENDER_STEPS}.`);
       for (const [name, command] of Object.entries(result.install)) lines.push(`Instalar ${name}: ${command}`);
       if (result.install_note) lines.push(result.install_note);
-      if (result.images) {
-        const images = result.images;
-        const codex = !images.codex.installed
-          ? "sem Codex"
-          : !images.codex.logged_in
-            ? "Codex instalado, sem conta conectada"
-            : images.codex.auth === "api_key"
-              ? "Codex conectado por chave de API (fora da ordem automática: cada imagem seria cobrada na chave)"
-              : "Codex conectado à conta do ChatGPT";
-        const gemini = images.gemini_key ? `chave do Gemini salva (${images.gemini_key_from === "environment" ? "variável de ambiente" : "no flyee"})` : "sem chave do Gemini";
-        const order = images.available.length ? `o comando images usa, nesta ordem: ${images.available.join(", ")}` : "o comando images não tem quem gere imagens aqui; veja o guia de imagens";
-        lines.push(`Imagens: ${codex} · ${gemini} · ${order}. Se você mesmo gera imagens, use a sua ferramenta antes de tudo.`);
-      }
       lines.push(`Guias: ${Object.values(result.guides).join(" · ")}`);
       return [...lines, ...warnings].join("\n");
     }
@@ -837,10 +755,6 @@ function humanText(result) {
       lines.push(`Relatório: ${result.report}`);
       return [...lines, ...warnings].join("\n");
     }
-    case "images": {
-      const cut = result.cutout ? ` · recorte com ${Math.round((result.cutout.transparent_ratio ?? 0) * 100)}% de transparência` : "";
-      return [`Imagem ${result.cached ? "reaproveitada" : "pronta"}: ${result.file} (${result.width}×${result.height}, por ${result.provider === "codex" ? "Codex" : "Gemini"}${cut}). Na página: ${result.page_path}`, ...warnings].join("\n");
-    }
     case "open":
       return `Aberto: ${result.file}`;
     default:
@@ -869,16 +783,12 @@ async function main(argv) {
       if (positionals.length !== 1) throw usage("Informe o carrossel: accept <nome> [--slides 1,3].");
       result = await acceptCommand(positionals, values);
       break;
-    case "images":
-      if (positionals.length !== 1) throw usage('Informe o carrossel: images <nome> --prompt "…" --out assets/<arquivo>.');
-      result = await imagesCommand(positionals, values);
-      break;
     case "open":
       if (positionals.length !== 1) throw usage("Informe o carrossel: open <nome>.");
       result = openCommand(positionals);
       break;
     default:
-      throw usage(`Comando desconhecido: ${command}.`, "Comandos: check, new, render, accept, images, open, help.");
+      throw usage(`Comando desconhecido: ${command}.`, "Comandos: check, new, render, accept, open, help.");
   }
   return { ok: true, command, app: APP, ...result };
 }
@@ -898,9 +808,5 @@ main(process.argv.slice(2))
       },
     };
     process.stdout.write(`${json ? JSON.stringify(result, null, 2) : humanText(result)}\n`);
-    // exitCode, not process.exit(): on Windows with Node 24, exiting right after an HTTPS fetch (the
-    // Gemini request in lib/images.mjs) aborts Node on a libuv assertion with exit code 127. The process
-    // ends on its own; the unref'd timer only ends one that something unexpected keeps alive.
-    process.exitCode = result.error.code === "usage" ? 2 : 1;
-    setTimeout(() => process.exit(process.exitCode), 3000).unref();
+    process.exit(result.error.code === "usage" ? 2 : 1);
   });

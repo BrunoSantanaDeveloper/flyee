@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 // YouTube script: the commands the member's AI runs while writing with the member.
 //   node .flyee/modules/youtube-script/scripts/roteiro.mjs <command> [options] [--json]
-// The script format is in references/formato.md; the other apps it calls, in references/pesquisa.md
-// (youtube-research) and references/tutorial-de-tela.md (video-analysis).
+// The script format is in references/formato.md.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { scriptDocx } from "./lib/docx.mjs";
-import { creatorRules, lint, packagingTitles, PLACEHOLDERS, screenIssues } from "./lib/rules.mjs";
-import { chapters, DEFAULT_WPM, parseScript, screenSync, sentences, timing } from "./lib/script.mjs";
+import { creatorRules, lint, packagingTitles, PLACEHOLDERS } from "./lib/rules.mjs";
+import { chapters, DEFAULT_WPM, parseScript, sentences, timing } from "./lib/script.mjs";
 import { AppError, choiceOption, formatTime, intOption, parseArgs, projectRoot, readJson, toPosix, writeFileAtomic } from "./lib/util.mjs";
 
 const SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
@@ -25,7 +23,6 @@ const STAGES = [
   ["briefing.md", "briefing"],
   ["verdade.md", "ficha de verdade"],
   ["pesquisa.md", "pesquisa"],
-  ["referencia.md", "mapa da referência"],
   ["gravacao.md", "plano de gravação"],
   ["embalagem.md", "título e thumbnail"],
   ["estrutura.md", "estrutura"],
@@ -200,11 +197,6 @@ function lintCommand(positionals, values) {
   const checked = lint(script, timed, { target_s, format, banned: creator.never_say, own });
   const packaging = packagingChecks(file);
   const chaptered = chapters(timed);
-  const stretches = screenSync(script, pace.wpm);
-  for (const issue of screenIssues(stretches)) {
-    checked.issues.push(issue);
-    checked.summary[issue.severity === "warn" ? "warnings" : "infos"] += 1;
-  }
   const note = (issue) => {
     checked.issues.push({ section: null, line: 1, excerpt: "", ...issue });
     checked.summary[{ blocker: "blockers", warn: "warnings", info: "infos" }[issue.severity]] += 1;
@@ -242,7 +234,6 @@ function lintCommand(positionals, values) {
     },
     sections: timed.sections.map((section) => ({ ...section, start: formatTime(section.start_s) })),
     chapters: { valid: chaptered.valid, items: chaptered.items.map((chapter) => ({ time: formatTime(chapter.start_s), title: chapter.title })) },
-    screen: stretches.length ? { stretches: stretches.length, screen_s: stretches.reduce((total, stretch) => total + stretch.screen_s, 0), items: stretches } : null,
     creator_rules: { file: creator.file, never_say: creator.never_say, never_do: creator.never_do },
     own_product: own,
     pending: script.pending.length,
@@ -280,15 +271,6 @@ function teleprompterCommand(positionals, values) {
   const text = teleprompterText(script);
   writeFileAtomic(out, text);
   return { ok: true, command: "teleprompter", file: rel(out), words: timing(script).words };
-}
-
-function docxCommand(positionals, values) {
-  const file = resolveScript(positionals[0], values.dir);
-  const out = values.out ? resolve(ROOT, values.out) : join(dirname(file), "roteiro.docx");
-  if (!/\.docx$/i.test(out)) throw usage("O arquivo de saída precisa terminar em .docx.");
-  const data = scriptDocx(readFileSync(file, "utf8"));
-  writeFileAtomic(out, data);
-  return { ok: true, command: "docx", file: rel(out), bytes: data.length };
 }
 
 /** Every pending mark ([CONFIRMAR …], [ESCOLHER …]) of a file, with its block and line. */
@@ -434,59 +416,6 @@ function checklistCommand(positionals, values) {
   return { ok: true, command: "checklist", file: rel(out), pending: built.pending, pending_script: built.pending_script, pending_other: built.pending_other, pending_profile: built.pending_profile, plan: built.plan, shots: built.shots, result_missing: built.result_missing };
 }
 
-/** One level down for every heading, so a file fits under a section of the full document. */
-function demote(text) {
-  return String(text)
-    .replace(/^﻿/, "")
-    .split(/\r?\n/)
-    .filter((line, index) => !(index === 0 && /^#\s/.test(line)))
-    .map((line) => (/^#{1,5}\s/.test(line) ? `#${line}` : line))
-    .join("\n")
-    .trim();
-}
-
-const DOCUMENT_SECTIONS = [
-  ["briefing.md", "Resumo e premissas"],
-  ["verdade.md", "O que aparece no vídeo: a ficha de verdade"],
-  ["referencia.md", "O fluxo do vídeo: o mapa da referência"],
-  ["embalagem.md", "Título, thumbnail e teste de miniaturas"],
-  ["estrutura.md", "Ganchos, estrutura e pontos de retenção"],
-  ["gravacao.md", "Plano de gravação"],
-  ["roteiro.md", "Roteiro completo"],
-  ["descricao.md", "Descrição, capítulos e comentário fixado"],
-  ["checklist.md", "Checklist de gravação e publicação"],
-  ["revisao.md", "Revisão: as notas da crítica e o que ficou"],
-];
-
-/**
- * The whole video in one document, in reading order, for the creator to read,
- * comment and share. With pending marks, it says up front that it is a draft.
- */
-export function buildDocument(dir, { pending = 0, other = 0 } = {}) {
-  const script = existsSync(join(dir, "roteiro.md")) ? readFileSync(join(dir, "roteiro.md"), "utf8") : "";
-  const title = /^#\s+(.+)$/m.exec(script)?.[1]?.trim() ?? basename(dir);
-  const parts = [`# Roteiro · ${title}`, ""];
-  if (pending || other) parts.push(`> Rascunho: ${pending} marca(s) a preencher no roteiro${other ? ` e ${other} nos outros arquivos` : ""}, antes de gravar. A lista está no checklist, perto do fim.`, "");
-  const included = [];
-  for (const [name, heading] of DOCUMENT_SECTIONS) {
-    const path = join(dir, name);
-    if (!existsSync(path)) continue;
-    included.push(name);
-    parts.push(`## ${heading}`, "", demote(readFileSync(path, "utf8")), "");
-  }
-  return { text: `${parts.join("\n").trim()}\n`, included };
-}
-
-function documentCommand(positionals, values) {
-  const dir = videoDirOf(positionals[0], values.dir);
-  const checklist = buildChecklist(dir);
-  writeFileAtomic(join(dir, "checklist.md"), checklist.text);
-  const built = buildDocument(dir, { pending: checklist.pending_script, other: checklist.pending_other });
-  const out = values.out ? resolve(ROOT, values.out) : join(dir, "roteiro-completo.md");
-  writeFileAtomic(out, built.text);
-  return { ok: true, command: "documento", file: rel(out), sections: built.included, pending: checklist.pending };
-}
-
 function videoFolders(dir) {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { withFileTypes: true })
@@ -518,15 +447,6 @@ function videoFolders(dir) {
     .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)));
 }
 
-/** The other flyee apps this one calls, when installed: research with data and screen recordings. */
-function helperApps() {
-  const installed = (slug, entry) => existsSync(join(ROOT, ".flyee", "modules", slug, entry));
-  return {
-    "youtube-research": installed("youtube-research", "scripts/research.mjs"),
-    "video-analysis": installed("video-analysis", "scripts/video.mjs"),
-  };
-}
-
 function checkCommand(values) {
   const dir = scriptsDir(values.dir);
   const profile = readProfile(dir);
@@ -538,7 +458,6 @@ function checkCommand(values) {
     scripts_dir: rel(dir),
     profile: { file: rel(profile.path), exists: profile.exists, wpm: profile.wpm, gaps: profile.gaps },
     default_wpm: DEFAULT_WPM,
-    helpers: helperApps(),
     videos: videoFolders(dir),
   };
 }
@@ -552,9 +471,7 @@ Comandos
   lint <roteiro>            Confere o roteiro: abertura, pedidos fora de hora, frases longas, cara de texto de IA,
                             números sem fonte, trechos pendentes, duração por bloco e capítulos.
   teleprompter <roteiro>    Grava o texto falado, uma frase por linha, sem marcações (teleprompter.txt ao lado).
-  docx <roteiro>            Grava o roteiro como documento do Word (roteiro.docx ao lado), que também abre no Google Docs.
   checklist <roteiro>       Grava checklist.md: o que fazer e gravar antes, cada [CONFIRMAR] e [ESCOLHER] com o bloco, e o que conferir antes de publicar.
-  documento <roteiro>       Junta tudo num documento só (roteiro-completo.md), na ordem de leitura, para ler, comentar e compartilhar.
   help                      Esta ajuda.
 
 <roteiro> é o caminho do roteiro.md ou o nome da pasta do vídeo em ${SCRIPTS_FOLDER}/.
@@ -563,7 +480,7 @@ Opções
   --target <duração>        (lint) A duração planejada: 8, 8.5, 8:30 ou 45s; avisa fora de 15% para mais ou menos.
   --format long|short       (lint) Vídeo longo ou Short (padrão: long).
   --wpm N                   (lint) Palavras por minuto; padrão: o do perfil do canal, senão ${DEFAULT_WPM}.
-  --out <arquivo>           (teleprompter, docx, documento) Onde gravar; no lint, grava também o resultado em JSON (para a crítica).
+  --out <arquivo>           (teleprompter) Onde gravar; no lint, grava também o resultado em JSON (para a crítica).
   --dir <pasta>             Outra pasta de roteiros (padrão: ${SCRIPTS_FOLDER}).
   --json                    Saída em JSON, para a IA.`;
 
@@ -575,7 +492,6 @@ function humanText(result) {
     case "check":
       return [
         `Roteiro para YouTube ${result.app.version} · roteiros em ${result.scripts_dir}`,
-        `Apps parceiros: Pesquisa no YouTube ${result.helpers["youtube-research"] ? "instalado" : "ausente"} · Análise de vídeo ${result.helpers["video-analysis"] ? "instalado" : "ausente"}`,
         `Perfil do canal: ${result.profile.exists ? `${result.profile.file}${result.profile.wpm ? ` (ritmo ${result.profile.wpm} palavras/min)` : ""}${result.profile.gaps.length ? `; falta: ${result.profile.gaps.join(", ")}` : ""}` : "ainda não existe"}`,
         ...result.videos.map((video) => `- ${video.name}: ${video.stage}`),
       ].join("\n");
@@ -589,10 +505,6 @@ function humanText(result) {
       return `Texto do teleprompter: ${result.file} (${result.words} palavras).`;
     case "checklist":
       return `Checklist: ${result.file} (${result.pending} marca(s) pendente(s)).`;
-    case "documento":
-      return `Documento completo: ${result.file} (${result.sections.length} parte(s); ${result.pending} marca(s) pendente(s)).`;
-    case "docx":
-      return `Documento do Word: ${result.file}.`;
     default:
       return JSON.stringify(result, null, 2);
   }
@@ -611,12 +523,8 @@ async function main(argv) {
       return teleprompterCommand(positionals, values);
     case "checklist":
       return checklistCommand(positionals, values);
-    case "documento":
-      return documentCommand(positionals, values);
-    case "docx":
-      return docxCommand(positionals, values);
     default:
-      throw usage(`Comando desconhecido: ${command}.`, "Comandos: check, lint, teleprompter, docx, checklist, documento, help.");
+      throw usage(`Comando desconhecido: ${command}.`, "Comandos: check, lint, teleprompter, checklist, help.");
   }
 }
 

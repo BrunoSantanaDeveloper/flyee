@@ -16,7 +16,7 @@ Cada tema tem um fundo (a cor protagonista), uma tinta para o texto, um cinza pa
 
 - **Um tema por carrossel**, o mesmo em todos os slides.
 - **Um acento, nunca dois.** Ele marca o que importa: a linha-herói do título (`colors: ["accent", "ink", "ink"]`), o recurso do slide (o número do contador, as barras, a bola, os números dos cartões, o botão) e as marcas de continuidade (o risco sob o título, o trecho da régua, a pílula do slide). Nunca no texto corrido, e nunca uma segunda cor de destaque.
-- **O fundo é chapado**, com o grão do tema e, no máximo, a luz suave que deriva num canto (`C.glow`, com `alpha` perto de 0,08); ou é uma foto, com as regras da seção 8. Nada de degradê de tela inteira.
+- **O fundo é chapado**, com o grão do tema e, no máximo, a luz suave que deriva num canto (`C.glow`, com `alpha` perto de 0,08). Nada de degradê de tela inteira.
 - **Tema próprio** (`{ bg, ink, muted, accent }`) só com as cores da marca do integrante, dadas por ele, e com o mesmo contraste entre fundo e tinta.
 
 ## 2. Tipografia
@@ -90,20 +90,7 @@ Na prévia (`preview.html`), o botão "Grade" mostra todos os slides lado a lado
 
 **Chamada final.** O pedido numa frase, o que a pessoa ganha e uma palavra para comentar, em maiúsculas, no botão: "Comente TREINO". Uma palavra só, fácil de digitar. Sem @, sem "link na bio", sem logo de rede. Quatro compassos, para dar tempo de ler e agir. O botão pulsa nos tempos fortes e, perto do fim, some e estoura de novo: é o último gesto do carrossel.
 
-## 8. Fotos
-
-Um carrossel com fotos segue as mesmas regras, mais estas. De onde vem cada imagem e como pedir está em `images.md`; os helpers, em `slide-page.md`.
-
-- **Uma foto herói por slide.** O fundo ocupa o quadro, e no máximo um assunto recortado vai por cima. Nada de colagem.
-- **Texto sempre sobre um degradê ou sobre a foto escurecida.** Um `C.scrim` por baixo do texto, do lado do quadro em que ele está, ou a foto com `dim` de 0,35 ou mais; os modelos usam os dois (`dim` 0,3, um degradê em cima para o título, outro à esquerda para a coluna das frases e outro embaixo). Confira nos quadros: nenhuma linha pode cruzar uma área clara ou cheia de detalhe da foto (uma janela, uma placa, um reflexo).
-- **Sobre foto, o texto vai na cor `ink`, nunca no cinza `muted`.** O cinza some na foto, mesmo num texto menor como a frase de fecho. Só fica `muted` o que está na parte mais escura dos degradês de cima e de baixo: o rótulo no alto, a régua e a seta embaixo.
-- **Nunca texto sobre um rosto, nem sobre o assunto.** O assunto fica do lado oposto ao texto: nos modelos, o texto à esquerda e o recorte embaixo à direita.
-- **A mesma luz e o mesmo estilo em todos os slides.** Repita o mesmo fundo em mais de um slide e as mesmas palavras de luz e de estilo em todos os pedidos de imagem. Fotos que parecem de carrosséis diferentes quebram a continuidade.
-- **Profundidade com contenção.** O fundo mexe pouco (`depth` perto de 0,3) e o assunto mais (de 0,7 a 1); os dois voltam ao lugar no fim do slide. A deriva da foto é lenta e não segura um trecho sozinha: os gestos de texto e do recorte continuam valendo (seção 5).
-- **O tema continua mandando.** O degradê tem a cor de fundo do tema, o acento é o do tema, e a foto não traz outra cor de destaque: escolha imagens cujas cores combinem com o tema.
-- **Sem texto dentro da imagem.** O texto é do slide, nítido e editável. Nada de logos e produtos de terceiros, nem do rosto de uma pessoa real sem a foto e a autorização dela; imagem gerada nunca se passa por foto real.
-
-## 9. Proibições
+## 8. Proibições
 
 - Gradiente em texto; texto neon; brilho ou sombra colorida em volta de texto ou de formas; fundo em degradê de tela inteira.
 - Uma segunda cor de destaque; dois temas no mesmo carrossel; cores "parecidas" com as da marca no lugar das cores da marca.
@@ -111,12 +98,11 @@ Um carrossel com fotos segue as mesmas regras, mais estas. De onde vem cada imag
 - Partículas, explosões, confete, emojis como ilustração, texto 3D, rotação sem motivo.
 - Rebote em texto; texto que aparece por fusão lenta; tudo entrando ao mesmo tempo.
 - Texto nos dois cantos do Instagram, fora da margem ou por baixo de um elemento que se move.
-- Texto sobre foto sem degradê e sem escurecer; texto cinza (`muted`) sobre a foto; texto sobre um rosto; duas fotos herói no mesmo slide; imagem gerada apresentada como foto real.
 - Mais de uma ideia por slide; mais de 7 slides sem que o integrante peça; texto de amostra dos modelos esquecido.
 - Números inventados; "estudos mostram" e "especialistas dizem" sem fonte; qualquer promessa de alcance ou de engajamento.
 - Chamar de pronto um slide com item reprovado na conferência, ou sem ter olhado os quadros.
 
-## 10. Lista anti-"IA genérica"
+## 9. Lista anti-"IA genérica"
 
 Antes de entregar, passe o carrossel por esta lista. Um "sim" é um slide a refazer.
 
@@ -131,5 +117,4 @@ Antes de entregar, passe o carrossel por esta lista. Um "sim" é um slide a refa
 - Tudo se mexe ao mesmo tempo em algum instante?
 - A chamada final pede mais de uma coisa?
 - Sobrou texto de amostra em algum slide?
-- Alguma foto tem texto por cima sem degradê ou em cinza, ou as fotos parecem de carrosséis diferentes?
 - O veredito veio do JSON, sem os quadros terem sido olhados um a um?

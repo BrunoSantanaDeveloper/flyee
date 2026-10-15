@@ -8,7 +8,7 @@ Os comentários no topo das páginas citam este guia e o exemplo pelo caminho no
 
 ## 1. O esqueleto
 
-É o modelo do gancho, como o `new` o grava (os outros três mudam só o bloco `SLIDE` e o que há dentro de `seek`; o de foto também carrega as imagens, seção 5):
+É o modelo do gancho, como o `new` o grava (os outros dois mudam só o bloco `SLIDE` e o que há dentro de `seek`):
 
 ```html
 <!doctype html>
@@ -114,7 +114,6 @@ O que `C` traz:
 | `grid` | a grade de batidas do Motor: `beat(n)`, `bar(compasso, tempo)`, `index(t)`, `nearest(t)`, `phaseInBeat(t)`, `pulse(t)` |
 | `noise(x)` | ruído suave com semente, função pura de `x` |
 | `rng` | um gerador com semente que avança a cada chamada: dentro de `seek`, crie um novo a cada quadro (`Motion.rng(S.seed)`), senão o quadro passa a depender dos anteriores |
-| `images` | as imagens carregadas por `C.loadImages`, pelo apelido (`null` na que não carregou) |
 
 Atenção ao nome: `C.bars(...)` é o gráfico de barras. Os compassos do slide ficam em `S.bars` (ou `C.totalBeats / C.beatsPerBar`).
 
@@ -354,70 +353,7 @@ Uma seta pequena que cutuca a cada batida: "deslize". Por padrão fica na linha 
 
 - `C.pulseBg(quanto)`: um pulso de brilho do fundo em cada cabeça de compasso, de no máximo 3% (`0.03`, o padrão e o teto). Chame logo depois de `begin`, antes do conteúdo.
 - `C.glow({ x, y, r, color, alpha, drift })`: uma luz suave que deriva num círculo fechado ao longo do slide e volta ao lugar no fim. Padrões: `x` 0.75, `y` 0.3, `r` 0.8, `color` `accent`, `alpha` 0.1, `drift` 0.03.
-- `C.grain(alpha)`: o grão com semente sobre o quadro. O tema `noir` já o aplica em `begin`; chame à mão só em outro tema, ou de novo depois de uma foto de fundo, que cobre o grão (`C.grain(0.35)`, como no exemplo com fotos).
-
-### Imagens: `C.loadImages`, `C.image`, `C.layers`, `C.scrim`
-
-Uma página com fotos carrega as imagens uma vez, antes do primeiro quadro, e espera por elas em `seek`, que passa a ser `async`:
-
-```js
-const C = Carousel.setup({ bars: S.bars, beatsPerBar: S.beatsPerBar, bpm: S.bpm, format: S.format, theme: S.theme, seed: S.seed, title: "Slide 2 · foto" });
-const ready = C.loadImages({ fundo: "../assets/fundo.jpg", assunto: "../assets/halter.webp" });
-
-window.seek = async (t) => {
-  await ready;
-  C.begin(t);
-  C.image("fundo", { depth: 0.35, dim: 0.3 });             // preenche o quadro, deriva devagar, escurecido
-  C.scrim({ side: "top", size: 0.6, alpha: 0.88 });        // degradê por baixo do título
-  C.scrim({ side: "left", size: 0.6, alpha: 0.55 });       // e atrás da coluna das frases
-  const title = C.headline(S.title, { y: 176, size: 132 });
-  C.body(S.text, { y: title.bottom + 80, size: 56, maxWidth: 520 });  // na cor ink, a padrão
-  C.image("assunto", { x: 0.44, y: 0.36, w: 0.52, h: 0.46, fit: "contain", anchor: "bottom-right", depth: 1, shadow: true });
-  return C.end();
-};
-```
-
-**`C.loadImages(mapa)`** recebe `{ apelido: caminho }`, com caminhos relativos à página (`../assets/fundo.jpg`), e devolve uma promessa. Cada imagem fica em `C.images[apelido]`. A que não carrega fica `null`: o slide é desenhado sem ela, e um aviso vai para o console, que o `render` repassa em `warnings`. O Motor espera a promessa que `seek` devolve; `await ready` na primeira linha garante que todo quadro sai com as imagens.
-
-**`C.image(apelido, opções)`** desenha uma imagem carregada (pelo apelido, ou um `<img>` ou `<canvas>` passado direto).
-
-| Opção | Padrão | O que faz |
-|---|---|---|
-| `x`, `y`, `w`, `h` | o quadro inteiro | a caixa da imagem |
-| `fit` | `"cover"` | `"cover"` preenche a caixa e corta o que sobra; `"contain"` mostra a imagem inteira dentro da caixa |
-| `focusX`, `focusY` | 0.5 | no `cover`, a parte que fica à vista: 0 é a esquerda ou o topo, 1 a direita ou a base |
-| `anchor` | `"center"` | no `contain`, onde a imagem encosta na caixa: `top`, `bottom`, `left`, `right` e combinações como `bottom-right` |
-| `depth` | 0 | de 0 a 1: paralaxe em laço fechado. A imagem deriva e respira ao longo do slide e volta exatamente ao lugar no fim; fundo perto de 0.3, assunto perto de 0.7 a 1 |
-| `drift` | 1 | multiplica a deriva |
-| `dim` | 0 | de 0 a 1: escurece a imagem com a cor de fundo do tema |
-| `alpha` | 1 | a opacidade |
-| `radius` | 0 | cantos arredondados, que cortam a imagem |
-| `shadow` | `false` | no `contain`, uma sombra suave que segue o contorno de um recorte |
-| `at`, `in`, `inBeats`, `out`, `outStyle`, `outBeats`, `back`, `spring` | como na seção 4 | `in` padrão: `fade` numa imagem que ocupa o quadro, `rise` nas outras |
-| `role` | nenhum | `"logo"` ou `"face"` registram a caixa para a conferência da área segura; sem `role`, a imagem não é conferida |
-
-Devolve `{ x, y, w, h, bottom, right, loaded }`: no `contain`, o retângulo onde a imagem foi desenhada; no `cover`, a caixa. É com ele que o texto se apoia ao lado. Uma imagem em `cover` com `depth` é ampliada um pouco (até 3%), para a borda nunca aparecer enquanto ela deriva. Sem o arquivo (`loaded` falso), uma imagem de quadro inteiro não aparece, e uma menor vira um retângulo da cor `surface` no lugar dela.
-
-**`C.layers(lista, comuns)`** desenha várias imagens em camadas, da mais distante para a mais próxima. Cada item é `{ src, …opções de C.image }`, e `comuns` vale para todas. Sem `depth`, a profundidade cresce de 0.3 (a primeira) a 1 (a última): é o palco em 2.5D. Devolve a lista das caixas.
-
-```js
-C.layers([
-  { src: "fundo", dim: 0.3 },
-  { src: "assunto", x: 0.44, y: 0.36, w: 0.52, h: 0.46, fit: "contain", anchor: "bottom-right", shadow: true },
-]);
-```
-
-**`C.scrim(opções)`** pinta um degradê da cor de fundo do tema sobre a foto, para o texto ler bem. Desenhe-o depois da foto e antes do texto.
-
-| Opção | Padrão | O que faz |
-|---|---|---|
-| `side` | `"bottom"` | de onde ele parte, opaco, até sumir: `top`, `bottom`, `left`, `right`; `full` é um véu uniforme |
-| `size` | 0.6 | a fração do quadro que ele cobre |
-| `alpha` | 0.9 | a opacidade na borda |
-| `color` | `bg` | a cor; os nomes do tema valem |
-| `at`, `out`, `back`, `inBeats`, `outBeats` | como na seção 4 | ele entra e sai em fade |
-
-Não devolve nada e não registra caixa. Texto nunca vai direto sobre uma foto: sempre sobre um `scrim` do lado do quadro em que ele está (o de cima para o título, o da esquerda para uma coluna de frases) ou sobre a foto escurecida com `dim`. E vai na cor `ink`, a padrão de `C.body` e `C.headline`: o cinza `muted` some na foto. O que nasce `muted` (o rótulo, os números da régua, a seta) só fica bem na parte mais escura dos degradês de cima e de baixo, onde os modelos o põem.
+- `C.grain(alpha)`: o grão com semente sobre o quadro. O tema `noir` já o aplica em `begin`; chame à mão só em outro tema.
 
 ### Pulsos e contas
 
@@ -434,7 +370,7 @@ Não devolve nada e não registra caixa. Texto nunca vai direto sobre uma foto: 
 
 Para um elemento desenhado à mão com `C.g`, o mesmo relógio está disponível: `C.life({ at, out, back }, inBeats, outBeats, mola)` devolve `{ visible, p, q, settled }` (o progresso da entrada e da saída, de 0 a 1), `C.pose(estilo, p, q, estiloDeSaída, deslocamento)` devolve `{ alpha, dx, dy, scale, wipe, chars }`, e `C.entrance(x, mola)` é a curva de uma entrada.
 
-`Carousel` traz ainda `version` (2, desde que as imagens chegaram), `THEMES`, `FORMATS`, `FONTS`, `MARGIN` (72), `CORNERS`, `safeRect(largura, altura, formato)` e `resolveTheme(tema)`.
+`Carousel` traz ainda `THEMES`, `FORMATS`, `FONTS`, `MARGIN` (72), `CORNERS`, `safeRect(largura, altura, formato)` e `resolveTheme(tema)`.
 
 ## 6. Temas e fontes
 
@@ -475,18 +411,17 @@ S.cards.forEach((card, i) => {
 
 O cartão e os textos dele recebem os mesmos tempos (`k`), para entrarem e saírem juntos; `S.step` é a distância, em batidas, entre a volta de um cartão e a do seguinte (1,5 no exemplo).
 
-## 8. Os quatro modelos e os exemplos
+## 8. Os três modelos e o exemplo
 
-O `new` grava um modelo por papel. Todos têm o rótulo opcional em `y: 96`, o título em `y: 176`, a luz de fundo, o pulso do fundo, a régua em `y: 1140` e as pílulas. E os quatro seguem a mesma ideia de movimento: o texto de apoio sai logo no começo (`textOut`, batida 0,5) e volta uma linha por batida a partir de `textBack` (batida 2), e mais um gesto acontece perto do fim. Os momentos deixados em `null` no bloco `SLIDE` são calculados a partir das batidas do slide (`BEATS`).
+O `new` grava um modelo por papel. Todos têm o rótulo opcional em `y: 96`, o título em `y: 176`, a luz de fundo, o pulso do fundo, a régua em `y: 1140` e as pílulas. E os três seguem a mesma ideia de movimento: o texto de apoio sai logo no começo (`textOut`, batida 0,5) e volta uma linha por batida a partir de `textBack` (batida 2), e mais um gesto acontece perto do fim. Os momentos deixados em `null` no bloco `SLIDE` são calculados a partir das batidas do slide (`BEATS`).
 
 | Modelo | O gesto perto do fim | O que editar |
 |---|---|---|
 | gancho (`hook`) | o título (176 px; a primeira linha em `accent` quando há `\n`) sai 5 batidas antes do fim e volta com `slam` 3 batidas antes do fim: num slide de 3 compassos, sai na 7 e volta na 9 | `title` em até 3 linhas; `text`, que o `new` deixa vazio, com até três frases curtas, uma por linha; `label` |
 | ponto (`point`) | o título (140 px) sai 5 batidas antes do fim e volta subindo (`rise`) 3 antes | `label`, `title`, `text` (60 px); troque o texto pelo recurso do slide copiando do exemplo |
-| foto (`photo`) | como no ponto: o título (132 px) sai 5 batidas antes do fim e volta subindo 3 antes. A foto `fundo` preenche o quadro, deriva devagar (`depth: 0.35`) e fica escurecida (`dim: 0.3`), com um degradê em cima, outro à esquerda, atrás das frases (`alpha: 0.55`), e outro embaixo; o recorte `assunto` fica embaixo à direita, mexe mais (`depth: 1`) e sai e volta com o texto; as frases (56 px) ficam à esquerda, com até 520 px de largura | `images.fundo` e `images.assunto` (os arquivos de `assets/`), `label`, `title`, `text`; para um slide sem recorte, apague a linha `C.image("assunto", …)` do `seek` |
 | chamada (`cta`) | o título (150 px) sai uma batida antes da metade do slide (na batida 4, no mínimo) e volta com `slam` 2 batidas depois; o botão some encolhendo 4 batidas antes do fim e estoura de volta (`pop`) na batida seguinte. Num slide de 4 compassos: título na 7 e na 9, botão na 12 e na 13. O botão pulsa nas cabeças de compasso; não há dica de deslizar | `title`; `text` (54 px), o que a pessoa ganha; `button`, com a palavra em maiúsculas |
 
-No gancho, no ponto e na foto, o risco sob o título sai com o texto e volta meia batida antes dele. Os textos de amostra que o `new` grava ("Ponto 1: uma ideia só", "Duas linhas curtas que explicam a ideia.", "Uma linha curta.", "Comente PALAVRA e eu te mando", "Salve para rever depois.", "Comente AQUI") são sempre para trocar. O modelo de foto espera `assets/fundo.jpg` e `assets/assunto.png`: enquanto eles não existem, o slide aparece sem o fundo e com um retângulo da cor `surface` no lugar do assunto, cada imagem que falta vira um aviso no `render`, e o texto só se confere de verdade com as imagens no lugar. Um caminho vazio (`""`) em `images` também conta como imagem que falta: sem fundo, fica a cor do tema; sem recorte, o retângulo continua lá até você apagar a linha dele.
+No gancho e no ponto, o risco sob o título sai com o texto e volta meia batida antes dele. Os textos de amostra que o `new` grava ("Ponto 1: uma ideia só", "Duas linhas curtas que explicam a ideia.", "Comente PALAVRA e eu te mando", "Salve para rever depois.", "Comente AQUI") são sempre para trocar.
 
 O exemplo completo (cinco slides, tema `noir`) fica em `.flyee/modules/motion-carousel/references/exemplo/`; `new <nome> --from-example` o copia inteiro para um carrossel. Copie dele o padrão de que o slide precisa:
 
@@ -498,43 +433,35 @@ O exemplo completo (cinco slides, tema `noir`) fica em `.flyee/modules/motion-ca
 | cartões que voltam um a um | `slides/04.html` | o laço da seção 7: cartões de volta na 3, na 4,5 e na 6; perto do fim, o título sai na 7 e volta na 9 (`outStyle: "rise"`, `in: "rise"`), junto com a frase de fecho |
 | chamada final com o botão que estoura de novo | `slides/05.html` | `C.cta(S.button, { y: 0.7, size: 58, pulse: true, out: 12, outStyle: "shrink", back: 13, in: "pop" })` |
 
-O exemplo com fotos (três slides, tema `noir`, com as duas imagens dele em `assets/`) fica em `.flyee/modules/motion-carousel/references/exemplo-foto/`; `new <nome> --from-photo-example` o copia inteiro, imagens incluídas. O briefing dele traz os pedidos que geraram as imagens.
+## 9. Um logo ou uma imagem do integrante
 
-| Padrão | Onde | O essencial |
-|---|---|---|
-| capa com foto: fundo, três degradês, título com impacto e o recorte por cima | `slides/01.html` | `C.image("fundo", { depth: 0.35, dim: 0.28 })`, `C.scrim` em cima (`size: 0.62`), à esquerda, atrás das frases (`size: 0.6, alpha: 0.55`), e embaixo (`size: 0.3`), `C.grain(0.35)` e o recorte com `fit: "contain", anchor: "bottom-right", depth: 1, shadow: true` |
-| ponto com foto: o recorte sai e volta | `slides/02.html` | o recorte com `out: 1, back: 2.5, in: "rise"`; as linhas com `perLine: 1.5`; a frase de fecho (46 px) na cor `ink`, não no cinza, de volta na batida 8,5; `focusX: 0.8` mostra outra parte do mesmo fundo |
-| chamada com foto | `slides/03.html` | o mesmo fundo mais escuro (`dim: 0.55`), para o texto e o botão mandarem |
+A biblioteca não tem helper de imagem. Um arquivo que o integrante deixou em `assets/` entra pelo canvas: ponha um `<img>` escondido na página, para o navegador carregá-lo antes do primeiro quadro, e desenhe-o em `seek`. Um cartão transparente no mesmo retângulo, com `role: "logo"`, registra a caixa para a conferência.
 
-## 9. Imagens nos slides: onde ficam e uma logo
-
-As imagens de um carrossel ficam em `carrosseis/<nome>/assets/`, e a página as carrega por `../assets/<arquivo>`. De onde vem cada uma (a sua própria ferramenta de imagens, o Codex do integrante, a chave do Gemini ou as fotos dele), como pedir e como conferir está em `images.md`. O `render` guarda a assinatura de cada arquivo de `assets/` que a página cita (`assets/<nome>`): trocar uma imagem refaz esse slide no próximo `render`, sem `--refresh`.
-
-Uma logo do integrante, em PNG com transparência, no lugar do rótulo (sem `label` nesse slide):
-
-```js
-const ready = C.loadImages({ logo: "../assets/logo.png" });
-window.seek = async (t) => {
-  await ready;
-  C.begin(t);
-  C.image("logo", { x: 72, y: 96, w: 220, h: 80, fit: "contain", anchor: "left", role: "logo" });
-  // … o resto do slide
-  return C.end();
-};
+```html
+<canvas id="c" width="1080" height="1350"></canvas>
+<img id="logo" src="../assets/logo.png" alt="" style="display: none">
 ```
 
-Com `role: "logo"`, a conferência confere a logo como confere o texto: dentro da margem e fora dos dois cantos.
+```js
+const logo = document.getElementById("logo");
+if (logo.naturalWidth) {
+  C.g.drawImage(logo, 72, 820, 240, 120);
+  C.card({ x: 72, y: 820, w: 240, h: 120, color: "rgba(0,0,0,0)", role: "logo", in: "none" });
+}
+```
+
+Mantenha a proporção do arquivo (`logo.naturalWidth` e `logo.naturalHeight`). O `render` guarda a assinatura de cada arquivo de `assets/` que a página cita (`assets/<nome>`): trocar o logo refaz esse slide no próximo `render`, sem `--refresh`.
 
 ## 10. As caixas e a conferência
 
-Cada helper registra, enquanto o elemento está visível, uma caixa `{ role, x, y, w, h, size, text }` com a medida real do que desenhou. Textos e rótulos de gráfico entram com `role: "text"` e o tamanho da fonte em `size`; cartões, formas, régua, pílulas, bola e o fundo do botão, com `role: "ui"`; uma imagem, só quando recebe `role` (`"logo"` ou `"face"`). `window.boxes(t)` devolve a lista do instante pedido.
+Cada helper registra, enquanto o elemento está visível, uma caixa `{ role, x, y, w, h, size, text }` com a medida real do que desenhou. Textos e rótulos de gráfico entram com `role: "text"` e o tamanho da fonte em `size`; cartões, formas, régua, pílulas, bola e o fundo do botão, com `role: "ui"`. `window.boxes(t)` devolve a lista do instante pedido.
 
 A conferência (`accept`) abre a página, lê as caixas a cada 0,25 s, em cada batida e no último quadro, e mede:
 
 | Item | O que exige |
 |---|---|
 | `first_frame_readable` | no quadro 0, pelo menos um texto com 44 px ou mais |
-| `safe_area` | toda caixa `text`, `logo` ou `face`, em todo instante lido, dentro da margem de 72 px e fora dos dois cantos; as caixas `ui` e as imagens sem `role` não entram |
+| `safe_area` | toda caixa `text` ou `logo`, em todo instante lido, dentro da margem de 72 px e fora dos dois cantos; as caixas `ui` não entram |
 | `text_size` | o menor texto: reprova abaixo de 26,4 px, avisa abaixo de 44 |
 | `loop_seamless` | o último quadro igual ao primeiro (semelhança de 0,985 para passar; avisa a partir de 0,95) |
 
@@ -567,7 +494,5 @@ Aberta num navegador comum, a página toca sozinha, sem som: espaço pausa, as s
 - Um título com `at > 0`: a capa fica sem ele.
 - `out` sem `back` num elemento da capa, ou `out` e `back` num elemento com `at > 0`: o loop salta.
 - Mudar o tamanho do canvas, a duração ou o `fps` fora do `setup`.
-- Carregar uma imagem dentro de `seek`, ou um `seek` com imagens sem o `await ready` na primeira linha: carregue tudo com `C.loadImages` antes do primeiro quadro.
-- Texto direto sobre uma foto, sem `scrim` por baixo nem `dim`.
 - Texto por `C.g.fillText`, ou abaixo de 44 px.
 - Texto de amostra dos modelos esquecido na página ("Ponto 1: uma ideia só", "Comente AQUI").

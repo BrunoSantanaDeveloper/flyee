@@ -6,14 +6,38 @@
       "setup": "video-render instalado em .flyee/modules/video-render; ffmpeg e um navegador (Edge, Chrome ou Chromium) presentes; projeto sem a pasta carrosseis/.",
       "prompt": "Faça um carrossel animado sobre por que as pessoas desistem da academia em fevereiro, tema noir, 5 slides.",
       "assertions": [
-        { "kind": "file_exists", "path": "carrosseis/*/brief.md" },
-        { "kind": "file_exists", "path": "carrosseis/*/storyboard.json" },
-        { "kind": "file_exists", "path": "carrosseis/*/previa/quadros-01/folha.png" },
-        { "kind": "file_exists", "path": "carrosseis/*/previa/01.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/*/out/01.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/*/out/05.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/*/preview.html" },
-        { "kind": "file_exists", "path": "carrosseis/*/relatorio.json" }
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/brief.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/storyboard.json"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/previa/quadros-01/folha.png"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/previa/01.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/out/01.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/out/05.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/preview.html"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/relatorio.json"
+        }
       ],
       "rubric": "A IA roda check --json uma vez, pergunta de uma vez só o que falta (para quem, promessa, tom, a palavra da chamada) ou decide e diz, e cria o carrossel com new (5 slides: hook, point, point, point, cta; 3 compassos nos quatro primeiros e 4 na chamada; tema e trilha noir; 120 BPM). Preenche brief.md, troca todo texto de amostra dos modelos (nenhum 'Ponto 1: uma ideia só', 'Comente PALAVRA' ou 'Comente AQUI' sobra), quebra o título do gancho com \\n em até 3 linhas e escreve os events do roteiro nas mesmas batidas dos gestos das páginas. Antes de renderizar, fotografa cada slide com frames --every 0.5 --format 4:5 e abre a folha, e roda accept; corrige todo fail. Depois render --preview, open, render final num só comando (se ele for interrompido, o mesmo comando de novo, que reaproveita os slides prontos) até pending vazio, accept completo e sheet --phone de cada out/NN.mp4 aberto e olhado. Em relatorio.json, first_frame_readable, safe_area, text_size e loop_seamless passam em todos os slides, hook_first_frame e cta_present no conjunto, e nenhum dead_time fica em warn sem correção (um par out/back levado para o trecho parado). Cada slide se mexe já no primeiro segundo e termina igual ao quadro 0. Uma cor e um acento; nenhum número sem origem; nenhuma promessa de alcance ou engajamento; a chamada pede uma palavra em maiúsculas, sem @ nem logo de rede. A entrega dá os caminhos de out/ na ordem, diz como postar pelo aplicativo do Instagram, relata a conferência item por item e sugere a legenda com a palavra. Nada é pedido para o integrante instalar, digitar ou abrir; o uso é registrado com npx --yes flyee@latest track tool.executed --module motion-carousel."
     },
@@ -22,10 +46,22 @@
       "setup": "video-render instalado; ffmpeg e navegador presentes; projeto sem a pasta carrosseis/.",
       "prompt": "Crie um carrossel em vídeo para o lançamento do meu curso de fotografia com celular: 4 slides, visual azul, terminando com 'comente FOTO'. Promessa: fotos de produto vendáveis só com o celular, em uma semana. Tom: direto e animado.",
       "assertions": [
-        { "kind": "file_exists", "path": "carrosseis/*/out/01.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/*/out/04.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/*/preview.html" },
-        { "kind": "file_exists", "path": "carrosseis/*/relatorio.json" }
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/out/01.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/out/04.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/preview.html"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/relatorio.json"
+        }
       ],
       "rubric": "Escolhe o tema cobalt e a trilha upbeat a partir de 'visual azul' e 'animado', sem perguntar o que o pedido já respondeu, e cria hook, point, point, cta com 3, 3, 3 e 4 compassos. As páginas trazem totalBars 13 e offsetBars 0, 3, 6 e 9, o mesmo tema e a mesma régua. A chamada final mostra 'Comente FOTO' no botão, que pulsa e estoura de novo perto do fim, sem dica de deslizar. A IA olha as folhas de quadros de cada slide antes de julgar, roda accept, corrige o que reprovar e entrega os MP4 de out/ na ordem, com uma legenda sugerida. Não inventa números sobre o curso nem resultados de alunos: o que o integrante não informou não vira número."
     },
@@ -34,8 +70,14 @@
       "setup": "Depois do caso 'carrossel noir sobre a academia em fevereiro': a pasta carrosseis/<nome>/ já tem os cinco out/NN.mp4 e o carousel.json do render final.",
       "prompt": "Refaça o slide 3 do carrossel da academia com outra frase: 'Dor sem placar não vira hábito'.",
       "assertions": [
-        { "kind": "file_exists", "path": "carrosseis/*/out/03.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/*/relatorio.json" }
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/out/03.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/relatorio.json"
+        }
       ],
       "rubric": "Edita só slides/03.html (a frase, quebrada em até 3 linhas escolhidas pela IA) e o title do slide 3 no roteiro. Fotografa o slide 3 com frames e olha a folha, roda accept --slides 3, depois render --slides 3: o resultado tem rendered [3], os outros slides como kept sem stale e pending vazio. Roda o accept completo no fim. Nenhum outro slide é renderizado de novo e --refresh não é usado. A frase nova cabe sem encolher abaixo do tamanho pedido, fica dentro da área segura e o slide 3 passa na conferência."
     },
@@ -44,9 +86,18 @@
       "setup": "Só o motion-carousel instalado em .flyee/modules/; sem ffmpeg; Edge presente (Windows); a conta do integrante tem acesso ao video-render.",
       "prompt": "Faça um carrossel animado de 3 slides sobre como organizar a semana no domingo.",
       "assertions": [
-        { "kind": "file_exists", "path": ".flyee/modules/video-render/scripts/render.mjs" },
-        { "kind": "file_exists", "path": "carrosseis/*/out/03.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/*/relatorio.json" }
+        {
+          "kind": "file_exists",
+          "path": ".flyee/modules/video-render/scripts/render.mjs"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/out/03.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/relatorio.json"
+        }
       ],
       "rubric": "O check mostra video_render.installed falso: a IA roda ela mesma npx --yes flyee@latest add video-render --dry-run --json, diz numa frase que o render vem do app Motor de vídeo e o que ele declara e, com o sim do integrante, roda npx --yes flyee@latest add video-render --yes --json com tempo limite de 10 minutos. Repete o check, vê modes.render falso e install.ffmpeg, avisa numa frase e roda ela mesma o comando de install.ffmpeg com tempo limite longo; se viesse needs_member, mostraria só o passo único. Nunca mostra um comando para o integrante digitar, nunca fala em terminal e não pede para reabrir a IA. Depois segue o fluxo inteiro (new com hook, point e cta, folhas olhadas, accept, prévia, render final, accept) e entrega."
     },
@@ -55,9 +106,18 @@
       "setup": "video-render instalado; ffmpeg e navegador presentes; um arquivo trilha.mp3 na raiz do projeto, com batida clara a 100 BPM, que o integrante diz ser dele.",
       "prompt": "Faça um carrossel animado de 4 slides sobre café especial usando a minha música, trilha.mp3. A música é minha, pode usar.",
       "assertions": [
-        { "kind": "file_exists", "path": "carrosseis/*/assets/trilha.mp3" },
-        { "kind": "file_exists", "path": "carrosseis/*/out/04.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/*/relatorio.json" }
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/assets/trilha.mp3"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/out/04.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/*/relatorio.json"
+        }
       ],
       "rubric": "A IA copia a música para carrosseis/<nome>/assets/ e aponta sound.file para assets/trilha.mp3. Ou mede o andamento antes, com o beats do Motor sem --bpm, ou deixa o render medir: se o primeiro render trouxer music.tempo_matches falso e o aviso com 100 BPM, ela põe esse bpm no roteiro e no bloco SLIDE de todas as páginas, refaz a conta dos compassos (a 100 BPM, 3 compassos são 7,2 s) e renderiza de novo; nunca entrega com tempo_matches falso. O render final traz music.source 'file', bpm_detected perto de 100, tempo_matches verdadeiro e nenhum aviso de música curta. Anota no brief.md que o integrante confirmou o direito de uso. Não diz que ouviu a música; descreve o que mediu."
     },
@@ -66,30 +126,16 @@
       "setup": "Um carrossel pronto em carrosseis/academia/ (render final e relatorio.json), cujo slide 4 tem os cartões voltando nas batidas 3, 4 e 5 e a frase de fecho na 7, e nada mais até o fim: o accept final dá dead_time em warn de 4,1 s a 5,9 s.",
       "prompt": "Confira o carrossel da academia e corrija o que estiver errado antes de eu postar.",
       "assertions": [
-        { "kind": "file_exists", "path": "carrosseis/academia/out/04.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/academia/relatorio.json" }
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/academia/out/04.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "carrosseis/academia/relatorio.json"
+        }
       ],
       "rubric": "Roda accept academia --json e relata o warn de dead_time do slide 4 com o trecho. Corrige levando um par out/back de um elemento grande para dentro do trecho quieto (por exemplo, o título saindo na 7 e voltando na 9 com a frase de fecho, ou os cartões voltando a cada batida e meia; nunca só um traço pequeno), ajusta os events do slide 4 no roteiro para as novas batidas, olha a folha de quadros do slide 4, roda render academia --slides 4 --json e o accept completo: o dead_time do slide 4 passa e nada mais muda. Não chama de pronto antes disso, não renderiza os outros slides e não usa --refresh."
-    },
-    {
-      "name": "carrossel com fotos pelo Codex do integrante",
-      "setup": "video-render instalado; ffmpeg e navegador presentes; o Codex instalado e conectado à conta do ChatGPT (check: images.available [\"codex\"], images.codex.auth \"chatgpt\"); sem chave do Gemini; a IA da conversa não gera imagens; projeto sem a pasta carrosseis/.",
-      "prompt": "Faça um carrossel animado com fotos sobre treinar em casa com um peso só: 3 slides, clima de academia escura ao amanhecer.",
-      "assertions": [
-        { "kind": "file_exists", "path": "carrosseis/*/assets/*.jpg" },
-        { "kind": "file_exists", "path": "carrosseis/*/assets/*.jpg.json" },
-        { "kind": "file_exists", "path": "carrosseis/*/previa/quadros-01/folha.png" },
-        { "kind": "file_exists", "path": "carrosseis/*/out/03.mp4" },
-        { "kind": "file_exists", "path": "carrosseis/*/relatorio.json" }
-      ],
-      "rubric": "Roda check --json e vê codex em images.available, com auth chatgpt: não oferece nem pede chave nenhuma. Cria o carrossel com new com o papel photo (por exemplo --roles hook,photo,cta) ou põe a foto no gancho e na chamada pelos helpers. Avisa numa frase que cada imagem pelo Codex leva por volta de um minuto e meio e roda images um pedido por vez, com tempo limite de 10 minutos: um fundo .jpg e um recorte com --cutout em .png ou .webp, descrições em inglês com as mesmas palavras de luz e de estilo, sem texto, logos, marcas de terceiros ou pessoas reais. Abre e olha cada imagem antes de usar, confere cutout.transparent_ratio e repete com --refresh o que saiu com moldura, texto ou deformação. Troca os caminhos de images no bloco SLIDE pelos arquivos gravados. Em cada slide, uma foto herói; o texto na cor ink, sobre um degradê do lado em que está, longe do recorte; nenhum texto muted sobre a foto. Fotografa os quadros e olha as folhas (nenhuma linha sobre parte clara da foto, o recorte longe do texto), roda accept, a prévia e o render final, e entrega com o resultado da conferência. O brief.md traz a seção Imagens com os pedidos usados. Nunca apresenta as imagens geradas como fotos reais."
-    },
-    {
-      "name": "fotos sem Codex e sem chave, sem pedir a chave na conversa",
-      "setup": "video-render, ffmpeg e navegador presentes; sem Codex e sem chave do Gemini (check: images.available vazio, images.gemini_setup preenchido); a IA da conversa não gera imagens.",
-      "prompt": "Quero um carrossel animado com fotos sobre o meu café: 5 slides.",
-      "assertions": [],
-      "rubric": "Roda check --json, vê que nenhum caminho gera imagens e oferece numa frase as três saídas: a chave opcional do Gemini, que o Google não cobra no uso comum, as fotos do próprio integrante ou o estilo gráfico. Se ele quiser a chave, diz onde criá-la (images.gemini_setup.key_url) e roda npx --yes flyee@latest key set GEMINI_API_KEY --browser --json, sem pedir que o integrante digite nada: o comando abre a página no navegador dele; quando ele diz que salvou, roda check --json de novo e só então usa images. Nunca pede a chave na conversa, nunca a escreve num comando e nunca abre ~/.flyee/keys.json; se o integrante colar a chave no chat, não a usa e diz para apagá-la no Google AI Studio e criar outra. Se ele mandar fotos, grava em carrosseis/<nome>/assets/ e as usa (foto inteira com dim ou num quadro; pessoa recortada só a partir de uma foto que já vem sem fundo). Se ele não quiser nenhuma das duas, segue no estilo gráfico sem insistir. Nenhuma frase manda o integrante abrir um terminal ou instalar algo."
     }
   ]
 }

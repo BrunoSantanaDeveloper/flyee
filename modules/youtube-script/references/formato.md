@@ -5,22 +5,17 @@ Tudo o que este app produz fica na pasta `roteiros/` do projeto do integrante. U
 ```
 roteiros/
 ├── canal.md                  o perfil do canal: público, promessa, formatos, voz, ritmo de fala e as regras do criador
-├── pautas-<data>.md          as pautas, quando o integrante pergunta o que gravar
 └── <vídeo>/                  um nome curto, minúsculas e hífens (ex.: bolo-de-pote)
     ├── briefing.md           o que o vídeo é, para quem, o que precisa provar e o que fica fora da fala
     ├── verdade.md            a ficha de verdade do que aparece no vídeo (ferramenta, produto, serviço)
-    ├── pesquisa.md           os dados do tema, os padrões, a lacuna e os fatos com fonte
-    ├── referencia.md         o mapa batida a batida de um vídeo de referência e a adaptação ao público
     ├── embalagem.md          títulos, thumbnails para o teste e a promessa escolhida
-    ├── gravacao.md           o plano de gravação: o que fazer, gravar e anotar antes da fala (e, num tutorial de tela, o mapa da gravação)
+    ├── gravacao.md           o plano de gravação: o que fazer, gravar e anotar antes da fala
     ├── estrutura.md          os ganchos, o escolhido, os blocos com tempo e os pontos de retenção
     ├── roteiro.md            o texto que vai ser falado, bloco por bloco
     ├── revisao.md            o que a conferência e a crítica acharam e o que mudou
     ├── descricao.md          a descrição do vídeo, com capítulos e o comentário fixado
     ├── checklist.md          o que fazer antes, o que preencher e o que conferir antes de publicar (gerado pelo script)
-    ├── teleprompter.txt      só a fala, uma frase por linha (gerado pelo script)
-    ├── roteiro.docx          o roteiro em documento do Word e do Google Docs (gerado pelo script)
-    └── roteiro-completo.md   tudo junto, na ordem de leitura, para ler e compartilhar (gerado pelo script)
+    └── teleprompter.txt      só a fala, uma frase por linha (gerado pelo script)
 ```
 
 Nunca apague o que o integrante escreveu. Para mudar um arquivo pronto, mostre a mudança e grave por cima só com o sim dele; versões antigas do roteiro podem ficar como `roteiro-v1.md`.
@@ -89,7 +84,6 @@ Nunca apague o que o integrante escreveu. Para mudar um arquivo pronto, mostre a
 - Prova que o criador tem: … (números, casos, telas, histórias próprias)
 - Alguma coisa que aparece no vídeo é sua (você fez, vende ou ganha com ela)? sim/não: …
 - O resultado já existe? sim/não: … (num vídeo que mostra fazer, testar ou experimentar algo)
-- Vídeo de referência: … (o endereço, ou "nenhum")
 - O que o vídeo NÃO cobre: …
 - O que fica fora da fala: … (marcas que o público não conhece, planos, preços, versões, números não medidos)
 - Pedido do fecho: …
@@ -132,14 +126,6 @@ Fontes: <a documentação oficial, o README, o site; a data em que você leu>
 
 Para um objeto comum, sem fonte oficial (uma panela, um pote), a ficha é curta: o que ele usa, o que se sabe com fonte e o resto em `[CONFIRMAR]`. Os títulos `## ` com nome próprio são os nomes que o checklist manda conferir nas legendas.
 
-## pesquisa.md e pautas-<data>.md
-
-Os outliers que importam, os padrões, os traços de título medidos, como os melhores fazem, o que o público pergunta, a lacuna, a tabela de fatos com fonte e as ressalvas. O formato de cada um está em `pesquisa.md` (esta mesma pasta).
-
-## referencia.md
-
-O mapa batida a batida do vídeo de referência, o que muda no contexto do público, o que fica de fora e de onde veio a transcrição. O formato está em `pesquisa.md`, na seção "Um vídeo de referência".
-
 ## gravacao.md
 
 O plano de gravação. Num vídeo que mostra fazer, testar ou experimentar algo que ainda não aconteceu, ele vem antes da fala; o checklist copia os itens dele.
@@ -152,14 +138,11 @@ O plano de gravação. Num vídeo que mostra fazer, testar ou experimentar algo 
 - [ ] Anotar: os tempos, as escolhas, o que deu errado de verdade
 - [ ] A busca que a fala vai citar: … (onde, com que palavras e quantos resultados)
 - [ ] Gravar as cenas de apoio: …
-
-## O mapa da gravação
-<num tutorial de tela, depois de gravar: a tabela com os tempos; veja tutorial-de-tela.md>
 ```
 
 ## embalagem.md
 
-Os títulos (5, de gatilhos diferentes, cada um entre aspas, com o gatilho e o traço medido), as thumbnails (como variantes do teste de miniaturas quando o canal tem esse teste), o par escolhido, a promessa em uma frase e onde o vídeo paga essa promessa. Veja `embalagem.md`.
+Os títulos (5, de gatilhos diferentes, cada um entre aspas, com o gatilho), as thumbnails (como variantes do teste de miniaturas quando o canal tem esse teste), o par escolhido, a promessa em uma frase e onde o vídeo paga essa promessa. Veja `embalagem.md`.
 
 ## estrutura.md
 
@@ -195,7 +178,6 @@ Fala…
 | `## ` | um bloco do vídeo; os blocos viram os capítulos da descrição. O primeiro é o gancho, e o limite de 45 s vale para ele; o contrato é um bloco próprio, logo depois. "Gancho", "Abertura" e "Contrato" entram como "Introdução" nos capítulos |
 | texto comum | a fala, exatamente como vai ser dita |
 | `[TELA: …]`, `[CÂMERA]`, `[B-ROLL: …]`, `[CORTE]`, `[TEXTO: …]`, `[MÚSICA: …]`, `[PAUSA]` | marcações de produção, nunca faladas. Um tempo dentro de qualquer uma delas (`[TELA 8s: …]`, `[B-ROLL 25s: …]`, `[PAUSA 2s]`, `[CONGELAR 3s]`) soma segundos de ação sem fala na duração |
-| `[TELA 00:12 a 00:31: …]` | num tutorial, o trecho da gravação de tela que esta fala cobre, até a próxima marca desse tipo. Não soma tempo: a conferência compara a fala com o trecho. Escreva "acelerar" ou "cortar" na marca quando o trecho vai ser encurtado na edição |
 | `[fonte: …]` | de onde vem um número ou um dado de fora; não é falada. O que está na ficha de verdade não leva marca: a ficha é a fonte |
 | `[CONFIRMAR: …]` | a fala depende de algo que ainda falta: um número, um nome, um fato do criador ou o que só o resultado responde. A conferência bloqueia até sair, uma por uma, mesmo sozinha numa linha ou numa nota. Quando a marca pede uma fala dele (uma história, uma opinião), traga um exemplo do tamanho e do tom: `[CONFIRMAR: de onde veio a ideia. Ex.: 'Eu tava fazendo … e reparei que …']`. O exemplo mostra a forma, nunca a história ou a lição de outro criador |
 | `[ESCOLHER: …]` | uma decisão que é do criador (o tema do exemplo, a palavra da chamada). A conferência bloqueia até sair |
@@ -245,6 +227,6 @@ Comentário fixado: <uma pergunta fácil, ou o material prometido no fecho>
 
 Os tempos dos capítulos saem do `lint`. Depois da edição, eles mudam: avise o integrante para conferir no vídeo final. A descrição passa pela conferência também: um `[CONFIRMAR]` esquecido nela gera aviso.
 
-## checklist.md e roteiro-completo.md
+## checklist.md
 
-Os dois são gerados pelo script. O `checklist` tem três tempos: o que fazer e gravar antes da fala (os itens de `gravacao.md`; sem o plano, as cenas que as marcas pedem); cada `[CONFIRMAR]` e `[ESCOLHER]` do roteiro, da descrição, do briefing, da ficha, da embalagem, do plano e do perfil, com o bloco e a linha; e o que conferir antes de publicar (telas sem dados pessoais, legendas com os nomes certos, quadros reais nas thumbnails, links). O `documento` junta o briefing, a ficha, a referência, a embalagem, a estrutura, o plano de gravação, o roteiro, a descrição, o checklist e a revisão num arquivo só, e avisa no alto quando ainda é rascunho.
+Gerado pelo script. Ele tem três tempos: o que fazer e gravar antes da fala (os itens de `gravacao.md`; sem o plano, as cenas que as marcas pedem); cada `[CONFIRMAR]` e `[ESCOLHER]` do roteiro, da descrição, do briefing, da ficha, da embalagem, do plano e do perfil, com o bloco e a linha; e o que conferir antes de publicar (telas sem dados pessoais, legendas com os nomes certos, quadros reais nas thumbnails, links).

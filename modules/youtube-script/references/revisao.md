@@ -8,8 +8,6 @@ Rode `lint <vídeo> --target <minutos> --json` e resolva todos os bloqueios. Os 
 
 ## 2. A abertura às cegas
 
-Com uma referência, confira o mapa: cada batida de "como entra no nosso" em `referencia.md` está no roteiro, no lugar do mapa, ou foi riscada com o motivo.
-
 Antes de ler o resto, julgue só a abertura, como um estranho, pelo teste de `ganchos.md`. Se a abertura não passa, conserte-a antes de avaliar o corpo: um roteiro bom atrás de uma abertura fraca não é visto.
 
 ## 3. A crítica
@@ -17,8 +15,7 @@ Antes de ler o resto, julgue só a abertura, como um estranho, pelo teste de `ga
 **Quem critica.** Se a sua ferramenta abre um subagente, peça a crítica a ele, entregando estes arquivos e nada mais:
 
 - `roteiro.md`, `briefing.md`, `embalagem.md` e `estrutura.md` (com os laços abertos) do vídeo, e `gravacao.md`, se existir;
-- `verdade.md` e `referencia.md`, se existirem, e a transcrição da referência, quando estiver no projeto (para o teste de cópia);
-- `pesquisa.md`, se existir;
+- `verdade.md`, se existir;
 - o perfil `canal.md`, com as "Regras do criador";
 - o resultado do `lint` (rode com `--out roteiros/<vídeo>/lint.json` para ter o arquivo);
 - este guia, `ganchos.md` (para o teste da abertura às cegas) e `escrita-falada.md` (para as mudanças propostas não caírem nas fórmulas que a conferência aponta).

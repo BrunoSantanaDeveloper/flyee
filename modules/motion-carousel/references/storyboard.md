@@ -56,7 +56,7 @@ O começo do roteiro do exemplo, com o primeiro slide:
 | `seed` | inteiro | `7` | a semente que o `new` grava nas páginas |
 | `slides` | lista de 2 a 20 | sem padrão | um item por slide, na ordem de postagem |
 | `slides[].n` | a posição na lista | a posição | opcional; quando existe, tem de ser a posição |
-| `slides[].role` | `hook`, `point`, `photo`, `cta` | sem padrão | o papel (seção 3) |
+| `slides[].role` | `hook`, `point`, `cta` | sem padrão | o papel (seção 3) |
 | `slides[].bars` | inteiro de 1 a 16 | sem padrão | os compassos do slide; a duração tem de ficar entre 3 e 60 s |
 | `slides[].file` | caminho `.html` dentro da pasta do carrossel | `slides/NN.html` | a página do slide; nenhum arquivo se repete |
 | `slides[].title` | texto de até 300 caracteres | vazio | a frase principal do slide, para o relatório e para quem lê o roteiro |
@@ -95,12 +95,9 @@ Mantenha 120 BPM a não ser que o tom peça outra coisa: a 30 quadros por segund
 |---|---|---|
 | `hook` | o primeiro | a capa do carrossel: uma frase de 2 a 8 palavras em até 3 linhas, pronta no quadro 0 |
 | `point` | os do meio | uma ideia: um rótulo, um título e um recurso que a prova (um contador, um gráfico, cartões, frases que entram por batida, a bola) |
-| `photo` | os do meio | uma ideia com foto: a foto de fundo que preenche o quadro, um assunto recortado por cima e o texto num degradê |
 | `cta` | o último | o pedido, o que a pessoa ganha e o botão com a palavra a comentar; sem dica de deslizar |
 
-O papel decide o modelo que o `new` usa para a página e aparece na prévia e no relatório. A ordem padrão do `new` é `hook`, os `point` e `cta` (cinco slides: `hook, point, point, point, cta`); `--roles` aceita outra, como `hook,photo,point,cta`. Um `photo` conta como um ponto na numeração dos textos de amostra. A validação não confere a ordem dos papéis; a conferência avisa quando o último slide não é `cta` (`cta_present`) e trata o primeiro quadro do slide 1 como a capa do carrossel (`hook_first_frame`), seja qual for o papel dele.
-
-Foto não é exclusividade do papel `photo`: o gancho e a chamada também podem levar uma foto de fundo, escrita na página com os helpers de imagem, como no exemplo com fotos (`new <nome> --from-photo-example`, papéis `hook, photo, cta`). O papel só escolhe o modelo de partida. As imagens moram em `assets/`, fora do roteiro: de onde vêm está em `images.md`.
+O papel decide o modelo que o `new` usa para a página e aparece na prévia e no relatório. A ordem padrão do `new` é `hook`, os `point` e `cta` (cinco slides: `hook, point, point, point, cta`); `--roles` aceita outra. A validação não confere a ordem dos papéis; a conferência avisa quando o último slide não é `cta` (`cta_present`) e trata o primeiro quadro do slide 1 como a capa do carrossel (`hook_first_frame`), seja qual for o papel dele.
 
 ## 4. Os eventos sonoros
 
@@ -189,7 +186,7 @@ O `render` grava o progresso em `carousel.json` slide a slide, com `partial: tru
 - `format` fora dos quatro; `fps` que não é inteiro de 1 a 120; `bpm` fora de 60 a 200; `beats_per_bar` diferente de 3 e de 4.
 - `sound.style` desconhecido; `sound.seed` que não é inteiro; `sound.intro_bars` fora de 0 a 8, ou igual ou maior que o total de compassos do carrossel; `sound.file` com caminho absoluto, com letra de unidade ou com `..`.
 - `theme` que não é um dos cinco nomes nem um objeto com `bg`, `ink`, `muted` e `accent` em hexadecimal de seis dígitos.
-- Menos de 2 ou mais de 20 slides; `n` diferente da posição; `role` fora de `hook`, `point`, `photo`, `cta`; `bars` que não é inteiro de 1 a 16, ou que dá menos de 3 s ou mais de 60 s (a mensagem diz quantos compassos cabem naquele `bpm`).
+- Menos de 2 ou mais de 20 slides; `n` diferente da posição; `role` fora de `hook`, `point`, `cta`; `bars` que não é inteiro de 1 a 16, ou que dá menos de 3 s ou mais de 60 s (a mensagem diz quantos compassos cabem naquele `bpm`).
 - Mais de 64 compassos somados com a trilha gerada (o erro aparece em `slides`).
 - `file` que não termina em `.html`, que sai da pasta do carrossel ou que repete o de outro slide.
 - Num evento: `type` desconhecido; `beat` negativo, ou igual ou maior que o total de batidas do slide; `pan` fora de −1 a 1; `direction` diferente de `in` e `out`; `gain_db` fora de −40 a 12; `length` fora de 0,01 a 10; `pitch` fora de 0,1 a 8.
@@ -198,7 +195,7 @@ Um arquivo que não é JSON válido é o erro `invalid_json`. O que passa pela v
 
 ## 8. O que a conferência lê do roteiro
 
-O `accept` confere cada página com o `format` e a grade do `bpm` do roteiro (cada slide começa numa cabeça de compasso da trilha, então dentro dele as batidas contam de zero) e, quando `out/NN.mp4` existe, o vídeo final. Do roteiro saem os itens do conjunto:
+O `accept` confere cada página com o `format` do roteiro, as batidas de `audio/music.beats.json` (antes do primeiro `render`, a grade do `bpm`) e, quando `out/NN.mp4` existe, o vídeo final. Do roteiro saem os itens do conjunto:
 
 | Item | Passa quando | Senão |
 |---|---|---|

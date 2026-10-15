@@ -14,7 +14,7 @@ export const FORMATS = {
   "1:1": { width: 1080, height: 1080 },
   "9:16": { width: 1080, height: 1920 },
 };
-export const ROLES = ["hook", "point", "photo", "cta"];
+export const ROLES = ["hook", "point", "cta"];
 export const THEMES = ["noir", "cobalt", "paper", "forest", "mono"];
 export const SOUND_STYLES = ["clean", "noir", "upbeat", "lofi", "pulse"];
 export const EVENT_TYPES = ["kick", "thump", "impact", "click", "tick", "pop", "whoosh", "swish", "riser", "ding", "shutter", "pluck", "blip"];

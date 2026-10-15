@@ -18,12 +18,12 @@ Quando a plataforma tiver o token de serviço e a importação do índice (fase 
 1. O CI do `main` verde: o workflow `release-cli` roda o mesmo `npm run ci:verify` no Linux antes de publicar. `npm run check:tarball` lista só `dist/**`, `package.json`, `README.md` e `LICENSE`.
 2. Suba `version` em `packages/cli/package.json`. A linha é 1.x; a 0.x do pacote `flyee` no npm é de outro projeto e não fala o contrato. Nunca publique uma prerelease como primeira versão: ela viraria o `latest` que todo mundo baixa, e a plataforma conta uma alpha como mais antiga que o piso.
 3. Atualize a seção de mudanças de `packages/cli/README.md`.
-4. Tag `cli-v<versão>` e push da tag. O workflow `release-cli` confere a tag contra a versão do pacote e publica com `NPM_TOKEN` e proveniência.
+4. Tag `cli-v<versão>` e push da tag. O workflow `release-cli` confere a tag contra a versão do pacote e publica pela publicação confiável do npm, sem token: no npmjs.com, o pacote `flyee` tem em Settings, Trusted Publisher, o GitHub Actions com usuário `BrunoSantanaDeveloper`, repositório `flyee`, workflow `release-cli.yml` e "Allow npm publish" marcado. Uma configuração nova expira se nenhuma publicação acontecer em 2 dias. O repositório é privado, então o npm não gera proveniência, e o workflow não a pede.
 5. Peça ao operador da plataforma para subir `platform_settings.cli.min_cli_version` quando a versão for o novo piso. Na primeira publicação, para `1.0.0`.
 
 ## Segredos da CI
 
 | Segredo | Uso |
 |---|---|
-| `NPM_TOKEN` | publicar o pacote `flyee` (token de automação com 2FA) |
+| nenhum para o npm | a publicação confiável identifica o workflow; tokens que pulam o 2FA deixam de publicar em janeiro de 2027 |
 | `FLYEE_SERVICE_TOKEN` | enviar rascunhos e o índice à plataforma, quando existir |

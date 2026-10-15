@@ -1,6 +1,6 @@
 ---
 name: app-release
-description: Procedure to publish a version of an app or a release of the CLI — pack and checksum, console upload as draft, publish, check the entry-version mark, verify page and guides, end-to-end check with an account without purchase and a paid one; engines before the apps that use them; CLI tag and npm publish through CI. Use when asked to "publish", "release", "subir uma versão" or "lançar o app".
+description: Procedure to publish a version of an app or a release of the CLI — pack and checksum, console upload as draft, publish, check the entry-version mark, verify page and guides, end-to-end check with an account without purchase and a paid one; engines before the apps that use them; CLI tag and npm trusted publishing through CI. Use when asked to "publish", "release", "subir uma versão" or "lançar o app".
 ---
 
 # Release
@@ -22,5 +22,5 @@ Engines first: `video-render` before `video-studio` and `motion-carousel`; `vide
 
 1. `main` green in CI (the `release-cli` workflow runs the same `npm run ci:verify` on Linux before it publishes); `npm run check:tarball` lists only `dist/**`, `README.md`, `LICENSE` and `package.json`.
 2. Bump `version` in `packages/cli/package.json` (1.x; never 0.x, that line belongs to another project; never a prerelease as the first published version) and the changes section of `packages/cli/README.md`.
-3. The tag is `cli-v<version>`; once pushed, the `release-cli` workflow checks it against the package version and publishes with `NPM_TOKEN`.
+3. The tag is `cli-v<version>`; once pushed, the `release-cli` workflow checks it against the package version and publishes through npm trusted publishing, with no token (the package's Trusted Publisher on npmjs.com names this repository and `release-cli.yml`; the repository is private, so there is no provenance).
 4. Ask the platform operator to raise `platform_settings.cli.min_cli_version` when a release is the new floor (`1.0.0` on the first one).

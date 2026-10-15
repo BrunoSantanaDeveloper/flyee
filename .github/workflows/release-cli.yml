@@ -1,8 +1,15 @@
 name: Release CLI
 
 # Publishes packages/cli to npm when a tag `cli-v<version>` is pushed. The tag
-# must match the version in packages/cli/package.json. Needs the NPM_TOKEN
-# secret (automation token). Provenance ties the package to this workflow run.
+# must match the version in packages/cli/package.json.
+#
+# No token: npm trusts this workflow by its identity (trusted publishing,
+# https://docs.npmjs.com/trusted-publishers), configured on npmjs.com for the
+# package `flyee` with this repository and the workflow file `release-cli.yml`.
+# That needs `id-token: write` and npm 11.5.1 or newer at publish time (Node 22
+# ships npm 10, which fails with a misleading 404). The repository is private,
+# so npm generates no provenance and `--provenance` would be refused. No cache
+# in a release build.
 
 on:
   push:
@@ -15,13 +22,12 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm run ci:verify
@@ -31,6 +37,8 @@ jobs:
           if [ "$GITHUB_REF_NAME" != "$expected" ]; then
             echo "Tag $GITHUB_REF_NAME does not match $expected"; exit 1
           fi
-      - run: npm publish -w flyee --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: npm 11 for trusted publishing
+        run: |
+          npm install -g npm@11
+          npm --version
+      - run: npm publish -w flyee --access public

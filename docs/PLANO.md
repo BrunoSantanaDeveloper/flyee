@@ -32,7 +32,7 @@ As decisões estão na plataforma (`flyee-club/docs/PRODUCT.md`, "Decisões toma
 |---|---|---|
 | `min_cli_version` para `1.0.0` na publicação da CLI | 9.4 | P2, publicação |
 | `links.module_page` e `module_page_en` em `/api/cli/version`, `access.tier_name` em `/me` | 12.1, servidos desde 2026-10-08 | P2 lê os três |
-| Token de serviço e importação do índice | 10.2 | release de apps |
+| Token de serviço e importação do índice | 10.2, contrato seção 10 (commit `4fc2f02` da plataforma, ainda sem deploy em 2026-10-15) | o "Pack app" envia o rascunho (`npm run apps -- send`) |
 | Manifesto v2 e `trigger` | 10.1 | P4 |
 | `packages/design-tokens` público | 9.6(b) | P5 |
 | Licença no download e JWKS | 10.6 | P6 |

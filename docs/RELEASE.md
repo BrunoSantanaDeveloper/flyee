@@ -3,15 +3,15 @@
 ## Uma versão de app
 
 1. Árvore limpa; `npm run validate` e `npm run pack` verdes. O `pack` regenera `files` no manifesto (os guias em `guides/` entram nele), grava `dist/modules/<slug>-<versão>.zip` e `.sha256`, e imprime o checksum. Faça o commit do manifesto antes da tag: o ZIP sai do conteúdo desse commit.
-2. Tag: `git tag <slug>@<versão>` no commit de onde o ZIP saiu. O workflow "Pack app" refaz o ZIP a partir da tag e guarda o artefato; o SHA-256 dele precisa ser igual ao do passo 1.
-3. No console da plataforma, `/admin/catalogo/<slug>`: se o módulo não existe, crie-o com o mesmo slug, trilha e tipo do manifesto. Envie o ZIP pelo upload em dois passos. A plataforma recomputa o SHA-256; ele precisa ser igual ao impresso no passo 1.
+2. Tag: `git tag <slug>@<versão>` no commit de onde o ZIP saiu, e push dessa tag sozinha (o GitHub não dispara workflow quando chegam mais de três tags num push). O workflow "Pack app" refaz o ZIP a partir da tag, guarda o artefato e envia o app à plataforma como rascunho, com o segredo `FLYEE_SERVICE_TOKEN` (contrato, seção 10): o índice de todos os apps (cria ou atualiza cada módulo), o ZIP e a versão. Ele falha se o SHA-256 que a plataforma calculou for diferente do que o `pack` gravou, e trata uma versão que já existe como sucesso. Para reenviar sem uma tag nova, com o token no ambiente: `npm run pack <slug>`, `npm run index` e `npm run apps -- send <slug>`.
+3. No console da plataforma, `/admin/catalogo/<slug>`, a versão aparece como rascunho, com o SHA-256 do passo 1. Sem o token de serviço, o caminho manual continua: crie o módulo com o mesmo slug, trilha e tipo do manifesto, se ele não existe, e envie o ZIP pelo upload em dois passos.
 4. Publique. A primeira versão publicada de um app recebe sozinha a marca de **versão de entrada**: é a que a conta sem compra instala, e ela nunca muda por atualização. Confira no console se é essa versão que deve ficar com a marca; se não for, mova a marca para outra versão publicada (ou tire). A versão marcada não pode ser retirada enquanto tiver a marca. Numa correção, retire a versão anterior só se ela precisar sair do ar, com o motivo.
 5. Confira `/verificar/<slug>@<versão>` e a página do app, com a aba Guia: "usar" para todos e "abrir o capô" para o FlyeeClub Pro, lidos de `guides/<pt-BR|en>/<usar|abrir-o-capo>.md` dentro do pacote.
 6. Ponta a ponta, numa pasta de teste, com uma conta sem compra e com uma paga: peça à IA para instalar o app (ela roda `npx --yes flyee@latest add <slug> --dry-run --json` e, com o sim, `add <slug> --yes --json`); depois a atualização e o estado (`update --json`, `status --json`). Na conta sem compra, o estado mostra a distância até a versão mais nova.
 
 **Ordem.** Os motores são publicados antes dos apps que dependem deles, porque a skill de um app instala o motor com `add` e a plataforma precisa servi-lo: `video-render` antes de `video-studio` e `motion-carousel`; `video-analysis` e `youtube-research` antes de `youtube-script`.
 
-Quando a plataforma tiver o token de serviço e a importação do índice (fase 10.2 dela, ainda fora do contrato), os passos 3 e 4 passam a ser `npm run index` seguido do envio pela CI; publicar continua sendo um ato deliberado no console.
+O envio pela CI nunca publica nem retira uma versão: publicar continua sendo um ato deliberado no console.
 
 ## A CLI
 
@@ -26,4 +26,4 @@ Quando a plataforma tiver o token de serviço e a importação do índice (fase 
 | Segredo | Uso |
 |---|---|
 | nenhum para o npm | a publicação confiável identifica o workflow; tokens que pulam o 2FA deixam de publicar em janeiro de 2027 |
-| `FLYEE_SERVICE_TOKEN` | enviar rascunhos e o índice à plataforma, quando existir |
+| `FLYEE_SERVICE_TOKEN` | o workflow "Pack app" envia o índice e o rascunho de cada versão à plataforma; o mesmo valor fica nas variáveis da Vercel, com pelo menos 32 caracteres (`openssl rand -hex 32`) |

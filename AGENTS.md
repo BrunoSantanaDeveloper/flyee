@@ -79,7 +79,7 @@ Everything else is the operator's material and stays here: `docs/`, `.claude/`, 
 
 - `npm install` — always at the root.
 - `npm run validate` / `pack` / `index` — the app tooling over `modules/*` (skips `_template`); `pack` writes `dist/modules/<slug>-<version>.zip` and `.sha256`. A slug after the script name narrows it to one app.
-- `npm run apps -- list|new|bump|link|unlink|project|catalog|workspace [--json]` — the operator's console (flags go after `--`). `link` brings the apps an app calls; `--project <name>` targets a brand's project instead of the workspace. `new` scaffolds from the template with `[PREENCHER]` markers that `validate` refuses; `bump` raises the version and blanks the changelog the same way.
+- `npm run apps -- list|new|bump|link|unlink|project|send|catalog|workspace [--json]` — the operator's console (flags go after `--`). `send <slug>` uploads a packed app to the platform as a draft with `FLYEE_SERVICE_TOKEN` (contract section 10), as the "Pack app" workflow does on every app tag. `link` brings the apps an app calls; `--project <name>` targets a brand's project instead of the workspace. `new` scaffolds from the template with `[PREENCHER]` markers that `validate` refuses; `bump` raises the version and blanks the changelog the same way.
 - `npm run build` — bundles the CLI and copies the core assets into `packages/cli/dist/core`. `npm run check:tarball` inspects what `npm pack` would publish.
 - `npm test` / `npm run typecheck` — every workspace. `npm run ci:verify` — everything CI runs.
 - `npm run harness:sync|check|test` — the development harness mirror.

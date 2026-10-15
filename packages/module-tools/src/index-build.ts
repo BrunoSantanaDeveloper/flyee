@@ -25,7 +25,7 @@ export type IndexEntry = {
 
 /**
  * dist/index.json: what the platform needs to create or update each module
- * (CLI-CONTRACT.md section 9, planned import). The README is the module's
+ * (CLI-CONTRACT.md 10.1, POST /api/service/catalog/import). The README is the module's
  * description; the checksum is the one the platform will recompute.
  */
 export function buildIndex(dirs: string[] = listModuleDirs()): { generated_at: string; apps: IndexEntry[] } {

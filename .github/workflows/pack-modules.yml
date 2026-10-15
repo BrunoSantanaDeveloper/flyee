@@ -1,8 +1,13 @@
 name: Pack app
 
-# Builds the package of one app when a tag `<slug>@<version>` is pushed and
-# keeps the ZIP and its checksum as a workflow artifact. Uploading to the
-# platform stays with the operator (console) until the service token exists.
+# Builds the package of one app when a tag `<slug>@<version>` is pushed, keeps
+# the ZIP and its checksum as a workflow artifact, and sends the app to the
+# platform as a DRAFT with the service token (CLI-CONTRACT.md section 10, in
+# the order of 10.4): the index, an upload slot, the ZIP, the version. The
+# checksum the platform computes must equal the one `pack` wrote, and a version
+# already in the catalog (409) is a success, so a rerun is harmless. Nothing
+# here publishes: publishing is the operator's click in /admin/catalogo. Needs
+# the FLYEE_SERVICE_TOKEN secret, the same value the platform has in Vercel.
 
 on:
   push:
@@ -17,7 +22,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - run: npm ci
       - name: Resolve the app and version from the tag
         id: tag
@@ -40,3 +44,9 @@ jobs:
             dist/modules/${{ steps.tag.outputs.slug }}-${{ steps.tag.outputs.version }}.zip
             dist/modules/${{ steps.tag.outputs.slug }}-${{ steps.tag.outputs.version }}.zip.sha256
           if-no-files-found: error
+      - name: Index of the apps (10.1)
+        run: npm run index
+      - name: Send to the platform as a draft (10.4)
+        env:
+          FLYEE_SERVICE_TOKEN: ${{ secrets.FLYEE_SERVICE_TOKEN }}
+        run: npm run apps -- send ${{ steps.tag.outputs.slug }} --version ${{ steps.tag.outputs.version }}

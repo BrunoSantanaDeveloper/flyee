@@ -13,6 +13,7 @@
 //   npm run apps -- project list | new <name> [slug...] | sync [name...]
 //   npm run apps -- catalog [--check]
 //   npm run apps -- workspace
+//   npm run apps -- send <slug> [--version x.y.z]   (draft upload, CLI-CONTRACT.md §10; FLYEE_SERVICE_TOKEN)
 //
 // Every `apps` subcommand accepts --json and then prints one JSON object.
 
@@ -27,12 +28,14 @@ import { bumpApp, scaffoldApp } from "./scaffold.ts";
 import { appsStatus } from "./status.ts";
 import { createProject, listProjects, projectDir, projectsRoot, readProject, withUsedApps } from "./projects.ts";
 import { referencedApps } from "./relations.ts";
+import { readManifest } from "./manifest.ts";
+import { sendApp } from "./platform-send.ts";
 import { type Report, validateAll } from "./validate.ts";
 import { ensureCliBundle, ensureWorkspace, readWorkspaceLock, runCliInWorkspace, workspaceDir } from "./workspace.ts";
 
 const argv = process.argv.slice(2);
 const command = argv[0];
-const VALUE_FLAGS = new Set(["out", "type", "trail", "title", "title-en", "summary", "project"]);
+const VALUE_FLAGS = new Set(["out", "type", "trail", "title", "title-en", "summary", "project", "version"]);
 const flags: Record<string, string | boolean> = {};
 const positionals: string[] = [];
 for (let index = 1; index < argv.length; index += 1) {
@@ -307,7 +310,27 @@ if (command === "validate") {
   const lock = readWorkspaceLock(workspace);
   const apps = Object.entries(lock?.modules ?? {}).map(([slug, module]) => ({ slug, version: module.version, dev: Boolean(module.dev) }));
   emit({ ok: true, workspace, exists: existsSync(workspace), apps }, [`Workspace: ${workspace}`, ...apps.map((app) => `  ${app.slug} ${app.version}${app.dev ? " (dev)" : ""}`)]);
+} else if (command === "send") {
+  // The draft upload of CLI-CONTRACT.md section 10 (platform-send.ts). Run after `npm run pack <slug>` and `npm run index`.
+  const slug = positionals[0];
+  if (!slug) fail("Usage: npm run apps -- send <slug> [--version x.y.z]   (needs FLYEE_SERVICE_TOKEN; FLYEE_BASE_URL overrides https://flyee.club)");
+  const manifestPath = join(modulesRoot, slug, "flyee.module.json");
+  if (!existsSync(manifestPath)) fail(`No app named "${slug}" under modules/.`);
+  const version = value("version") ?? readManifest(manifestPath).manifest?.version ?? "";
+  const actions = process.env.GITHUB_ACTIONS === "true";
+  const result = await sendApp({
+    slug,
+    version,
+    base: (process.env.FLYEE_BASE_URL?.trim() || "https://flyee.club").replace(/\/+$/, ""),
+    token: process.env.FLYEE_SERVICE_TOKEN,
+    distDir: distRoot,
+    actions,
+  });
+  if (json) process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  if (!result.ok) console.error(`${actions ? "::error::" : ""}send stopped at ${result.step}: ${result.message}`);
+  // process.exitCode, never process.exit(): an exit right after a fetch aborts Node on Windows (exit 127).
+  process.exitCode = result.ok ? 0 : 1;
 } else {
-  console.error("Usage: cli.ts <validate|pack|index|list|new|bump|link|unlink|project|catalog|workspace> …");
+  console.error("Usage: cli.ts <validate|pack|index|list|new|bump|link|unlink|project|send|catalog|workspace> …");
   process.exit(2);
 }

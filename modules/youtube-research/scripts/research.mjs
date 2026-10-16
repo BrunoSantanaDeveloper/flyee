@@ -443,7 +443,7 @@ async function transcriptOne(ytdlp, base, id, refresh) {
   const track = pickCaptionTrack(info);
   if (!track) throw new AppError("no_captions", "O vídeo não tem legenda, nem a automática do YouTube.", "Sem legenda não há transcrição por aqui. Para ouvir o áudio, use o app Análise de vídeo, se estiver instalado.");
   const segments = await downloadCaptions(ytdlp, info, track);
-  if (!segments?.length) throw new AppError("no_captions", "O YouTube não entregou a legenda deste vídeo agora.", "Tente de novo em alguns minutos.");
+  if (!segments?.length) throw new AppError("captions_unavailable", "A legenda deste vídeo chegou vazia.", "Tente de novo em alguns minutos.");
   const transcript = {
     format_version: 1,
     id,

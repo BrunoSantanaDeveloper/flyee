@@ -54,12 +54,27 @@
         { "role": "item", "label": "Item", "repeat": [3, 5], "bars": [1, 2], "slots": ["text", "detail?", "emphasis?"] },
         { "role": "fechamento", "label": "Chamada", "bars": [1, 2], "slots": ["text", "logo?", "emphasis?"] }
       ]
+    },
+    "passos": {
+      "label": "Passo a passo",
+      "description": "um gancho, de dois a cinco passos em ordem ligados por um caminho que avança a cada passo, o resultado e a chamada",
+      "objectives": ["explicar"],
+      "default_style": "limpo",
+      "music_style": "clean",
+      "scenes": [
+        { "role": "gancho", "label": "Gancho", "bars": [1, 2], "slots": ["text", "emphasis?"] },
+        { "role": "passo", "label": "Passo", "repeat": [2, 5], "bars": [1, 2], "slots": ["text", "detail?", "emphasis?"] },
+        { "role": "resultado", "label": "O resultado", "optional": true, "bars": [1, 2], "slots": ["text", "detail?", "emphasis?"] },
+        { "role": "fechamento", "label": "Chamada", "bars": [1, 2], "slots": ["text", "logo?", "emphasis?"] }
+      ]
     }
   },
   "limits": {
     "gancho": { "text_words": 6 },
     "ponto": { "text_words": 5, "detail_words": 10 },
     "item": { "text_words": 6, "detail_words": 10 },
+    "passo": { "text_words": 6, "detail_words": 10 },
+    "resultado": { "text_words": 6, "detail_words": 10 },
     "estado": { "text_words": 5, "detail_words": 8 },
     "produto": { "text_words": 5 },
     "preco": { "text_words": 5 },

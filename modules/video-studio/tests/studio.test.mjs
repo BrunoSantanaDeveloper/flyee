@@ -70,7 +70,7 @@ const MODULES_DIR = resolve(APP_DIR, "..");
 const ENGINE_DIR = join(MODULES_DIR, "video-render");
 const FIXTURES = join(TESTS_DIR, "fixtures");
 const SCRIPT = "node .flyee/modules/video-studio/scripts/studio.mjs";
-const TEMPLATE_IDS = ["lancamento", "interface", "oferta", "lista"];
+const TEMPLATE_IDS = ["lancamento", "interface", "oferta", "lista", "passos"];
 const REAL_INTAKE =
   existsSync(join(APP_DIR, "scripts", "lib", "intake.mjs")) &&
   existsSync(join(APP_DIR, "scripts", "lib", "request.mjs")) &&
@@ -692,6 +692,21 @@ test("the first draft: oferta, lista and interface, and what happens when the br
   assert.equal(draftRoteiro(briefState({ template: field("lista"), points: field(["Um", "Dois"]) }), KIT, TEMPLATES, { warnings: shortList }).template, "lancamento");
   assert.match(shortList.join(" "), /O roteiro Lista pede de 3 a 5 itens/);
   assert.throws(() => draftRoteiro(briefState({ points: field(["Só um"]) }), KIT, TEMPLATES), (error) => error.code === "roteiro_invalid" && /Faltam os pontos/.test(error.message) && /answer/.test(error.fix) && error.ask === "pontos");
+
+  // the passo a passo: one scene per step, the step's detail after a colon, the path's sounds, no result made up
+  const steps = draftRoteiro(briefState({ template: field("passos"), points: field(["Baixe o app", "Crie sua conta: leva um minuto", "Escolha o horário"], "resposta") }), KIT, TEMPLATES);
+  assert.deepEqual(steps.scenes.map((scene) => scene.role), ["gancho", "passo", "passo", "passo", "fechamento"]);
+  assert.deepEqual([steps.scenes[2].text, steps.scenes[2].detail], ["Crie sua conta", "leva um minuto"]);
+  assert.deepEqual(steps.scenes[1].events, [{ beat: 0, type: "swish" }, { beat: 2, type: "pop" }]);
+  assert.ok(!steps.scenes.some((scene) => scene.role === "resultado"), "the result is the member's to say, never drafted");
+  validateRoteiro(steps, TEMPLATES);
+  // "explicar" with no story of its own is the passo a passo
+  assert.equal(draftRoteiro(briefState({ template: field(null), objective: field("explicar"), points: field(["Baixe o app", "Escolha o horário"], "resposta") }), KIT, TEMPLATES).template, "passos");
+  assert.throws(
+    () => draftRoteiro(briefState({ template: field("passos"), points: field(["Só um"], "resposta") }), KIT, TEMPLATES),
+    (error) => error.code === "roteiro_invalid" && /Faltam os passos/.test(error.message) && /os passos, na ordem/.test(error.fix) && error.ask === "pontos",
+  );
+  // a roteiro with the result the member said is fixtures/roteiros/passos-completo.json, validated with every fixture
   const many = [];
   const five = draftRoteiro(briefState({ points: field(["A um", "B dois", "C três", "D quatro", "E cinco"], "resposta"), proof: field(null) }), KIT, TEMPLATES, { warnings: many });
   assert.equal(five.scenes.filter((scene) => scene.role === "ponto").length, 4);
@@ -788,7 +803,7 @@ test("validateRoteiro names the scene and the field that are wrong, with code ro
   const cases = [
     [null, /precisa ser um objeto/],
     [{ ...SAMPLE, format_version: 2 }, /^roteiro\.json: format_version/],
-    [{ ...SAMPLE, template: "novela" }, /^roteiro\.json: template precisa ser um de lancamento, interface, oferta, lista/],
+    [{ ...SAMPLE, template: "novela" }, /^roteiro\.json: template precisa ser um de lancamento, interface, oferta, lista, passos/],
     [{ ...SAMPLE, style: "neon" }, /^roteiro\.json: style/],
     [{ ...SAMPLE, format: "16:9" }, /^roteiro\.json: format nesta versão o vídeo é sempre 9:16/],
     [{ ...SAMPLE, width: 1920 }, /^roteiro\.json: format/],
@@ -2289,7 +2304,9 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     assert.match(built, /\nPróximo passo: node \.flyee\/modules\/video-studio\/scripts\/studio\.mjs preview /);
     const preview = await human(["preview", slug]);
     assert.match(preview, /^Prévia: estudio-de-video\/.*previa\.mp4 \(540×960, 15 s\)/);
-    assert.match(preview, /\nConferência: APROVADO\n  ✓ page: /);
+    // the check's name a person reads, never the JSON's (`page`, `loop_seamless`)
+    assert.match(preview, /\nConferência: APROVADO\n  ✓ A página do vídeo: /);
+    assert.doesNotMatch(preview, /loop_seamless|first_frame_readable/);
     assert.match(preview, /\nTextos na tela:\n\s+0 s  Seu sorriso novo em 90 dias\n/);
     assert.match(await human(["approve", slug, "preview"]), /^Registrado o sim do integrante: prévia\./);
     const final = await human(["final", slug]);

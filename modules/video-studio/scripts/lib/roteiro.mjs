@@ -33,7 +33,7 @@ const OPTIONAL_PALETTE_KEYS = ["surface", "muted"];
 const IMAGE = /\.(png|jpe?g|webp|svg|gif|avif)$/i;
 const ROLE_NAMES = {
   gancho: "gancho", produto: "produto", ponto: "ponto", prova: "prova", fechamento: "fechamento",
-  abertura: "abertura", estado: "estado", preco: "preço", prazo: "prazo", item: "item",
+  abertura: "abertura", estado: "estado", preco: "preço", prazo: "prazo", item: "item", passo: "passo", resultado: "resultado",
 };
 const MEMBER_SOURCES = ["pedido", "resposta"];
 
@@ -621,6 +621,9 @@ export function defaultEvents(role, bars, { kind = null } = {}) {
     produto: [{ beat: 0, type: "whoosh" }],
     ponto: [{ beat: 0, type: "pop" }, { beat: 2, type: "click" }],
     item: [{ beat: 0, type: "pop" }, { beat: 2, type: "click" }],
+    // the path reaches the step on 0 (the swish) and its key word lands on 2 (the pop), as the page reads them
+    passo: [{ beat: 0, type: "swish" }, { beat: 2, type: "pop" }],
+    resultado: [{ beat: 0, type: "ding" }],
     estado: [{ beat: 0, type: KIND_EVENT[kind] ?? "click" }],
     prova: [{ beat: 0, type: "tick" }, { beat: 1, type: "tick" }, { beat: 2, type: "tick" }, { beat: 3, type: "impact" }],
     preco: [{ beat: 0, type: "impact" }],
@@ -803,7 +806,7 @@ const pointDetail = (point) => clean(typeof point === "object" && point ? (point
 /** A stable seed from the video's name: the same video always gets the same music. */
 export const seedFor = (slug) => (parseInt(shortHash(String(slug ?? "video"), 8), 16) % 9973) + 1;
 
-const TEMPLATE_BY_OBJECTIVE = { vender: "oferta", explicar: "lista" };
+const TEMPLATE_BY_OBJECTIVE = { vender: "oferta", explicar: "passos" };
 
 /**
  * The first roteiro of a video, from the brief (`state.fields`), the brand kit and the template
@@ -942,8 +945,10 @@ export function draftRoteiro(state, kit, templates, options = {}) {
           break;
         }
         case "ponto":
-        case "item": {
+        case "item":
+        case "passo": {
           const [min] = repeatOf(spec);
+          const noun = { item: ["O item", "o item"], passo: ["O passo", "o passo"] }[spec.role] ?? ["O ponto", "o ponto"];
           if (points.length < min) {
             if (id === "lista" && points.length >= 2 && specs.lancamento) {
               return { fallback: "lancamento", reason: `O roteiro Lista pede de ${min} a ${repeatOf(spec)[1]} itens e o briefing tem ${points.length}: usei o roteiro Lançamento.` };
@@ -951,15 +956,17 @@ export function draftRoteiro(state, kit, templates, options = {}) {
             throw Object.assign(
               new AppError(
                 "roteiro_invalid",
-                `Faltam os pontos do vídeo: o roteiro ${template.label} precisa de pelo menos ${min} e o briefing tem ${points.length}.`,
-                "Pergunte ao integrante o que o vídeo deve mostrar e registre com o comando answer (pergunta pontos, os textos separados por ponto e vírgula); depois repita o build.",
+                `Faltam os ${spec.role === "passo" ? "passos" : "pontos"} do vídeo: o roteiro ${template.label} precisa de pelo menos ${min} e o briefing tem ${points.length}.`,
+                spec.role === "passo"
+                  ? "Pergunte ao integrante os passos, na ordem, e registre com o comando answer (pergunta pontos, os passos separados por ponto e vírgula); depois repita o build."
+                  : "Pergunte ao integrante o que o vídeo deve mostrar e registre com o comando answer (pergunta pontos, os textos separados por ponto e vírgula); depois repita o build.",
               ),
               { ask: "pontos" },
             );
           }
           entries.push(
             ...repeated(template, spec, points, (point, index) => {
-              const label = `${spec.role === "item" ? "O item" : "O ponto"} ${index + 1}`;
+              const label = `${noun[0]} ${index + 1}`;
               let text = pointText(point);
               let detail = pointDetail(point);
               const split = /^(.{2,60}?)\s*(?::|\s[–—-]\s)\s*(.{3,})$/.exec(text);
@@ -968,7 +975,7 @@ export function draftRoteiro(state, kit, templates, options = {}) {
                 detail = clean(split[2]);
               }
               const scene = { role: spec.role, text: short(text, spec.role, label) };
-              if (detail) scene.detail = short(detail, spec.role, `O detalhe d${spec.role === "item" ? "o item" : "o ponto"} ${index + 1}`, "detail_words");
+              if (detail) scene.detail = short(detail, spec.role, `O detalhe d${noun[1]} ${index + 1}`, "detail_words");
               // each point shows the member's next screenshot or photo, when there is one; else the page keeps the product's screen
               if (spec.role === "ponto" && memberScreens[index + 1]) scene.screen = memberScreens[index + 1];
               if (spec.role === "ponto" && photos[index]) scene.image = photos[index];

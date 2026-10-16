@@ -25,7 +25,7 @@ const STUDIO = join(APP_DIR, "runtime", "studio.js");
 const TEMPLATE_DIR = join(APP_DIR, "runtime", "templates");
 const FIXTURES = join(APP_DIR, "tests", "fixtures", "roteiros");
 const SPECS = JSON.parse(readFileSync(join(APP_DIR, "references", "roteiros.json"), "utf8"));
-const TEMPLATES = ["lancamento", "interface", "oferta", "lista"];
+const TEMPLATES = ["lancamento", "interface", "oferta", "lista", "passos"];
 const STYLE_IDS = ["interface-narra", "interface-que-se-transforma", "limpo", "tipografia-cinetica", "vitrine"];
 const EVENT_TYPES = ["impact", "kick", "thump", "whoosh", "swish", "riser", "click", "tick", "pop", "ding", "shutter", "pluck", "blip"];
 const OUT_ROOT = process.env.FLYEE_TEST_OUT ? resolve(process.env.FLYEE_TEST_OUT) : join(tmpdir(), "flyee-video-studio-templates");
@@ -643,9 +643,9 @@ test("a page without its roteiro says so instead of drawing garbage", () => {
 // Through the real Motor (skipped without a browser or ffmpeg)
 // ---------------------------------------------------------------------------------------------
 
-const ENGINE_CASES = { lancamento: "lancamento-tela", interface: "interface-completo", oferta: "oferta-foto", lista: "lista-tres" };
+const ENGINE_CASES = { lancamento: "lancamento-tela", interface: "interface-completo", oferta: "oferta-foto", lista: "lista-tres", passos: "passos-completo" };
 /** A second in the middle of the film, starting in the scene that has the most to draw (the proof, a state, the call, an item). */
-const MID_SCENE = { lancamento: "prova", interface: "estado", oferta: "fechamento", lista: "item" };
+const MID_SCENE = { lancamento: "prova", interface: "estado", oferta: "fechamento", lista: "item", passos: "passo" };
 function midSecond(roteiro, role) {
   const bar = (roteiro.beats_per_bar * 60) / roteiro.bpm;
   let start = 0;

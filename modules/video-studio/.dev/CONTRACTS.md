@@ -1,5 +1,7 @@
 # video-studio 1.0 — contracts between the parts (section 8 of SPEC.md)
 
+> Since 1.1.0 (2026-10-16) there are five template specs: `passos` joined the four of 1.0. The rule below holds for every one of them.
+
 Three builders work in parallel against these contracts. They are fixed: build to them, and report (do not silently change) anything you could not honour.
 
 Already on disk, shared and FROZEN (import, never edit):

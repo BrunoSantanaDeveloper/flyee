@@ -1,5 +1,7 @@
 # video-studio 1.0 — build spec (operator material, never ships)
 
+> History: this spec built 1.0. On 2026-10-16, 1.1.0 added a fifth story template, `passos` (passo a passo: `references/roteiros.md`, `runtime/templates/passos.html`), and `explicar` now maps to it; where this file says four templates, read five. The next large scope is 1.2, in `docs/PLANO-VIDEO.md`.
+
 App: `modules/video-studio` (slug `video-studio`, title "Estúdio de vídeo" / "Video studio", type `workflow`, trail `divulgar`). Skill: `skills/motion-video/SKILL.md` (1.0). 1.1 will add `skills/edit-video` and more; nothing in 1.0 may block that.
 
 ## 0. What 1.0 does

@@ -25,7 +25,7 @@
     "lancar": ["lancamento", "interface", "oferta"],
     "portfolio": ["lancamento", "interface", "lista"],
     "vender": ["oferta", "lancamento", "lista"],
-    "explicar": ["lista", "interface", "lancamento"]
+    "explicar": ["passos", "lista", "interface"]
   },
   "styles": {
     "interface-narra": { "label": "A interface conta a história", "description": "As telas reais do seu site se montam e um cursor mostra o caminho." },
@@ -153,8 +153,8 @@
       "free_text": true,
       "chat_descriptions": true,
       "priority": 8,
-      "ask_when": { "note": "Só no briefing guiado. O roteiro recomendado vem do objetivo: vender pede a oferta, explicar pede a lista, os demais pedem o lançamento." },
-      "skip_when": { "note": "O pedido descreveu a história com as próprias palavras (uma lista de estados, \"3 dicas\", preço e prazo, um lançamento) ou uma resposta já escolheu.", "sources": ["pedido", "resposta"] }
+      "ask_when": { "note": "Só no briefing guiado. O roteiro recomendado vem do objetivo: vender pede a oferta, explicar pede o passo a passo, os demais pedem o lançamento." },
+      "skip_when": { "note": "O pedido descreveu a história com as próprias palavras (uma lista de estados, \"3 dicas\", \"passo a passo\", preço e prazo, um lançamento) ou uma resposta já escolheu.", "sources": ["pedido", "resposta"] }
     },
     {
       "id": "pontos",
@@ -166,13 +166,21 @@
         { "from": "kit.points", "max": 3, "label": "{ponto}", "description": "Está no seu site." },
         { "value": "outras", "label": "Outras: escrevo", "description": "Escreva até cinco, separadas por ponto e vírgula.", "free": true }
       ],
+      "variants": [
+        {
+          "when": "story_passos",
+          "text": "Quais são os passos, na ordem? De dois a cinco, separados por ponto e vírgula, cada um começando pelo que a pessoa faz.",
+          "options": [],
+          "default": null
+        }
+      ],
       "default": { "rule": "listed" },
       "decide": "keep_open",
       "multi": true,
       "free_text": true,
       "waits_for_capture": true,
       "priority": 4,
-      "ask_when": { "note": "Só nos roteiros que mostram pontos um a um (lançamento e lista). As opções são os títulos das seções e os produtos do site.", "story": ["lancamento", "lista"] },
+      "ask_when": { "note": "Só nos roteiros que mostram pontos um a um (lançamento, lista e passo a passo). As opções são os títulos das seções e os produtos do site; no passo a passo, os passos vêm do integrante, na ordem.", "story": ["lancamento", "lista", "passos"] },
       "skip_when": { "note": "O pedido ou uma resposta já listou o que mostrar.", "sources": ["pedido", "resposta"] }
     },
     {

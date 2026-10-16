@@ -4,6 +4,8 @@ Complementa a linha P3 de `docs/PLANO.md`. A 1.0 (`video-render` e `video-studio
 
 Regra de versão que continua valendo: a 1.0 é a versão gratuita e sai reduzida de propósito; a 1.1 sai no mesmo dia.
 
+Numeração, decidida em 2026-10-16: o `video-studio` 1.1.0 é o roteiro "passo a passo" (`passos`), pedido pelo operador para os vídeos que explicam como algo funciona, que antes caíam na lista. O escopo deste plano chega ao `video-studio` como 1.2; o `video-render` segue a própria numeração.
+
 ## 1. Aprovado
 
 ### 1.1 Combinado em 2026-10-07

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Vídeo animado · passo a passo</title>
+<style>
+  html, body { margin: 0; background: #101012; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="motion.js"></script>
+<script src="studio.js"></script>
+<script id="roteiro" type="application/json">__ROTEIRO__</script>
+<script>
+  // Roteiro "passos": um gancho, de dois a cinco passos em ordem, o resultado (quando existe) e a chamada.
+  // No alto, um caminho liga os passos: o círculo de cada passo acende quando ele começa, o trecho até o
+  // próximo enche enquanto ele dura e, quando ele termina, o número vira um sinal de certo. O resultado
+  // fecha o caminho num círculo grande com o certo se desenhando.
+  // Tudo aqui é função do tempo. Guia desta página: references/pagina-do-video.md.
+  Studio.load();
+  const R = Studio.roteiro, TL = Studio.timeline, ST = Studio.style, Q = Studio.Q;
+  const film = Motion.setup({ title: R.title || "Passo a passo", duration: TL.duration, width: R.width, height: R.height, fps: 30, background: Studio.palette.background });
+  film.cuts = TL.cuts;
+  const S = Studio.stage(document.getElementById("c"));
+  document.body.style.background = Studio.palette.background;
+  window.setFormat = S.setFormat;
+  window.boxes = S.boxes;
+  window.seek = S.seek;
+
+  // A chamada acontece no fundo em que o logo nasceu.
+  S.worlds({ fechamento: "native" });
+
+  const clamp = Motion.clamp, lerp = Motion.lerp, phase = Motion.phase, ease = Motion.ease;
+  const filled = (v) => typeof v === "string" && v.trim().length > 0;
+  const STEPS = TL.scenes.filter((s) => s.role === "passo");
+  const RESULT = TL.scenes.find((s) => s.role === "resultado") || null;
+
+  // ---------- o caminho ----------
+
+  /** Onde fica o caminho: os centros dos círculos numa linha no alto da área útil (o círculo nunca menor que o texto mínimo pede). */
+  function pathOf() {
+    const A = S.area;
+    const n = STEPS.length;
+    const d = Math.max(S.px(n <= 3 ? 116 : n === 4 ? 104 : 96), Math.round(S.minText * 2.2));
+    const span = Math.min(A.w - d, (n - 1) * S.px(S.vertical ? 300 : 360));
+    const x0 = A.x + (A.w - span) / 2;
+    const y = A.y + d / 2 + S.px(8);
+    const xs = STEPS.map((_, i) => (n > 1 ? x0 + (span * i) / (n - 1) : x0 + span / 2));
+    return { d, r: d / 2, y, xs, top: y - d / 2, bottom: y + d / 2 };
+  }
+
+  /** O sinal de certo de um passo concluído, desenhado até a fração p (0 a 1). */
+  function tick(g, cx, cy, r, p, color) {
+    if (p <= 0.001) return;
+    const pts = [[-0.42, 0.02], [-0.1, 0.32], [0.44, -0.28]];
+    const l0 = Math.hypot(pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]);
+    const l1 = Math.hypot(pts[2][0] - pts[1][0], pts[2][1] - pts[1][1]);
+    const d = p * (l0 + l1);
+    g.lineWidth = r * 0.2;
+    g.lineCap = "round";
+    g.lineJoin = "round";
+    g.strokeStyle = color;
+    g.beginPath();
+    g.moveTo(cx + pts[0][0] * r, cy + pts[0][1] * r);
+    if (d <= l0) g.lineTo(cx + lerp(pts[0][0], pts[1][0], d / l0) * r, cy + lerp(pts[0][1], pts[1][1], d / l0) * r);
+    else {
+      g.lineTo(cx + pts[1][0] * r, cy + pts[1][1] * r);
+      g.lineTo(cx + lerp(pts[1][0], pts[2][0], (d - l0) / l1) * r, cy + lerp(pts[1][1], pts[2][1], (d - l0) / l1) * r);
+    }
+    g.stroke();
+  }
+
+  S.over((f) => {
+    if (!STEPS.length) return;
+    const first = STEPS[0], last = STEPS[STEPS.length - 1];
+    // com o resultado, o caminho fica até o último certo se desenhar; sem ele, sai com o último passo
+    const leave = RESULT ? { scene: RESULT, at: 1.5 } : { scene: last, at: last.beats };
+    if (f.T < first.start || f.T >= leave.scene.start + leave.at * TL.beat_s) return;
+    const g = S.g;
+    const P = pathOf();
+    const n = STEPS.length;
+    const k = STEPS.findIndex((s) => f.T >= s.start && f.T < s.end);
+    const cur = k >= 0 ? k : n; // n: todos concluídos (no resultado)
+    const W = f.world;
+    const grow = clamp(Motion.springBy("snappy", f.T - first.start));
+    const xEnd = lerp(P.xs[0], P.xs[n - 1], grow);
+    const out = Studio.whip(f.context(leave.scene.index), { at: leave.at, dir: [0, -1], distance: S.px(320), echo: false });
+    S.group({ dy: out.dy, alpha: out.alpha }, () => {
+      // o trilho de fundo e o trecho já percorrido, que enche enquanto o passo atual dura
+      g.lineCap = "round";
+      g.lineWidth = S.px(10);
+      S.setAlpha(1);
+      g.strokeStyle = Studio.rgba(W.ink, 0.18);
+      g.beginPath();
+      g.moveTo(P.xs[0], P.y);
+      g.lineTo(xEnd, P.y);
+      g.stroke();
+      const along = k >= 0 ? clamp((f.T - STEPS[k].start) / STEPS[k].duration) : 1;
+      const reach = cur >= n - 1 ? P.xs[n - 1] : lerp(P.xs[cur], P.xs[cur + 1], ease.inOutCubic(along));
+      g.strokeStyle = W.accent;
+      g.beginPath();
+      g.moveTo(P.xs[0], P.y);
+      g.lineTo(Math.min(reach, xEnd), P.y);
+      g.stroke();
+
+      const font = S.numberFont();
+      const size = Math.max(S.minText, Math.round(P.d * 0.44));
+      const cap = S.metrics(font).cap;
+      for (let i = 0; i < n; i++) {
+        const cx = P.xs[i];
+        const seen = clamp((xEnd - cx) / Math.max(1, P.d) + 1);
+        if (seen <= 0.001) continue;
+        const done = i < cur;
+        const lit = i <= cur;
+        // o círculo acende na batida 0 do seu passo, com um tranco que assenta
+        const pop = lit ? clamp(Motion.springBy("snappy", f.T - STEPS[i].start), 0, 1.2) : 0;
+        const radius = P.r * (lit ? 0.7 + 0.3 * pop : 1) * (0.6 + 0.4 * seen);
+        S.setAlpha(seen);
+        g.fillStyle = lit ? W.accent : W.bg;
+        g.beginPath();
+        g.arc(cx, P.y, radius, 0, Math.PI * 2);
+        g.fill();
+        if (!lit) {
+          g.lineWidth = S.px(5);
+          g.strokeStyle = Studio.rgba(W.ink, 0.35);
+          g.stroke();
+        }
+        // o número vira certo quando o passo termina
+        const check = done ? ease.outCubic(phase(f.T, STEPS[i].end, STEPS[i].end + 9 * Q)) : 0;
+        const numberAlpha = seen * (1 - check);
+        if (numberAlpha > 0.003) {
+          S.setAlpha(numberAlpha);
+          S.setFont(font, size);
+          g.textAlign = "center";
+          g.textBaseline = "alphabetic";
+          g.fillStyle = lit ? W.onAccent : W.muted;
+          g.fillText(String(i + 1), cx, P.y + cap * size * 0.5);
+          if (numberAlpha >= 0.5) S.box("text", cx - size * 0.45, P.y - size * 0.55, size * 0.9, size * 1.1, size, String(i + 1));
+        }
+        if (check > 0.001) {
+          S.setAlpha(seen);
+          tick(g, cx, P.y, radius, check, W.onAccent);
+        }
+      }
+      S.setAlpha(1);
+      S.box("ui", P.xs[0] - P.r, P.top, P.xs[n - 1] - P.xs[0] + P.d, P.d);
+    });
+  });
+
+  // ---------- os passos ----------
+
+  const TITLE = () => S.px(168 * ST.type.scale);
+  const DETAIL = () => S.type(58);
+  const detailHeight = (c, w) => (filled(c.scene.detail) ? Studio.body(c, c.scene.detail, { x: 0, y: 0, w, h: DETAIL() * 2.6, size: DETAIL(), maxLines: 2, measure: true }).h + S.px(40) : 0);
+  /** Como o texto de uma cena sai: sobe junto com o corte para a cena seguinte. */
+  const exitOf = (c) => ({ at: c.beats, style: ST.between === "push" ? "lift" : "whip", dir: [0, -1] });
+
+  /** O texto da cena e o detalhe embaixo dele, dentro da caixa (o detalhe já descontado da altura do título). */
+  function sceneText(c, box, o) {
+    const scene = c.scene;
+    const opts = o || {};
+    // o passo é curto (de 2 a 4 s): o texto entra logo depois do corte, quando o texto do passo anterior já saiu
+    const at = opts.at === undefined ? 0.25 : opts.at;
+    const em = { words: scene.emphasis, at: c.hit("pop", Math.max(2, at + 1)) };
+    const dh = detailHeight(c, box.w);
+    const title = Studio.headline(c, scene.text, Object.assign({ x: box.x, y: box.y, w: box.w, h: Math.max(S.px(120), box.h - dh), size: TITLE(), maxLines: ST.type.maxLines, at, by: "line", stagger: 0.25, emphasis: em, out: exitOf(c), breathe: { amount: 0.015, every: 2, from: Math.max(2, at + 1) } }, opts, { at }));
+    if (filled(scene.detail)) {
+      Studio.body(c, scene.detail, { x: box.x, y: title.bottom + S.px(40), w: box.w, h: DETAIL() * 2.6, size: DETAIL(), maxLines: 2, at: at + 1, align: opts.align || "left", out: exitOf(c) });
+    }
+    return title;
+  }
+
+  /** O quanto o texto da cena ocupa numa caixa de largura w e altura h (para centrar). */
+  function textHeight(c, w, h, o) {
+    const dh = detailHeight(c, w);
+    const title = Studio.headline(c, c.scene.text, Object.assign({ x: 0, y: 0, w, h: Math.max(S.px(120), h - dh), size: TITLE(), maxLines: ST.type.maxLines, measure: true }, o || {}));
+    return title.h + dh;
+  }
+
+  S.scene("passo", { tail: 2 * Q }, (c) => {
+    const A = c.area;
+    const top = pathOf().bottom + S.px(S.vertical ? 110 : 50);
+    const room = A.y + A.h - S.px(40) - top;
+    const h = textHeight(c, A.w, room);
+    const y = top + Math.max(0, (room - h) * 0.42);
+    S.group({ scale: Studio.drift(c, 0.015), about: [A.x + A.w / 2, y + h / 2] }, () => {
+      sceneText(c, { x: A.x, y, w: A.w, h: A.y + A.h - S.px(40) - y });
+    });
+  });
+
+  // ---------- o resultado ----------
+
+  // O resultado: um círculo grande na cor de destaque pousa na batida do "ding", o certo se desenha nele e o texto sobe embaixo.
+  S.scene("resultado", { tail: 2 * Q }, (c) => {
+    const A = c.area;
+    const g = S.g;
+    const at = c.hit("ding", 0);
+    const r = S.px(S.vertical ? 150 : 130);
+    const cx = S.vertical ? A.x + A.w / 2 : A.x + A.w * 0.2;
+    const cy = S.vertical ? Math.max(A.y + A.h * 0.3, pathOf().bottom + S.px(50) + r) : A.y + A.h / 2;
+    if (c.since(at) >= 0) {
+      const s = Motion.springBy("snappy", c.since(at));
+      const leave = phase(c.t, c.dur - 4 * Q, c.dur);
+      S.setAlpha(clamp(s * 1.5) * (1 - leave));
+      g.fillStyle = c.world.accent;
+      g.beginPath();
+      g.arc(cx, cy, r * (0.5 + 0.5 * s), 0, Math.PI * 2);
+      g.fill();
+      Studio.check(c, { cx, cy, r: r * 0.9, at: at + 0.25, color: c.world.onAccent, width: r * 0.16, alpha: 1 - leave });
+      S.setAlpha(1);
+      if (leave < 0.5) S.box("ui", cx - r, cy - r, 2 * r, 2 * r);
+    }
+    if (S.vertical) {
+      const top = cy + r + S.px(80);
+      sceneText(c, { x: A.x, y: top, w: A.w, h: A.y + A.h - S.px(40) - top }, { at: at + 1, align: "center" });
+    } else {
+      sceneText(c, { x: A.x + A.w * 0.4, y: A.y + A.h * 0.12, w: A.w * 0.6, h: A.h * 0.76 }, { at: at + 1, valign: "middle" });
+    }
+  });
+
+  // ---------- gancho e chamada ----------
+
+  // Gancho: a frase já está pousada no quadro 0 (a capa); o soco, o destaque e a travessia acontecem em volta dela.
+  S.scene("gancho", { tail: 2 * Q }, (c) => {
+    const A = c.area;
+    S.group({ scale: Studio.drift(c), about: [A.x + A.w / 2, A.y + A.h / 2] }, () => {
+      Studio.headline(c, c.scene.text, {
+        x: A.x, y: A.y + A.h * 0.06, w: A.w, h: A.h * 0.82, valign: "middle", size: S.px(210 * ST.type.scale), maxLines: Math.max(4, ST.type.maxLines),
+        cover: true, punch: c.hit("impact", 0), breathe: { amount: 0.015, every: 2, from: c.hit("pop", c.beats > 4 ? 2 : 1) + 2 },
+        emphasis: { words: c.scene.emphasis, at: c.hit("pop", c.beats > 4 ? 2 : 1) },
+        out: { at: c.beats, style: ST.hookExit },
+      });
+    });
+  });
+
+  // A chamada: o logo e o texto, parados, com uma deriva lenta até o último quadro.
+  S.scene("fechamento", (c) => {
+    const A = c.area;
+    const at = c.hit("impact", 0);
+    S.group({ scale: Studio.drift(c), about: [A.x + A.w / 2, A.y + A.h / 2] }, () => {
+      Studio.lockup(c, { text: c.scene.text, words: c.scene.emphasis, logo: c.scene.logo !== false, x: A.x, y: A.y, w: A.w, h: A.h, align: "center", at, in: "cut", textAt: at + 1, plate: c.world.bg, breathe: { amount: 0.02, every: 2, from: at + 2 } });
+    });
+  });
+</script>
+</body>
+</html>

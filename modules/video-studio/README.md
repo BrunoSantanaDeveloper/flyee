@@ -10,7 +10,7 @@ O que separa um vídeo bom de um vídeo com cara de modelo pronto é o que vem a
 
 - **O pedido vira um briefing.** O app mede o que você escreveu. Um pedido completo não recebe pergunta nenhuma. Um pedido curto, como "faça um vídeo animado", vira uma conversa de até três rodadas rápidas (o vídeo, a história, o jeito), com opções prontas para marcar. Em qualquer rodada você pode dizer "decida por mim". No fim, a IA escreve o briefing inteiro de volta e só constrói com o seu sim.
 - **A marca é a de verdade.** A IA visita o seu site e traz o logo, as cores, as fontes, as telas e os números que estão publicados. Nada é redesenhado de imaginação e nenhum número é inventado: se o site não publica um resultado, o vídeo não mostra resultado.
-- **Um roteiro que conta uma história.** Quatro roteiros prontos: lançamento (o problema, o produto se montando, os recursos e a assinatura), interface que se transforma (um elemento que muda de estado a cada batida), oferta (produto, preço, prazo e chamada) e lista (um gancho e de três a cinco itens). A IA sugere o que combina com o seu objetivo.
+- **Um roteiro que conta uma história.** Cinco roteiros prontos: lançamento (o problema, o produto se montando, os recursos e a assinatura), interface que se transforma (um elemento que muda de estado a cada batida), oferta (produto, preço, prazo e chamada), lista (um gancho e de três a cinco itens) e passo a passo (de dois a cinco passos em ordem, ligados por um caminho que avança a cada um). A IA sugere o que combina com o seu objetivo.
 - **Som na batida.** A trilha é composta ali mesmo, sem música de terceiros, e cada corte e cada entrada caem no tempo dela. Pode ir em post e em anúncio.
 - **Prévia antes do final.** Você assiste a um rascunho do tamanho de um celular, com som, e lê os textos que aparecem na tela. O vídeo final só é feito depois do seu sim.
 - **Conferência.** O app mede o que dá para medir: a primeira imagem já legível, o texto longe dos botões das redes, o tamanho da letra, os cortes na batida e o volume. O que reprovar aparece no relatório, nunca escondido.
@@ -85,4 +85,5 @@ Vídeos animados na vertical (1080×1920), de 6 a 20 segundos, para Reels, TikTo
 
 ## O que há de novo
 
+- 1.1.0: roteiro passo a passo, para mostrar como algo funciona ou como se faz: de dois a cinco passos em ordem, ligados por um caminho no alto que avança a cada passo, e o resultado no fim quando você diz qual é. Pedidos com "passo a passo", "como funciona" ou "tutorial" vão para ele; dicas e erros continuam na lista. Os textos da tela passam pela revisão de texto natural do flyee, e a conferência mostra cada item com um nome em português.
 - 1.0.0: primeira versão. Briefing que mede o pedido e pergunta só o que falta; marca real capturada do site; quatro roteiros e cinco estilos; trilha original e efeitos na batida; prévia antes do final; conferência para as redes; capa e notas para postar.

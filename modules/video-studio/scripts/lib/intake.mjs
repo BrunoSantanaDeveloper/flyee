@@ -51,8 +51,8 @@ const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const INSTALL_SELF = "npx --yes flyee@latest add video-studio --yes --json";
 const ROUND_STAGES = ["round1", "round2", "round3"];
 const FROM_MEMBER = ["pedido", "resposta"];
-const TEMPLATE_BY_OBJECTIVE = { apresentar: "lancamento", lancar: "lancamento", portfolio: "lancamento", vender: "oferta", explicar: "lista" };
-const OBJECTIVE_BY_TEMPLATE = { lancamento: "apresentar", interface: "explicar", oferta: "vender", lista: "explicar" };
+const TEMPLATE_BY_OBJECTIVE = { apresentar: "lancamento", lancar: "lancamento", portfolio: "lancamento", vender: "oferta", explicar: "passos" };
+const OBJECTIVE_BY_TEMPLATE = { lancamento: "apresentar", interface: "explicar", oferta: "vender", lista: "explicar", passos: "explicar" };
 const TONE_BY_OBJECTIVE = { vender: "vontade", portfolio: "surpresa" };
 const MUSIC_BY_TONE = { confianca: "clean", vontade: "energetic", surpresa: "energetic", proximidade: "playful" };
 const SECOND_LEVEL = /^(com|net|org|gov|edu|co|art|blog|eco|ind|adv|eng|med|odo|psc|tur|inf|imb|far|vet|esp)$/;
@@ -109,7 +109,7 @@ export function loadBank(appDir = APP_DIR) {
   return bank;
 }
 
-/** Reads references/roteiros.json of the app in `appDir`: the four story templates. */
+/** Reads references/roteiros.json of the app in `appDir`: the story templates. */
 export function loadTemplates(appDir = APP_DIR) {
   const file = join(appDir, "references", "roteiros.json");
   if (!isFile(file)) throw missingData("Falta um arquivo do app Estúdio de vídeo: references/roteiros.json.");
@@ -761,6 +761,8 @@ function contextOf(state, bank, { kit = null, templates = null, vars = {} } = {}
       whatsapp: Boolean(site?.social?.whatsapp),
       number: numbers.length > 0,
       reference_without_link: Boolean(reference) && !reference.url,
+      // a step-by-step asks for the steps in order, not for what the site shows
+      story_passos: view.template === "passos",
     },
     vars: {
       nome: brand.name ?? brand.shown ?? "",
@@ -1549,6 +1551,10 @@ function storyPhrase(brief) {
     case "lista":
       parts.push(opening);
       parts.push(points.length ? `${countName(points.length)} itens numerados, um por vez: ${joinList(points.map(quote))}` : "de três a cinco itens numerados, um por vez, que você ainda vai me dizer");
+      break;
+    case "passos":
+      parts.push(opening);
+      parts.push(points.length ? `${countName(points.length)} passos em ordem, ligados por um caminho que avança a cada um: ${joinList(points.map(quote))}` : "de dois a cinco passos em ordem, ligados por um caminho que avança a cada um, que você ainda vai me dizer");
       break;
     default:
       parts.push(`${opening} em letras grandes`);

@@ -103,5 +103,6 @@ Tudo fica em `carrosseis/<nome>/` dentro do seu projeto, uma pasta por carrossel
 
 ## O que há de novo
 
+- 1.1.1: antes do render, a sua IA revisa o texto dos slides para ele não soar como texto de IA, mantendo o tom que você pediu; a sugestão de legenda passa pela mesma revisão. A conferência mostra cada item com um nome em português.
 - 1.1.0: slides com fotos. Um fundo que ocupa o quadro, um objeto ou uma pessoa recortada por cima e paralaxe em 2.5D, com o texto sobre um degradê. As imagens vêm, nesta ordem, da sua própria IA, do Codex com a sua conta do ChatGPT, da chave opcional do Gemini ou das suas fotos; o recorte do fundo é automático. Novo modelo de slide com foto e um exemplo completo com fotos.
 - 1.0.0: primeira versão. Carrosséis de 2 a 20 slides em vídeo 4:5 ou 3:4, em loop, com movimento e som na batida; briefing e roteiro; modelos de slide por papel e um exemplo completo; cinco temas visuais e cinco estilos de trilha gerada no computador, ou a sua própria música; prévia que imita o celular; conferência de cada slide e do conjunto; refazer um slide sem refazer os outros.

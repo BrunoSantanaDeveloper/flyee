@@ -30,16 +30,17 @@ O kit vale por 90 dias. Nesse prazo, um vídeo novo da mesma marca não visita o
 
 ### 3. O roteiro
 
-Todo vídeo nasce de um de quatro roteiros, que definem as cenas, a ordem e quanto cada cena pode durar:
+Todo vídeo nasce de um de cinco roteiros, que definem as cenas, a ordem e quanto cada cena pode durar:
 
 | Roteiro | Para quê | As cenas |
 |---|---|---|
 | Lançamento | apresentar ou lançar | gancho, o produto se montando na tela, de 2 a 4 recursos, um número que prova (se houver) e assinatura |
 | Interface que se transforma | mostrar como um app ou um site funciona | o ícone da marca, de 4 a 10 estados de um mesmo elemento (botão, campo, carregando, pronto, cartão, gráfico, lista, aviso, busca) e assinatura |
 | Oferta | vender | gancho, o produto, o preço batendo na tela, o prazo (se houver) e chamada |
-| Lista | ensinar ou opinar | gancho, de 3 a 5 itens numerados e chamada |
+| Lista | ensinar ou opinar em itens soltos | gancho, de 3 a 5 itens numerados e chamada |
+| Passo a passo | explicar como algo funciona ou como se faz | gancho, de 2 a 5 passos em ordem ligados por um caminho que avança, o resultado (quando você diz qual é) e chamada |
 
-O objetivo escolhe: vender pede a oferta, explicar pede a lista, apresentar e lançar pedem o lançamento. A interface entra quando você a pede ou a escolhe na pergunta sobre a história. O material desempata: telas boas puxam o lançamento ou a interface, fotos com preço puxam a oferta, nenhuma imagem puxa a lista. Cada cena aceita de 4 a 6 palavras no texto principal e até 10 no detalhe, porque no celular uma frase longa só cabe pequena. Um texto maior é recusado com o nome da cena e do campo.
+O objetivo escolhe: vender pede a oferta, explicar pede o passo a passo, apresentar e lançar pedem o lançamento. Dicas, erros e motivos que não dependem da ordem vão para a lista. A interface entra quando você a pede ou a escolhe na pergunta sobre a história. O material desempata: telas boas puxam o lançamento ou a interface, fotos com preço puxam a oferta, nenhuma imagem puxa a lista ou o passo a passo. Cada cena aceita de 4 a 6 palavras no texto principal e até 10 no detalhe, porque no celular uma frase longa só cabe pequena. Um texto maior é recusado com o nome da cena e do campo.
 
 O primeiro rascunho sai do plano e da marca, e cada texto guarda a sua origem: é ela que aparece ao lado de cada número na prévia. Antes de renderizar, a IA lê as cenas e corrige o que ficou longo ou sem sentido.
 

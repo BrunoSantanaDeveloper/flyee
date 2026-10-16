@@ -53,10 +53,10 @@ const ARG_SPEC = {
   flags: ["json", "force", "decide", "decide-all", "refresh", "direct"],
   options: ["request", "slug", "file", "url", "note"],
 };
-const TEMPLATE_IDS = ["lancamento", "interface", "oferta", "lista"];
+const TEMPLATE_IDS = ["lancamento", "interface", "oferta", "lista", "passos"];
 const FEATURES = [
   "motion_video", "vertical_9x16", "duration_6_20", "reels_tiktok_shorts", "measured_brief", "guided_rounds", "brand_capture", "brand_kit",
-  "four_roteiros", "five_styles", "original_music", "own_music_file", "effects_on_beat", "preview_before_final", "network_checks", "cover", "delivery_notes",
+  "five_roteiros", "five_styles", "original_music", "own_music_file", "effects_on_beat", "preview_before_final", "network_checks", "cover", "delivery_notes",
 ];
 const REGULATED = {
   "saúde": "saúde", odontologia: "odontologia", advocacia: "advocacia", apostas: "apostas", "política": "propaganda política", infantil: "público infantil",
@@ -1327,7 +1327,7 @@ async function finalCommand(positionals, values) {
   const scenesByRole = (role) => roteiro.scenes.filter((scene) => scene.role === role).map((scene) => scene.text).filter(Boolean);
   const post = suggestPost({
     hook: scenesByRole("gancho")[0] ?? clean(fieldValue(state, "hook")),
-    points: [...scenesByRole("ponto"), ...scenesByRole("item")],
+    points: [...scenesByRole("ponto"), ...scenesByRole("item"), ...scenesByRole("passo")],
     closing: scenesByRole("fechamento")[0] ?? "",
     brand: roteiro.brand?.name,
   });
@@ -1548,7 +1548,7 @@ Todo resultado traz next_step: action (o que vem agora), command (o comando exat
 O vídeo tem de ${LIMITS.duration[0]} a ${LIMITS.duration[1]} s, em ${FORMAT.name} (${FORMAT.width}×${FORMAT.height}); cada cena dura compassos da trilha, e todo corte cai na batida.`;
 
 function checkLines(accept) {
-  return (accept?.checks ?? []).map((item) => `  ${MARKS[item.status] ?? "?"} ${item.name ?? item.id}: ${item.summary ?? ""}`);
+  return (accept?.checks ?? []).map((item) => `  ${MARKS[item.status] ?? "?"} ${CHECK_LABELS[item.name ?? item.id] ?? item.name ?? item.id}: ${item.summary ?? ""}`);
 }
 
 function roundLines(plan) {

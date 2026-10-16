@@ -79,6 +79,26 @@ const GUIDES = {
 const MIN_TEXT = 44;
 /** One mark per status in the human output: ✓ passou · ✗ reprovou · △ aviso · ○ não medido (the same as the Motor's). */
 const MARKS = { pass: "✓", fail: "✗", warn: "△", skip: "○" };
+/** The name a person reads for each check in the human output; the JSON keeps the stable `name`. */
+const CHECK_LABELS = {
+  page: "Página",
+  first_frame_readable: "Capa legível (o primeiro quadro)",
+  safe_area: "Texto longe das bordas e dos cantos",
+  text_size: "Tamanho do texto",
+  cuts_on_beat: "Cortes na batida",
+  loop_seamless: "Emenda do loop",
+  flashes: "Piscadas",
+  dead_time: "Tempo parado",
+  loudness: "Volume",
+  slide_count: "Quantidade de slides",
+  durations: "Duração de cada slide",
+  whole_bars: "Compassos inteiros",
+  same_format: "Mesmo formato em todos",
+  hook_first_frame: "Capa do gancho",
+  cta_present: "Chamada final",
+  total_duration: "Duração total",
+};
+const checkLabel = (item) => CHECK_LABELS[item.name ?? item.id] ?? item.name ?? item.id;
 
 const rel = (path) => displayPath(ROOT, path);
 const engineCall = (engine, args) => runEngine(engine, args, { root: ROOT });
@@ -830,10 +850,10 @@ function humanText(result) {
       const lines = [`Conferência de "${result.slug}": ${result.passed ? "APROVADO" : "REPROVADO"}`];
       for (const slide of result.slides) {
         lines.push(`Slide ${pad(slide.n)} (${slide.role}): ${slide.passed ? "✓" : "✗"} ${slide.page}`);
-        for (const item of slide.checks) lines.push(`  ${MARKS[item.status] ?? "?"} ${item.name ?? item.id}: ${item.summary ?? item.detail ?? ""}`);
+        for (const item of slide.checks) lines.push(`  ${MARKS[item.status] ?? "?"} ${checkLabel(item)}: ${item.summary ?? item.detail ?? ""}`);
       }
       lines.push("Conjunto:");
-      for (const item of result.checks) lines.push(`  ${MARKS[item.status] ?? "?"} ${item.name}: ${item.summary}`);
+      for (const item of result.checks) lines.push(`  ${MARKS[item.status] ?? "?"} ${checkLabel(item)}: ${item.summary}`);
       lines.push(`Relatório: ${result.report}`);
       return [...lines, ...warnings].join("\n");
     }

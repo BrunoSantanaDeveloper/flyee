@@ -15,7 +15,7 @@ estudio-de-video/<vídeo>/
   assets/           o logo, as telas e as fotos que o roteiro cita
 ```
 
-A `pagina.html` é um dos quatro modelos (lançamento, interface, oferta, lista) com um bloco de dados preenchido:
+A `pagina.html` é um dos cinco modelos (lançamento, interface, oferta, lista, passo a passo) com um bloco de dados preenchido:
 
 ```html
 <canvas id="c" width="1080" height="1920"></canvas>
@@ -197,7 +197,7 @@ S.sceneAt(4, { tail: 2 * Q }, (c) => {
 });
 ```
 
-No lançamento, a tela do produto é uma camada do filme inteiro (`S.under`) e continua aparecendo nas cenas de recurso (com a imagem do próprio recurso, ou com a tela do produto quando ele não tem imagem): o desenho trocado à mão fica por cima dela, então deixe a metade de baixo da área útil livre ou cubra a tela de propósito.
+No passo a passo, o caminho do alto é uma camada do filme inteiro (`S.over`), desenhada do primeiro passo até o resultado: um desenho trocado à mão numa cena `passo` fica por baixo dele, então deixe livre a faixa do alto da área útil. No lançamento, a tela do produto é uma camada do filme inteiro (`S.under`) e continua aparecendo nas cenas de recurso (com a imagem do próprio recurso, ou com a tela do produto quando ele não tem imagem): o desenho trocado à mão fica por cima dela, então deixe a metade de baixo da área útil livre ou cubra a tela de propósito.
 
 O mesmo vale para mudar o desenho de todas as cenas de um papel: `S.scene("ponto", …)` registrado depois do modelo substitui o dele. Para uma camada nova do filme inteiro, `S.under` ou `S.over`.
 

@@ -18,6 +18,8 @@ Ask the way it comes to mind. The more your request says, the fewer questions yo
 
 > "Make a list of 5 mistakes that stain your teeth, for my clinic's profile."
 
+> "Make a step by step of how to book an appointment in our app: download the app, pick a time and confirm with your name."
+
 > "A 20-second Reels ad for Loja Aurora, lojaaurora.com.br: wool coat for R$ 199 until Sunday. Open with 'Winter is here. So is wool.' and close with 'link in bio'."
 
 > "Launch video for my booking app, meuapp.com.br. Open with 'No more spreadsheets'. Show: booking a slot, automatic reminders and paying by phone. Close with the logo and the address."
@@ -27,7 +29,7 @@ Ask the way it comes to mind. The more your request says, the fewer questions yo
 **The conversation.** With a complete request, the AI tells you in one sentence what it is going to make and starts. With an almost complete one, it asks three questions at most and moves on. With a short one, like "make an animated video", it runs up to three quick rounds:
 
 1. The video: which brand it is for, what it should do, where you will post it and how long it runs.
-2. The story: what the video promotes, which storyboard, which three things to show and whether there is a number that proves it works.
+2. The story: what the video promotes, which storyboard, which three things to show (or, in a step by step, which steps) and whether there is a number that proves it works.
 3. The feel: what viewers should feel at the end, the style, the sound and how the video closes.
 
 Each round has four questions at most, each with ready-made options. Answer only what you care about. "You decide" closes the round with the defaults, and "you decide the rest" covers every round still to come.

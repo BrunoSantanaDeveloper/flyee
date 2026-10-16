@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "youtube-research",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "tool",
   "trail": "planejar",
   "title": {
@@ -72,8 +72,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: outliers de um tema medidos contra o normal de cada canal, com faixas, avisos, relatório e planilha; traços de título medidos contra o multiplicador, com o tamanho de cada grupo; o normal de um canal; a fala de vídeos pela legenda, com o ritmo em palavras por minuto; os comentários mais relevantes, sem nomes; interface para outros apps.",
-    "en": "First version: a topic's outliers measured against each channel's normal, with bands, flags, report and spreadsheet; title traits measured against the multiplier, with the size of each group; a channel's normal; video speech from captions, with the pace in words per minute; the most relevant comments, without names; an interface for other apps."
+    "pt-BR": "Quando o YouTube recusa ou limita a entrega da legenda de um vídeo, o app agora diz isso, em vez de dizer que o vídeo não tem legenda. Um novo aviso separa a legenda que existe, mas não chegou desta vez, de um vídeo sem legenda.",
+    "en": "When YouTube refuses or limits the delivery of a video's captions, the app now says so instead of saying the video has no captions. A new notice tells a caption track that exists but did not arrive this time apart from a video with no captions."
   },
   "license": "member"
 }

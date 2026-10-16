@@ -2,7 +2,7 @@
 
 O roteiro diz o que acontece em cada cena; o estilo diz como isso aparece e se move. São cinco estilos com nome, e cada um muda coisas concretas da página: o mundo (fundo escuro ou claro), o tamanho e o peso das letras, o jeito do destaque, o tamanho e a moldura das imagens, as transições entre as cenas, os elementos de apoio (etiqueta numerada, cursor, detalhe) e a deriva das cenas paradas. Todos usam as cores e as fontes da marca que estão no `roteiro.json` (`palette`, `fonts`): o estilo nunca inventa uma cor.
 
-O estilo fica no campo `style` do `roteiro.json`, com um destes ids: `interface-narra`, `interface-que-se-transforma`, `limpo`, `tipografia-cinetica`, `vitrine`. Sem estilo (ou com um estilo descrito por um vídeo de referência), a página usa o estilo padrão do roteiro: `interface-narra` no lançamento, `interface-que-se-transforma` na interface, `vitrine` na oferta e `tipografia-cinetica` na lista.
+O estilo fica no campo `style` do `roteiro.json`, com um destes ids: `interface-narra`, `interface-que-se-transforma`, `limpo`, `tipografia-cinetica`, `vitrine`. Sem estilo (ou com um estilo descrito por um vídeo de referência), a página usa o estilo padrão do roteiro: `interface-narra` no lançamento, `interface-que-se-transforma` na interface, `vitrine` na oferta, `tipografia-cinetica` na lista e `limpo` no passo a passo.
 
 ## Como a página escolhe as cores
 
@@ -76,7 +76,8 @@ O estilo fica no campo `style` do `roteiro.json`, com um destes ids: `interface-
 | O integrante quer… | Estilo |
 |---|---|
 | mostrar um app, um site, um sistema | `interface-narra` |
-| explicar um passo a passo de uso | `interface-que-se-transforma` |
+| explicar um passo a passo de uso numa tela que muda | `interface-que-se-transforma` |
+| explicar um passo a passo sem telas, um passo depois do outro | `limpo` |
 | algo elegante, discreto, premium | `limpo` |
 | uma lista, dicas, uma opinião, sem telas | `tipografia-cinetica` |
 | vender um produto, mostrar uma oferta | `vitrine` |

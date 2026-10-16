@@ -1,0 +1,87 @@
+{
+  "format_version": 1,
+  "format": "9:16",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "beats_per_bar": 4,
+  "loop": false,
+  "title": "Caixa Forte · passo a passo",
+  "template": "passos",
+  "style": "limpo",
+  "bpm": 140,
+  "bars": 5,
+  "duration": 8.571,
+  "music": {
+    "mode": "music",
+    "style": "clean",
+    "seed": 11,
+    "file": null
+  },
+  "palette": {
+    "background": "#0B132B",
+    "text": "#F7F7F2",
+    "accent": "#FF6B35"
+  },
+  "fonts": {
+    "headline": "Georgia, serif",
+    "body": "'Segoe UI', Arial, sans-serif"
+  },
+  "brand": {
+    "name": "Caixa Forte",
+    "site": "",
+    "handle": "@caixaforte",
+    "logo": null
+  },
+  "scenes": [
+    {
+      "n": 1,
+      "role": "gancho",
+      "bars": 1,
+      "text": "Seu caixa fechado em 3 passos",
+      "events": [
+        { "beat": 0, "type": "impact" },
+        { "beat": 1, "type": "pop" }
+      ]
+    },
+    {
+      "n": 2,
+      "role": "passo",
+      "bars": 1,
+      "text": "Abra o extrato do dia",
+      "events": [
+        { "beat": 0, "type": "swish" },
+        { "beat": 2, "type": "pop" }
+      ]
+    },
+    {
+      "n": 3,
+      "role": "passo",
+      "bars": 1,
+      "text": "Marque cada saída",
+      "events": [
+        { "beat": 0, "type": "swish" },
+        { "beat": 2, "type": "pop" }
+      ]
+    },
+    {
+      "n": 4,
+      "role": "passo",
+      "bars": 1,
+      "text": "Some e compare",
+      "events": [
+        { "beat": 0, "type": "swish" },
+        { "beat": 2, "type": "pop" }
+      ]
+    },
+    {
+      "n": 5,
+      "role": "fechamento",
+      "bars": 1,
+      "text": "Siga para mais dicas",
+      "events": [
+        { "beat": 0, "type": "impact" }
+      ]
+    }
+  ]
+}

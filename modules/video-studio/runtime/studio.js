@@ -518,7 +518,7 @@
     },
   };
 
-  const DEFAULT_STYLE = { lancamento: "interface-narra", interface: "interface-que-se-transforma", oferta: "vitrine", lista: "tipografia-cinetica" };
+  const DEFAULT_STYLE = { lancamento: "interface-narra", interface: "interface-que-se-transforma", oferta: "vitrine", lista: "tipografia-cinetica", passos: "limpo" };
 
   /** O estilo de um id; um id desconhecido (ou um estilo descrito por referência) cai no padrão do roteiro. */
   function styleFor(id, template) {

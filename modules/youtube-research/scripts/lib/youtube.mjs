@@ -296,9 +296,37 @@ export function pickCaptionTrack(info) {
 
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/** Codes of a refusal that keep their own meaning when it happens while the caption downloads. */
+const CAPTION_REFUSALS = new Set(["youtube_blocked", "rate_limited", "offline", "age_restricted", "members_only", "private_video"]);
+
 /**
- * Downloads only the chosen caption track and returns its timed segments,
- * or null when YouTube did not deliver it. Works in a temporary folder.
+ * Why a caption track the video lists did not arrive. A block, a limit or a
+ * network failure keeps its own code, so the AI waits and tries again instead
+ * of telling the member the video has no captions; YouTube refusing the
+ * caption file itself (403, a verification yt-dlp did not do) is a block too.
+ * Anything else is `captions_unavailable`, never `no_captions`: the video has
+ * the track, YouTube just did not deliver it this time.
+ */
+export function captionDownloadError(stderr) {
+  const text = String(stderr ?? "");
+  const classified = classifyYtdlpError(text);
+  if (CAPTION_REFUSALS.has(classified.code)) return classified;
+  const update = installHints().update_ytdlp;
+  if (/HTTP Error 403|Forbidden|PO Token|po_token/i.test(text)) {
+    return new AppError("youtube_blocked", "O YouTube recusou entregar a legenda deste vídeo agora.", `Atualize o yt-dlp (${update}), espere alguns minutos e tente de novo.`);
+  }
+  const detail = errorLine(text);
+  return new AppError(
+    "captions_unavailable",
+    "O vídeo tem legenda, mas o YouTube não a entregou agora.",
+    detail ? `Tente de novo em alguns minutos. Detalhe: ${detail}.` : "Tente de novo em alguns minutos.",
+  );
+}
+
+/**
+ * Downloads only the chosen caption track and returns its timed segments.
+ * When the file does not arrive, it throws the reason (`captionDownloadError`).
+ * Works in a temporary folder.
  */
 export async function downloadCaptions(ytdlp, info, track) {
   const dir = mkdtempSync(join(tmpdir(), "youtube-research-"));
@@ -312,10 +340,11 @@ export async function downloadCaptions(ytdlp, info, track) {
       "--sub-langs", `^${escapeRegex(track.key)}$`, "--sub-format", "json3/srt/vtt/best",
       "-o", join(dir, "video.%(ext)s").replace(/\\/g, "/"),
     ];
-    const { code } = await run(ytdlp.file, args);
-    if (code !== 0) return null;
+    // yt-dlp may end with code 0 and only a warning when the caption request fails: the file decides.
+    const { stderr } = await run(ytdlp.file, args);
     const file = readdirSync(dir).find((name) => name.startsWith(`video.${track.key}.`) && /\.(json3|srt|vtt)$/i.test(name));
-    return file ? readCaptions(join(dir, file)) : null;
+    if (!file) throw captionDownloadError(stderr);
+    return readCaptions(join(dir, file));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

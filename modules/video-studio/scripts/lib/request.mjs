@@ -8,7 +8,7 @@ export const OBJECTIVES = ["apresentar", "vender", "lancar", "explicar", "portfo
 export const TONES = ["confianca", "vontade", "surpresa", "proximidade"];
 export const STYLES = ["interface-narra", "interface-que-se-transforma", "limpo", "tipografia-cinetica", "vitrine"];
 export const DESTINATIONS = ["reels", "tiktok", "shorts"];
-export const TEMPLATES = ["lancamento", "interface", "oferta", "lista"];
+export const TEMPLATES = ["lancamento", "interface", "oferta", "lista", "passos"];
 export const UNSUPPORTED = ["edit", "generated", "format", "reference_study", "long"];
 export const DURATION = { min: 6, max: 20 };
 export const LIMITS = { hook_words: 6, closing_words: 6, points: 5, states: 10, point_words: 8 };
@@ -358,7 +358,9 @@ export function detectDuration(low, src = low) {
 
 const TEMPLATE_PATTERNS = [
   ["interface", /\b(?:lista de estados|estados da interface|interface que se transforma|mud(?:a|ando) de estado|mesmo elemento|nunca corta|um unico elemento|morph(?:ing)?)\b/],
-  ["lista", new RegExp(`\\b(?:\\d{1,2}|${NUMBER_WORD_PATTERN})\\s+(?:dicas|erros|passos|motivos|razoes|mitos|segredos|sinais|ideias|truques|habitos|perguntas|maneiras|jeitos|formas|verdades|licoes|regras|tips|mistakes|steps|reasons)\\b|\\b(?:em lista|top \\d|passo a passo)\\b`)],
+  // steps in order ("passo a passo", "3 passos", "4 etapas") come before the list: they are a path, not loose items
+  ["passos", new RegExp(`\\b(?:(?:\\d{1,2}|${NUMBER_WORD_PATTERN})\\s+(?:passos|etapas|steps)|passo a passo|passo-a-passo|step by step|step-by-step)\\b`)],
+  ["lista", new RegExp(`\\b(?:\\d{1,2}|${NUMBER_WORD_PATTERN})\\s+(?:dicas|erros|motivos|razoes|mitos|segredos|sinais|ideias|truques|habitos|perguntas|maneiras|jeitos|formas|verdades|licoes|regras|tips|mistakes|reasons)\\b|\\b(?:em lista|top \\d)\\b`)],
   ["oferta", /\b(?:preco|precos|promocao|promocoes|promo|desconto|descontos|oferta|ofertas|liquidacao|cupom|black friday)\b|\d\s?% ?off\b|\bpor r\$|r\$ ?\d/],
   ["lancamento", new RegExp(`\\b(?:lancamento|o produto aparece|produto aparece|produto se monta\\w*|(?:\\d|${NUMBER_WORD_PATTERN}) recursos|recursos um a um)\\b`)],
 ];
@@ -631,11 +633,19 @@ export function storyRole(text) {
   return null;
 }
 
-/** A list line that is a thing to show ("frete grátis"), not an instruction ("usa o logo real") nor a part of the story ("Gancho: …", "Fecha com …"). */
-export function isContentItem(text) {
+/** The verbs that, even in a step-by-step, are about making the video ("anime o logo", "use a minha música"), never a step to show. */
+const PRODUCTION =
+  /^(?:usa|use|usar|gera|gere|gerar|anima|anime|animar|transcrev\w+|prioriza|priorize|renderiza|renderize|nunca|sempre|me mostra)\b/;
+
+/**
+ * A list line that is a thing to show ("frete grátis"), not an instruction ("usa o logo real") nor a
+ * part of the story ("Gancho: …", "Fecha com …"). In a step-by-step (`steps`), the steps are
+ * imperatives ("Baixe o app", "Crie sua conta"): only the making of the video is an instruction there.
+ */
+export function isContentItem(text, { steps = false } = {}) {
   const low = fold(clean(text));
   if (!low || wordCount(low) > LIMITS.point_words) return false;
-  return !INSTRUCTION.test(low) && storyRole(text) === null;
+  return !(steps ? PRODUCTION : INSTRUCTION).test(low) && storyRole(text) === null;
 }
 
 const POINT_NOUNS = "recursos|pontos|coisas|itens|beneficios|vantagens|diferenciais|dicas|motivos|passos|erros|produtos|servicos|momentos|funcoes|funcionalidades|destaques|novidades|razoes|topicos|features|points|benefits";
@@ -1096,7 +1106,9 @@ export function parseRequest(text) {
 
   // the points: the steps of an arrow chain, the things of a list, or "três recursos: a, b e c"
   const directions = {};
-  const contentItems = listItems.filter((item) => isContentItem(item.text));
+  // a step-by-step (named, or a request to explain with no other story) keeps its imperative steps
+  const steps = template ? template.value === "passos" : !chain.length && objective?.value === "explicar";
+  const contentItems = listItems.filter((item) => isContentItem(item.text, { steps }));
   let points = null;
   if (chain.length) points = { items: chain.slice(0, LIMITS.states), total: chain.length, evidence: chain.join(" → ") };
   if (!points && contentItems.length >= 2) points = { items: contentItems.slice(0, LIMITS.points).map((item) => item.text.replace(/[.;,]+$/, "")), total: contentItems.length, evidence: contentItems.map((item) => item.text).join(" · ") };

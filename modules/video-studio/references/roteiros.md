@@ -1,6 +1,6 @@
 # Os roteiros do vídeo
 
-Todo vídeo do Estúdio nasce de um de quatro roteiros: **lançamento**, **interface que se transforma**, **oferta** e **lista**. O roteiro diz quais cenas existem, em que ordem, quanto cada uma dura (em compassos da música) e o que cada cena precisa (as lacunas). O `build` escreve o `roteiro.json` a partir do pedido e da marca; você pode ajustar o texto, os tempos, os sons e o destaque de cada cena, e o `build` confere tudo de novo. As regras deste guia são as mesmas que o `build` confere (elas vêm de `roteiros.json`, ao lado deste guia).
+Todo vídeo do Estúdio nasce de um de cinco roteiros: **lançamento**, **interface que se transforma**, **oferta**, **lista** e **passo a passo**. O roteiro diz quais cenas existem, em que ordem, quanto cada uma dura (em compassos da música) e o que cada cena precisa (as lacunas). O `build` escreve o `roteiro.json` a partir do pedido e da marca; você pode ajustar o texto, os tempos, os sons e o destaque de cada cena, e o `build` confere tudo de novo. As regras deste guia são as mesmas que o `build` confere (elas vêm de `roteiros.json`, ao lado deste guia).
 
 ## O tempo: compassos e batidas
 
@@ -13,13 +13,13 @@ O vídeo anda numa grade de batidas, a mesma da trilha.
 
 | Duração | Compassos e andamento |
 |---|---|
-| 6 s | 3 compassos a 120: curto demais para os quatro roteiros; o mais curto possível tem 4 compassos (6,9 s a 140) |
+| 6 s | 3 compassos a 120: curto demais para os cinco roteiros; o mais curto possível tem 4 compassos (6,9 s a 140) |
 | 8,6 s | 5 compassos a 140 |
 | 12 s | 6 compassos a 120 |
 | 15 s | 8 compassos a 128 |
 | 20 s | 10 compassos a 120 |
 
-O menor vídeo de cada roteiro: interface, 4 compassos (6,9 s a 140); oferta, 4 compassos (6,9 s a 140); lançamento e lista, 5 compassos (8,6 s a 140).
+O menor vídeo de cada roteiro: interface, oferta e passo a passo, 4 compassos (6,9 s a 140); lançamento e lista, 5 compassos (8,6 s a 140).
 
 ## Os sons que marcam a imagem
 
@@ -235,6 +235,51 @@ Itens alternando 1 e 2 compassos dão ritmo (cortes do mesmo tamanho cansam); d�
 }
 ```
 
+## Passo a passo (`passos`)
+
+**Para quê.** Explicar como algo funciona ou como se faz: um gancho, de dois a cinco passos em ordem e, quando o integrante diz o que a pessoa tem no fim, o resultado, fechando com a chamada. Diferente da lista, os passos dependem um do outro: um caminho no alto liga os passos e avança a cada um. Objetivo: explicar. Estilo padrão: `limpo`.
+
+| Cena | Compassos | Lacunas | Som que combina | O que a página faz |
+|---|---|---|---|---|
+| `gancho` | 1 a 2 | `text` (até 6), `emphasis`? | `impact` na 0, `pop` na 1 | a capa pousada, o soco, o destaque e a travessia, como na lista |
+| `passo` (2 a 5) | 1 a 2 | `text` (até 6), `detail`? (até 10), `emphasis`? | `swish` na 0, `pop` na 2 | no alto, o círculo do passo acende na batida 0 e o trecho do caminho até o próximo enche enquanto o passo dura; quando ele termina, o número vira um sinal de certo; o texto sobe linha a linha, o destaque chega no `pop` e o detalhe vem depois |
+| `resultado` (opcional) | 1 a 2 | `text` (até 6), `detail`? (até 10), `emphasis`? | `ding` na 0 | o último certo se desenha, o caminho sai e um círculo grande na cor de destaque pousa com o sinal de certo se desenhando; o texto sobe embaixo |
+| `fechamento` | 1 a 2 | `text` (até 6), `logo`?, `emphasis`? | `impact` na 0 | o logo e a chamada, parados até o último quadro, no fundo da marca |
+
+Escreva cada passo começando pelo que a pessoa faz ("Baixe o app", "Escolha o horário"), na ordem em que ela faz. O `build` não escreve a cena `resultado`: ela entra no `roteiro.json` só quando o integrante disse o que a pessoa tem no fim ("horário marcado sem ligação"), com as palavras dele.
+
+```json
+{
+  "format_version": 1,
+  "title": "Agenda Fácil · como agendar",
+  "template": "passos",
+  "style": "limpo",
+  "format": "9:16",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "bpm": 120,
+  "beats_per_bar": 4,
+  "bars": 10,
+  "duration": 20,
+  "music": { "mode": "music", "style": "clean", "seed": 19, "file": null },
+  "palette": { "background": "#F6F7FB", "text": "#14161F", "accent": "#3B5BFD" },
+  "fonts": { "headline": "'Segoe UI', Arial, sans-serif", "body": "'Segoe UI', Arial, sans-serif" },
+  "brand": { "name": "Agenda Fácil", "site": "agendafacil.app", "handle": "@agendafacil", "logo": "assets/logo.svg" },
+  "scenes": [
+    { "n": 1, "role": "gancho", "bars": 1, "text": "Como marcar seu horário", "emphasis": "horário", "events": [{ "beat": 0, "type": "impact" }, { "beat": 1, "type": "pop" }] },
+    { "n": 2, "role": "passo", "bars": 1, "text": "Baixe o app", "detail": "Na loja do seu celular", "events": [{ "beat": 0, "type": "swish" }, { "beat": 2, "type": "pop" }] },
+    { "n": 3, "role": "passo", "bars": 1, "text": "Escolha o serviço", "events": [{ "beat": 0, "type": "swish" }, { "beat": 2, "type": "pop" }] },
+    { "n": 4, "role": "passo", "bars": 1, "text": "Toque no horário livre", "detail": "Os horários do dia aparecem em verde", "emphasis": "livre", "events": [{ "beat": 0, "type": "swish" }, { "beat": 2, "type": "pop" }] },
+    { "n": 5, "role": "passo", "bars": 1, "text": "Confirme com seu nome", "events": [{ "beat": 0, "type": "swish" }, { "beat": 2, "type": "pop" }] },
+    { "n": 6, "role": "passo", "bars": 1, "text": "Receba o lembrete", "detail": "Um dia antes, pelo WhatsApp", "events": [{ "beat": 0, "type": "swish" }, { "beat": 2, "type": "pop" }] },
+    { "n": 7, "role": "resultado", "bars": 2, "text": "Horário marcado sem ligação", "detail": "E você só aparece na hora", "events": [{ "beat": 0, "type": "ding" }] },
+    { "n": 8, "role": "fechamento", "bars": 2, "text": "agendafacil.app", "logo": true, "events": [{ "beat": 0, "type": "impact" }] }
+  ],
+  "loop": false
+}
+```
+
 ## Como escolher o roteiro
 
 | O integrante quer… | Roteiro |
@@ -242,9 +287,10 @@ Itens alternando 1 e 2 compassos dão ritmo (cortes do mesmo tamanho cansam); d�
 | vender um produto, anunciar uma promoção, mostrar um preço | oferta |
 | lançar ou apresentar um produto, um serviço, o próprio trabalho | lançamento |
 | mostrar um elemento da tela que muda de estado sem corte, como um app que se transforma | interface que se transforma |
-| dar dicas, listar erros, passos ou motivos, explicar como algo funciona | lista |
+| explicar como algo funciona ou como se faz, um passo depois do outro | passo a passo |
+| dar dicas, listar erros, motivos ou ideias soltas, que não dependem da ordem | lista |
 
-Desempate pelo material que existe: com telas boas do produto, lançamento ou interface; com fotos de produto e preço, oferta; sem imagem nenhuma, lista (ou lançamento no estilo `tipografia-cinetica`). Pedidos com "estados da interface", "interface que se transforma", "muda de estado" ou "mesmo elemento" pedem a interface; "passo a passo", "como funciona", "3 dicas", "erros", "passos" pedem a lista; "preço", "promoção", "desconto" pedem a oferta. Para mostrar um app por dentro com uma tela que se transforma, o pedido nomeia a interface.
+Desempate pelo material que existe: com telas boas do produto, lançamento ou interface; com fotos de produto e preço, oferta; sem imagem nenhuma, passo a passo ou lista (ou lançamento no estilo `tipografia-cinetica`). Pedidos com "estados da interface", "interface que se transforma", "muda de estado" ou "mesmo elemento" pedem a interface; "passo a passo", "3 passos", "4 etapas" pedem o passo a passo, e "como funciona", "como usar", "tutorial", sem outra história, também; "3 dicas", "5 erros", "top 5" pedem a lista; "preço", "promoção", "desconto" pedem a oferta. Para mostrar um app por dentro com uma tela que se transforma, o pedido nomeia a interface.
 
 ## O que o vídeo nunca faz
 

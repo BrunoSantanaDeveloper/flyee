@@ -351,7 +351,23 @@ const PARSE_CASES = [
   {
     name: "tutorial passo a passo, tom leve",
     text: "Faz um tutorial animado de como funciona o agendamento online da Clínica Bem Estar, passo a passo, tom leve",
-    fields: { brand: { name: "Clínica Bem Estar" }, objective: "explicar", template: "lista", tone: "proximidade", subject: "o agendamento online da Clínica Bem Estar" },
+    fields: { brand: { name: "Clínica Bem Estar" }, objective: "explicar", template: "passos", tone: "proximidade", subject: "o agendamento online da Clínica Bem Estar" },
+  },
+  {
+    name: "passo a passo com os passos numerados no imperativo; a instrução sobre o vídeo fica de fora",
+    text: "Faz um vídeo passo a passo de como agendar na Clínica Bem Estar:\n1. Baixe o app\n2. Crie sua conta\n3. Escolha o horário\n4. Use as cores da marca",
+    fields: { template: "passos", points: ["Baixe o app", "Crie sua conta", "Escolha o horário"] },
+  },
+  {
+    name: "como funciona, sem as palavras de um roteiro: só o objetivo explicar",
+    text: "Quero um vídeo que mostre como funciona o agendamento online da Clínica Bem Estar",
+    fields: { objective: "explicar" },
+    absent: ["template", "points"],
+  },
+  {
+    name: "4 etapas pedem o passo a passo",
+    text: "Um vídeo com as 4 etapas para abrir sua conta no Banco Aurora",
+    fields: { template: "passos" },
   },
   {
     name: "showreel do meu trabalho, estilo Apple, para o LinkedIn",
@@ -1301,7 +1317,8 @@ test("the question bank is complete, consistent and written for the member", () 
     // options with `when` are alternatives (the site, the @, WhatsApp): at most four are shown, checked below by rendering
     assert.ok(always.length <= 4, `${question.id}: ${always.length} opções sempre presentes`);
     if (!question.free_text_only && !dynamic) assert.ok(fixed.length >= 2, `${question.id}: ${fixed.length} opções`);
-    for (const variant of question.variants ?? []) if (variant.options) assert.ok(variant.options.length >= 2 && variant.options.length <= 4, `${question.id}: variante`);
+    // a variant with an empty list asks in text (the steps of a passo a passo: nothing on the site is a step)
+    for (const variant of question.variants ?? []) if (variant.options?.length) assert.ok(variant.options.length >= 2 && variant.options.length <= 4, `${question.id}: variante`);
     if (typeof question.default === "string" && !dynamic) assert.ok(fixed.some((option) => option.value === question.default), `${question.id}: o padrão é uma das opções`);
     for (const option of fixed) assert.equal(typeof option.value, "string", question.id);
   }
@@ -1367,5 +1384,5 @@ test("loadBank and loadTemplates refuse a broken install with runtime_missing", 
   assert.throws(() => loadBank(dir), (error) => error.code === "runtime_missing" && /stage|field|header/.test(error.message));
   writeFileSync(join(dir, "references", "roteiros.json"), "{ quebrado");
   assert.throws(() => loadTemplates(dir), (error) => error.code === "invalid_json");
-  assert.equal(Object.keys(TEMPLATES_DATA.templates).length, 4);
+  assert.equal(Object.keys(TEMPLATES_DATA.templates).length, 5);
 });

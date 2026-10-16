@@ -119,14 +119,15 @@ Em erro do comando, `ok` é `false`, a saída termina com código 1 (2 para uso 
 | `code` | O que fazer |
 |---|---|
 | `tools_missing` | rode você mesmo o comando de `fix` (tempo limite de 10 minutos) e repita |
-| `youtube_blocked`, `rate_limited` | o YouTube recusou por um tempo: rode `update_ytdlp`, espere alguns minutos, repita com menos buscas, canais ou vídeos |
-| `no_captions` | o YouTube não entregou a legenda (ou o vídeo não tem); diga ao integrante numa frase e ofereça três caminhos: ele colar a transcrição num arquivo, o app Análise de vídeo ler imagem e som, ou seguir sem aquele vídeo |
+| `youtube_blocked`, `rate_limited` | o YouTube recusou por um tempo, inclusive na hora de entregar uma legenda: rode `update_ytdlp`, espere alguns minutos, repita com menos buscas, canais ou vídeos. Não diga que o vídeo não tem legenda |
+| `no_captions` | o vídeo não tem legenda, nem a automática; diga ao integrante numa frase e ofereça três caminhos: ele colar a transcrição num arquivo, o app Análise de vídeo ler imagem e som, ou seguir sem aquele vídeo |
+| `captions_unavailable` | o vídeo tem legenda, mas o YouTube não a entregou agora (ou ela veio vazia); espere alguns minutos e tente uma vez de novo; se repetir, ofereça os três caminhos de `no_captions` |
 | `no_tab` | o canal não tem essa aba; use a outra |
 | `not_youtube`, `not_found`, `video_unavailable`, `private_video`, `members_only`, `age_restricted` | o endereço não serve; repasse `fix` |
 | `offline`, `ytdlp_failed`, `unexpected` | repasse `message` e `fix` |
 | `usage` | uma opção errada: corrija o comando |
 
-Quando a leitura de um vídeo falha, nunca tente outro caminho por conta própria para o mesmo conteúdo (outro site, outra ferramenta, a página aberta no navegador). Diga o que falhou e deixe o integrante escolher entre os caminhos da linha `no_captions`.
+Quando a leitura de um vídeo falha, nunca tente outro caminho por conta própria para o mesmo conteúdo (outro site, outra ferramenta, a página aberta no navegador). Diga o que falhou e deixe o integrante escolher entre os caminhos da linha `no_captions`. O código `captions_unavailable` chegou na versão 1.0.1, dentro da interface 1; antes dela, o mesmo caso voltava como `no_captions`.
 
 ## 8. O que não muda
 

@@ -77,7 +77,8 @@ Sem os degraus 1 a 3, ofereça numa frase as três saídas: a chave do Gemini, o
    Um recorte leva `--cutout` e sai em `.png` ou `.webp`. Pelo Codex, cada imagem leva por volta de um minuto e meio: avise numa frase, use tempo limite de 10 minutos e rode um pedido por vez. Abra cada imagem e olhe antes de usar (`images.md`, seção 4). O modelo `photo` espera `assets/fundo.jpg` e `assets/assunto.png`: troque os caminhos em `images`, no bloco `SLIDE`, pelos arquivos que você gravou.
 3. Preencha `brief.md`: Tema, Para quem, Promessa, Tom, Estrutura dos slides, Chamada final e, com fotos, Imagens (o arquivo, o que é e o pedido usado, como no exemplo com fotos).
 4. Escreva cada `slides/NN.html` seguindo `slide-page.md`: edite o bloco `SLIDE` e troque os helpers dentro de `seek`. Troque **todo** texto de amostra. Para um contador, barras, a bola ou cartões, copie o padrão do slide correspondente do exemplo. Aplique `design-rules.md`: título em até 3 linhas com as quebras escolhidas por você, um recurso por slide, movimento desde o primeiro segundo. Com fotos, também a seção 8: uma foto herói por slide, o texto na cor `ink` sobre um degradê do lado em que ele está, nunca sobre um rosto ou o recorte.
-5. Escreva o roteiro (`storyboard.md`): em cada slide, o `title`, os `events` (o `new` os deixa vazios: um efeito por gesto, nas mesmas batidas da página) e as `notes`.
+5. **A revisão do texto.** Passe o texto de todos os slides pela skill `texto-natural`, que vem com o flyee, para tirar o que ainda soar como texto de IA. O tom do `brief.md` manda sobre ela, e o texto que o integrante escreveu não muda. Dela vale só o que tira cara de IA: ela não acrescenta número, promessa ou fato que ele não deu, e cada título continua cabendo em até 3 linhas. Troque nas páginas o que ela mudou.
+6. Escreva o roteiro (`storyboard.md`): em cada slide, o `title`, os `events` (o `new` os deixa vazios: um efeito por gesto, nas mesmas batidas da página) e as `notes`.
 
 ## Passo 4: olhar e conferir, antes de renderizar
 
@@ -126,12 +127,12 @@ Mostre ao integrante: `open <nome> --json` abre a prévia no navegador dele, um 
    ```
 
    Abra `sheet` (o vídeo final, com o tempo em cada quadro) e `phone.file` (o teste de leitura no tamanho do celular).
-4. `open <nome> --json`, e entregue: a pasta, os arquivos de `out/` na ordem, como postar (pelo aplicativo do Instagram, escolhendo os MP4 na ordem, como um só carrossel), o que a conferência disse item por item e uma sugestão de legenda com a palavra da chamada. Nunca omita uma reprovação nem um aviso.
+4. `open <nome> --json`, e entregue: a pasta, os arquivos de `out/` na ordem, como postar (pelo aplicativo do Instagram, escolhendo os MP4 na ordem, como um só carrossel), o que a conferência disse item por item e uma sugestão de legenda com a palavra da chamada, que passa pela `texto-natural` antes de ser mostrada. Nunca omita uma reprovação nem um aviso.
 5. Depois de uma tarefa real, registre o uso: `npx --yes flyee@latest track tool.executed --module motion-carousel`.
 
 ## Mudanças
 
-- **Refazer um slide** ("troque a frase do slide 3"): edite `slides/03.html` (e o `title` e os `events` dele no roteiro), repita o Passo 4 para ele, depois `render <nome> --slides 3 --json` e a conferência completa. Os outros slides não são refeitos. A prévia mostra os arquivos do último `render`: prévia ou final.
+- **Refazer um slide** ("troque a frase do slide 3"): edite `slides/03.html` (e o `title` e os `events` dele no roteiro), passe a frase nova pela `texto-natural` (o que o integrante ditou fica como ele disse), repita o Passo 4 para ele, depois `render <nome> --slides 3 --json` e a conferência completa. Os outros slides não são refeitos. A prévia mostra os arquivos do último `render`: prévia ou final.
 - **Trocar uma imagem:** grave o arquivo novo em `assets/` com o mesmo nome (pelo comando `images`, um pedido diferente gera de novo; o mesmo pedido, só com `--refresh`) e olhe-o; depois `render <nome> --json`: só os slides que citam a imagem são refeitos.
 - **Trocar a trilha:** mude `sound.style` ou `sound.seed` no roteiro e rode `render` de novo. Só o som é refeito.
 - **Trocar o tema:** mude `theme` no bloco `SLIDE` de todas as páginas (e no roteiro).

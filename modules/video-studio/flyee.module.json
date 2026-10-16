@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "video-studio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -15,7 +15,7 @@
   "compatible_ais": [
     "claude_code"
   ],
-  "min_core": ">=1.1.0",
+  "min_core": ">=1.3.0",
   "entry": "skills/motion-video/SKILL.md",
   "files": [
     "README.md",
@@ -33,6 +33,7 @@
     "runtime/templates/lancamento.html",
     "runtime/templates/lista.html",
     "runtime/templates/oferta.html",
+    "runtime/templates/passos.html",
     "scripts/lib/brand.mjs",
     "scripts/lib/engine.mjs",
     "scripts/lib/intake.mjs",
@@ -103,8 +104,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: vídeos animados na vertical (1080×1920) de 6 a 20 segundos para Reels, TikTok e Shorts; o app mede o pedido e pergunta só o que falta (nenhuma pergunta para um pedido completo, um briefing guiado em até três rodadas curtas para um pedido vago, com a opção de deixar a IA decidir); marca real capturada do site (logo, cores, fontes, telas, números publicados); quatro roteiros (lançamento, interface que se transforma, oferta e lista) e cinco estilos; trilha original e efeitos na batida, sem música de terceiros; prévia do tamanho de um celular antes do vídeo final; conferência de capa legível, zona segura, tamanho do texto, cortes na batida e volume; capa e notas para postar.",
-    "en": "First version: vertical animated videos (1080×1920) from 6 to 20 seconds for Reels, TikTok and Shorts; the app measures the request and asks only what is missing (no questions for a complete request, a guided brief in up to three short rounds for a vague one, with the option of letting the AI decide); the real brand captured from the site (logo, colours, fonts, screens, published numbers); four storyboards (launch, morphing interface, offer and list) and five styles; original music and effects on the beat, with no third-party music; a phone-size preview before the final video; checks for a readable cover, safe area, text size, cuts on the beat and loudness; cover and notes for posting."
+    "pt-BR": "Roteiro novo, o passo a passo: de dois a cinco passos em ordem, ligados por um caminho no alto que avança a cada passo, com o resultado no fim quando você diz qual é. Pedidos para explicar como algo funciona vão para ele; dicas e erros continuam na lista. Os textos da tela passam pela revisão de texto natural do flyee, e a conferência mostra cada item com um nome em português.",
+    "en": "A new storyboard, the step by step: two to five steps in order, joined by a path at the top that moves forward with each step, with the result at the end when you say what it is. Requests to explain how something works go to it; tips and mistakes stay in the list. The on-screen texts go through flyee's natural-text review, and the check report shows each item with a name in Portuguese."
   },
   "license": "member"
 }

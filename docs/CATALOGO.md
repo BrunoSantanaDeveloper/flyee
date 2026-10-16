@@ -6,16 +6,16 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
-| [Carrossel animado](#motion-carousel) | 1.1.0 | skill | divulgar | `video-render` | — |
+| [Carrossel animado](#motion-carousel) | 1.1.1 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.0 | tool | planejar | — | `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.0.0 | tool | divulgar | — | `motion-carousel`, `video-studio` |
-| [Estúdio de vídeo](#video-studio) | 1.0.0 | workflow | divulgar | `video-render` | — |
-| [Pesquisa no YouTube](#youtube-research) | 1.0.0 | tool | planejar | — | `youtube-script` |
+| [Estúdio de vídeo](#video-studio) | 1.1.0 | workflow | divulgar | `video-render` | — |
+| [Pesquisa no YouTube](#youtube-research) | 1.0.1 | tool | planejar | — | `youtube-script` |
 | [Roteiro para YouTube](#youtube-script) | 1.1.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
 
 ## motion-carousel
 
-**Carrossel animado** (Motion carousel) · versão 1.1.0 · skill · trilha divulgar · testado em `claude_code`
+**Carrossel animado** (Motion carousel) · versão 1.1.1 · skill · trilha divulgar · testado em `claude_code`
 
 > Cria carrosséis para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida, a partir de um tema; entrega os MP4 prontos para postar e uma prévia de como fica no feed.
 
@@ -117,7 +117,7 @@ Transforma uma página animada em vídeo pronto para publicar. A sua IA escreve 
 
 ## video-studio
 
-**Estúdio de vídeo** (Video studio) · versão 1.0.0 · workflow · trilha divulgar · testado em `claude_code`
+**Estúdio de vídeo** (Video studio) · versão 1.1.0 · workflow · trilha divulgar · testado em `claude_code`
 
 > Cria vídeos animados para Reels, TikTok e Shorts a partir do seu pedido: pergunta o que falta, usa o logo, as cores e as telas reais da sua marca, compõe a trilha na batida, mostra uma prévia e entrega o vídeo conferido para as redes.
 
@@ -125,7 +125,7 @@ Transforma um pedido em um vídeo animado para Reels, TikTok e Shorts. Você diz
 
 **Skills**
 
-- `motion-video`: Cria vídeos animados na vertical para Reels, TikTok e Shorts a partir de um pedido. Pergunta só o que falta, usa a marca real (logo, cores e telas do site), põe trilha e efeitos na batida, mostra uma prévia e entrega o vídeo conferido. Use quando pedirem "faça um vídeo animado", "um Reels da minha loja", "vídeo de lançamento", "anúncio animado" ou "vídeo para o TikTok".
+- `motion-video`: Cria vídeos animados na vertical para Reels, TikTok e Shorts a partir de um pedido. Pergunta só o que falta, usa a marca real (logo, cores e telas do site), põe trilha e efeitos na batida, mostra uma prévia e entrega o vídeo conferido. Use quando pedirem "faça um vídeo animado", "um Reels da minha loja", "vídeo de lançamento", "passo a passo animado", "anúncio animado" ou "vídeo para o TikTok".
 
 **Usa** `video-render` · **Usado por** —
 
@@ -141,7 +141,7 @@ Transforma um pedido em um vídeo animado para Reels, TikTok e Shorts. Você diz
 
 ## youtube-research
 
-**Pesquisa no YouTube** (YouTube research) · versão 1.0.0 · tool · trilha planejar · testado em `claude_code`
+**Pesquisa no YouTube** (YouTube research) · versão 1.0.1 · tool · trilha planejar · testado em `claude_code`
 
 > Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público e o normal de qualquer canal, sem chave.
 

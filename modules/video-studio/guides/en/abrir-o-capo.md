@@ -30,16 +30,17 @@ The kit is good for 90 days. Within that time, a new video for the same brand do
 
 ### 3. The storyboard
 
-Every video starts from one of four storyboards, which set the scenes, their order and how long each one can last:
+Every video starts from one of five storyboards, which set the scenes, their order and how long each one can last:
 
 | Storyboard | What for | The scenes |
 |---|---|---|
 | Launch (lançamento) | introducing or launching | hook, the product assembling on screen, 2 to 4 features, a number that proves it (if there is one) and sign-off |
 | Morphing interface (interface que se transforma) | showing how an app or a site works | the brand icon, 4 to 10 states of a single element (button, field, loading, done, card, chart, list, notice, search) and sign-off |
 | Offer (oferta) | selling | hook, the product, the price landing on screen, the deadline (if there is one) and call to action |
-| List (lista) | teaching or giving opinions in points | hook, 3 to 5 numbered items and call to action |
+| List (lista) | teaching or giving opinions in loose points | hook, 3 to 5 numbered items and call to action |
+| Step by step (passo a passo) | explaining how something works or how it is done | hook, 2 to 5 steps in order joined by a path that moves forward, the result (when you say what it is) and call to action |
 
-The goal picks the storyboard: selling calls for the offer, explaining for the list, introducing and launching for the launch. The interface comes in when you ask for it or pick it in the question about the story. The material breaks ties: good screens lean towards the launch or the interface, photos with a price towards the offer, no images at all towards the list. Each scene takes 4 to 6 words of main text and up to 10 of detail, because on a phone a long sentence only fits in small type. A longer text is refused with the name of the scene and the field.
+The goal picks the storyboard: selling calls for the offer, explaining for the step by step, introducing and launching for the launch. Tips, mistakes and reasons that do not depend on their order go to the list. The interface comes in when you ask for it or pick it in the question about the story. The material breaks ties: good screens lean towards the launch or the interface, photos with a price towards the offer, no images at all towards the list or the step by step. Each scene takes 4 to 6 words of main text and up to 10 of detail, because on a phone a long sentence only fits in small type. A longer text is refused with the name of the scene and the field.
 
 The first draft comes from the plan and the brand, and every text keeps its source: that is what appears next to each number in the preview. Before rendering, the AI reads the scenes and fixes anything too long or that makes no sense.
 

@@ -18,6 +18,8 @@ Peça do jeito que estiver na sua cabeça. Quanto mais o pedido diz, menos a IA 
 
 > "Faça uma lista com 5 erros que mancham o sorriso, para o perfil da minha clínica."
 
+> "Faça um passo a passo de como agendar uma consulta pelo nosso app: baixe o app, escolha o horário e confirme com o seu nome."
+
 > "Faça um anúncio de 20 segundos para o Reels da Loja Aurora, lojaaurora.com.br: casaco de lã por R$ 199 até domingo. Abre com 'Frio chegou. A lã também.' e fecha com 'link na bio'."
 
 > "Vídeo de lançamento do meu aplicativo de agenda, meuapp.com.br. Abre com 'Chega de planilha'. Mostra: marcar um horário, lembrete automático e pagamento pelo celular. Fecha com o logo e o endereço."
@@ -27,7 +29,7 @@ Peça do jeito que estiver na sua cabeça. Quanto mais o pedido diz, menos a IA 
 **A conversa.** Com um pedido completo, a IA diz em uma frase o que vai fazer e começa. Com um pedido quase completo, faz no máximo três perguntas e segue. Com um pedido curto, como "faça um vídeo animado", ela conduz até três rodadas rápidas:
 
 1. O vídeo: de qual marca é, para que serve, onde você vai publicar e quanto tempo dura.
-2. A história: o que o vídeo divulga, qual roteiro, quais três coisas mostrar e se há um número que prove.
+2. A história: o que o vídeo divulga, qual roteiro, quais três coisas mostrar (ou, no passo a passo, quais são os passos) e se há um número que prove.
 3. O jeito: o que quem assiste deve sentir, o estilo, o som e como o vídeo termina.
 
 Cada rodada tem no máximo quatro perguntas, com opções prontas para escolher. Responda só o que quiser. "Decida por mim" fecha a rodada com os padrões, e "o resto decide você" vale para todas as rodadas que faltam.

@@ -1,0 +1,123 @@
+{
+  "format_version": 1,
+  "format": "9:16",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "beats_per_bar": 4,
+  "loop": false,
+  "title": "Agenda Fácil · como agendar",
+  "template": "passos",
+  "style": "limpo",
+  "bpm": 120,
+  "bars": 10,
+  "duration": 20,
+  "music": {
+    "mode": "music",
+    "style": "clean",
+    "seed": 19,
+    "file": null
+  },
+  "palette": {
+    "background": "#F6F7FB",
+    "text": "#14161F",
+    "accent": "#3B5BFD"
+  },
+  "fonts": {
+    "headline": "'Segoe UI', Arial, sans-serif",
+    "body": "'Segoe UI', Arial, sans-serif"
+  },
+  "brand": {
+    "name": "Agenda Fácil",
+    "site": "agendafacil.app",
+    "handle": "@agendafacil",
+    "logo": "assets/logo.svg"
+  },
+  "scenes": [
+    {
+      "n": 1,
+      "role": "gancho",
+      "bars": 1,
+      "text": "Como marcar seu horário",
+      "emphasis": "horário",
+      "events": [
+        { "beat": 0, "type": "impact" },
+        { "beat": 1, "type": "pop" }
+      ]
+    },
+    {
+      "n": 2,
+      "role": "passo",
+      "bars": 1,
+      "text": "Baixe o app",
+      "detail": "Na loja do seu celular",
+      "events": [
+        { "beat": 0, "type": "swish" },
+        { "beat": 2, "type": "pop" }
+      ]
+    },
+    {
+      "n": 3,
+      "role": "passo",
+      "bars": 1,
+      "text": "Escolha o serviço",
+      "events": [
+        { "beat": 0, "type": "swish" },
+        { "beat": 2, "type": "pop" }
+      ]
+    },
+    {
+      "n": 4,
+      "role": "passo",
+      "bars": 1,
+      "text": "Toque no horário livre",
+      "detail": "Os horários do dia aparecem em verde",
+      "emphasis": "livre",
+      "events": [
+        { "beat": 0, "type": "swish" },
+        { "beat": 2, "type": "pop" }
+      ]
+    },
+    {
+      "n": 5,
+      "role": "passo",
+      "bars": 1,
+      "text": "Confirme com seu nome",
+      "events": [
+        { "beat": 0, "type": "swish" },
+        { "beat": 2, "type": "pop" }
+      ]
+    },
+    {
+      "n": 6,
+      "role": "passo",
+      "bars": 1,
+      "text": "Receba o lembrete",
+      "detail": "Um dia antes, pelo WhatsApp",
+      "events": [
+        { "beat": 0, "type": "swish" },
+        { "beat": 2, "type": "pop" }
+      ]
+    },
+    {
+      "n": 7,
+      "role": "resultado",
+      "bars": 2,
+      "text": "Horário marcado sem ligação",
+      "detail": "E você só aparece na hora",
+      "events": [
+        { "beat": 0, "type": "ding" }
+      ]
+    },
+    {
+      "n": 8,
+      "role": "fechamento",
+      "bars": 2,
+      "text": "agendafacil.app",
+      "logo": true,
+      "events": [
+        { "beat": 0, "type": "impact" }
+      ]
+    }
+  ]
+}

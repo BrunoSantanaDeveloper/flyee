@@ -49,4 +49,5 @@ O que já foi lido é reaproveitado: os canais por uma semana, os dados de víde
 
 ## O que há de novo
 
+- 1.0.1: quando o YouTube recusa ou limita a entrega da legenda, a sua IA fica sabendo e tenta de novo depois, em vez de concluir que o vídeo não tem legenda.
 - 1.0.0: primeira versão. Outliers de um tema medidos contra o normal de cada canal, com faixas, avisos, relatório e planilha. Também os traços de título que andam junto com os vídeos que foram bem, o normal de um canal, a fala de vídeos com o ritmo em palavras por minuto, os comentários mais relevantes e uma interface para outros apps.

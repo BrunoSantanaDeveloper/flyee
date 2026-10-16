@@ -1,6 +1,6 @@
 ---
 name: motion-video
-description: Cria vídeos animados na vertical para Reels, TikTok e Shorts a partir de um pedido. Pergunta só o que falta, usa a marca real (logo, cores e telas do site), põe trilha e efeitos na batida, mostra uma prévia e entrega o vídeo conferido. Use quando pedirem "faça um vídeo animado", "um Reels da minha loja", "vídeo de lançamento", "anúncio animado" ou "vídeo para o TikTok".
+description: Cria vídeos animados na vertical para Reels, TikTok e Shorts a partir de um pedido. Pergunta só o que falta, usa a marca real (logo, cores e telas do site), põe trilha e efeitos na batida, mostra uma prévia e entrega o vídeo conferido. Use quando pedirem "faça um vídeo animado", "um Reels da minha loja", "vídeo de lançamento", "passo a passo animado", "anúncio animado" ou "vídeo para o TikTok".
 ---
 
 # Estúdio de vídeo: vídeo animado
@@ -13,7 +13,7 @@ node .flyee/modules/video-studio/scripts/studio.mjs <comando> [opções] --json
 
 Só o JSON vai para o stdout; o progresso vai para o stderr. Em erro, `ok` é `false` e `error` traz `code`, `message` e `fix`. **Todo resultado traz `next_step`**: `action` (o que vem agora), `command` (o comando exato a rodar, quando há um) e `say` (uma frase para dizer ao integrante). Siga o `next_step`: é ele que mantém a ordem certa, inclusive ao retomar um vídeo depois de uma pausa.
 
-Os guias desta pasta: `../../references/roteiros.md` (os quatro roteiros e as lacunas de cada cena), `../../references/estilos.md` (os estilos e como descrevê-los), `../../references/pagina-do-video.md` (como o roteiro vira a página e como ajustar uma cena) e `../../references/perguntas.json` (o texto de todas as perguntas).
+Os guias desta pasta: `../../references/roteiros.md` (os cinco roteiros e as lacunas de cada cena), `../../references/estilos.md` (os estilos e como descrevê-los), `../../references/pagina-do-video.md` (como o roteiro vira a página e como ajustar uma cena) e `../../references/perguntas.json` (o texto de todas as perguntas).
 
 ## Regras que não se quebram
 
@@ -71,7 +71,7 @@ No pedido completo e no parcial não há esta parada: a `linha` já disse o plan
 
 ## Passo 5: construir, olhar e mostrar a prévia
 
-1. `build <slug> --json` escreve o `roteiro.json` (as cenas na grade de batidas), a `pagina.html` e os efeitos. Aviso em `warnings` que muda o que o integrante pediu (a duração, quando o roteiro não cabe no tempo pedido) vai para ele numa frase, junto com a prévia. Leia `scenes` (cada cena com o texto e os tempos): algum texto ficou longo, trocado ou sem sentido? Ajuste o `roteiro.json` seguindo `../../references/roteiros.md` e rode `build` de novo: ele guarda o roteiro que você editou e reescreve a página a partir dele. Mudança feita à mão na `pagina.html` some no próximo `build`; ajuste fino que precisa ficar vai no roteiro, ou siga `../../references/pagina-do-video.md`. `build --force` descarta também as suas edições do roteiro e o redesenha do briefing (o anterior fica em `roteiro.anterior.json`).
+1. `build <slug> --json` escreve o `roteiro.json` (as cenas na grade de batidas), a `pagina.html` e os efeitos. Aviso em `warnings` que muda o que o integrante pediu (a duração, quando o roteiro não cabe no tempo pedido) vai para ele numa frase, junto com a prévia. Leia `scenes` (cada cena com o texto e os tempos): algum texto ficou longo, trocado ou sem sentido? Ajuste o `roteiro.json` seguindo `../../references/roteiros.md` e rode `build` de novo: ele guarda o roteiro que você editou e reescreve a página a partir dele. Passe também os textos da tela pela skill `texto-natural`, que vem com o flyee, para tirar o que soar como texto de IA: o que o integrante escreveu não muda, ela não acrescenta fato, número ou promessa, e cada texto continua no limite de palavras da cena. No roteiro passo a passo, a cena `resultado` só entra quando o integrante disse o que a pessoa tem no fim. Mudança feita à mão na `pagina.html` some no próximo `build`; ajuste fino que precisa ficar vai no roteiro, ou siga `../../references/pagina-do-video.md`. `build --force` descarta também as suas edições do roteiro e o redesenha do briefing (o anterior fica em `roteiro.anterior.json`).
 2. `preview <slug> --json` compõe a trilha, renderiza em tamanho de celular, mixa o som e confere. Leia `warnings` e `accept`.
 3. **Olhe antes de mostrar.** Abra a imagem de `sheet` (um quadro por batida) e julgue como um diretor exigente: o primeiro quadro já é uma capa legível? Cada cena tem um protagonista claro? O texto cabe e está longe das bordas? Acontece algo novo a cada 2 a 4 segundos? Dê notas de 1 a 10 para abertura, leitura no celular, movimento, variedade, fidelidade à marca e som, corrija os três piores problemas (no roteiro, ou na página seguindo `../../references/pagina-do-video.md`) e rode `preview` de novo. No mínimo duas rodadas; pare quando tudo for 8 ou mais, ou depois de cinco, dizendo o que ficou abaixo.
 4. Item com `status: "fail"` em `accept`: corrija e repita. `warn` é aviso a repassar.
@@ -85,7 +85,7 @@ O pedido dizia "faz direto" ou "não precisa me mostrar"? O `next_step` pula a a
 
 1. `final <slug> --json` renderiza em 1080×1920 com desfoque de movimento, mixa em −14 LUFS, grava a capa e confere de novo. Sem a aprovação da prévia ele recusa (`preview_not_approved`).
 2. Leia `accept`: `passed` falso é vídeo reprovado. Corrija e refaça, ou conte ao integrante exatamente o que reprovou.
-3. `open <slug> final --json` abre o vídeo. Entregue: onde está o arquivo, a capa, o que a conferência disse, e o conteúdo de `notes` (em qual rede postar, o texto sugerido, os lembretes de publicidade quando valem).
+3. `open <slug> final --json` abre o vídeo. Entregue: onde está o arquivo, a capa, o que a conferência disse, e o conteúdo de `notes` (em qual rede postar, o texto sugerido, que passa pela `texto-natural` antes de ser mostrado, os lembretes de publicidade quando valem).
 4. Depois de uma tarefa real, registre o uso: `npx --yes flyee@latest track tool.executed --module video-studio`.
 
 ## Retomar e mudar

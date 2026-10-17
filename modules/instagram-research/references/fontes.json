@@ -1,0 +1,18 @@
+{
+  "format_version": 1,
+  "checked_on": "2026-10-17",
+  "note": "Coletores do Apify que o app usa e o preço de tabela de cada um, conferidos na loja do Apify e numa coleta real. A estimativa usa esse preço; toda coleta vai com teto de gasto de uma vez e meia a estimativa. Acima de cost_warn_usd o app pede o sim do integrante antes de coletar.",
+  "cost_warn_usd": 1,
+  "posts": {
+    "actor": "apify/instagram-post-scraper",
+    "usd_per_item": 0.0027,
+    "usd_per_run": 0,
+    "observed": "2026-10-17: 30 posts por US$ 0,081 (US$ 0,0017 por post mais US$ 0,001 pelos detalhes). O coletor cobra US$ 0,007 a mais por foto ou carrossel com dados de música; isso não apareceu na coleta e fica coberto pelo teto."
+  },
+  "comments": {
+    "actor": "apify/instagram-comment-scraper",
+    "usd_per_item": 0.0026,
+    "usd_per_run": 0,
+    "observed": "2026-10-17: 1 comentário por US$ 0,0026"
+  }
+}

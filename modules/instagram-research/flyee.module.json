@@ -1,0 +1,105 @@
+{
+  "manifest_version": 1,
+  "name": "instagram-research",
+  "version": "1.0.0",
+  "type": "tool",
+  "trail": "planejar",
+  "title": {
+    "pt-BR": "Pesquisa no Instagram",
+    "en": "Instagram research"
+  },
+  "summary": {
+    "pt-BR": "Mostra quais Reels e posts fizeram muito mais do que o normal do próprio perfil, e quanto, no seu perfil e nos concorrentes. Sem chave, lê capturas de tela; com a chave do Apify, colhe sozinho e traz os comentários do público.",
+    "en": "Shows which Reels and posts did far better than their own profile's normal, and by how much, on your profile and your competitors'. With no key it reads screenshots; with an Apify key it collects on its own and brings the audience's comments."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.1.0",
+  "entry": "skills/instagram-research/SKILL.md",
+  "files": [
+    "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
+    "references/fontes.json",
+    "references/interface.md",
+    "references/metodologia.md",
+    "scripts/lib/apify.mjs",
+    "scripts/lib/instagram.mjs",
+    "scripts/lib/reading.mjs",
+    "scripts/lib/report.mjs",
+    "scripts/lib/score.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/research.mjs",
+    "skills/instagram-research/SKILL.md"
+  ],
+  "external_credentials": [
+    {
+      "name": "Token da API do Apify",
+      "env": "APIFY_TOKEN",
+      "url": "https://console.apify.com/settings/integrations",
+      "required": false,
+      "purpose": {
+        "pt-BR": "Opcional. Colhe sozinho os posts dos perfis, com plays, curtidas, comentários, duração e data, e os comentários de um post. O Apify cobra pelo uso, do crédito da sua conta lá. Sem a chave, a sua IA lê capturas de tela da aba de Reels.",
+        "en": "Optional. Collects the profiles' posts on its own, with plays, likes, comments, length and date, and the comments of a post. Apify charges for usage from your account's credit there. Without the key, your AI reads screenshots of the Reels tab."
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/instagram-research/scripts/research.mjs",
+      "reason": {
+        "pt-BR": "O script do app colhe os posts ou lê as suas capturas, mede o normal de cada perfil, calcula as métricas e grava o relatório.",
+        "en": "The app's script collects the posts or reads your screenshots, measures each profile's normal, computes the metrics and writes the report."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "api.apify.com",
+      "reason": {
+        "pt-BR": "Só com a chave do Apify: roda a coleta dos posts e dos comentários públicos, sempre com limite de itens e de gasto, e lê o resultado.",
+        "en": "Only with the Apify key: runs the collection of public posts and comments, always with an item and spending limit, and reads the result."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "as capturas de tela e os arquivos de posts que você indicar",
+      "reason": {
+        "pt-BR": "Lê as capturas da aba de Reels que você salvou no projeto e um arquivo de posts que você já tenha.",
+        "en": "Reads the Reels tab screenshots you saved in the project and a file of posts you already have."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "~/.flyee/keys.json (só a chave APIFY_TOKEN)",
+      "reason": {
+        "pt-BR": "Lê a chave do Apify que você salvou na página que a sua IA abriu no navegador, quando ela existe.",
+        "en": "Reads the Apify key you saved in the page your AI opened in your browser, when there is one."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./instagram-research/",
+      "reason": {
+        "pt-BR": "Grava os relatórios, as planilhas, as leituras das capturas e os comentários, e guarda cada coleta por 24 horas para não pagar duas vezes.",
+        "en": "Writes the reports, spreadsheets, screenshot readings and comments, and keeps each collection for 24 hours so you do not pay twice."
+      }
+    },
+    {
+      "kind": "env",
+      "scope": "APIFY_TOKEN",
+      "reason": {
+        "pt-BR": "Lê a chave do Apify da variável de ambiente, se você preferir defini-la assim; ela tem prioridade sobre a salva no flyee. Nunca é pedida no chat, gravada ou mostrada.",
+        "en": "Reads the Apify key from the environment variable, if you prefer to set it that way; it takes precedence over the one saved in flyee. Never asked for in the chat, written or shown."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão. O normal de um perfil e os outliers de até 25 perfis, com Reels e posts estáticos medidos separados, faixas, avisos de isca de comentário e parceria paga, a duração dos Reels, relatório e planilha. Também o modo manual por capturas de tela, os comentários de um post e uma interface para outros apps.",
+    "en": "First version. A profile's normal and the outliers of up to 25 profiles, with Reels and static posts measured separately, bands, notices for comment bait and paid partnerships, Reels length, report and spreadsheet. Also the manual mode from screenshots, a post's comments and an interface for other apps."
+  },
+  "license": "member"
+}

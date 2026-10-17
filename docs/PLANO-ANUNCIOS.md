@@ -182,6 +182,29 @@ Gasto com o Apify na rodada: US$ 0,30 em 10 execuções (`pesquisa/apify/*.run.j
 
 **Bloqueia:** a evidência orgânica automática do `ad-creatives` 1.1.0. Pode começar em paralelo ao ÉPICO 0.
 
+**Andamento em 2026-10-17** (o texto de cada tarefa abaixo continua como foi aprovado). O app existe em `modules/instagram-research` 1.0.0, sem commit. `npm run validate` dá os 7 apps válidos, sem avisos. O app passa em 26 testes (`node --test "modules/instagram-research/tests/*.test.mjs"`), e `npm run test:apps` deu 364 aprovados, 0 falhas e 1 pulado. `npm run apps -- catalog --check` está em dia.
+
+| Tarefa | Estado | Evidência |
+|---|---|---|
+| T1.1 | ✅ | `flyee.module.json`: `compatible_ais` só `claude_code`, `min_core >=1.1.0`, `APIFY_TOKEN` com `required: false`, as seis permissões da tarefa e nenhum valor do modelo |
+| T1.2 | ✅ | `scripts/lib/{instagram,score,report}.mjs` e `util.mjs` copiado byte a byte; `tests/unit.test.mjs` tem um teste por item. O app não tem `--dir`: tudo é gravado sob `instagram-research/` |
+| T1.3 | 🟡 | `import` lê a leitura versão 1 (`reels_grid` e `posts`, com origem `screenshot`, `link`, `export` ou `declared`) e o JSON do coletor de posts do Apify. Não lê planilha CSV. ⚠️ O aceite fala em `baseline.median`: o campo é `baseline.reels.value`, com `n` e `status` |
+| T1.4 | ✅ | `scripts/lib/apify.mjs`; os quatro casos do aceite estão em `tests/e2e.test.mjs`. Em vez de variável de ambiente, `--apify-url` aceita só 127.0.0.1 ou localhost, para a chave nunca sair para outro endereço |
+| T1.5 | ✅ | `check`, `profile`, `outliers`, `import`, `comments`, `list` e `help`, cada um com teste de envelope; `references/interface.md` (9 seções), `metodologia.md` e `fontes.json`; o catálogo mostra "sim v1 `scripts/research.mjs`" |
+| T1.6 | ✅ | SKILL, README e guias `usar` e `abrir-o-capo` nas duas línguas, revisados com a `humanizer-pt-br`; `validate` sem avisos |
+| T1.7 | 🟡 | `tests/eval.json` tem 9 casos. As fixtures são sintéticas (`tests/fixtures/posts.mjs`); a coleta real do @medchina.ai continua no projeto da marca e serviu ao aceite da T1.8 |
+| T1.8 | ✅ | `dist/modules/instagram-research-1.0.0.zip` e `.sha256` (`812f87f2…`), ligado no projeto `medchina`. O `import` da coleta da T0.2 (`pesquisa/apify/ig-posts-medchina-ai.json`) deu a mesma mediana de 59 plays em 27 Reels e os mesmos multiplicadores 44,83 e 208,22. Uma coleta nova pelo app em 2026-10-17 deu 62 plays em 28 Reels, com o custo previsto de US$ 0,081 |
+
+O `comments` também rodou no Apify real, no Reels de 12.285 plays: veio o único comentário do post, sem o nome de quem escreveu, por US$ 0,0026.
+
+O que as coletas reais ensinaram, e que já está no app:
+- O Apify lança o custo de uma execução alguns segundos depois que ela termina. Por isso o app lê a execução de novo, até quatro vezes, antes de informar o custo cobrado.
+- O coletor de posts cobra US$ 0,007 a mais por foto ou carrossel com dados de música. Isso não apareceu na coleta e está anotado em `references/fontes.json`.
+
+Gasto com o Apify neste épico: US$ 0,086 em três execuções.
+
+Falta: o commit, que fica com o operador, e a publicação, que é passo de console (`docs/RELEASE.md`). O modo de capturas não foi testado com uma captura real da aba de Reels, só com a leitura de exemplo dos testes; a comparação entre captura e Apify continua pendente na T0.2.
+
 ### T1.1: criar o app e o manifesto
 **Estado: ⬜** `modules/instagram-research` não existe.
 - `npm run apps -- new instagram-research --type tool --trail planejar`, com título e resumo da D2; corrigir os valores que o modelo deixa.

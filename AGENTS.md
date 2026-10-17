@@ -119,6 +119,7 @@ Every app that exists in `modules/`, so that a request to create or change an ap
 
 | App | Type · trail | What it delivers | Skills | Serves other apps | Uses | Used by |
 |---|---|---|---|---|---|---|
+| `instagram-research` 1.0.0 | tool · planejar | Mostra quais Reels e posts fizeram muito mais do que o normal do próprio perfil, e quanto, no seu perfil e nos concorrentes. Sem chave, lê capturas de tela; com a chave do Apify, colhe sozinho e traz os comentários do público. | `instagram-research` | sim v1 `scripts/research.mjs` | — | — |
 | `motion-carousel` 1.1.1 | skill · divulgar | Cria carrosséis para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida, a partir de um tema; entrega os MP4 prontos para postar e uma prévia de como fica no feed. | `motion-carousel` | — | `video-render` | — |
 | `video-analysis` 1.0.0 | tool · planejar | Assiste a vídeos do YouTube ou do seu computador, com imagem e som, e entrega uma descrição com tempos do que aparece na tela, do que é dito e de como foi editado. | `analyze-video` | sim v1 `scripts/video.mjs` | — | `youtube-script` |
 | `video-render` 1.0.0 | tool · divulgar | Transforma uma página animada em vídeo pronto para as redes, com trilha original e efeitos na batida, prévia, a marca do seu site e conferência antes de publicar: capa, texto, área segura, volume e, por rede, formato e duração. É o motor que outros apps usam para renderizar. | `video-render` | sim v1 `scripts/render.mjs` | — | `motion-carousel`, `video-studio` |

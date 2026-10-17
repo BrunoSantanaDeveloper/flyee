@@ -6,12 +6,46 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
+| [Pesquisa no Instagram](#instagram-research) | 1.0.0 | tool | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.1 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.0 | tool | planejar | — | `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.0.0 | tool | divulgar | — | `motion-carousel`, `video-studio` |
 | [Estúdio de vídeo](#video-studio) | 1.1.0 | workflow | divulgar | `video-render` | — |
 | [Pesquisa no YouTube](#youtube-research) | 1.0.1 | tool | planejar | — | `youtube-script` |
 | [Roteiro para YouTube](#youtube-script) | 1.1.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
+
+## instagram-research
+
+**Pesquisa no Instagram** (Instagram research) · versão 1.0.0 · tool · trilha planejar · testado em `claude_code`
+
+> Mostra quais Reels e posts fizeram muito mais do que o normal do próprio perfil, e quanto, no seu perfil e nos concorrentes. Sem chave, lê capturas de tela; com a chave do Apify, colhe sozinho e traz os comentários do público.
+
+Mostra, com números de verdade, quais Reels e posts fizeram muito mais do que o normal do próprio perfil, no seu perfil e nos perfis do seu nicho. Assim você decide o que publicar ou anunciar pelo que já funcionou com o público.
+
+**Skills**
+
+- `instagram-research`: Pesquisa o Instagram. Mede os Reels e posts de perfis contra o normal de cada perfil e acha os que passaram muito dele (outliers), e lê os comentários de um post. Com a chave do Apify a coleta é automática; sem ela, lê capturas de tela. Use quando pedirem "o que funciona no Instagram", "analisar um perfil", "posts que bombaram" ou "o que os concorrentes postam".
+
+**Chaves externas**
+
+- `APIFY_TOKEN` (Token da API do Apify), opcional
+
+**Serve outros apps**
+
+- Guia: `modules/instagram-research/references/interface.md`, interface v1
+- Entrada: `node .flyee/modules/instagram-research/scripts/research.mjs <comando> --json`
+- Comandos nos exemplos: `check`, `comments`, `import`, `outliers`, `profile`
+
+**Usa** — · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/instagram-research/scripts/research.mjs
+- network: api.apify.com
+- fs:read: as capturas de tela e os arquivos de posts que você indicar
+- fs:read: ~/.flyee/keys.json (só a chave APIFY_TOKEN)
+- fs:write: ./instagram-research/
+- env: APIFY_TOKEN
 
 ## motion-carousel
 

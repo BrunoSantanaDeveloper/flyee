@@ -9,6 +9,7 @@ import { PLACEHOLDER, placeholdersIn } from "./placeholders.ts";
 import { referencedApps } from "./relations.ts";
 import { guideErrors } from "./guides.ts";
 import { scriptTextErrors } from "./script-text.ts";
+import { readShowcase, showcaseErrors } from "./showcase.ts";
 import { copyBreaks, DASH, EMOJI, lintMemberText, storeBreaks } from "./text-lint.mjs";
 
 export type Report = {
@@ -184,6 +185,10 @@ export function validateModule(dir: string): Report {
   for (const file of files.filter((candidate) => candidate.startsWith("guides/") && candidate.endsWith(".md"))) {
     for (const problem of storeBreaks(safeRead(join(dir, ...file.split("/"))), { pro: false })) report.errors.push(`${file}: ${problem}`);
   }
+  // The store's example of the app answering a request (CLI-CONTRACT.md 10.1), kept outside the package.
+  const example = readShowcase(dir);
+  if (example.error) report.errors.push(example.error);
+  else if (example.showcase) report.errors.push(...showcaseErrors(example.showcase));
   // Other text the package carries (pages, data, styles): no dash or emoji anywhere.
   for (const file of files.filter((candidate) => TEXT_ASSET.test(candidate))) {
     const text = safeRead(join(dir, ...file.split("/")));

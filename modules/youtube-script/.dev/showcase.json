@@ -1,0 +1,30 @@
+{
+  "pt-BR": {
+    "request": "Quero gravar um vídeo de uns 10 minutos sobre como montar a marmita da semana sem enjoar. Me ajuda com o roteiro?",
+    "reply": [
+      { "label": "Título · 1 de 5", "text": "\"Como montar a marmita da semana sem enjoar (passo a passo)\". Na pesquisa do tema, os títulos que começam com \"Como\" tiveram mediana de 2,1× o normal do próprio canal, contra 1,2× dos outros (14 e 38 títulos)." },
+      { "label": "Thumbnail A", "text": "Imagem: cinco potes iguais na geladeira aberta. Texto: \"De novo isso?\". Acrescenta ao título a cena da quarta-feira, que quem assiste conhece." },
+      { "label": "Gancho · 00:00", "text": "Cinco potes iguais no domingo. Na quarta, você abre a geladeira e não quer nenhum. Dá pra cozinhar uma vez só e ter um almoço diferente por dia." },
+      { "label": "Capítulos, estimados", "text": "00:00 Introdução · 00:46 A semana pronta na geladeira · 01:38 O que cozinhar no domingo · 03:34 Um tempero para cada dia · 05:52 Guardar sem ficar aguado · 07:31 A troca que salva a quinta · 08:58 Por onde começar" },
+      { "label": "O que só você sabe", "text": "Fica marcado dentro da frase, nunca inventado: \"No domingo eu levo [CONFIRMAR: quanto tempo, do fogão ligado ao último pote fechado] para deixar tudo pronto.\"" },
+      { "label": "Conferência", "text": "1.742 palavras, cerca de 9:41 a 180 palavras por minuto, dentro dos 10 minutos planejados e sem frase acima de 30 palavras. Um bloqueio: a marca do tempo, que espera a sua resposta." },
+      { "label": "Crítica", "text": "Uma segunda IA lê só os arquivos, sem a conversa: gancho 8, promessa paga 7, fatos 8. Ela pediu a ponte que faltava entre os blocos 3 e 4, e uma crítica nova aprovou o conserto." },
+      { "label": "Entrega", "text": "O checklist com a marca a preencher e o que conferir antes de publicar, a descrição com os capítulos, o documento completo e o roteiro em Word. O teleprompter sai depois da última marca." }
+    ],
+    "saved": "Salvo em roteiros/marmita-da-semana/roteiro.md, com o roteiro.docx, a descricao.md e o checklist.md"
+  },
+  "en": {
+    "request": "I want to record a 10-minute video on how I prep a week of lunches without getting sick of them. Can you help me with the script?",
+    "reply": [
+      { "label": "Title · 1 of 5", "text": "\"How to prep a week of lunches you won't get sick of (step by step)\". In the topic research, titles starting with \"How\" had a median of 2.1× their own channel's normal, against 1.2× for the rest (14 and 38 titles)." },
+      { "label": "Thumbnail A", "text": "Image: five identical containers in an open fridge. Text: \"This again?\". It adds what the title leaves out: the Wednesday scene viewers know." },
+      { "label": "Hook · 00:00", "text": "Five identical containers on Sunday. By Wednesday you open the fridge and don't want any of them. You can cook once and still have a different lunch every day." },
+      { "label": "Chapters, estimated", "text": "00:00 Introduction · 00:46 The week ready in the fridge · 01:38 What to cook on Sunday · 03:34 A different seasoning each day · 05:52 Storing it so nothing goes soggy · 07:31 The swap that saves Thursday · 08:58 Where to start" },
+      { "label": "What only you know", "text": "It stays marked inside the sentence, never made up: \"On Sunday it takes me [CONFIRMAR: how long, from turning on the stove to closing the last container] to get it all ready.\"" },
+      { "label": "Check", "text": "1,742 words, about 9:41 at 180 words a minute, within the 10 minutes planned and with no sentence over 30 words. One blocker: the time mark, waiting for your answer." },
+      { "label": "Critique", "text": "A second AI reads only the files, not the conversation: hook 8, promise paid off 7, facts 8. It asked for the missing bridge between blocks 3 and 4, and a fresh critique approved the fix." },
+      { "label": "Delivery", "text": "The checklist with the mark to fill in and what to check before publishing, the description with the chapters, the full document and the script as a Word file. The teleprompter text comes after the last mark." }
+    ],
+    "saved": "Saved to roteiros/marmita-da-semana/roteiro.md, with roteiro.docx, descricao.md and checklist.md"
+  }
+}

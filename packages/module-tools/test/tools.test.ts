@@ -15,6 +15,8 @@ import { readInterface, referencedApps } from "../src/relations.ts";
 import { isSafePackagePath } from "../src/safe-path.ts";
 import { bumpApp, copyDir, nextVersion, scaffoldApp } from "../src/scaffold.ts";
 import { compareSemver, isSemver, minimumOfRange } from "../src/semver.ts";
+import { buildIndex } from "../src/index-build.ts";
+import { showcaseErrors } from "../src/showcase.ts";
 import { validateAll, validateModule } from "../src/validate.ts";
 import { isInsideRepo, workspaceState } from "../src/workspace.ts";
 
@@ -299,3 +301,41 @@ function buildShaOf(path: string): string {
   const { createHash } = process.getBuiltinModule("node:crypto") as typeof import("node:crypto");
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
+
+describe("the store's example of an app (CLI-CONTRACT.md 10.1)", () => {
+  const good = {
+    "pt-BR": {
+      request: "Quero um roteiro sobre marmita da semana.",
+      reply: [{ label: "Título", text: "Marmita da semana em 1 hora" }, { text: "Na quarta você já não aguenta a mesma comida." }],
+      saved: "Salvo em roteiros/marmita/estrutura.md",
+    },
+    en: { request: "I want a script about weekly meal prep.", reply: [{ text: "Weekly meal prep in 1 hour" }] },
+  };
+
+  it("takes the contract's shape and refuses what the platform's import would drop", () => {
+    assert.deepEqual(showcaseErrors(good), []);
+    const broken = (patch: Record<string, unknown>) => showcaseErrors({ "pt-BR": { ...good["pt-BR"], ...patch } });
+    assert.ok(broken({ request: "x".repeat(401) }).some((error) => error.includes("limit is 400")));
+    assert.ok(broken({ reply: [] }).some((error) => error.includes("1 to 8 lines")));
+    assert.ok(broken({ reply: Array.from({ length: 9 }, () => ({ text: "linha" })) }).some((error) => error.includes("1 to 8 lines")));
+    assert.ok(broken({ reply: [{ label: "x".repeat(41), text: "ok" }] }).some((error) => error.includes("limit is 40")));
+    assert.ok(broken({ saved: "x".repeat(161) }).some((error) => error.includes("limit is 160")));
+    assert.ok(broken({ reply: [{ text: "Pronto — agora sim" }] }).some((error) => error.includes("[travessao]")));
+    assert.ok(broken({ reply: [{ text: "Pronto!" }] }).some((error) => error.includes("[exclamacao]")));
+    assert.ok(broken({ request: "Quero o plano grátis" }).some((error) => error.includes("[gratis]")));
+    assert.ok(broken({ reply: [{ text: "Disponível no FlyeeClub Pro" }] }).some((error) => error.includes("[pro]")));
+    assert.ok(showcaseErrors({ es: good["pt-BR"] }).some((error) => error.includes("unknown language")));
+    assert.ok(broken({ answer: "x" }).some((error) => error.includes('unknown key "answer"')));
+  });
+
+  it("goes into the index and never into the package, so released versions keep their checksum", () => {
+    const dir = makeApp("vitrine");
+    mkdirSync(join(dir, ".dev"), { recursive: true });
+    writeFileSync(join(dir, ".dev", "showcase.json"), JSON.stringify(good));
+    assert.ok(!buildPackage(dir).files.some((file) => file.includes("showcase")));
+    assert.deepEqual(buildIndex([dir]).apps[0].showcase, good);
+    assert.deepEqual(validateModule(dir).errors.filter((error) => error.includes("showcase")), []);
+    writeFileSync(join(dir, ".dev", "showcase.json"), "{ not json");
+    assert.ok(validateModule(dir).errors.some((error) => error.includes("not valid JSON")));
+  });
+});

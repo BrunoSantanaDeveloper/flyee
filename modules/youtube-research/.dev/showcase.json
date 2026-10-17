@@ -1,0 +1,28 @@
+{
+  "pt-BR": {
+    "request": "Pesquise o que está funcionando no YouTube sobre finanças para autônomos e me diga que vídeo eu deveria gravar.",
+    "reply": [
+      { "label": "explosivo · 14,1×", "text": "Reserva de emergência para quem não tem salário fixo: 96 mil views num canal que costuma fazer 6,8 mil." },
+      { "label": "outlier · 6,2×", "text": "Quanto separar de imposto sendo MEI: 41 mil views, contra 6,6 mil de normal do canal." },
+      { "label": "Padrão", "text": "Em 4 outliers, o título parte de quem não tem renda fixa e promete a conta pronta: quanto guardar, quanto separar." },
+      { "label": "Saturado", "text": "Planilha de gastos e dicas gerais de organização: 31 vídeos, quase todos entre 0,5× e 1,5× do normal do canal." },
+      { "label": "Lacuna", "text": "Aposentadoria para autônomos: só 6 vídeos na amostra, e 3 deles passaram de 3×. Há procura e pouca gente falando disso." },
+      { "label": "Ressalvas", "text": "112 vídeos de 88 canais, 58 com o normal medido. Tirei 7 vídeos fora do tema, sobre como conseguir clientes." },
+      { "label": "O que gravar", "text": "Aposentadoria para autônomos, com a conta de quanto guardar por mês já no título. Leve o ângulo dos outliers, nunca o título deles." }
+    ],
+    "saved": "Salvo em youtube-research/outliers/financas-para-autonomos-2026-10-17/outliers.md, com a planilha outliers.csv"
+  },
+  "en": {
+    "request": "Research what's working on YouTube about personal finance for freelancers and tell me which video I should make.",
+    "reply": [
+      { "label": "explosive · 14.1×", "text": "An emergency fund for people with no fixed salary: 96K views on a channel that usually gets 6.8K." },
+      { "label": "outlier · 6.2×", "text": "How much to set aside for taxes as a freelancer: 41K views, against a channel normal of 6.6K." },
+      { "label": "Pattern", "text": "In 4 outliers, the title starts from having no fixed income and promises the math done: how much to save, how much to set aside." },
+      { "label": "Saturated", "text": "Expense spreadsheets and general budgeting tips: 31 videos, nearly all between 0.5× and 1.5× their channel's normal." },
+      { "label": "Gap", "text": "Retirement for freelancers: only 6 videos in the sample, and 3 of them beat 3×. There is demand, and few channels cover it." },
+      { "label": "Caveats", "text": "112 videos from 88 channels, 58 with a measured normal. I left out 7 off-topic videos about landing clients." },
+      { "label": "What to make", "text": "Retirement for freelancers, with how much to put away each month right in the title. Take the outliers' angle, never their titles." }
+    ],
+    "saved": "Saved to youtube-research/outliers/personal-finance-for-freelancers-2026-10-17/outliers.md, with the outliers.csv spreadsheet"
+  }
+}

@@ -13,6 +13,8 @@
 
 O envio pela CI nunca publica nem retira uma versão: publicar continua sendo um ato deliberado no console.
 
+**Mandar o índice de novo, sem versão nova.** Nome, resumo, trilha e o exemplo da loja (`.dev/showcase.json`) vão à plataforma pelo índice, que todo envio manda inteiro. Para mandar o índice do `main` depois de mudar só isso, dispare o "Pack app" à mão no `main`, com uma tag já enviada cuja versão o `main` ainda carrega: `gh workflow run pack-modules.yml --ref main -f tag=video-render@1.0.0`. A versão volta como `409`, a resposta esperada. Nunca reexecute o run de uma tag antiga para isso: ele manda o índice daquela tag, e foi assim que um resumo antigo voltou ao catálogo. No log, a linha de cada app na importação não pode trazer aviso de `showcase`.
+
 ## A CLI
 
 1. O CI do `main` verde: o workflow `release-cli` roda o mesmo `npm run ci:verify` no Linux antes de publicar. `npm run check:tarball` lista só `dist/**`, `package.json`, `README.md` e `LICENSE`. `npm run check:packed` empacota a CLI, instala o pacote numa pasta temporária e a roda pelo `node_modules/.bin/flyee` (o caminho do npx) e pelo bin global, sem proxy, com um proxy em `HTTPS_PROXY` e com um valor que o Node não usa como proxy; a 1.0.0 passou em todos os testes e não fazia nada no macOS e no Linux, onde esse caminho é um link simbólico. O job do Windows na CI roda o mesmo conferidor.

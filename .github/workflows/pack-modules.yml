@@ -12,6 +12,15 @@ name: Pack app
 on:
   push:
     tags: ["*@*"]
+  # Sends main's index again (names, summaries, the store's examples of 10.1) through an app version the
+  # platform already has: give its tag, whose version main still carries, and the version comes back as 409,
+  # the expected answer. A rerun of a tag's own run would send that tag's older index instead, which once
+  # put an old summary back in the catalog.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "An app version already sent, as <slug>@<version>, whose version main still carries (for example video-render@1.0.0)"
+        required: true
 
 jobs:
   pack:
@@ -25,9 +34,12 @@ jobs:
       - run: npm ci
       - name: Resolve the app and version from the tag
         id: tag
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          slug="${GITHUB_REF_NAME%@*}"
-          version="${GITHUB_REF_NAME#*@}"
+          case "$TAG" in *@*) ;; *) echo "Not an app tag: $TAG (expected <slug>@<version>)"; exit 1 ;; esac
+          slug="${TAG%@*}"
+          version="${TAG#*@}"
           echo "slug=$slug" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - run: npm run pack -- ${{ steps.tag.outputs.slug }}

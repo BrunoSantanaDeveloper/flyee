@@ -1,0 +1,26 @@
+{
+  "pt-BR": {
+    "request": "Faça um Reels de 15 segundos sobre o lançamento do meu produto, com trilha original na batida.",
+    "reply": [
+      { "label": "Vídeo", "text": "Reels de 15 s pronto em 9:16, com trilha original e efeitos na batida, aprovado para Instagram Reels, TikTok e YouTube Shorts." },
+      { "label": "Trilha", "text": "Composta no seu computador: estilo enérgico, 120 BPM, em lá maior. O ponto alto cai aos 6 s e a pancada final aos 14 s." },
+      { "label": "Cortes", "text": "10 de 10 cortes caem numa batida, com tolerância de 1 quadro." },
+      { "label": "Capa · 0:00", "text": "Título de 122 px já no primeiro quadro, acima do mínimo de 44 px para ler no celular." },
+      { "label": "Área segura", "text": "Na primeira conferência, o título passava 91 px de cada lado aos 1,75 s. Depois da correção, texto e logo ficaram longe dos botões das três redes." },
+      { "label": "Volume", "text": "No volume que as redes esperam: −14,1 LUFS, com pico real de −1 dBTP." }
+    ],
+    "saved": "Salvo em lancamento/reel.mp4, com o relatório da conferência em lancamento/reel.aceite.json"
+  },
+  "en": {
+    "request": "Make a 15-second Reel about my product launch, with original music on the beat.",
+    "reply": [
+      { "label": "Video", "text": "A 15-second Reel ready in 9:16, with original music and sound effects on the beat, approved for Instagram Reels, TikTok and YouTube Shorts." },
+      { "label": "Music", "text": "Composed on your computer: energetic style, 120 BPM, in A major. The peak lands at 6 s and the final hit at 14 s." },
+      { "label": "Cuts", "text": "10 of 10 cuts land on a beat, within 1 frame." },
+      { "label": "Cover · 0:00", "text": "A 122 px title on the very first frame, above the 44 px minimum for reading on a phone." },
+      { "label": "Safe area", "text": "On the first check, the title ran 91 px past each side at 1.75 s. After the fix, text and logo stay clear of the buttons on all three networks." },
+      { "label": "Loudness", "text": "At the level the networks expect: −14.1 LUFS, with a true peak of −1 dBTP." }
+    ],
+    "saved": "Saved to lancamento/reel.mp4, with the check report in lancamento/reel.aceite.json"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "pt-BR": {
+    "request": "Faça um carrossel animado sobre por que as pessoas desistem da academia em fevereiro, tema noir, 5 slides.",
+    "reply": [
+      { "label": "Slide 1 · 6 s", "text": "Fevereiro mata academias." },
+      { "label": "Slide 2 · 6 s", "text": "Meta errada. Um contador de treinos desce e as barras das semanas sobem uma por batida." },
+      { "label": "Slide 3 · 6 s", "text": "Dor sem placar. Uma bola quica e perde impulso, com um baque mais fraco a cada pouso." },
+      { "label": "Slide 4 · 6 s", "text": "A regra dos 2 minutos. Três cartões entram, um a cada batida e meia: vista a roupa de treino, vá até a porta da academia, faça 2 minutos." },
+      { "label": "Slide 5 · 8 s", "text": "Quer o plano dia por dia? O botão \"Comente TREINO\" pulsa no ritmo e estoura de novo perto do fim." },
+      { "label": "Som", "text": "Trilha noir a 120 BPM, gerada no seu computador. A música segue de um slide para o outro, com um efeito em cada gesto." },
+      { "label": "Conferência", "text": "Aprovado nos 5 slides: capa legível, texto longe das bordas e dos cantos do Instagram, loop sem emenda e volume certo para as redes." },
+      { "label": "Legenda", "text": "Fevereiro chega para todo mundo. Comente TREINO e eu te mando o plano dia por dia." }
+    ],
+    "saved": "Salvo em carrosseis/academia-fevereiro/out/, de 01.mp4 a 05.mp4"
+  },
+  "en": {
+    "request": "Make an animated carousel about why people give up on the gym in February, noir theme, 5 slides.",
+    "reply": [
+      { "label": "Slide 1 · 6 s", "text": "February kills gyms." },
+      { "label": "Slide 2 · 6 s", "text": "Wrong goal. A workout counter ticks down and the weekly bars rise one per beat." },
+      { "label": "Slide 3 · 6 s", "text": "Pain without a scoreboard. A ball bounces and loses momentum, with a softer thud at every landing." },
+      { "label": "Slide 4 · 6 s", "text": "The 2-minute rule. Three cards come in, one every beat and a half: put on your gym clothes, walk to the gym door, do 2 minutes." },
+      { "label": "Slide 5 · 8 s", "text": "Want the day-by-day plan? The \"Comment WORKOUT\" button pulses with the beat and pops again near the end." },
+      { "label": "Sound", "text": "A noir track at 120 BPM, generated on your computer. The music carries on from one slide to the next, with an effect for every gesture." },
+      { "label": "Checks", "text": "Passed on all 5 slides: readable cover, text clear of the edges and of Instagram's corners, a loop with no visible jump and loudness matched to social media." },
+      { "label": "Caption", "text": "February comes for everyone. Comment WORKOUT and I'll send you the day-by-day plan." }
+    ],
+    "saved": "Saved to carrosseis/academia-fevereiro/out/, 01.mp4 to 05.mp4"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "pt-BR": {
+    "request": "Analise este vídeo e me diga o que aparece na tela além do que é falado: https://www.youtube.com/watch?v=…",
+    "reply": [
+      { "label": "Só na imagem · 01:42", "text": "A balança marca 350 g com a água na tigela; a fala não diz a quantidade." },
+      { "label": "Só na imagem · 04:26", "text": "Em close, um dedo aperta a massa para testar o ponto. A fala não explica esse teste." },
+      { "label": "Texto na tela · 07:12", "text": "\"230 °C · 40 min\", sobre a imagem do forno. A fala não diz a temperatura nem o tempo." },
+      { "label": "Medições", "text": "Cortes detectados: 41 em 08:05; um plano a cada 11,5 s em média." },
+      { "label": "Incertezas", "text": "O rótulo do pote de fermento, em 00:38, está fora de foco e ficou registrado como ilegível." }
+    ],
+    "saved": "Salvo em video-analyses/yt-…/descriptions/general.md"
+  },
+  "en": {
+    "request": "Analyze this video and tell me what shows on screen beyond what is said: https://www.youtube.com/watch?v=…",
+    "reply": [
+      { "label": "Only in the picture · 01:42", "text": "The scale reads 350 g with the water in the bowl; the speech never gives the amount." },
+      { "label": "Only in the picture · 04:26", "text": "In close-up, a finger presses the dough to check whether it is ready. The speech never explains that test." },
+      { "label": "On-screen text · 07:12", "text": "\"230 °C · 40 min\", over the shot of the oven. The speech gives neither the temperature nor the time." },
+      { "label": "Measurements", "text": "Cuts detected: 41 in 08:05; one shot every 11.5 s on average." },
+      { "label": "Uncertainties", "text": "The label on the starter jar, at 00:38, is out of focus and is recorded as illegible." }
+    ],
+    "saved": "Saved to video-analyses/yt-…/descriptions/general.md"
+  }
+}

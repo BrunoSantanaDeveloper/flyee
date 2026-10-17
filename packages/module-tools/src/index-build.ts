@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import { buildPackage } from "./pack.ts";
 import { distRoot, listModuleDirs } from "./paths.ts";
+import { readShowcase, type Showcase } from "./showcase.ts";
 
 export type IndexEntry = {
   slug: string;
@@ -21,6 +22,8 @@ export type IndexEntry = {
   sha256: string;
   size_bytes: number;
   package: string;
+  /** The store's example (CLI-CONTRACT.md 10.1), from the app's .dev/showcase.json; never in the package. */
+  showcase?: Showcase;
 };
 
 /**
@@ -32,6 +35,7 @@ export function buildIndex(dirs: string[] = listModuleDirs()): { generated_at: s
   const apps = dirs.map((dir) => {
     const built = buildPackage(dir);
     const readme = readFileSync(join(dir, "README.md"), "utf8");
+    const { showcase } = readShowcase(dir);
     return {
       slug: built.slug,
       version: built.version,
@@ -49,6 +53,7 @@ export function buildIndex(dirs: string[] = listModuleDirs()): { generated_at: s
       sha256: built.sha256,
       size_bytes: built.sizeBytes,
       package: `modules/${built.slug}-${built.version}.zip`,
+      ...(showcase ? { showcase } : {}),
     };
   });
   return { generated_at: new Date().toISOString(), apps };

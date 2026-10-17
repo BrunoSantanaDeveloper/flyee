@@ -1,0 +1,28 @@
+{
+  "pt-BR": {
+    "request": "Analise o meu perfil @meuperfil no Instagram: qual é o meu normal e quais Reels passaram dele?",
+    "reply": [
+      { "label": "explosivo · 11,2×", "text": "\"Pão sem sova em 3 passos\": 45,9 mil plays contra o seu normal de 4,1 mil." },
+      { "label": "outlier · 4,6×", "text": "\"3 erros que deixam o pão solado\": 18,9 mil plays." },
+      { "label": "outlier · 3,2×", "text": "\"Fermento natural do zero em 7 dias\": 13,1 mil plays em 5 dias no ar, e o número ainda vai mudar." },
+      { "label": "Padrão", "text": "Os três trazem um número na legenda e duram de 38 a 52 s. É hipótese, tirada da legenda e da duração, sem assistir aos vídeos." },
+      { "label": "Duração", "text": "Na mediana, os seus Reels de 21 a 60 s ficam em 1,4× do normal (12 Reels); os de até 20 s, em 0,8× (9 Reels)." },
+      { "label": "Ressalva", "text": "\"Comente PÃO que eu te mando a receita\" fez 6,3×, mas pediu comentário: o número mede o pedido, não o interesse pelo tema." },
+      { "label": "Amostra", "text": "Os seus últimos 30 posts, sem os fixados, colhidos pelo Apify: 24 Reels e 6 posts estáticos, cada tipo com um normal próprio." }
+    ],
+    "saved": "Salvo em instagram-research/profiles/meuperfil/profile.md, com a planilha profile.csv ao lado"
+  },
+  "en": {
+    "request": "Analyze my Instagram profile @myprofile: what's my normal, and which Reels beat it?",
+    "reply": [
+      { "label": "explosive · 11.2×", "text": "\"No-knead bread in 3 steps\": 45.9K plays against your normal of 4.1K." },
+      { "label": "outlier · 4.6×", "text": "\"3 mistakes that make your bread dense\": 18.9K plays." },
+      { "label": "outlier · 3.2×", "text": "\"Sourdough starter from scratch in 7 days\": 13.1K plays in its first 5 days, and the number will still change." },
+      { "label": "Pattern", "text": "All three put a number in the caption and run 38 to 52 s. It is a hypothesis drawn from the captions and lengths, without watching the videos." },
+      { "label": "Length", "text": "At the median, your Reels of 21 to 60 s sit at 1.4× your normal (12 Reels); those up to 20 s, at 0.8× (9 Reels)." },
+      { "label": "Caveat", "text": "\"Comment BREAD and I'll send you the recipe\" hit 6.3×, but it asked for comments: the number measures the request, not interest in the topic." },
+      { "label": "Sample", "text": "Your last 30 posts, pinned ones left out, collected through Apify: 24 Reels and 6 static posts, each type against its own normal." }
+    ],
+    "saved": "Saved to instagram-research/profiles/myprofile/profile.md, with the spreadsheet profile.csv next to it"
+  }
+}

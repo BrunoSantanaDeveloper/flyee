@@ -1,0 +1,28 @@
+{
+  "pt-BR": {
+    "request": "Faça um anúncio de 20 segundos para o Reels da Loja Aurora, lojaaurora.com.br: casaco de lã por R$ 199 até domingo. Abre com 'Frio chegou. A lã também.' e fecha com 'link na bio'.",
+    "reply": [
+      { "label": "Vídeo final", "text": "Anúncio animado de 20 segundos na vertical, em 1080×1920, com o logo e as cores do site da loja, trilha original composta no seu computador e cada corte na batida da música." },
+      { "label": "Gancho · 0 s", "text": "Frio chegou. A lã também" },
+      { "label": "Produto · 4,4 s", "text": "Casaco de lã" },
+      { "label": "Preço · 8,9 s", "text": "R$ 199" },
+      { "label": "Prazo · 13,3 s", "text": "Até domingo" },
+      { "label": "Chamada · 15,6 s", "text": "O logo da loja com \"Link na bio\"" },
+      { "label": "Conferência", "text": "Capa legível no primeiro quadro, texto e logo longe dos botões do Reels, letra de 44 px ou mais, cortes na batida e som no volume que as redes usam: nenhum item reprovado." }
+    ],
+    "saved": "Salvo em estudio-de-video/lojaaurora-oferta/entrega/lojaaurora-oferta.mp4, com a capa e as notas para postar"
+  },
+  "en": {
+    "request": "A 20-second Reels ad for Loja Aurora, lojaaurora.com.br: wool coat for R$ 199 until Sunday. Open with 'Winter is here. So is wool.' and close with 'link in bio'.",
+    "reply": [
+      { "label": "Final video", "text": "A 20-second animated vertical ad at 1080×1920, with the logo and colours from the shop's site, original music composed on your computer and every cut on the beat." },
+      { "label": "Hook · 0 s", "text": "Winter is here. So is wool" },
+      { "label": "Product · 4.4 s", "text": "Wool coat" },
+      { "label": "Price · 8.9 s", "text": "R$ 199" },
+      { "label": "Deadline · 13.3 s", "text": "Until Sunday" },
+      { "label": "Call to action · 15.6 s", "text": "The shop's logo with \"Link in bio\"" },
+      { "label": "Checks", "text": "Readable cover on the first frame, text and logo clear of the Reels buttons, type 44 px or larger, cuts on the beat and sound at the loudness the networks use: nothing failed." }
+    ],
+    "saved": "Saved to estudio-de-video/lojaaurora-oferta/entrega/lojaaurora-oferta.mp4, with the cover and the posting notes"
+  }
+}

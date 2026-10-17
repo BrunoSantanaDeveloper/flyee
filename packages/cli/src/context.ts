@@ -52,6 +52,8 @@ export type Context = {
   locale: Locale;
   now: () => number;
   fetch: typeof fetch;
+  /** How long a host has to send the response headers (api/network.ts); tests shorten it. */
+  headersDeadlineMs?: number;
   /** FLYEE_DEV=1: the operator's mode, enables `dev link` and nothing else. */
   dev: boolean;
 };
@@ -100,5 +102,6 @@ export function createContext(options: ContextOptions = {}): Context {
     dev: options.dev ?? env.FLYEE_DEV === "1",
     system: options.system,
     cliEntry: options.cliEntry,
+    headersDeadlineMs: options.headersDeadlineMs,
   };
 }

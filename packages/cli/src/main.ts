@@ -2,7 +2,6 @@ import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { ApiError, CliError } from "./api/errors.ts";
 import { runAdd } from "./commands/add.ts";
 import { runDev } from "./commands/dev.ts";
 import { runDoctor } from "./commands/doctor.ts";
@@ -16,13 +15,17 @@ import { runRemove } from "./commands/remove.ts";
 import { runStatus } from "./commands/status.ts";
 import { runTrack } from "./commands/track.ts";
 import { runUpdate } from "./commands/update.ts";
-import type { Fail, ParsedArgs, Result } from "./commands/types.ts";
+import type { ParsedArgs, Result } from "./commands/types.ts";
 import { type Context, createContext, detectLocale, type Locale } from "./context.ts";
+import { nodeHonorsEnvProxy, releaseNetwork } from "./api/network.ts";
+import { describeFailure } from "./failure.ts";
 import { t } from "./i18n.ts";
 import { readConfig } from "./state/config.ts";
 import { openBrowser } from "./util/os.ts";
 import { confirmOnTerminal, readAllStdin, readSecretOnTerminal } from "./util/prompt.ts";
 import { CLI_VERSION } from "./version.ts";
+
+export { describeFailure, nodeHonorsEnvProxy };
 
 export function parseArgs(argv: string[]): ParsedArgs {
   const flags: Record<string, string | boolean> = {};
@@ -125,31 +128,6 @@ export async function runCommand(ctx: Context, args: ParsedArgs): Promise<Result
   }
 }
 
-/** Turns any failure into the contract's shape and a line the member can act on. */
-export function describeFailure(ctx: Context, error: unknown): Fail {
-  if (error instanceof ApiError) {
-    return { ok: false, error: error.code, message: error.message, action_url: error.actionUrl, status: error.status, ...error.extra };
-  }
-  if (error instanceof CliError) {
-    const message =
-      error.code === "cli_outdated"
-        ? t(ctx, "error.min_version", { current: CLI_VERSION, min: error.message })
-        : error.code === "not_logged"
-          ? t(ctx, "error.not_logged")
-          : error.code === "relogin" || error.code === "login_denied"
-            ? t(ctx, "error.relogin")
-            : error.code === "login_timeout"
-              ? t(ctx, "login.timeout")
-              : error.code === "network"
-                ? t(ctx, "error.network", { detail: error.message })
-                : error.code.startsWith("package_") || error.code === "download_failed"
-                  ? t(ctx, "error.package", { detail: error.message })
-                  : error.message;
-    return { ok: false, error: error.code, message, action_url: error.actionUrl };
-  }
-  return { ok: false, error: "unexpected", message: t(ctx, "error.unknown", { detail: error instanceof Error ? error.message : String(error) }) };
-}
-
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const args = parseArgs(argv);
   if (args.flags.version) {
@@ -226,12 +204,6 @@ export function isEntryScript(argv1: string | undefined, moduleUrl: string, plat
 const PROXY_VARIABLES = ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"] as const;
 const LOOPBACK = ["127.0.0.1", "localhost", "[::1]"];
 
-/** Whether this Node's fetch honors NODE_USE_ENV_PROXY: 22.21 or later on the 22 line, and every 24 or later (measured). */
-export function nodeHonorsEnvProxy(version: string = process.versions.node): boolean {
-  const [major, minor] = version.split(".").map(Number);
-  return major >= 24 || (major === 22 && minor >= 21);
-}
-
 /**
  * The environment to start the CLI again with, when a proxy is set and Node's
  * fetch would ignore it; null otherwise. Node's fetch reads HTTPS_PROXY and
@@ -274,10 +246,17 @@ export function finish(code: number): NodeJS.Timeout {
 }
 
 function runHere(): void {
-  main().then(finish, (error) => {
-    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-    finish(1);
-  });
+  // releaseNetwork first: a request cut by its deadline leaves undici reconnecting, and only that ends it.
+  main()
+    .then(async (code) => {
+      await releaseNetwork();
+      finish(code);
+    })
+    .catch(async (error) => {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+      await releaseNetwork();
+      finish(1);
+    });
 }
 
 if (invokedDirectly) {

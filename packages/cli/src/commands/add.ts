@@ -16,6 +16,7 @@ import { keySource } from "../state/keys.ts";
 import { programsDeclared } from "../programs.ts";
 import { ensurePrograms, isPresent, specsForApp } from "./need.ts";
 import { readLock, writeLock } from "../state/lock.ts";
+import { projectsIn } from "../state/projects.ts";
 import { writeFileAtomic } from "../util/fs.ts";
 import { CLI_VERSION } from "../version.ts";
 import { askOrExplain } from "./confirm.ts";
@@ -117,6 +118,13 @@ export async function billingLink(client: Client): Promise<string | undefined> {
 export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
   const target = args.positionals[0];
   if (!target) return { ok: false, error: "usage", message: "flyee add <app> | flyee add receita:<nome>" };
+  // A folder that holds the brands' projects and has no apps of its own: an app goes into a brand's project.
+  const projects = projectsIn(ctx.cwd, ctx.flyeeHome);
+  if (projects.length && !Object.keys(readLock(ctx)?.modules ?? {}).length) {
+    const message = t(ctx, "add.projects_folder", { list: projects.join(", ") });
+    ctx.io.out(message);
+    return { ok: false, error: "projects_folder", message, projects };
+  }
   const client = new Client(ctx);
   const assets = loadCoreAssets();
   const recipeMatch = /^(?:receita|recipe):(.+)$/.exec(target);
@@ -198,7 +206,8 @@ export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
     if (!(error instanceof ApiError)) throw error;
   }
   await flushEvents(ctx, client);
-  ctx.io.out(t(ctx, "add.next", { slug }));
+  // The skills' folder only for an app that has skills: the AI reads its SKILL.md and goes on.
+  ctx.io.out(t(ctx, result.module.skills.length ? "add.next" : "add.next_guide", { slug }));
   return { ok: true, slug, version: result.module.version, changed: true, skills: result.module.skills, written: result.written, programs: result.programs };
 }
 

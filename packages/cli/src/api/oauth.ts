@@ -6,7 +6,8 @@ import { join } from "node:path";
 import type { Context } from "../context.ts";
 import { t } from "../i18n.ts";
 import { ensureDir } from "../util/fs.ts";
-import { ApiError, CliError, fetchFailure } from "./errors.ts";
+import { ApiError, CliError } from "./errors.ts";
+import { reach, readBody } from "./network.ts";
 import type { DeviceAuthorization, ErrorBody, TokenResponse } from "./types.ts";
 
 /**
@@ -29,17 +30,13 @@ export function pkcePair(): { verifier: string; challenge: string } {
 }
 
 async function postForm<T>(ctx: Context, path: string, body: Record<string, string>): Promise<T> {
-  let response: Response;
-  try {
-    response = await ctx.fetch(`${ctx.baseUrl}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-      body: new URLSearchParams(body).toString(),
-    });
-  } catch (error) {
-    throw new CliError("network", fetchFailure(error));
-  }
-  const text = await response.text();
+  const url = `${ctx.baseUrl}${path}`;
+  const response = await reach(ctx, url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    body: new URLSearchParams(body).toString(),
+  });
+  const text = await readBody(url, () => response.text());
   let json: unknown = null;
   try {
     json = text ? JSON.parse(text) : null;
@@ -180,6 +177,8 @@ export async function loginWithDeviceCode(
         device_code: authorization.device_code,
       });
     } catch (error) {
+      // One poll the network cut or left unanswered does not end the login: the code still waits for approval.
+      if (error instanceof CliError && error.code === "network") continue;
       if (!(error instanceof ApiError)) throw error;
       if (error.code === "authorization_pending") continue;
       if (error.code === "slow_down") {

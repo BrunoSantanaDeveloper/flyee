@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { Client } from "../api/client.ts";
+import { describeFailure } from "../failure.ts";
 import type { Context } from "../context.ts";
 import { loadCoreAssets } from "../core-assets.ts";
 import { t } from "../i18n.ts";
@@ -71,17 +72,17 @@ export async function runDoctor(ctx: Context): Promise<Result> {
     }
   }
 
-  // The reason travels with the answer: a name that does not resolve, a proxy that refused the domain
-  // and a certificate this machine does not trust each call for a different fix.
-  let platform: { reachable: boolean; min_cli_version?: string; error?: string } = { reachable: false };
+  // The reason travels with the answer: a host the network refused (with the one-time step of a cloud
+  // session), a certificate this machine does not trust and a name that does not resolve call for different fixes.
+  let platform: { reachable: boolean; min_cli_version?: string; error?: string; message?: string; host?: string } = { reachable: false };
   try {
     const info = await client.version();
     platform = { reachable: true, min_cli_version: info.min_cli_version };
     ctx.io.out(t(ctx, "doctor.platform_ok", { base: ctx.baseUrl, min: info.min_cli_version }));
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    platform = { reachable: false, error: detail };
-    ctx.io.out(t(ctx, "doctor.platform_fail", { base: ctx.baseUrl, detail }));
+    const failure = describeFailure(ctx, error);
+    platform = { reachable: false, error: failure.error, message: failure.message, ...(typeof failure.host === "string" ? { host: failure.host } : {}) };
+    ctx.io.out(t(ctx, "doctor.platform_fail", { base: ctx.baseUrl, detail: failure.message }));
   }
 
   return {

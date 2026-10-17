@@ -6,9 +6,10 @@ import type { Context } from "../context.ts";
 import { loadCoreAssets } from "../core-assets.ts";
 import { localeOf, t } from "../i18n.ts";
 import { flushEvents, registerMachine } from "../registration.ts";
-import { ensureConfig, machineName, writeConfig } from "../state/config.ts";
+import { ensureConfig, machineName, readConfig, writeConfig } from "../state/config.ts";
 import { newLock, readLock, writeLock } from "../state/lock.ts";
 import { applyAdapters } from "../install/adapters.ts";
+import { isCloudSession } from "../api/network.ts";
 import { noBrowserReason } from "../util/os.ts";
 import { commandLine } from "./confirm.ts";
 import { flag, has, type ParsedArgs, type Result } from "./types.ts";
@@ -42,7 +43,11 @@ export async function runLogin(ctx: Context, args: ParsedArgs): Promise<Result> 
   const client = new Client(ctx);
   const assets = loadCoreAssets();
   await client.ensureMinVersion();
-  const config = ensureConfig(ctx, machineName(flag(args, "name")));
+  // A cloud VM has a throwaway host name; the panel lists this connection by what it is instead.
+  const cloud = isCloudSession(ctx);
+  const named = machineName(flag(args, "name"));
+  const fresh = !readConfig(ctx);
+  const config = ensureConfig(ctx, named, cloud ? t(ctx, "login.cloud_device_name") : undefined);
 
   let tokens: TokenResponse;
   try {
@@ -73,6 +78,12 @@ export async function runLogin(ctx: Context, args: ParsedArgs): Promise<Result> 
   const locale = localeOf(me.member.locale);
   if (locale !== config.locale) writeConfig(ctx, { ...config, locale });
   ctx.locale = locale;
+  // A cloud computer this login created is named in the account's language, known only now; a --name stays.
+  if (cloud && fresh && !named) {
+    const current = readConfig(ctx);
+    const name = t(ctx, "login.cloud_device_name");
+    if (current && current.device_name !== name) writeConfig(ctx, { ...current, device_name: name });
+  }
 
   const kind = flag(args, "kind") === "client" ? "client" : flag(args, "kind") === "own" ? "own" : undefined;
   let registration: Awaited<ReturnType<typeof registerMachine>> | null = null;
@@ -82,7 +93,9 @@ export async function runLogin(ctx: Context, args: ParsedArgs): Promise<Result> 
     if (error instanceof ApiError && error.code === "device_limit_reached") {
       ctx.io.err(error.message);
       if (error.actionUrl) ctx.io.err(error.actionUrl);
-      return { ok: false, error: error.code, message: error.message, action_url: error.actionUrl, limit: error.extra.limit, live_devices: error.extra.live_devices };
+      // Every cloud session starts on a new VM and registers as a new computer of the plan.
+      if (cloud) ctx.io.err(t(ctx, "login.device_limit_cloud"));
+      return { ok: false, error: error.code, message: error.message, action_url: error.actionUrl, limit: error.extra.limit, live_devices: error.extra.live_devices, ...(cloud ? { cloud: true } : {}) };
     }
     throw error;
   }
@@ -101,7 +114,8 @@ export async function runLogin(ctx: Context, args: ParsedArgs): Promise<Result> 
   // `tier_name` is what the CLI shows (CLI-CONTRACT.md 4.1, since 2026-10-08); `tier` is the code's value.
   const tierName = me.access.tier_name ?? me.access.tier;
   if (me.access.tier) ctx.io.out(t(ctx, "login.done", { as, tier: tierName ?? "", days }));
-  else ctx.io.out(t(ctx, "login.done_no_access", { as, link: me.links.billing }));
+  // No rung bought is not "no access": the account installs the entry version of each app (CLI-CONTRACT.md 4.3).
+  else ctx.io.out(t(ctx, "login.done_entry", { as, days, link: me.links.billing }));
 
   return {
     ok: true,

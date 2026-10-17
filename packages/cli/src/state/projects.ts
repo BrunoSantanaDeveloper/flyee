@@ -1,3 +1,4 @@
+import { existsSync, readdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 
 import type { Context } from "../context.ts";
@@ -25,6 +26,27 @@ export function projectsPath(ctx: Context): string {
 export function samePath(a: string, b: string): boolean {
   const [left, right] = [resolve(a), resolve(b)];
   return process.platform === "win32" ? left.toLowerCase() === right.toLowerCase() : left === right;
+}
+
+/**
+ * A folder where flyee is installed: its `.flyee/lock.json` exists. The machine's
+ * own `~/.flyee` never counts: a login run in the home folder writes a lock there,
+ * and every folder under home would then sit in a "folder of projects".
+ */
+export function isFlyeeFolder(dir: string, flyeeHome: string): boolean {
+  return existsSync(join(dir, ".flyee", "lock.json")) && !samePath(join(dir, ".flyee"), flyeeHome);
+}
+
+/** The projects a folder holds: its immediate subfolders (junctions and links too) where flyee is installed. */
+export function projectsIn(dir: string, flyeeHome: string): string[] {
+  try {
+    return readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => (entry.isDirectory() || entry.isSymbolicLink()) && !entry.name.startsWith(".") && isFlyeeFolder(join(dir, entry.name), flyeeHome))
+      .map((entry) => entry.name)
+      .sort();
+  } catch {
+    return [];
+  }
 }
 
 export function readProjects(ctx: Context): KnownProject[] {

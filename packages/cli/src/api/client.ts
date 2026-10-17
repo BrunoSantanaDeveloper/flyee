@@ -3,7 +3,8 @@ import { compareSemver, isSemver } from "../semver.ts";
 import { ensureConfig } from "../state/config.ts";
 import { accessExpired, type Credentials, readCredentials, writeCredentials } from "../state/credentials.ts";
 import { CLI_VERSION } from "../version.ts";
-import { ApiError, CliError, fetchFailure } from "./errors.ts";
+import { ApiError, CliError } from "./errors.ts";
+import { reach, readBody } from "./network.ts";
 import { refreshTokens, withRefreshLock } from "./oauth.ts";
 import type {
   Catalog,
@@ -70,14 +71,10 @@ export class Client {
   /** CLI-CONTRACT.md 4.9: public; a CLI below `min_cli_version` must stop before any other call. */
   async version(): Promise<VersionInfo> {
     if (this.versionInfo) return this.versionInfo;
-    let response: Response;
-    try {
-      response = await this.ctx.fetch(`${this.ctx.baseUrl}/api/cli/version`, { headers: { Accept: "application/json" } });
-    } catch (error) {
-      throw new CliError("network", fetchFailure(error));
-    }
+    const url = `${this.ctx.baseUrl}/api/cli/version`;
+    const response = await reach(this.ctx, url, { headers: { Accept: "application/json" } });
     if (!response.ok) throw new CliError("network", `HTTP ${response.status} from /api/cli/version`);
-    const info = (await response.json()) as VersionInfo;
+    const info = (await readBody(url, () => response.json())) as VersionInfo;
     this.versionInfo = {
       min_cli_version: typeof info.min_cli_version === "string" ? info.min_cli_version : "0.0.0",
       latest_core_version: typeof info.latest_core_version === "string" ? info.latest_core_version : null,
@@ -128,17 +125,13 @@ export class Client {
     const headers: Record<string, string> = { Authorization: `Bearer ${token}`, Accept: "application/json" };
     if (init.device !== false) headers[DEVICE_HEADER] = this.deviceId;
     if (init.body !== undefined) headers["Content-Type"] = "application/json";
-    let response: Response;
-    try {
-      response = await this.ctx.fetch(`${this.ctx.baseUrl}${path}`, {
-        method: init.method ?? "GET",
-        headers,
-        body: init.body === undefined ? undefined : JSON.stringify(init.body),
-      });
-    } catch (error) {
-      throw new CliError("network", fetchFailure(error));
-    }
-    const text = await response.text();
+    const url = `${this.ctx.baseUrl}${path}`;
+    const response = await reach(this.ctx, url, {
+      method: init.method ?? "GET",
+      headers,
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+    const text = await readBody(url, () => response.text());
     let json: unknown = null;
     try {
       json = text ? JSON.parse(text) : null;

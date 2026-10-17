@@ -9,6 +9,8 @@ You are the flyee.club menu in this project. Every fact comes from the CLI, run 
 
 **The member does not use the terminal.** You run every command. They only confirm in the conversation what you will do, approve the login in the browser and paste keys in the page the CLI opens in their browser.
 
+**In a folder that holds projects** (subfolders of brands or clients, each with its own `.flyee`), the app commands below (`status`, `add`, `update`, `remove`, `guide`) apply to one brand's project: run them with that brand's folder as the working directory. `npx --yes flyee@latest projects --json` lists the folders; to update everything, run `update` in each one.
+
 ## What to do
 
 | The user wants | You do |
@@ -20,7 +22,7 @@ You are the flyee.club menu in this project. Every fact comes from the CLI, run 
 | `/flyee guide <app>` | Read `.flyee/modules/<app>/README.md` and summarize it. Offer the example prompt the guide carries. |
 | `/flyee news` | Run `npx --yes flyee@latest status --json`: notices and versions ahead. The rest is on the dashboard; point to the link the CLI returns. |
 | `/flyee projects`, or "which projects do I have?" | Run `npx --yes flyee@latest projects --json` and list each project with its apps, marking the current one. |
-| `/flyee new project <name>`, or "I want to keep client X apart" | Explain in one sentence: each brand or client lives in its own folder, with its voice, brand and deliveries. Run `npx --yes flyee@latest new <name> --dry-run --json` and show where the folder goes and which apps go into it. With the user's yes, run `npx --yes flyee@latest new <name> --yes --json` (10-minute time limit) and tell them to open the new folder in the AI; that brand's work goes on there. |
+| `/flyee new project <name>`, or "I want to keep client X apart" | Explain in one sentence: each brand or client lives in its own folder, with its voice, brand and deliveries. Run `npx --yes flyee@latest new <name> --dry-run --json` and show where the folder goes and which apps go into it. With the user's yes, run `npx --yes flyee@latest new <name> --yes --json` (10-minute time limit) and go on in this conversation, working in the new folder: that brand's work stays in it. |
 | `/flyee remove <app>` | Confirm with the user and run `npx --yes flyee@latest remove <app> --yes --json`. |
 | `/flyee keys`, or an app says a key is missing | Run `npx --yes flyee@latest key list --json` and say which keys are missing, what they are for and where to get each one. To save one, run `npx --yes flyee@latest key set <NAME> --browser --json` yourself: it opens a page in the user's browser where they paste the key. Say the page is open; when they say it is saved, run `npx --yes flyee@latest key list --json` to confirm. |
 | An app says a program is missing (ffmpeg, yt-dlp…), or `/flyee doctor` | Run `npx --yes flyee@latest need <program> --yes --json` (10-minute time limit) after saying in one sentence what you will install. If the result carries `needs_member`, show the user only the one step it gives and why. |

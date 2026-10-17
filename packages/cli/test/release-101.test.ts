@@ -299,9 +299,10 @@ describe("a platform out of reach says why (a cloud session needs it to tell a r
     });
     mkdirSync(join(sandbox, "project-doctor"), { recursive: true });
     const result = await runCommand(ctx, parseArgs(["doctor", "--json"]));
-    const platform = result.platform as { reachable: boolean; error?: string };
+    const platform = result.platform as { reachable: boolean; error?: string; message?: string };
     assert.equal(platform.reachable, false);
-    assert.match(String(platform.error), /ENOTFOUND/);
+    assert.equal(platform.error, "network", "the code, as in any failed result");
+    assert.match(String(platform.message), /ENOTFOUND/);
     assert.ok(lines.some((line) => line.includes("não alcançável") && line.includes("ENOTFOUND")), lines.join("\n"));
   });
 });

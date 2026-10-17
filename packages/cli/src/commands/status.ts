@@ -3,6 +3,7 @@ import { ApiError, CliError } from "../api/errors.ts";
 import type { Catalog, Me } from "../api/types.ts";
 import type { Context } from "../context.ts";
 import { loadCoreAssets } from "../core-assets.ts";
+import { describeFailure } from "../failure.ts";
 import { t } from "../i18n.ts";
 import { compareSemver } from "../semver.ts";
 import { daysUntilRefreshExpiry } from "../state/credentials.ts";
@@ -11,6 +12,18 @@ import { CLI_VERSION } from "../version.ts";
 import type { Result } from "./types.ts";
 
 const REVALIDATION_WARNING_DAYS = 5;
+
+/**
+ * What the account has today, by the name the panel uses. With no rung bought, an
+ * active account installs the entry version of each app (CLI-CONTRACT.md 4.3); an
+ * inactive one (a payment past its grace) or a suspended one installs nothing.
+ */
+function accessLabel(ctx: Context, me: Me): string {
+  if (me.access.tier) return me.access.tier_name ?? me.access.tier;
+  if (me.access.suspended) return t(ctx, "status.suspended");
+  if (!me.access.active) return t(ctx, "status.no_access");
+  return t(ctx, "status.entry");
+}
 
 /**
  * `flyee status [--quiet]`: the connection, the apps and their distance to
@@ -25,6 +38,8 @@ export async function runStatus(ctx: Context): Promise<Result> {
   let me: Me | null = null;
   let catalog: Catalog | null = null;
   let connectionError: string | null = null;
+  let connectionMessage: string | null = null;
+  let connectionHost: string | null = null;
   let deprecations: unknown[] = [];
 
   if (credentials) {
@@ -34,9 +49,13 @@ export async function runStatus(ctx: Context): Promise<Result> {
       if (lock && Object.keys(lock.modules).length) catalog = await client.catalog(ctx.locale);
     } catch (error) {
       if (error instanceof CliError && error.code === "relogin") connectionError = "relogin";
-      else if (error instanceof ApiError) connectionError = error.code;
-      else if (error instanceof CliError) connectionError = error.code;
-      else throw error;
+      else if (error instanceof ApiError || error instanceof CliError) {
+        // The reason travels whole: a host the network refused carries its one-time step, not just a code.
+        const failure = describeFailure(ctx, error);
+        connectionError = failure.error;
+        connectionMessage = failure.message;
+        if (typeof failure.host === "string" && failure.host) connectionHost = failure.host;
+      } else throw error;
     }
   }
 
@@ -56,26 +75,27 @@ export async function runStatus(ctx: Context): Promise<Result> {
     };
   });
   const updates = apps.filter((app) => app.update_available).length;
-  const needsAttention = !credentials || connectionError !== null || (days !== null && days <= REVALIDATION_WARNING_DAYS) || updates > 0;
+  const inactive = Boolean(me && !me.access.tier && (me.access.suspended || !me.access.active));
+  const needsAttention = !credentials || connectionError !== null || inactive || (days !== null && days <= REVALIDATION_WARNING_DAYS) || updates > 0;
 
   if (ctx.quiet) {
     if (needsAttention) {
-      if (!credentials || connectionError) ctx.io.out(t(ctx, "status.not_logged"));
+      if (!credentials || connectionError === "relogin") ctx.io.out(t(ctx, "status.not_logged"));
+      else if (connectionMessage) ctx.io.out(connectionMessage);
+      else if (me && inactive) ctx.io.out(accessLabel(ctx, me));
       else if (days !== null && days <= REVALIDATION_WARNING_DAYS) ctx.io.out(t(ctx, "status.revalidate_soon", { days }));
-      else ctx.io.out(`${updates} update(s): npx flyee update`);
+      else ctx.io.out(t(ctx, "status.quiet_updates", { count: updates }));
     }
   } else {
     if (!credentials || connectionError === "relogin") ctx.io.out(t(ctx, "status.not_logged"));
     else if (me) {
       const name = me.member.name ?? me.workspace.name;
       const parts = [t(ctx, "status.connected", { as: name ? t(ctx, "common.as", { name }) : "" })];
-      if (me.access.tier) {
-        parts.push(me.access.tier_name ?? me.access.tier);
-        if (days !== null) parts.push(t(ctx, "status.days", { days }));
-      } else parts.push(t(ctx, "status.no_access"));
+      parts.push(accessLabel(ctx, me));
+      if (days !== null) parts.push(t(ctx, "status.days", { days }));
       ctx.io.out(parts.join(" · "));
       if (days !== null && days <= REVALIDATION_WARNING_DAYS) ctx.io.out(t(ctx, "status.revalidate_soon", { days }));
-    } else if (connectionError) ctx.io.out(t(ctx, "error.network", { detail: connectionError }));
+    } else if (connectionMessage) ctx.io.out(connectionMessage);
     if (apps.length === 0) ctx.io.out(t(ctx, "status.no_apps"));
     else {
       ctx.io.out(t(ctx, "status.apps"));
@@ -91,6 +111,8 @@ export async function runStatus(ctx: Context): Promise<Result> {
     ok: true,
     connected: Boolean(credentials) && connectionError === null,
     connection_error: connectionError,
+    connection_message: connectionMessage,
+    connection_host: connectionHost,
     member: me?.member ?? null,
     access: me?.access ?? null,
     token: me ? me.token : credentials ? { days_until_revalidation: days } : null,

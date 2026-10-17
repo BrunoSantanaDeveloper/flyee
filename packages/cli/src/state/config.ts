@@ -39,7 +39,8 @@ export function machineName(name: string | undefined): string | undefined {
   return clean ? clean : undefined;
 }
 
-export function ensureConfig(ctx: Context, deviceName?: string): Config {
+/** `fallbackName` names only a config this call creates; `deviceName` also renames an existing one. */
+export function ensureConfig(ctx: Context, deviceName?: string, fallbackName?: string): Config {
   deviceName = machineName(deviceName);
   const current = readConfig(ctx);
   if (current?.device_id) {
@@ -52,7 +53,7 @@ export function ensureConfig(ctx: Context, deviceName?: string): Config {
   }
   const config: Config = {
     device_id: randomUUID(),
-    device_name: deviceName ?? machineName(hostname()) ?? "flyee",
+    device_name: deviceName ?? machineName(fallbackName) ?? machineName(hostname()) ?? "flyee",
     locale: ctx.locale,
     created_at: new Date(ctx.now()).toISOString(),
   };

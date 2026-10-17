@@ -35,6 +35,9 @@ export type FakeOptions = {
   modules?: FakeModule[];
   recipes?: FakeRecipe[];
   deviceLimit?: number;
+  /** What /me says of the account (CLI-CONTRACT.md 4.1): an inactive account answers /me and nothing else. */
+  accessActive?: boolean;
+  suspended?: boolean;
   locale?: string;
   accessTtlSeconds?: number;
   /** Serve bytes that do not match the announced checksum. */
@@ -122,6 +125,9 @@ export class FakePlatform {
         response.end(JSON.stringify({ error: "unavailable", message: String(error) }));
       });
     });
+    // Idle connections stay open past any pause of a test: with Node's 5 s default, a CLI child slowed by a busy
+    // machine reused a socket the server had just closed and failed with ECONNRESET.
+    this.server.keepAliveTimeout = 60_000;
     await new Promise<void>((resolve) => this.server!.listen(0, "127.0.0.1", () => resolve()));
     const address = this.server.address();
     const port = typeof address === "object" && address ? address.port : 0;
@@ -357,7 +363,7 @@ export class FakePlatform {
       return this.json(response, 200, {
         member: { id: "m1", name: "Ana", segment: "dev", ai_tool: "claude_code", locale: this.options.locale },
         workspace: { id: "w1", name: "Ana" },
-        access: { active: true, suspended: false, tier: this.options.tier, tier_name: this.tierName(), limits: { catalog_access: this.options.tier ? 1 : 0, devices: this.options.deviceLimit } },
+        access: { active: this.options.accessActive ?? true, suspended: this.options.suspended ?? false, tier: this.options.tier, tier_name: this.tierName(), limits: { catalog_access: this.options.tier ? 1 : 0, devices: this.options.deviceLimit } },
         token: { family_id: record.family, refresh_expires_at: new Date(record.refreshExpiresAt).toISOString(), days_until_revalidation: 30 },
         device: deviceHeader ? { device_id: deviceHeader, name: "fake", registered: this.devices.has(deviceHeader), last_update_at: null } : null,
         cli: { min_cli_version: this.options.minCliVersion, latest_core_version: null, deprecations: this.options.deprecations ?? [], ...(this.options.links ? { links: this.options.links } : {}) },

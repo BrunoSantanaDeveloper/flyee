@@ -35,6 +35,8 @@ export type Lock = {
   core_version: string;
   locale: Locale;
   project_kind?: "own" | "client";
+  /** The project sits in a folder of projects, as `new` made it: the next brand goes beside it, never inside. */
+  in_projects_folder?: boolean;
   managed_files: string[];
   modules: Record<string, LockModule>;
   recipes: Record<string, { modules: string[]; installed_at: string }>;

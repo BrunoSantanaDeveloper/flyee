@@ -8,6 +8,8 @@ Você não usa o terminal: a sua IA roda os comandos. Os programas que um app us
 
 Peça à sua IA: "Instale o flyee seguindo https://flyee.club/instalar.md". Ela confere o Node.js, conecta este computador à sua conta e instala os apps que você pedir.
 
+Numa sessão do Claude Code na nuvem, em claude.ai/code, a rede da sessão só chega aos endereços que o ambiente dela libera. O ajuste se faz uma vez, no ambiente: em Network access, escolha Custom e acrescente `flyee.club` em Allowed domains, com a opção Also include default list of common package managers marcada, que mantém o npm. Se a rede recusar outro endereço, a CLI responde `host_not_allowed` com o endereço que falta. Ali, a conexão é pelo login por código.
+
 ## O que a sua IA roda
 
 Comandos de referência, escritos como uma IA precisa rodá-los: `--yes` responde a pergunta que o npx faz antes de baixar o pacote, e `@latest` usa sempre a versão mais nova.
@@ -24,7 +26,7 @@ npx --yes flyee@latest doctor                  # confere a instalação, os prog
 npx --yes flyee@latest need <programa> --yes   # instala um programa que um app usa (winget, Homebrew ou apt)
 npx --yes flyee@latest key set <NOME> --browser  # abre uma página no navegador para colar a chave de um app
 npx --yes flyee@latest remove <app>
-npx --yes flyee@latest new <pasta>             # outro projeto com os apps deste, ao lado dele
+npx --yes flyee@latest new <pasta>             # um projeto para uma marca ou um cliente, na pasta dos projetos
 npx --yes flyee@latest projects                # os projetos com apps do flyee neste computador
 npx --yes flyee@latest logout
 ```
@@ -41,7 +43,7 @@ Nada é instalado sem antes conferir o tamanho e o SHA-256 do pacote contra o qu
 
 ## Um projeto por marca ou cliente
 
-O projeto é a pasta onde os apps estão instalados. Tudo o que eles aprendem ali, como a sua voz e a sua marca, e tudo o que entregam fica dentro dela. Se você cria conteúdo para mais de uma marca ou atende clientes, use uma pasta para cada um: peça à sua IA um projeto novo para o cliente, e ela cria uma pasta ao lado desta com os mesmos apps. Abra essa pasta na IA para trabalhar naquele cliente. Nada se mistura entre elas.
+O projeto é a pasta onde os apps estão instalados. Tudo o que eles aprendem ali, como a sua voz e a sua marca, e tudo o que entregam fica dentro dela. Se você cria conteúdo para mais de uma marca ou atende clientes, cada um tem a sua pasta, dentro da pasta onde você instalou o flyee: peça à sua IA o trabalho de uma marca, e ela usa a pasta dessa marca, ou a cria com os apps que você usa, e segue na mesma conversa. Nada se mistura entre elas. Se o flyee está instalado num projeto que já tem apps, como um repositório de código, o projeto novo fica ao lado dele.
 
 Cada app passa de novo pela conferência do pacote e pelo seu acesso; um app que a sua conta não inclui hoje fica de fora e continua funcionando onde já estava. A lista dos seus projetos fica só neste computador.
 
@@ -60,6 +62,7 @@ Português e inglês, seguindo o idioma da sua conta.
 
 ## Mudanças
 
-- 1.0.1: funciona no macOS e no Linux, onde a 1.0.0 terminava sem fazer nada. No Windows, o login pelo navegador abre o endereço inteiro, e no WSL abre o navegador do Windows. Numa sessão na nuvem, por SSH ou num computador sem tela, o login pelo navegador e a página da chave avisam na hora que não há navegador na frente da pessoa e indicam o login por código e a variável de ambiente; o login faz o mesmo quando o navegador não abre. Com um proxy em `HTTPS_PROXY`, como nas sessões na nuvem, as chamadas passam por ele, com o Node 22.21 ou mais novo. Quando a plataforma não responde, o erro e o `doctor` dizem o motivo, como um endereço que não resolve, um proxy que recusou o domínio ou um certificado em que o computador não confia. Numa imagem nova, o apt baixa as listas de pacotes antes de instalar. O resultado do `add` diz como ficou cada programa. A ferramenta de IA também é reconhecida pelo programa no PATH: com o Windsurf ou o Aider instalados, o projeto recebe o arquivo que cada um lê (`.windsurfrules`, `CONVENTIONS.md`).
+- 1.0.2: a conta sem compra lê que instala a versão de entrada de cada app, e o que o FlyeeClub libera, em vez de ler que não tem acesso. Um endereço que a rede recusa vira a resposta `host_not_allowed`, com o endereço: numa sessão do Claude Code na nuvem, com o ajuste único do ambiente; fora dela, dizendo que um proxy da rede recusou o endereço. Toda chamada tem um prazo para a resposta, e uma rede que não responde não deixa mais a CLI parada. Na nuvem, o computador aparece no painel como Claude Code na nuvem, e o limite de computadores vem explicado. O `doctor` traz o código em `platform.error` e o texto em `platform.message`, e o `status` mostra a mensagem inteira de uma falha de rede. Uma conta sem plano ativo ou suspensa aparece como tal. Um certificado recusado ganha uma mensagem pela causa, como o relógio do computador, e um proxy que o Node deste computador ignora passa a ser dito. Depois de instalar um app, o `add` diz onde estão as skills dele, sem mandar abrir a IA de novo. Os projetos de cada marca ficam dentro da pasta onde o flyee foi instalado, e não mais ao lado dela, e o `new` cria um projeto mesmo sem apps para levar.
+- 1.0.1: funciona no macOS e no Linux, onde a 1.0.0 terminava sem fazer nada. No Windows, o login pelo navegador abre o endereço inteiro, e no WSL abre o navegador do Windows. Numa sessão na nuvem, por SSH ou num computador sem tela, o login pelo navegador e a página da chave avisam na hora que não há navegador na frente da pessoa e indicam o login por código e a variável de ambiente; o login faz o mesmo quando o navegador não abre. Com um proxy em `HTTPS_PROXY`, como nas sessões na nuvem, as chamadas passam por ele, com o Node 22.21 ou mais novo. Quando a plataforma não responde, o erro e o `doctor` dizem o motivo, como um endereço que não resolve ou um certificado em que o computador não confia. Numa imagem nova, o apt baixa as listas de pacotes antes de instalar. O resultado do `add` diz como ficou cada programa. A ferramenta de IA também é reconhecida pelo programa no PATH: com o Windsurf ou o Aider instalados, o projeto recebe o arquivo que cada um lê (`.windsurfrules`, `CONVENTIONS.md`).
 - 1.0.0: a primeira versão da linha 1.x publicada. Login com navegador ou com código (o endereço e o código saem antes da espera, e com `--json` numa primeira linha JSON), instalação de apps e receitas, atualização, estado, diagnóstico, programas, chaves pela página do navegador, um projeto por marca ou cliente (`new` e `projects`) e registro de uso. Sem um terminal para perguntar, a confirmação vem por `--yes`, depois de mostrar o plano com `--dry-run`. O nome do degrau aparece como o painel o chama, e a página de um app abre no idioma de quem lê.
 - A linha 0.x deste pacote pertence a um projeto anterior e não fala com o flyee.club.

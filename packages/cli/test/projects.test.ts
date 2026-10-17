@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
 
 import { CliError } from "../src/api/errors.ts";
-import { projectFolder } from "../src/commands/new.ts";
+import { projectFolder, projectsHome } from "../src/commands/new.ts";
 import { type Context, createContext } from "../src/context.ts";
 import { parseArgs, runCommand } from "../src/main.ts";
 import { type Lock, readLock } from "../src/state/lock.ts";
@@ -39,7 +39,8 @@ const statuses = (result: Record<string, unknown>) => Object.fromEntries((result
 
 before(async () => {
   sandbox = mkdtempSync(join(tmpdir(), "flyee-projects-"));
-  mkdirSync(join(sandbox, "marca-a"), { recursive: true });
+  // marca-a is a code repository: a project made from it goes beside it, never inside.
+  mkdirSync(join(sandbox, "marca-a", ".git"), { recursive: true });
   const takes = buildModuleZip({ slug: "takes", version: "1.0.0", permissions: [{ kind: "network", scope: "api.exemplo.com", reason: { "pt-BR": "Busca os dados." } }] });
   platform = await startFakePlatform({
     tier: "kit",
@@ -62,10 +63,12 @@ after(async () => {
 });
 
 describe("one project per brand or client", () => {
-  it("turns a bare name into a folder beside the project and keeps a path as written", () => {
-    assert.equal(projectFolder(join(sandbox, "marca-a"), "cliente-x"), join(sandbox, "cliente-x"));
-    assert.equal(projectFolder(join(sandbox, "marca-a"), "../outros/cliente-x"), join(sandbox, "outros", "cliente-x"));
-    assert.equal(projectFolder(join(sandbox, "marca-a"), join(sandbox, "longe")), join(sandbox, "longe"));
+  it("puts a project beside a code repository, and keeps a path as written", () => {
+    const home = projectsHome(join(sandbox, "marca-a"), readLock(makeContext()), join(sandbox, "home", ".flyee"));
+    assert.equal(home, sandbox, "marca-a is a repository: never filled with brands");
+    assert.equal(projectFolder(join(sandbox, "marca-a"), "cliente-x", home), join(sandbox, "cliente-x"));
+    assert.equal(projectFolder(join(sandbox, "marca-a"), "../outros/cliente-x", home), join(sandbox, "outros", "cliente-x"));
+    assert.equal(projectFolder(join(sandbox, "marca-a"), join(sandbox, "longe"), home), join(sandbox, "longe"));
   });
 
   it("creates another project with the same apps, through the platform's gates, and leaves this one alone", async () => {
@@ -89,7 +92,8 @@ describe("one project per brand or client", () => {
     const last = platform.state.installs[platform.state.installs.length - 1] as { project_kind?: string; installed_modules: { slug: string }[] };
     assert.equal(last.project_kind, "client");
     assert.deepEqual(last.installed_modules.map((module) => module.slug), ["copy-lp", "radar"]);
-    assert.ok(output.some((line) => line.includes("abra essa pasta na sua IA")));
+    assert.equal(result.next_step, "open_folder", "beside a repository, outside the folder the command ran in");
+    assert.ok(output.some((line) => line.includes("fora da pasta onde este comando rodou")));
   });
 
   it("does nothing the second time", async () => {
@@ -192,17 +196,188 @@ describe("the operator's linked apps", () => {
     assert.equal(platform.state.requests.length, calls, "nothing was asked of the platform");
   });
 
-  it("stay behind for a member", async () => {
+  it("stay behind for a member, who still gets the project, with no apps and the reason", async () => {
+    const dry = await run(makeContext({ cwd: join(sandbox, "bancada"), dev: false, dryRun: true }), ["new", "seenaly", "--dry-run"]);
+    assert.deepEqual(statuses(dry), { "meu-video": "dev" }, "a dry run gives the reason the real run gives");
+    assert.equal(existsSync(join(String(dry.path), ".flyee")), false);
     const result = await run(makeContext({ cwd: join(sandbox, "bancada"), dev: false }), ["new", "seenaly"]);
-    assert.equal(result.ok, false);
-    assert.equal(result.error, "nothing_to_install");
+    assert.equal(result.ok, true, JSON.stringify(result));
     assert.deepEqual(statuses(result), { "meu-video": "dev" });
-    assert.equal(existsSync(join(sandbox, "seenaly")), false);
+    assert.ok(existsSync(join(String(result.path), ".flyee", "lock.json")), "an empty project, ready for add");
+    const explicit = await run(makeContext({ cwd: join(sandbox, "bancada"), dev: false }), ["new", "outra", "--apps", "meu-video"]);
+    assert.equal(explicit.error, "nothing_to_install", "with --apps, nothing to install is still a refusal");
   });
 
   it("are remembered as projects of this machine", async () => {
     const result = await run(makeContext({ cwd: join(sandbox, "bancada"), dev: true }), ["projects"]);
     const names = (result.projects as { name: string; current: boolean }[]).map((project) => project.name);
     assert.ok(names.includes("bancada"));
+  });
+});
+
+describe("a flyee folder that holds the projects, one subfolder per brand", () => {
+  // The member's own layout, from the first desktop test (2026-10-17): flyee installed in one folder and each
+  // brand or client as a subfolder of it. 1.0.1 put a new project beside the folder and refused one inside it.
+  const home = () => join(sandbox, "membro", "flyee-workspace");
+  const flyeeHome = () => join(sandbox, "home", ".flyee");
+
+  it("is the folder with no apps: a brand becomes a subfolder, ready for apps, and the work goes on in the same conversation", async () => {
+    mkdirSync(home(), { recursive: true });
+    assert.equal((await run(makeContext({ cwd: home() }), ["login", "--device"])).ok, true);
+    const result = await run(makeContext({ cwd: home() }), ["new", "medchina"]);
+    assert.equal(result.ok, true, JSON.stringify(result));
+    assert.equal(result.path, join(home(), "medchina"));
+    assert.deepEqual(result.apps, []);
+    assert.equal(result.next_step, "work_in_folder");
+    assert.ok(existsSync(join(home(), "medchina", ".flyee", "lock.json")), "a project: add can run in it next");
+    assert.ok(existsSync(join(home(), "medchina", "AGENTS.md")));
+    assert.ok(output.some((line) => line.includes("ainda sem apps")));
+    assert.ok(output.some((line) => line.includes("Siga nesta conversa")));
+  });
+
+  it("takes the apps named into the subfolder", async () => {
+    const result = await run(makeContext({ cwd: home() }), ["new", "seenaly", "--apps", "radar"]);
+    assert.equal(result.ok, true, JSON.stringify(result));
+    assert.equal(result.path, join(home(), "seenaly"));
+    assert.deepEqual(statuses(result), { radar: "installed" });
+  });
+
+  it("from inside a brand's project, puts the next brand beside it, in the same folder of projects", async () => {
+    const result = await run(makeContext({ cwd: join(home(), "seenaly") }), ["new", "cliente-y"]);
+    assert.equal(result.ok, true, JSON.stringify(result));
+    assert.equal(result.path, join(home(), "cliente-y"));
+    assert.deepEqual(statuses(result), { radar: "installed" }, "with the apps of the project it came from");
+  });
+
+  it("stays the folder of projects with apps of its own at the root", () => {
+    assert.equal(projectsHome(home(), { modules: { radar: {} as never } }, flyeeHome()), home());
+  });
+
+  it("never puts a project inside a brand's project, nor makes the folder of projects one", async () => {
+    for (const folder of [join("medchina", "campanha"), join(home(), "seenaly", "dentro"), "."]) {
+      const result = await run(makeContext({ cwd: home() }), ["new", folder]);
+      assert.equal(result.error, "nested_project", folder);
+    }
+    assert.equal(existsSync(join(home(), "medchina", "campanha")), false);
+  });
+});
+
+describe("the folder of projects, after the adversarial review of 1.0.2", () => {
+  const base = () => join(sandbox, "revisao");
+  const flyeeHome = () => join(sandbox, "home", ".flyee");
+  const at = (...parts: string[]) => join(base(), ...parts);
+
+  before(async () => {
+    mkdirSync(at("F"), { recursive: true });
+    assert.equal((await run(makeContext({ cwd: at("F") }), ["login", "--device"])).ok, true);
+    assert.equal((await run(makeContext({ cwd: at("F") }), ["new", "medchina", "--apps", "radar"])).ok, true);
+  });
+
+  it("from a delivery folder of a brand, puts the next brand in the folder of projects, with the brand's apps", async () => {
+    mkdirSync(at("F", "medchina", "estudio-de-video"), { recursive: true });
+    const result = await run(makeContext({ cwd: at("F", "medchina", "estudio-de-video") }), ["new", "seenaly"]);
+    assert.equal(result.ok, true, JSON.stringify(result));
+    assert.equal(result.path, at("F", "seenaly"));
+    assert.deepEqual(statuses(result), { radar: "installed" });
+  });
+
+  it("keeps the brands inside the folder where flyee was installed even with an app at its root, and takes an existing subfolder as it is", async () => {
+    mkdirSync(at("G"), { recursive: true });
+    assert.equal((await run(makeContext({ cwd: at("G") }), ["login", "--device"])).ok, true);
+    assert.equal((await run(makeContext({ cwd: at("G") }), ["add", "radar"])).ok, true);
+    mkdirSync(at("G", "medchina"), { recursive: true });
+    writeFileSync(join(at("G", "medchina"), "briefing.txt"), "o que a marca já tinha");
+    const result = await run(makeContext({ cwd: at("G") }), ["new", "medchina"]);
+    assert.equal(result.ok, true, JSON.stringify(result));
+    assert.equal(result.path, at("G", "medchina"), "the existing subfolder, not a copy beside G");
+    assert.equal(result.existing_folder, true);
+    assert.equal(readFileSync(join(at("G", "medchina"), "briefing.txt"), "utf8"), "o que a marca já tinha");
+    assert.ok(output.some((line) => line.includes("já existe e tem arquivos")));
+  });
+
+  it("marks a project it makes, so the next brand goes beside it even with no flyee folder above", async () => {
+    mkdirSync(at("H"), { recursive: true });
+    const first = await run(makeContext({ cwd: at("H") }), ["new", "marca-um"]);
+    assert.equal(first.path, at("H", "marca-um"));
+    assert.equal(lockAt(join("revisao", "H", "marca-um")).in_projects_folder, true);
+    const second = await run(makeContext({ cwd: at("H", "marca-um") }), ["new", "marca-dois"]);
+    assert.equal(second.path, at("H", "marca-dois"), "beside marca-um, not inside it");
+  });
+
+  it("never counts the machine's ~/.flyee as a folder of projects", () => {
+    const machine = join(sandbox, "maquina");
+    mkdirSync(join(machine, ".flyee"), { recursive: true });
+    writeFileSync(join(machine, ".flyee", "lock.json"), "{}");
+    mkdirSync(join(machine, "projeto"), { recursive: true });
+    assert.equal(projectsHome(join(machine, "projeto"), null, join(machine, ".flyee")), join(machine, "projeto"));
+  });
+
+  it("says the apps a brand already has when it runs again with none to take", async () => {
+    const result = await run(makeContext({ cwd: at("H") }), ["new", "marca-um", "--apps", "radar"]);
+    assert.equal(result.ok, true, JSON.stringify(result));
+    const again = await run(makeContext({ cwd: at("H") }), ["new", "marca-um"]);
+    assert.equal(again.created, false);
+    assert.deepEqual(statuses(again), { radar: "already" });
+  });
+
+  it("never takes over a code repository with the brand's name", async () => {
+    mkdirSync(at("F", "repo-da-marca", ".git"), { recursive: true });
+    const result = await run(makeContext({ cwd: at("F") }), ["new", "repo-da-marca"]);
+    assert.equal(result.error, "target_is_repository");
+    assert.equal(existsSync(at("F", "repo-da-marca", ".flyee")), false);
+  });
+
+  it("refuses a name a Windows program cannot open", async () => {
+    for (const name of ["marca.", "con", "marca:dois"]) {
+      const result = await run(makeContext({ cwd: at("F") }), ["new", name]);
+      assert.equal(result.error, "invalid_name", name);
+    }
+    const trimmed = await run(makeContext({ cwd: at("F"), dryRun: true }), ["new", "  espaços  ", "--dry-run"]);
+    assert.equal(trimmed.path, at("F", "espaços"), "spaces around the name are dropped");
+  });
+
+  it("lists the apps a dry run would install as planned", async () => {
+    const result = await run(makeContext({ cwd: at("F"), dryRun: true }), ["new", "planejada", "--apps", "radar", "--dry-run"]);
+    assert.equal(result.dry_run, true);
+    assert.deepEqual(statuses(result), { radar: "planned" });
+  });
+});
+
+describe("the folder of projects, after the second review", () => {
+  const at = (...parts: string[]) => join(sandbox, "revisao2", ...parts);
+  const flyeeHome = () => join(sandbox, "home", ".flyee");
+
+  it("in a Claude Code cloud session, the repository is the member's folder: brands go inside it", () => {
+    mkdirSync(at("repo", ".git"), { recursive: true });
+    assert.equal(projectsHome(at("repo"), null, flyeeHome(), true), at("repo"));
+    assert.equal(projectsHome(at("repo"), null, flyeeHome(), false), at(), "on a computer, a repository is never filled with brands");
+  });
+
+  it("a folder that already holds projects stays the folder of projects, apps at its root and brands beside it or not", async () => {
+    mkdirSync(at("W"), { recursive: true });
+    assert.equal((await run(makeContext({ cwd: at("W") }), ["login", "--device"])).ok, true);
+    assert.equal((await run(makeContext({ cwd: at("W") }), ["add", "copy-lp"])).ok, true, "an app at the root, installed before any brand");
+    assert.equal((await run(makeContext({ cwd: at("W") }), ["new", "medchina", "--apps", "radar"])).ok, true);
+    mkdirSync(at("vizinha"), { recursive: true });
+    assert.equal((await run(makeContext({ cwd: at("vizinha") }), ["new", "outra-marca", "--apps", "radar"])).ok, true);
+    const result = await run(makeContext({ cwd: at("W") }), ["new", "seenaly", "--apps", "radar"]);
+    assert.equal(result.path, at("W", "seenaly"));
+  });
+
+  it("says where a project went when it is outside the folder the command ran in", async () => {
+    const result = await run(makeContext({ cwd: at("W", "medchina") }), ["new", "cliente-z", "--apps", "radar"]);
+    assert.equal(result.path, at("W", "cliente-z"));
+    assert.equal(result.next_step, "open_folder");
+    assert.ok(output.some((line) => line.includes("fora da pasta onde este comando rodou")));
+  });
+
+  it("sends an app to a brand's project when it is asked for in the folder that holds them, with no apps of its own", async () => {
+    mkdirSync(at("Z"), { recursive: true });
+    assert.equal((await run(makeContext({ cwd: at("Z") }), ["login", "--device"])).ok, true);
+    assert.equal((await run(makeContext({ cwd: at("Z") }), ["new", "medchina"])).ok, true);
+    const result = await run(makeContext({ cwd: at("Z") }), ["add", "radar"]);
+    assert.equal(result.error, "projects_folder");
+    assert.deepEqual(result.projects, ["medchina"]);
+    assert.ok(String(result.message).includes("pasta da marca"));
   });
 });

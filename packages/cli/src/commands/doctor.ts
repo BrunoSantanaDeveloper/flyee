@@ -71,13 +71,17 @@ export async function runDoctor(ctx: Context): Promise<Result> {
     }
   }
 
-  let platform: { reachable: boolean; min_cli_version?: string } = { reachable: false };
+  // The reason travels with the answer: a name that does not resolve, a proxy that refused the domain
+  // and a certificate this machine does not trust each call for a different fix.
+  let platform: { reachable: boolean; min_cli_version?: string; error?: string } = { reachable: false };
   try {
     const info = await client.version();
     platform = { reachable: true, min_cli_version: info.min_cli_version };
     ctx.io.out(t(ctx, "doctor.platform_ok", { base: ctx.baseUrl, min: info.min_cli_version }));
-  } catch {
-    ctx.io.out(t(ctx, "doctor.platform_fail", { base: ctx.baseUrl }));
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    platform = { reachable: false, error: detail };
+    ctx.io.out(t(ctx, "doctor.platform_fail", { base: ctx.baseUrl, detail }));
   }
 
   return {

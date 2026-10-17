@@ -1,11 +1,13 @@
 import { spawnSync } from "node:child_process";
-import { accessSync, constants as fsConstants, existsSync, lstatSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
 
 import type { Context } from "./context.ts";
 import { readJson, writeJsonAtomic } from "./util/fs.ts";
-import { contractOs, type ContractOs } from "./util/os.ts";
+import { contractOs, isProgramFile, type ContractOs } from "./util/os.ts";
+
+export { isProgramFile };
 
 /**
  * Programs apps need (ffmpeg, yt-dlp…), installed by the CLI itself so the
@@ -77,25 +79,6 @@ export function knownFolders(platform: NodeJS.Platform = process.platform, env: 
   return folders;
 }
 
-/**
- * A program file. Windows app execution aliases (winget.exe in WindowsApps)
- * are reparse points that `stat` refuses with EACCES and `lstat` reports as a
- * link; they still run, so a link the process can access counts too.
- */
-export function isProgramFile(path: string): boolean {
-  try {
-    return statSync(path).isFile();
-  } catch {
-    try {
-      if (!lstatSync(path).isSymbolicLink()) return false;
-      accessSync(path, fsConstants.F_OK);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-}
-
 const isFile = isProgramFile;
 
 /** Absolute path of a program on PATH or in the package managers' folders, or null. */
@@ -165,6 +148,13 @@ function isRoot(): boolean {
 
 type Planned = { file: string; args: string[]; env?: Record<string, string>; display: string } | { missing: true };
 
+/**
+ * What apt answers when its package lists are missing or old: a package it
+ * does not know (a fresh image never downloaded them) or archives that moved.
+ * apt runs with LC_ALL=C, so these are the words it prints in any locale.
+ */
+const APT_LISTS_STALE = /Unable to locate package|has no installation candidate|maybe run apt-get update/i;
+
 /** The command for one step, or `missing` when that package manager is not on this machine. */
 function plan(step: InstallStep, upgrade: boolean, find: Finder): Planned {
   const id = step.id;
@@ -188,11 +178,14 @@ function plan(step: InstallStep, upgrade: boolean, find: Finder): Planned {
       if (!path) return { missing: true };
       const managerArgs =
         step.manager === "apt" ? ["install", "-y", id] : step.manager === "dnf" ? ["install", "-y", id] : ["-S", "--noconfirm", id];
-      const env = step.manager === "apt" ? { DEBIAN_FRONTEND: "noninteractive" } : undefined;
+      const env = step.manager === "apt" ? { DEBIAN_FRONTEND: "noninteractive", LC_ALL: "C" } : undefined;
       if (isRoot()) return { file: path, args: managerArgs, env, display: `${tool} ${managerArgs.join(" ")}` };
       const sudo = find("sudo");
       if (!sudo) return { missing: true };
-      return { file: sudo, args: ["-n", path, ...managerArgs], env, display: `sudo ${tool} ${managerArgs.join(" ")}` };
+      // The step left to the member refreshes apt's lists first: where they were never
+      // downloaded, the install alone would fail for them the way it failed here.
+      const display = step.manager === "apt" ? `sudo sh -c 'apt-get update && apt-get install -y ${id}'` : `sudo ${tool} ${managerArgs.join(" ")}`;
+      return { file: sudo, args: ["-n", path, ...managerArgs], env, display };
     }
     case "pipx": {
       const pipx = find("pipx");
@@ -239,8 +232,18 @@ export function ensureProgram(
   for (const step of spec.install[os] ?? []) {
     const planned = plan(step, Boolean(options.upgrade) && allFound(before), find);
     if ("missing" in planned) continue;
-    const result = run(planned.file, planned.args, planned.env);
-    const output = `${result.stdout}\n${result.stderr}`;
+    let result = run(planned.file, planned.args, planned.env);
+    let output = `${result.stdout}\n${result.stderr}`;
+    // A fresh image (a container, a cloud session) ships with empty package lists, and apt knows no
+    // ffmpeg until `apt-get update`: refresh the lists once, the same way (as root or through sudo), and
+    // try again. The install runs again even when the refresh failed, since one broken source fails the
+    // whole refresh while the others were read; what the refresh refused goes at the end of the detail.
+    if (step.manager === "apt" && result.status !== 0 && APT_LISTS_STALE.test(output)) {
+      const update = run(planned.file, [...planned.args.slice(0, -3), "update", "-qq"], planned.env);
+      const refused = `${update.stdout}\n${update.stderr}`.split(/\r?\n/).filter((line) => line.trim().startsWith("E:")).slice(0, 2);
+      result = run(planned.file, planned.args, planned.env);
+      output = [result.stdout, result.stderr, ...refused].join("\n");
+    }
     // winget answers "no applicable upgrade" with a non-zero code when the program is already current.
     const alreadyCurrent = /No (available|applicable) upgrade|No newer package versions|already installed/i.test(output);
     if (result.status === 0 || alreadyCurrent) {

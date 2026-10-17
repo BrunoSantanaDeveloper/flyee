@@ -1,3 +1,7 @@
+import { spawn } from "node:child_process";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { ApiError, CliError } from "./api/errors.ts";
 import { runAdd } from "./commands/add.ts";
 import { runDev } from "./commands/dev.ts";
@@ -199,14 +203,62 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   return result.ok ? 0 : result.error === "usage" ? 2 : 1;
 }
 
-const invokedDirectly = (() => {
+/**
+ * Whether this module is the script Node was asked to run. npm starts the CLI
+ * through a link on macOS and Linux (`node_modules/.bin/flyee` points to
+ * `dist/flyee.js`), so the two paths are compared after resolving links. The
+ * 1.0.0 compared file names, `flyee` against `flyee.js`, and on those systems
+ * every command ended at once, printing nothing.
+ */
+export function isEntryScript(argv1: string | undefined, moduleUrl: string, platform: NodeJS.Platform = process.platform): boolean {
+  if (!argv1) return false;
   try {
-    const entry = process.argv[1] ? new URL(`file:///${process.argv[1].replace(/\\/g, "/")}`).pathname : "";
-    return entry.length > 0 && import.meta.url.endsWith(entry.split("/").pop() ?? "");
+    const real = (path: string) => {
+      const resolved = realpathSync(path);
+      return platform === "win32" ? resolved.toLowerCase() : resolved;
+    };
+    return real(argv1) === real(fileURLToPath(moduleUrl));
   } catch {
     return false;
   }
-})();
+}
+
+const PROXY_VARIABLES = ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"] as const;
+const LOOPBACK = ["127.0.0.1", "localhost", "[::1]"];
+
+/** Whether this Node's fetch honors NODE_USE_ENV_PROXY: 22.21 or later on the 22 line, and every 24 or later (measured). */
+export function nodeHonorsEnvProxy(version: string = process.versions.node): boolean {
+  const [major, minor] = version.split(".").map(Number);
+  return major >= 24 || (major === 22 && minor >= 21);
+}
+
+/**
+ * The environment to start the CLI again with, when a proxy is set and Node's
+ * fetch would ignore it; null otherwise. Node's fetch reads HTTPS_PROXY and
+ * HTTP_PROXY only with NODE_USE_ENV_PROXY=1, and npm reads them on its own, so
+ * in a Claude Code cloud session, where every request goes through a proxy, `npx`
+ * downloaded the CLI and then every call to the platform failed. Never on a
+ * Node that ignores the variable (a second process for nothing), never over a
+ * NODE_USE_ENV_PROXY the person set, and never when a proxy value is not an
+ * http(s) address: Node builds its proxy agents at startup and dies on a value
+ * like `127.0.0.1:7890` or `socks5h://…`, which 1.0.0 simply ignored.
+ */
+export function proxyRelaunchEnv(env: Record<string, string | undefined>, nodeVersion: string = process.versions.node): Record<string, string | undefined> | null {
+  const values = PROXY_VARIABLES.map((name) => env[name]).filter((value): value is string => Boolean(value));
+  if (!values.length || env.NODE_USE_ENV_PROXY !== undefined || !nodeHonorsEnvProxy(nodeVersion)) return null;
+  for (const value of values) {
+    try {
+      if (!["http:", "https:"].includes(new URL(value).protocol)) return null;
+    } catch {
+      return null;
+    }
+  }
+  // Calls to this machine (a platform on 127.0.0.1, the key page) never go through the proxy.
+  const withLoopback = (value: string | undefined) => [...new Set([...(value ?? "").split(",").map((entry) => entry.trim()).filter(Boolean), ...LOOPBACK])].join(",");
+  return { ...env, NODE_USE_ENV_PROXY: "1", NO_PROXY: withLoopback(env.NO_PROXY), no_proxy: withLoopback(env.no_proxy ?? env.NO_PROXY) };
+}
+
+const invokedDirectly = isEntryScript(process.argv[1], import.meta.url);
 
 /**
  * Ends with the exit code, never with process.exit(): on Windows a process.exit()
@@ -221,9 +273,39 @@ export function finish(code: number): NodeJS.Timeout {
   return setTimeout(() => process.exit(code), 3000).unref();
 }
 
-if (invokedDirectly) {
+function runHere(): void {
   main().then(finish, (error) => {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     finish(1);
   });
+}
+
+if (invokedDirectly) {
+  const relaunch = proxyRelaunchEnv(process.env);
+  if (!relaunch) runHere();
+  else {
+    // The same command, in a child that honors the proxy; it shares this terminal, so a key typed with the echo off still works.
+    // --disable-warning hides only Node's notice that its proxy agent is experimental, never a warning about certificates.
+    const child = spawn(process.execPath, [...process.execArgv, "--disable-warning=UNDICI-EHPA", ...process.argv.slice(1)], { stdio: "inherit", env: relaunch, windowsHide: true });
+    // This process waits for the child and passes signals on, so it is never left running alone. On Windows a
+    // console Ctrl+C already reaches both, and a signal sent to the child by PID would only terminate it.
+    const signals = process.platform === "win32" ? (["SIGINT"] as const) : (["SIGINT", "SIGTERM", "SIGHUP"] as const);
+    const forward = (signal: NodeJS.Signals) => {
+      if (process.platform !== "win32") child.kill(signal);
+    };
+    for (const signal of signals) process.on(signal, forward);
+    const unhook = () => {
+      for (const signal of signals) process.off(signal, forward);
+    };
+    let started = false;
+    child.once("spawn", () => (started = true));
+    child.once("error", () => {
+      unhook();
+      if (!started) runHere();
+    });
+    child.once("exit", (code, signal) => {
+      unhook();
+      finish(code ?? (signal ? 1 : 0));
+    });
+  }
 }

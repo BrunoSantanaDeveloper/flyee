@@ -24,6 +24,20 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Why a fetch failed. Node says only "fetch failed" and keeps the reason in
+ * `cause`: a name that does not resolve (ENOTFOUND), a proxy that refused the
+ * tunnel, or a certificate this machine does not trust, as behind a proxy that
+ * inspects TLS (UNABLE_TO_GET_ISSUER_CERT_LOCALLY). Without it nobody can tell
+ * those apart, least of all the member's AI in a cloud session.
+ */
+export function fetchFailure(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const cause = error instanceof Error ? (error.cause as { code?: unknown; message?: unknown } | undefined) : undefined;
+  const parts = [cause?.code, cause?.message].filter((part): part is string => typeof part === "string" && part.length > 0 && !message.includes(part));
+  return parts.length ? `${message} (${[...new Set(parts)].join(": ")})`.slice(0, 300) : message;
+}
+
 /** A failure the CLI itself detected: a package that does not check out, no connection, a bad argument. */
 export class CliError extends Error {
   code: string;

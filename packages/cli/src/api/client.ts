@@ -3,7 +3,7 @@ import { compareSemver, isSemver } from "../semver.ts";
 import { ensureConfig } from "../state/config.ts";
 import { accessExpired, type Credentials, readCredentials, writeCredentials } from "../state/credentials.ts";
 import { CLI_VERSION } from "../version.ts";
-import { ApiError, CliError } from "./errors.ts";
+import { ApiError, CliError, fetchFailure } from "./errors.ts";
 import { refreshTokens, withRefreshLock } from "./oauth.ts";
 import type {
   Catalog,
@@ -74,7 +74,7 @@ export class Client {
     try {
       response = await this.ctx.fetch(`${this.ctx.baseUrl}/api/cli/version`, { headers: { Accept: "application/json" } });
     } catch (error) {
-      throw new CliError("network", (error as Error).message);
+      throw new CliError("network", fetchFailure(error));
     }
     if (!response.ok) throw new CliError("network", `HTTP ${response.status} from /api/cli/version`);
     const info = (await response.json()) as VersionInfo;
@@ -136,7 +136,7 @@ export class Client {
         body: init.body === undefined ? undefined : JSON.stringify(init.body),
       });
     } catch (error) {
-      throw new CliError("network", (error as Error).message);
+      throw new CliError("network", fetchFailure(error));
     }
     const text = await response.text();
     let json: unknown = null;

@@ -15,11 +15,12 @@ O envio pela CI nunca publica nem retira uma versão: publicar continua sendo um
 
 ## A CLI
 
-1. O CI do `main` verde: o workflow `release-cli` roda o mesmo `npm run ci:verify` no Linux antes de publicar. `npm run check:tarball` lista só `dist/**`, `package.json`, `README.md` e `LICENSE`.
+1. O CI do `main` verde: o workflow `release-cli` roda o mesmo `npm run ci:verify` no Linux antes de publicar. `npm run check:tarball` lista só `dist/**`, `package.json`, `README.md` e `LICENSE`. `npm run check:packed` empacota a CLI, instala o pacote numa pasta temporária e a roda pelo `node_modules/.bin/flyee` (o caminho do npx) e pelo bin global, sem proxy, com um proxy em `HTTPS_PROXY` e com um valor que o Node não usa como proxy; a 1.0.0 passou em todos os testes e não fazia nada no macOS e no Linux, onde esse caminho é um link simbólico. O job do Windows na CI roda o mesmo conferidor.
 2. Suba `version` em `packages/cli/package.json`. A linha é 1.x; a 0.x do pacote `flyee` no npm é de outro projeto e não fala o contrato. Nunca publique uma prerelease como primeira versão: ela viraria o `latest` que todo mundo baixa, e a plataforma conta uma alpha como mais antiga que o piso.
 3. Atualize a seção de mudanças de `packages/cli/README.md`.
 4. Tag `cli-v<versão>` e push da tag. O workflow `release-cli` confere a tag contra a versão do pacote e publica pela publicação confiável do npm, sem token: no npmjs.com, o pacote `flyee` tem em Settings, Trusted Publisher, o GitHub Actions com usuário `BrunoSantanaDeveloper`, repositório `flyee`, workflow `release-cli.yml` e "Allow npm publish" marcado. Uma configuração nova expira se nenhuma publicação acontecer em 2 dias. O repositório é privado, então o npm não gera proveniência, e o workflow não a pede.
 5. Peça ao operador da plataforma para subir `platform_settings.cli.min_cli_version` quando a versão for o novo piso. Na primeira publicação, para `1.0.0`.
+6. Depois da publicação, confira o que o integrante recebe: `npx --yes flyee@latest --version` no Windows e num contêiner Linux (`node:22-bookworm`) imprime a versão nova.
 
 ## Segredos da CI
 

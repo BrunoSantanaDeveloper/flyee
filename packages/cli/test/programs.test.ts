@@ -112,7 +112,7 @@ describe("installing a program without the member", () => {
     const result = ensureProgram(ffmpeg, { os: "linux", ...machine.system });
     assert.equal(result.status, "needs_member");
     assert.equal(result.reason, "admin_password");
-    assert.equal(result.member_step, "sudo apt-get install -y ffmpeg");
+    assert.equal(result.member_step, "sudo sh -c 'apt-get update && apt-get install -y ffmpeg'", "the step refreshes the lists, which may never have been downloaded");
     assert.deepEqual(machine.calls[0].args.slice(0, 2), ["-n", "/usr/bin/apt-get"], "sudo never prompts");
   });
 

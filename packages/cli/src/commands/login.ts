@@ -1,6 +1,7 @@
 import { Client } from "../api/client.ts";
-import { ApiError } from "../api/errors.ts";
+import { ApiError, CliError } from "../api/errors.ts";
 import { loginWithBrowser, loginWithDeviceCode } from "../api/oauth.ts";
+import type { TokenResponse } from "../api/types.ts";
 import type { Context } from "../context.ts";
 import { loadCoreAssets } from "../core-assets.ts";
 import { localeOf, t } from "../i18n.ts";
@@ -8,7 +9,20 @@ import { flushEvents, registerMachine } from "../registration.ts";
 import { ensureConfig, machineName, writeConfig } from "../state/config.ts";
 import { newLock, readLock, writeLock } from "../state/lock.ts";
 import { applyAdapters } from "../install/adapters.ts";
+import { noBrowserReason } from "../util/os.ts";
+import { commandLine } from "./confirm.ts";
 import { flag, has, type ParsedArgs, type Result } from "./types.ts";
+
+type NoBrowser = NonNullable<ReturnType<typeof noBrowserReason>> | "no_opener";
+
+/** The answer when the browser login cannot reach the person: the same command, with --device. */
+function useDeviceLogin(ctx: Context, args: ParsedArgs, reason: NoBrowser): Result {
+  const command = `npx --yes flyee@latest ${commandLine(args)} --device`;
+  const message =
+    reason === "no_opener" ? t(ctx, "login.no_opener", { command }) : t(ctx, "login.no_browser", { where: t(ctx, `login.no_browser.${reason}`), command });
+  ctx.io.err(message);
+  return { ok: false, error: "no_browser", reason, message, fix: command };
+}
 
 /**
  * `flyee login [--device] [--name <machine>] [--kind own|client]`
@@ -20,26 +34,39 @@ import { flag, has, type ParsedArgs, type Result } from "./types.ts";
  * --json as one JSON line ahead of the final result.
  */
 export async function runLogin(ctx: Context, args: ParsedArgs): Promise<Result> {
+  // The browser login waits for a redirect to 127.0.0.1 of this machine. With no browser in front of the
+  // person (a cloud session, SSH, a server) it could only wait out its 5 minutes: it answers now instead,
+  // with the login by code (CLI-CONTRACT.md 2.2, "device authorization for machines without a browser").
+  const noBrowser = has(args, "device") ? null : noBrowserReason(ctx.env);
+  if (noBrowser) return useDeviceLogin(ctx, args, noBrowser);
   const client = new Client(ctx);
   const assets = loadCoreAssets();
   await client.ensureMinVersion();
   const config = ensureConfig(ctx, machineName(flag(args, "name")));
 
-  const tokens = has(args, "device")
-    ? await loginWithDeviceCode(ctx, config.device_id, async (authorization) => {
-        const url = authorization.verification_uri_complete ?? authorization.verification_uri;
-        await ctx.io.progress(t(ctx, "login.device_code", { url, code: authorization.user_code, minutes: Math.round(authorization.expires_in / 60) }), {
-          event: "device_code",
-          verification_uri: authorization.verification_uri,
-          verification_uri_complete: authorization.verification_uri_complete ?? null,
-          user_code: authorization.user_code,
-          expires_in: authorization.expires_in,
+  let tokens: TokenResponse;
+  try {
+    tokens = has(args, "device")
+      ? await loginWithDeviceCode(ctx, config.device_id, async (authorization) => {
+          const url = authorization.verification_uri_complete ?? authorization.verification_uri;
+          await ctx.io.progress(t(ctx, "login.device_code", { url, code: authorization.user_code, minutes: Math.round(authorization.expires_in / 60) }), {
+            event: "device_code",
+            verification_uri: authorization.verification_uri,
+            verification_uri_complete: authorization.verification_uri_complete ?? null,
+            user_code: authorization.user_code,
+            expires_in: authorization.expires_in,
+          });
+        })
+      : await loginWithBrowser(ctx, config.device_id, async (url) => {
+          // No browser opened (no opener on this system, or it gave up at once): the login by code, now.
+          if (!(await ctx.io.openBrowser(url))) return false;
+          await ctx.io.progress(t(ctx, "login.browser", { url }), { event: "browser_login", url });
+          return true;
         });
-      })
-    : await loginWithBrowser(ctx, config.device_id, async (url) => {
-        await ctx.io.openBrowser(url);
-        await ctx.io.progress(t(ctx, "login.browser", { url }), { event: "browser_login", url });
-      });
+  } catch (error) {
+    if (error instanceof CliError && error.code === "no_browser") return useDeviceLogin(ctx, args, "no_opener");
+    throw error;
+  }
   client.storeTokens(tokens);
 
   const me = await client.me();

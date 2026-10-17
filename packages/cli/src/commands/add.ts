@@ -87,14 +87,22 @@ export async function installModule(ctx: Context, client: Client, assets: CoreAs
   const skills = result.module.skills.length ? ` ${t(ctx, "add.skills", { skills: result.module.skills.join(", ") })}` : "";
   ctx.io.out(`${t(ctx, "add.installed", { slug: module.slug, version: latest.version })}${skills}`);
   // The member approved the app, and with it the programs it declares: install what is missing now.
-  ensurePrograms(ctx, specsForApp(assets, result.module.programs));
+  const programs = ensurePrograms(ctx, specsForApp(assets, result.module.programs)).map(({ name, label, status, reason, member_step, detail }) => ({
+    name,
+    label,
+    status,
+    ...(reason ? { reason } : {}),
+    ...(member_step ? { member_step } : {}),
+    ...(detail ? { detail } : {}),
+  }));
   for (const credential of result.module.external_credentials) {
     if (credential.required && !keySource(ctx, credential.env)) {
       const where = credential.url ? t(ctx, "add.where", { url: credential.url }) : "";
       ctx.io.out(t(ctx, "add.missing_env", { env: credential.env, name: credential.name, where }));
     }
   }
-  return result;
+  // In the result too, not only in the lines: an app installs even when a program could not, and the AI must see which.
+  return { ...result, programs };
 }
 
 export async function billingLink(client: Client): Promise<string | undefined> {
@@ -191,7 +199,7 @@ export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
   }
   await flushEvents(ctx, client);
   ctx.io.out(t(ctx, "add.next", { slug }));
-  return { ok: true, slug, version: result.module.version, changed: true, skills: result.module.skills, written: result.written };
+  return { ok: true, slug, version: result.module.version, changed: true, skills: result.module.skills, written: result.written, programs: result.programs };
 }
 
 async function runAddRecipe(ctx: Context, client: Client, assets: CoreAssets, slug: string, kind: "own" | "client" | undefined, args: ParsedArgs): Promise<Result> {
@@ -220,13 +228,14 @@ async function runAddRecipe(ctx: Context, client: Client, assets: CoreAssets, sl
     return { ok: false, error: "cancelled", message: t(ctx, "add.cancelled") };
   }
   const installed: string[] = [];
+  const programs = new Map<string, Awaited<ReturnType<typeof installModule>>["programs"][number]>();
   for (const module of installable) {
     const current = readLock(ctx)?.modules[module.slug];
     if (current && !current.dev && compareSemver(current.version, module.latest!.version) >= 0) {
       installed.push(module.slug);
       continue;
     }
-    await installModule(ctx, client, assets, module, kind);
+    for (const program of (await installModule(ctx, client, assets, module, kind)).programs) programs.set(program.name, program);
     installed.push(module.slug);
   }
   const lock = readLock(ctx);
@@ -243,5 +252,5 @@ async function runAddRecipe(ctx: Context, client: Client, assets: CoreAssets, sl
   }
   await flushEvents(ctx, client);
   ctx.io.out(t(ctx, "recipe.installed", { slug, count: installed.length }));
-  return { ok: true, recipe: slug, modules: installed, workflow: Boolean(recipe.workflow) };
+  return { ok: true, recipe: slug, modules: installed, workflow: Boolean(recipe.workflow), programs: [...programs.values()] };
 }

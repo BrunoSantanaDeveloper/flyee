@@ -6,6 +6,7 @@ import { freePort, KEY_PAGE_TTL_MS, type KeyPageInfo, serveKeyPage, waitForPort 
 import { t } from "../i18n.ts";
 import { KEY_NAME, keySource, keysPath, readKeys, writeKeys } from "../state/keys.ts";
 import { readLock } from "../state/lock.ts";
+import { noBrowserReason } from "../util/os.ts";
 import { askOrExplain } from "./confirm.ts";
 import { has, type ParsedArgs, type Result } from "./types.ts";
 
@@ -46,17 +47,26 @@ function pageInfo(ctx: Context, name: string): KeyPageInfo {
  * `--wait` serves it here and returns when the key is saved.
  */
 async function setKeyInBrowser(ctx: Context, args: ParsedArgs, name: string): Promise<Result> {
+  // The page lives on 127.0.0.1 of this machine. With no browser in front of the person (a cloud session,
+  // SSH, a server) nobody can reach it: say so instead of reporting a page that opened for no one.
+  const noBrowser = noBrowserReason(ctx.env);
+  if (noBrowser) {
+    const message = t(ctx, "key.no_browser", { name, where: t(ctx, `login.no_browser.${noBrowser}`) });
+    ctx.io.err(message);
+    return { ok: false, error: "no_browser", reason: noBrowser, name, message };
+  }
   const token = randomBytes(24).toString("base64url");
   const info = pageInfo(ctx, name);
+  // The page is served whether or not the browser opened; when it did not, the address goes to the person.
   const announce = async (url: string) => {
     const opened = await ctx.io.openBrowser(url);
-    ctx.io.out(t(ctx, "key.browser_opened", { name }));
-    if (!opened) ctx.io.out(t(ctx, "key.browser_url", { url }));
+    ctx.io.out(opened ? t(ctx, "key.browser_opened", { name }) : t(ctx, "key.browser_ready", { name, url }));
+    return opened;
   };
 
   if (has(args, "wait") || !ctx.cliEntry) {
     let url = "";
-    let announced: Promise<void> = Promise.resolve();
+    let announced: Promise<boolean> = Promise.resolve(false);
     const saved = await serveKeyPage(ctx, name, {
       port: 0,
       token,
@@ -83,8 +93,8 @@ async function setKeyInBrowser(ctx: Context, args: ParsedArgs, name: string): Pr
   child.unref();
   if (!(await waitForPort(port))) return refuse(ctx, "key_page_failed", t(ctx, "key.browser_failed"));
   const url = `http://127.0.0.1:${port}/k/${token}`;
-  await announce(url);
-  return { ok: true, name, waiting: true, via: "browser", url, expires_in: KEY_PAGE_TTL_MS / 1000, check: "npx --yes flyee@latest key list --json" };
+  const opened = await announce(url);
+  return { ok: true, name, waiting: true, via: "browser", url, opened, expires_in: KEY_PAGE_TTL_MS / 1000, check: "npx --yes flyee@latest key list --json" };
 }
 
 /** `flyee key serve <NAME>`: the detached process behind the page; not for people. */

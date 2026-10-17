@@ -20,11 +20,12 @@
     "test": "npm run test --workspaces --if-present && npm run test:apps",
     "test:apps": "node --test \"modules/*/tests/*.test.mjs\"",
     "check:tarball": "node scripts/check-tarball.mjs",
+    "check:packed": "node scripts/check-packed-cli.mjs",
     "schema:sync": "node scripts/sync-schema.mjs",
     "harness:sync": "node scripts/sync-agent-harness.mjs",
     "harness:check": "node scripts/sync-agent-harness.mjs --check",
     "harness:test": "node scripts/test-agent-harness.mjs",
-    "ci:verify": "npm run harness:check && npm run harness:test && npm run typecheck && npm test && npm run validate && npm run apps -- catalog --check && npm run build && npm run check:tarball"
+    "ci:verify": "npm run harness:check && npm run harness:test && npm run typecheck && npm test && npm run validate && npm run apps -- catalog --check && npm run build && npm run check:tarball && npm run check:packed"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

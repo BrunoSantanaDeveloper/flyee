@@ -6,7 +6,7 @@ import { join } from "node:path";
 import type { Context } from "../context.ts";
 import { t } from "../i18n.ts";
 import { ensureDir } from "../util/fs.ts";
-import { ApiError, CliError } from "./errors.ts";
+import { ApiError, CliError, fetchFailure } from "./errors.ts";
 import type { DeviceAuthorization, ErrorBody, TokenResponse } from "./types.ts";
 
 /**
@@ -37,7 +37,7 @@ async function postForm<T>(ctx: Context, path: string, body: Record<string, stri
       body: new URLSearchParams(body).toString(),
     });
   } catch (error) {
-    throw new CliError("network", (error as Error).message);
+    throw new CliError("network", fetchFailure(error));
   }
   const text = await response.text();
   let json: unknown = null;
@@ -98,8 +98,12 @@ export function buildAuthorizeUrl(ctx: Context, input: { redirectUri: string; ch
   return url.toString();
 }
 
-/** CLI-CONTRACT.md 2.1: a loopback server on a free port receives the code; the state must match. */
-export async function loginWithBrowser(ctx: Context, deviceId: string, onUrl: (url: string) => Promise<void>): Promise<TokenResponse> {
+/**
+ * CLI-CONTRACT.md 2.1: a loopback server on a free port receives the code; the state must match.
+ * `onUrl` answers false when no browser opened: nobody would come back to the loopback, so the
+ * login ends at once with `no_browser` instead of waiting out its 5 minutes.
+ */
+export async function loginWithBrowser(ctx: Context, deviceId: string, onUrl: (url: string) => Promise<boolean>): Promise<TokenResponse> {
   const { verifier, challenge } = pkcePair();
   const state = base64url(randomBytes(16));
 
@@ -140,7 +144,12 @@ export async function loginWithBrowser(ctx: Context, deviceId: string, onUrl: (u
       const address = server.address();
       const port = typeof address === "object" && address ? address.port : 0;
       const redirectUri = `http://127.0.0.1:${port}/callback`;
-      onUrl(buildAuthorizeUrl(ctx, { redirectUri, challenge, state, deviceId })).catch(() => undefined);
+      onUrl(buildAuthorizeUrl(ctx, { redirectUri, challenge, state, deviceId })).then(
+        (opened) => {
+          if (!opened) finish(() => reject(new CliError("no_browser", "the browser did not open")));
+        },
+        () => undefined,
+      );
     });
     server.on("error", (cause) => finish(() => reject(cause)));
   });

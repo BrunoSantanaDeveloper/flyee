@@ -24,7 +24,8 @@ function makeContext(overrides: Partial<Parameters<typeof createContext>[0]> = {
     cwd: join(sandbox, "project"),
     yes: true,
     locale: "pt-BR",
-    env: { PATH: "", FLYEE_DEV: "1" },
+    // DISPLAY: a desktop with a browser in front of the member, so the browser paths run on the Linux CI too.
+    env: { PATH: "", FLYEE_DEV: "1", DISPLAY: ":0" },
     dev: true,
     io: { out: (line) => output.push(line), err: (line) => output.push(line), confirm: async () => true, openBrowser: async () => true },
     ...overrides,

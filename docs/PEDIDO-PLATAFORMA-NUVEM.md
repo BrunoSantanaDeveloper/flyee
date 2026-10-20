@@ -2,7 +2,7 @@
 
 **Objetivo:** quem instala o flyee pela IA, no computador ou numa sessão do Claude Code na nuvem, faz no máximo um ajuste, uma vez, e segue na mesma conversa até usar o primeiro app.
 
-> Auditado em 2026-10-17 contra o produto (`7450407`, CLI 1.0.1 no npm, e a 1.0.2 na árvore) e a plataforma (`f2cce77`, só leitura). Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção. A pesquisa que embasa este pedido ficou no journal do workflow `wf_043b9490-29f` da sessão do produto (cinco frentes: downloads, computadores, página de instalação, erros do Node, contrato).
+> Auditado em 2026-10-17 contra o produto (`7450407`, CLI 1.0.1 no npm, e a 1.0.2 na árvore) e a plataforma (`f2cce77`, só leitura). Decisões do operador em 2026-10-20, com a CLI 1.0.2 no npm (`b6dbc94`) e a plataforma em `e09cf08`, sem mudança nos itens deste pedido desde a auditoria. Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção. A pesquisa que embasa este pedido ficou no journal do workflow `wf_043b9490-29f` da sessão do produto (cinco frentes: downloads, computadores, página de instalação, erros do Node, contrato).
 
 ## De onde vem
 
@@ -15,13 +15,21 @@ O que o produto resolve sozinho já está na CLI 1.0.2 (o item 3 da conversa com
 
 ## 0. Decisões do operador antes do código
 
-| # | Decisão | Proposta | Onde mora |
+Todas decididas pelo operador em 2026-10-20.
+
+| # | Decisão | Valor decidido | Onde mora |
 |---|---|---|---|
-| D1 | Uma sessão do Claude Code na nuvem conta no teto de computadores do plano? | Não. Cada conta tem 1 vaga de nuvem, fora do teto, e a sessão mais nova toma o lugar da anterior | `PRODUCT.md` (a regra "1 acesso") e `plans.limits.cloud_sessions` |
-| D2 | Os pacotes passam a sair do próprio `flyee.club`? | Sim, por uma rota própria que repassa os bytes do Storage, com uma chave para voltar atrás sem deploy | `platform_settings.cli` (por exemplo `package_host`: `platform` ou `storage`) |
-| D3 | O nome do ambiente que o botão da nuvem pré-seleciona | `flyee` | uma constante em `apps/web/src/lib/install-links.ts` |
-| D4 | O piso da CLI | `1.0.2` depois que ela estiver no npm; a 1.0.0 não faz nada no macOS e no Linux e corta o login no Windows | `platform_settings.cli.min_cli_version`, aba Entrega do console |
-| D5 | O guia deixa de pedir conversa nova | Sim: a IA lê o bloco novo do `AGENTS.md` e a skill do app e segue na mesma conversa | `apps/web/src/lib/install-guide.ts` |
+| D1 | Uma sessão do Claude Code na nuvem conta no teto de computadores do plano? | Não. Cada conta tem 1 vaga de nuvem, fora do teto, e a sessão mais nova toma o lugar da anterior. É o último item a fazer. Risco aceito: a marca de nuvem é declarada pela CLI, e quem a simular num segundo PC ganha no máximo uma máquina, trocada a cada sessão real na nuvem e sempre com a aprovação da dona no navegador (veja Riscos) | `PRODUCT.md` (a regra "1 acesso") e `plans.limits.cloud_sessions` |
+| D2 | Os pacotes passam a sair do próprio `flyee.club`? | Sim, por uma rota própria que repassa os bytes do Storage, com uma chave para voltar atrás sem deploy. A chave só passa para `platform` depois do aceite do item 2 num preview | `platform_settings.cli` (por exemplo `package_host`: `platform` ou `storage`) |
+| D3 | O ambiente que o botão da nuvem pré-seleciona | Nenhum. ⚠️ Mudou em relação à proposta de 2026-10-17 (`flyee`): o integrante não tem um ambiente com esse nome, a documentação não diz o que o botão faz com um nome que não existe, e criar um seria um passo a mais. O botão leva só o `prompt`, e a sessão abre no ambiente que a pessoa já usa, que é onde ela faz o ajuste | nada a guardar: `apps/web/src/lib/install-links.ts` monta a URL sem `environment` |
+| D4 | O piso da CLI | ✅ Feito: `GET /api/cli/version` responde `"min_cli_version": "1.0.2"` (conferido em 2026-10-20) | `platform_settings.cli.min_cli_version`, aba Entrega do console |
+| D5 | O guia deixa de pedir conversa nova | Sim, e é o primeiro item: a IA lê o bloco novo do `AGENTS.md` e a skill do app e segue na mesma conversa | `apps/web/src/lib/install-guide.ts` |
+
+**Ordem de entrega**, cada etapa útil sozinha:
+
+1. Item 5 e item 1: só texto do guia e o bloco do painel. Valem para todo integrante, no computador e na nuvem.
+2. Item 2: a rota dos pacotes, atrás da chave da D2. Depois dela, a nuvem pede um endereço só.
+3. Item 4: a vaga de nuvem, com migração, campo novo no contrato e a CLI 1.0.3. Até lá, a CLI 1.0.2 explica o limite quando ele aparece.
 
 ## 0.5 Regras que este pedido não pode quebrar
 
@@ -43,9 +51,9 @@ O que o produto resolve sozinho já está na CLI 1.0.2 (o item 3 da conversa com
 
 - **No guia**, uma seção "Claude Code na nuvem" entre "Antes de começar" e "Passos", em pt-BR e em inglês. Ela diz que a rede da sessão só chega aos endereços liberados no ambiente e que a CLI 1.0.2 responde `host_not_allowed` com o endereço e o ajuste. Também diz que, pedido o ajuste, a IA espera a pessoa confirmar e repete o comando, porque a sessão aberta segue a regra nova em cerca de um minuto, sem conversa nova. O login ali é por código. A chave de um app vai em Environment variables do ambiente, nunca na conversa. A redação proposta está no apêndice A.
 - **No guia, linhas 103 e 164:** com `platform.reachable` falso, mostrar `platform.message` como veio. Com `platform.error` igual a `host_not_allowed`, pedir à pessoa o ajuste que a mensagem descreve, esperar e repetir. Desde a CLI 1.0.2, `platform.error` traz o código e `platform.message` o texto.
-- **No painel**, um bloco recolhido "Claude Code na nuvem" abaixo do `AskAiBlock` da página inicial e do passo de instalação do onboarding. Ele tem o ajuste único do ambiente, com os endereços para copiar, e um botão que abre `https://claude.ai/code` com o pedido escrito e o ambiente `flyee` escolhido. A documentação do Claude Code aceita `?prompt=…&environment=…` e só preenche, sem enviar. O pedido pré-preenchido funciona mesmo antes do ajuste: "Instale o flyee seguindo {url}. Se a página não abrir nesta sessão, rode `npx --yes flyee@latest doctor --json`, que vem pelo npm, e me peça o ajuste que ele descrever." O npm é liberado no ambiente padrão.
-- **Os rótulos da tela do Claude.** A documentação só traz os rótulos em inglês (Edit cloud environment, Network access, Custom, Allowed domains, Also include default list of common package managers, Save changes). Confira numa sessão real com o claude.ai em português antes de escrever o bloco.
-- **Aceite:** o teste do guia passa a contar seis seções. A seção nomeia `flyee.club` em código e, enquanto o item 2 não sair, o host do Storage. `new URL(href).searchParams.get("prompt")` é o pedido do idioma de quem lê, e `environment` é `flyee`. Numa sessão real com o ambiente padrão, o botão abre o pedido, a IA roda o `doctor`, pede o ajuste e, depois dele, instala sem outra conversa.
+- **No painel**, um bloco recolhido "Claude Code na nuvem" abaixo do `AskAiBlock` da página inicial e do passo de instalação do onboarding. Ele tem o ajuste único do ambiente, com os endereços para copiar, e um botão que abre `https://claude.ai/code` com o pedido escrito, sem escolher ambiente (D3): a sessão abre no ambiente que a pessoa já usa, e é nele que ela faz o ajuste. A documentação do Claude Code aceita `?prompt=…` e só preenche, sem enviar. O pedido pré-preenchido funciona mesmo antes do ajuste: "Instale o flyee seguindo {url}. Se a página não abrir nesta sessão, rode `npx --yes flyee@latest doctor --json`, que vem pelo npm, e me peça o ajuste que ele descrever." O npm é liberado no ambiente padrão.
+- **Os rótulos da tela do Claude.** A documentação só traz os rótulos em inglês (Edit cloud environment, Network access, Custom, Allowed domains, Also include default list of common package managers, Save changes). Confira numa sessão real com o claude.ai em português antes de escrever o bloco: o operador ficou de mandar uma captura da tela do ambiente em português (2026-10-20). Até ela chegar, o bloco usa os rótulos em inglês, que a tela mostra quando o claude.ai está em inglês.
+- **Aceite:** o teste do guia passa a contar seis seções. A seção nomeia `flyee.club` em código e, enquanto o item 2 não sair, o host do Storage. `new URL(href).searchParams.get("prompt")` é o pedido do idioma de quem lê, e `searchParams.has("environment")` é `false`. Numa sessão real com o ambiente padrão, o botão abre o pedido, a IA roda o `doctor`, pede o ajuste e, depois dele, instala sem outra conversa.
 
 ## Item 2: os pacotes saem do flyee.club
 
@@ -83,13 +91,13 @@ O que o produto resolve sozinho já está na CLI 1.0.2 (o item 3 da conversa com
 ## Correções ⚠️ que este pedido encontrou
 
 - **`CLI-CONTRACT.md:6`** promete respostas sem cache, mas `apps/web/src/app/api/cli/version/route.ts:21` manda `public, max-age=300`. Ou o contrato diz que 4.9 tem 5 minutos de cache, ou a rota passa a `no-store`. A decisão de cache em si é da plataforma.
-- **A linha da seção 9 sobre `min_cli_version` 1.0.0** está vencida: a 1.0.1 está no npm desde 2026-10-17, e a plataforma ainda responde `0.1.0`. Veja a decisão D4.
+- **`CLI-CONTRACT.md:428`**, a linha da seção 9 sobre `min_cli_version`, ainda diz que o piso "sobe para `1.0.0`", e os exemplos das linhas 188 e 323 mostram `0.1.0`. A plataforma responde `1.0.2` desde 2026-10-20 (D4): a linha 428 sai da seção 9, e os exemplos podem seguir com qualquer valor, desde que o texto diga que o piso atual é `1.0.2`.
 
 ## Riscos
 
 - **O proxy da nuvem pode recusar de outro jeito.** A CLI 1.0.2 trata três formas: 403 no túnel, resposta com `x-deny-reason` e certificado trocado. Uma sessão real ainda não foi observada. Sinal: um `doctor` numa sessão real que volte `network` em vez de `host_not_allowed`.
 - **A rota de bytes pode bater no limite de corpo das funções da Vercel.** A medição dos pacotes atuais dá folga de sobra; o limite só importa se um pacote passar de alguns MB. Sinal: um 413 ou 500 no preview com o maior pacote.
-- **`environment=flyee` sem um ambiente com esse nome.** A documentação não diz o que acontece. Sinal: o botão abrir sem ambiente escolhido.
+- **A marca de nuvem é declarada pela CLI (D1).** Com `CLAUDE_CODE_REMOTE=true` num segundo PC, uma conta ganha a vaga de nuvem para ele. O ganho tem limite: é uma vaga só, a próxima sessão real na nuvem a toma, e toda conexão pede a aprovação da dona no navegador. Sinal: uma conta com revogações `replaced` toda semana, que é o desenho de uma conta usada por duas pessoas. A faixa de egresso das sessões na nuvem, se a Anthropic a publicar, fecha esse caminho.
 
 ## Apêndice A: a seção "Claude Code na nuvem" do guia
 

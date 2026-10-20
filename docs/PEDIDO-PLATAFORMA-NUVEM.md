@@ -27,7 +27,7 @@ Todas decididas pelo operador em 2026-10-20.
 
 **Ordem de entrega**, cada etapa útil sozinha:
 
-1. Item 5 e item 1: só texto do guia e o bloco do painel. Valem para todo integrante, no computador e na nuvem.
+1. Item 5 e item 1: só texto do guia e o bloco do painel. Valem para todo integrante, no computador e na nuvem. Junto, o item 6, que é pequeno: o exemplo em inglês do `video-studio` sai da loja.
 2. Item 2: a rota dos pacotes, atrás da chave da D2. Depois dela, a nuvem pede um endereço só.
 3. Item 4: a vaga de nuvem, com migração, campo novo no contrato e a CLI 1.0.3. Até lá, a CLI 1.0.2 explica o limite quando ele aparece.
 
@@ -87,6 +87,14 @@ Todas decididas pelo operador em 2026-10-20.
   - Sobre o Codex, o Gemini CLI e o Cursor, a documentação não diz nada. Ler os arquivos funciona em qualquer IA.
 - Por isso, sem conversa nova e sem comando para a pessoa digitar: trocar os três pedidos por "Leia agora o bloco do flyee no `AGENTS.md` e, para usar um app, o `SKILL.md` dele em `.flyee/modules/<app>/skills/<skill>/SKILL.md`, e siga nesta mesma conversa. Depois de uma atualização, leia de novo o bloco e o `SKILL.md`, porque a versão do início da conversa fica para trás." Na conversa seguinte, a IA carrega tudo sozinha.
 - **Aceite:** o teste do guia procura "conversa nova" e "new conversation" e não acha. Num teste real no Claude Code desktop, depois de instalar um app, o pedido seguinte da pessoa usa o app na mesma conversa.
+
+## Item 6: tirar um idioma do exemplo da loja
+
+**Estado: ⬜** Pelo contrato 10.1, "um idioma ausente no índice mantém o do catálogo" (`CLI-CONTRACT.md:453`), e a importação junta o que veio com o que havia (`apps/web/src/lib/catalog/index-import.ts:313`, `{ ...current.showcase, ...app.showcase }`). Em 2026-10-20 o produto tirou o `en` do exemplo do `video-studio` (`c9fa08a`): o app pergunta, planeja e escreve as notas em português, e o exemplo traduzido prometia uma conversa em inglês. O "Pack app" do mesmo dia (run 39435557940) respondeu `video-studio: unchanged`, e o exemplo em inglês continua no catálogo. Não há como o produto tirá-lo.
+
+- **Agora:** tirar o `en` de `catalog_modules.showcase` do `video-studio`, só ele.
+- **No contrato:** `"en": null` no índice tira esse idioma do catálogo; um idioma ausente continua mantendo o do catálogo. O produto passa a mandar `null` quando o `.dev/showcase.json` de um app disser isso, depois que a regra estiver no corpo do contrato.
+- **Aceite:** depois de uma importação, `GET /en/catalog/video-studio` não mostra o exemplo; a de `/catalogo/video-studio` em português continua igual. Um vitest cobre `null` (tira), ausente (mantém) e um idioma com problema (fica de fora, com aviso, e mantém).
 
 ## Correções ⚠️ que este pedido encontrou
 

@@ -11,7 +11,7 @@ import { dirname, join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { fetchFailure } from "../src/api/errors.ts";
+import { CliError, fetchFailure } from "../src/api/errors.ts";
 import { loginWithDeviceCode } from "../src/api/oauth.ts";
 import { proxyIgnored, reach, refusalOf, refusedResponse } from "../src/api/network.ts";
 import { type Context, createContext } from "../src/context.ts";
@@ -142,8 +142,14 @@ describe("a host out of reach becomes one answer the AI can act on", () => {
     assert.equal(failure.error, "host_not_allowed");
     assert.equal(failure.host, "flyee.club");
     assert.equal(failure.cloud, true);
-    for (const words of ["flyee.club", "Edit cloud environment", "Network access", "Custom", "Allowed domains", "Also include default list of common package managers", "Save changes", "cerca de um minuto"]) {
+    // The labels of claude.ai's screen in Portuguese, from the operator's screenshots of 2026-10-20.
+    for (const words of ["flyee.club", "Editar ambiente de nuvem", "Acesso à rede", "Limitado", "Domínios permitidos", "Permitir gerenciadores de pacotes", "Salvar alterações", "cerca de um minuto"]) {
       assert.ok(failure.message.includes(words), `${words} missing in: ${failure.message}`);
+    }
+    // In English, the documented labels; the level's name differs between the documentation and the screen.
+    const english = describeFailure(createContext({ baseUrl: "https://flyee.club", homeDir: join(sandbox, "home-net"), cwd: join(sandbox, "project"), env: { PATH: "", CLAUDE_CODE_REMOTE: "true" }, locale: "en", io: { out: () => undefined, err: () => undefined } }), new CliError("host_not_allowed", "refused", undefined, { host: "flyee.club", cloud: true }));
+    for (const words of ["flyee.club", "Edit cloud environment", "Network access", "Custom or Limited", "Allowed domains", "package managers", "Save changes"]) {
+      assert.ok(english.message.includes(words), `${words} missing in: ${english.message}`);
     }
   });
 
@@ -197,8 +203,8 @@ describe("a host out of reach becomes one answer the AI can act on", () => {
     assert.equal(platform.reachable, false);
     assert.equal(platform.error, "host_not_allowed");
     assert.equal(platform.host, "flyee.club");
-    assert.match(String(platform.message), /Allowed domains/);
-    assert.ok(output.some((line) => line.includes("Allowed domains")));
+    assert.match(String(platform.message), /Domínios permitidos/);
+    assert.ok(output.some((line) => line.includes("Domínios permitidos")));
   });
 });
 
@@ -318,11 +324,11 @@ describe("status tells what is wrong and what the account has", () => {
       const result = await runCommand(blocked, parseArgs(["status"]));
       assert.equal(result.connection_error, "host_not_allowed");
       assert.ok(String(result.connection_host).startsWith("127.0.0.1"));
-      assert.match(String(result.connection_message), /Allowed domains/);
-      assert.ok(output.some((line) => line.includes("Allowed domains")));
+      assert.match(String(result.connection_message), /Domínios permitidos/);
+      assert.ok(output.some((line) => line.includes("Domínios permitidos")));
       output = [];
       await runCommand(Object.assign(blocked, { quiet: true }), parseArgs(["status", "--quiet"]));
-      assert.ok(output.some((line) => line.includes("Allowed domains")), output.join("\n"));
+      assert.ok(output.some((line) => line.includes("Domínios permitidos")), output.join("\n"));
       assert.ok(!output.some((line) => line.includes("não está conectado")));
     } finally {
       await platform.close();
@@ -398,7 +404,7 @@ describe("through a real proxy that refuses the tunnel, as the cloud's does", ()
     assert.equal(platform.reachable, false);
     assert.equal(platform.error, "host_not_allowed");
     assert.equal(platform.host, "flyee.club");
-    assert.match(String(platform.message), /Allowed domains/);
+    assert.match(String(platform.message), /Domínios permitidos/);
   });
 
   it("login --device stops at once with the same answer, instead of 'fetch failed (Request was cancelled.)'", { skip: !nodeHonorsEnvProxy() && "this Node cannot route fetch through HTTPS_PROXY" }, async () => {

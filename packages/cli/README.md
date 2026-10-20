@@ -8,7 +8,7 @@ Você não usa o terminal: a sua IA roda os comandos. Os programas que um app us
 
 Peça à sua IA: "Instale o flyee seguindo https://flyee.club/instalar.md". Ela confere o Node.js, conecta este computador à sua conta e instala os apps que você pedir.
 
-Numa sessão do Claude Code na nuvem, em claude.ai/code, a rede da sessão só chega aos endereços que o ambiente dela libera. O ajuste se faz uma vez, no ambiente: em Network access, escolha Custom e acrescente `flyee.club` em Allowed domains, com a opção Also include default list of common package managers marcada, que mantém o npm. Se a rede recusar outro endereço, a CLI responde `host_not_allowed` com o endereço que falta. Ali, a conexão é pelo login por código.
+Numa sessão do Claude Code na nuvem, em claude.ai/code, a rede da sessão só chega aos endereços que o ambiente dela libera. O ajuste se faz uma vez, em Editar ambiente de nuvem: em Acesso à rede, escolha Limitado e acrescente `flyee.club` em Domínios permitidos, com a opção Permitir gerenciadores de pacotes marcada, que mantém o npm. Se a rede recusar outro endereço, a CLI responde `host_not_allowed` com o endereço que falta. Ali, a conexão é pelo login por código.
 
 ## O que a sua IA roda
 

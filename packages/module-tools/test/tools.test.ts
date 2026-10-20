@@ -338,4 +338,15 @@ describe("the store's example of an app (CLI-CONTRACT.md 10.1)", () => {
     writeFileSync(join(dir, ".dev", "showcase.json"), "{ not json");
     assert.ok(validateModule(dir).errors.some((error) => error.includes("not valid JSON")));
   });
+
+  it("sends null for a language the store must drop, since a language left out keeps the catalog's", () => {
+    const dropped = { "pt-BR": good["pt-BR"], en: null };
+    assert.deepEqual(showcaseErrors(dropped), []);
+    const dir = makeApp("vitrine-pt");
+    mkdirSync(join(dir, ".dev"), { recursive: true });
+    writeFileSync(join(dir, ".dev", "showcase.json"), JSON.stringify(dropped));
+    assert.deepEqual(buildIndex([dir]).apps[0].showcase, dropped);
+    assert.ok(JSON.stringify(buildIndex([dir])).includes('"en":null'), "null survives into the index file");
+    assert.ok(showcaseErrors({ en: "nada" }).some((error) => error.includes("or null")));
+  });
 });

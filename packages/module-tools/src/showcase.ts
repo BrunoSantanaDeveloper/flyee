@@ -19,7 +19,8 @@ export const SHOWCASE_LOCALES = ["pt-BR", "en"] as const;
 
 export type ShowcaseLine = { label?: string; text: string };
 export type ShowcaseLocale = { request: string; reply: ShowcaseLine[]; saved?: string };
-export type Showcase = Partial<Record<(typeof SHOWCASE_LOCALES)[number], ShowcaseLocale>>;
+/** `null` takes that language off the catalog on the next import; a language left out keeps the catalog's (10.1, since 2026-10-20). */
+export type Showcase = Partial<Record<(typeof SHOWCASE_LOCALES)[number], ShowcaseLocale | null>>;
 
 /** The contract's limits (10.1), in characters. */
 const LIMITS = { request: 400, text: 280, label: 40, saved: 160, linesMin: 1, linesMax: 8 };
@@ -63,8 +64,9 @@ export function showcaseErrors(showcase: unknown): string[] {
       errors.push(`${where}: unknown language; the store takes ${SHOWCASE_LOCALES.join(" and ")}`);
       continue;
     }
-    if (value === null || typeof value !== "object" || Array.isArray(value)) {
-      errors.push(`${where}: must be an object with request, reply and, if you like, saved`);
+    if (value === null) continue;
+    if (typeof value !== "object" || Array.isArray(value)) {
+      errors.push(`${where}: must be an object with request, reply and, if you like, saved, or null to take the language off the store`);
       continue;
     }
     const entry = value as Record<string, unknown>;

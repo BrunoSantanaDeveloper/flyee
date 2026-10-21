@@ -40,7 +40,7 @@ Com a chave do Apify, o app faz a mesma pesquisa sozinho: um coletor público l�
 
 ## Os outros apps
 
-Quando estão no projeto, três apps trazem mais evidência, e cada uma entra com a origem e a data:
+Três apps trazem mais evidência, e cada uma entra com a origem e a data. Quando a pesquisa precisa de um deles e ele ainda não está no projeto, a IA o instala na hora:
 
 - a **Pesquisa no Instagram** mede o seu perfil e o dos concorrentes: entram os posts que passaram muito o normal do próprio perfil, com o normal ao lado, Reels e posts estáticos sempre separados;
 - as **Pesquisas no Instagram e no YouTube** trazem os comentários mais curtidos de posts e vídeos do tema, sem o nome de quem escreveu: a fala do público;

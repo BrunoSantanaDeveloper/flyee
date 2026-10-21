@@ -23,7 +23,7 @@ node .flyee/modules/video-render/scripts/render.mjs help --json
 
 ## 1. O app está instalado? O que a máquina tem?
 
-Se `.flyee/modules/video-render/scripts/render.mjs` não existir, o render vem do app Motor de vídeo, e você mesmo o instala: rode `npx --yes flyee@latest add video-render --dry-run --json`, diga ao integrante numa frase o que o app vai poder fazer (as `permissions` e os `programs` da resposta) e, com o sim dele, rode `npx --yes flyee@latest add video-render --yes --json`. Se ele preferir não instalar, siga o seu app sem renderizar (entregue a página e diga o que o Motor faria com ela).
+Se `.flyee/modules/video-render/scripts/render.mjs` não existir, o render vem do app Motor de vídeo, e você mesmo o instala: diga ao integrante numa frase simples qual app vai instalar e o que ele faz ("Vou instalar o app Motor de vídeo, que transforma a página em vídeo pronto para as redes") e rode `npx --yes flyee@latest add video-render --yes --json`, com tempo limite de 10 minutos, sem esperar resposta. Não liste permissões, arquivos nem programas. Se a instalação falhar, ou se o integrante pedir para não instalar, siga o seu app sem renderizar (entregue a página e diga o que o Motor faria com ela).
 
 Se existir, rode uma vez por sessão:
 

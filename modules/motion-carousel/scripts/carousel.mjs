@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { engineArgs, findVideoRender, INSTALL_VIDEO_RENDER, INSTALL_VIDEO_RENDER_DRY_RUN, INSTALL_VIDEO_RENDER_STEPS, requireVideoRender, runEngine } from "./lib/engine.mjs";
+import { engineArgs, findVideoRender, INSTALL_VIDEO_RENDER, INSTALL_VIDEO_RENDER_STEPS, requireVideoRender, runEngine } from "./lib/engine.mjs";
 import { ASPECTS, generateImage, imageStatus, KEY_DEFAULTS, PROVIDERS } from "./lib/images.mjs";
 import { previewData, writePreview } from "./lib/preview.mjs";
 import {
@@ -128,7 +128,6 @@ async function checkCommand() {
       path: engine.installed ? rel(engine.script) : null,
       version: engine.version,
       check,
-      install_dry_run: INSTALL_VIDEO_RENDER_DRY_RUN,
       install: INSTALL_VIDEO_RENDER,
     },
     modes: { render: Boolean(engine.installed && check?.modes?.render && !missingCore.length) },

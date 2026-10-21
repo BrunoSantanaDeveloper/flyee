@@ -68,5 +68,6 @@ A pesquisa e a leitura de vídeos ficam nas pastas dos apps parceiros (`youtube-
 
 ## O que há de novo
 
+- 1.1.1: quando a pesquisa ou a leitura de um vídeo precisa de outro app que ainda não está no projeto, a sua IA diz numa frase qual vai instalar e instala na hora, sem pedir confirmação.
 - 1.1.0: pesquisa com dados antes do roteiro e títulos medidos contra o normal de cada canal; o mapa batida a batida de um vídeo de referência, até de outro país, adaptado ao seu público; a voz tirada dos seus vídeos ou de criadores que você indicar; pautas para "o que eu gravo?"; narração em cima da gravação de tela; o documento completo e o roteiro em Word.
 - 1.0.0: primeira versão. Perfil do canal com a sua voz, as suas histórias e opiniões e as suas regras; ficha de verdade do que aparece no vídeo; vídeo do que é seu sem cara de anúncio; primeiro acontece, depois se escreve; título e thumbnail antes do roteiro, com variantes para o teste de miniaturas; ganchos de famílias diferentes, com o seu texto em primeiro lugar; esqueleto para "como eu uso X para Y"; escrita bloco a bloco; conferência automática e crítica com nota mínima; checklist, teleprompter e descrição com capítulos.

@@ -48,7 +48,7 @@
         { "kind": "file_exists", "path": "carrosseis/*/out/03.mp4" },
         { "kind": "file_exists", "path": "carrosseis/*/relatorio.json" }
       ],
-      "rubric": "O check mostra video_render.installed falso: a IA roda ela mesma npx --yes flyee@latest add video-render --dry-run --json, diz numa frase que o render vem do app Motor de vídeo e o que ele declara e, com o sim do integrante, roda npx --yes flyee@latest add video-render --yes --json com tempo limite de 10 minutos. Repete o check, vê modes.render falso e install.ffmpeg, avisa numa frase e roda ela mesma o comando de install.ffmpeg com tempo limite longo; se viesse needs_member, mostraria só o passo único. Nunca mostra um comando para o integrante digitar, nunca fala em terminal e não pede para reabrir a IA. Depois segue o fluxo inteiro (new com hook, point e cta, folhas olhadas, accept, prévia, render final, accept) e entrega."
+      "rubric": "O check mostra video_render.installed falso: a IA diz numa frase simples que vai instalar o app Motor de vídeo e o que ele faz e roda ela mesma npx --yes flyee@latest add video-render --yes --json com tempo limite de 10 minutos, sem --dry-run, sem listar permissões e sem esperar resposta. Repete o check, vê modes.render falso e install.ffmpeg, avisa numa frase e roda ela mesma o comando de install.ffmpeg com tempo limite longo; se viesse needs_member, mostraria só o passo único. Nunca mostra um comando para o integrante digitar, nunca fala em terminal e não pede para reabrir a IA. Depois segue o fluxo inteiro (new com hook, point e cta, folhas olhadas, accept, prévia, render final, accept) e entrega."
     },
     {
       "name": "musica do proprio integrante",

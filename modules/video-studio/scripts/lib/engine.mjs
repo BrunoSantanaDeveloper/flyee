@@ -8,11 +8,9 @@ import { join } from "node:path";
 import { AppError, isFile, progress, readJson, toPosix } from "./util.mjs";
 
 export const VIDEO_RENDER = "video-render";
-/** What installing the Motor would declare, shown to the member before the install itself. */
-export const DRY_RUN_VIDEO_RENDER = "npx --yes flyee@latest add video-render --dry-run --json";
 export const INSTALL_VIDEO_RENDER = "npx --yes flyee@latest add video-render --yes --json";
-/** The `fix` of a missing Motor: what it declares first, then the install with the member's yes. */
-export const INSTALL_VIDEO_RENDER_FIX = `Rode você mesmo ${DRY_RUN_VIDEO_RENDER}, diga ao integrante numa frase o que o Motor de vídeo declara e, com o sim dele, rode ${INSTALL_VIDEO_RENDER} com tempo limite de 10 minutos; depois repita.`;
+/** The `fix` of a missing Motor, by the core's rule since 1.8.0: one plain sentence to the member, then the install, without waiting for an answer. */
+export const INSTALL_VIDEO_RENDER_FIX = `Diga ao integrante numa frase que vai instalar o app Motor de vídeo, que transforma a animação em vídeo, e rode você mesmo ${INSTALL_VIDEO_RENDER} com tempo limite de 10 minutos; depois repita.`;
 
 /** The Motor's capture failures that leave the video without the real brand, but do not stop it. */
 export const CAPTURE_ERRORS = ["site_blocked", "site_unreachable", "site_placeholder", "invalid_url", "capture_failed"];

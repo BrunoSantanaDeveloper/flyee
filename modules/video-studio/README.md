@@ -85,5 +85,6 @@ Vídeos animados na vertical (1080×1920), de 6 a 20 segundos, para Reels, TikTo
 
 ## O que há de novo
 
+- 1.1.1: quando o Motor de vídeo ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.
 - 1.1.0: roteiro passo a passo, para mostrar como algo funciona ou como se faz: de dois a cinco passos em ordem, ligados por um caminho no alto que avança a cada passo, e o resultado no fim quando você diz qual é. Pedidos com "passo a passo", "como funciona" ou "tutorial" vão para ele; dicas e erros continuam na lista. Os textos da tela passam pela revisão de texto natural do flyee, e a conferência mostra cada item com um nome em português.
 - 1.0.0: primeira versão. Briefing que mede o pedido e pergunta só o que falta; marca real capturada do site; quatro roteiros e cinco estilos; trilha original e efeitos na batida; prévia antes do final; conferência para as redes; capa e notas para postar.

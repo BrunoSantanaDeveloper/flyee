@@ -58,4 +58,5 @@ O Apify cobra pelo que colhe, do crédito da sua conta lá. Pela tabela de outub
 
 ## O que há de novo
 
+- 1.0.1: quando outro app precisa da Pesquisa no Instagram e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.
 - 1.0.0: primeira versão. O normal de um perfil e os outliers de até 25 perfis, com Reels e posts estáticos medidos separados, faixas, avisos de isca de comentário e parceria paga, duração dos Reels, relatório e planilha. Também o modo manual por capturas de tela, os comentários de um post e uma interface para outros apps.

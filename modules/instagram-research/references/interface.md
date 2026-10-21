@@ -10,7 +10,7 @@ node .flyee/modules/instagram-research/scripts/research.mjs <comando> [opções]
 
 ## 1. O app está instalado?
 
-Se `.flyee/modules/instagram-research/scripts/research.mjs` não existir, diga ao integrante que os dados vêm do app Pesquisa no Instagram e ofereça instalá-lo: com o sim, rode você mesmo `npx --yes flyee@latest add instagram-research --yes --json`. Sem ele, siga o seu app sem esses dados, dizendo o que fica de fora (por exemplo: "os conceitos saem sem a prova do que funciona no perfil").
+Se `.flyee/modules/instagram-research/scripts/research.mjs` não existir, diga ao integrante numa frase simples que vai instalar o app e o que ele faz ("Vou instalar o app Pesquisa no Instagram, que mostra quais posts passaram do normal do perfil") e rode você mesmo `npx --yes flyee@latest add instagram-research --yes --json`, com tempo limite de 10 minutos, sem esperar resposta. Se a instalação falhar, ou se o integrante pedir para não instalar, siga o seu app sem esses dados, dizendo o que fica de fora (por exemplo: "os conceitos saem sem a prova do que funciona no perfil").
 
 Se existir, rode uma vez por sessão:
 

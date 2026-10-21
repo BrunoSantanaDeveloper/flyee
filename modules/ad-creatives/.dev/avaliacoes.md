@@ -54,7 +54,7 @@ Depois desta rodada, o gancho passou para o tamanho grande de título (a capa fi
 | com chave | coberto pelo teste | `tests/apify.test.mjs`, contra o servidor falso do Apify: uma execução com as 5 buscas, `maxItems` e `maxTotalChargeUsd` na chamada, a chave só no cabeçalho, 13 anúncios na evidência (10 de uma página, D12), o bruto em `pesquisa/apify/`, o custo cobrado relido; a segunda coleta do dia volta `cached`, sem chamada |
 | chave vazia | coberto pelo teste | `APIFY_TOKEN` vazio ou só com espaço dá `mode: "manual"` e nenhuma chamada, mesmo com a chave salva em `~/.flyee/keys.json`; sem a variável, a chave salva é usada |
 | custo acima do teto | coberto pelo teste | `needs_confirmation` com o valor ("US$ 0,07") e nenhuma chamada; com `--confirm-cost`, a coleta roda |
-| parceiro ausente | coberto pelo teste | `check` devolve os três parceiros com `installed: false`, o que cada um traz (`gives`) e o comando de instalar; o resto da campanha não depende deles. A oferta numa frase e o "não" respeitado são conversa |
+| parceiro ausente | coberto pelo teste | `check` devolve os três parceiros com `installed: false`, o que cada um traz (`gives`) e o comando de instalar; o resto da campanha não depende deles. A frase antes de instalar e a instalação sem esperar resposta (a regra do core 1.8.0, aplicada aos parceiros em 2026-10-21) são conversa |
 | anúncio de referência que não baixa | não rodado | depende de um endereço de vídeo expirado no Apify real e da Análise de vídeo; a skill manda dizer numa frase e seguir sem a análise, com os códigos do guia dela |
 
 **Achados desta rodada, já corrigidos na 1.1.0.**

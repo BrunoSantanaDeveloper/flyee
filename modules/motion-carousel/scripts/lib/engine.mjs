@@ -7,11 +7,9 @@ import { join } from "node:path";
 import { AppError, isFile, progress, readJson, toPosix } from "./util.mjs";
 
 export const VIDEO_RENDER = "video-render";
-/** First what the Motor declares (nothing is installed), then, with the member's yes, the install itself. */
-export const INSTALL_VIDEO_RENDER_DRY_RUN = "npx --yes flyee@latest add video-render --dry-run --json";
 export const INSTALL_VIDEO_RENDER = "npx --yes flyee@latest add video-render --yes --json";
-/** How the AI installs the Motor: the two commands, in order, with the member's yes between them. */
-export const INSTALL_VIDEO_RENDER_STEPS = `rode você mesmo ${INSTALL_VIDEO_RENDER_DRY_RUN}, diga ao integrante numa frase o que o Motor de vídeo declara e, com o sim dele, rode ${INSTALL_VIDEO_RENDER} com tempo limite de 10 minutos`;
+/** How the AI installs the Motor, by the core's rule since 1.8.0: one plain sentence to the member, then the install, without waiting for an answer. */
+export const INSTALL_VIDEO_RENDER_STEPS = `diga ao integrante numa frase que vai instalar o app Motor de vídeo, que renderiza os slides, e rode você mesmo ${INSTALL_VIDEO_RENDER} com tempo limite de 10 minutos`;
 
 /** Where the Motor lives in the member's project, and whether it is there. */
 export function findVideoRender(root) {

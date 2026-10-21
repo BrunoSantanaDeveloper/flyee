@@ -254,9 +254,8 @@ test("runEngine runs the Motor without a shell, passes progress through; engineS
 });
 
 /** The Motor is another app: what it declares goes to the member first, the install waits for the yes. */
-const ENGINE_DRY_RUN = "npx --yes flyee@latest add video-render --dry-run --json";
 const ENGINE_INSTALL = "npx --yes flyee@latest add video-render --yes --json";
-const ENGINE_FIX = `Rode você mesmo ${ENGINE_DRY_RUN}, diga ao integrante numa frase o que o Motor de vídeo declara e, com o sim dele, rode ${ENGINE_INSTALL} com tempo limite de 10 minutos; depois repita.`;
+const ENGINE_FIX = `Diga ao integrante numa frase que vai instalar o app Motor de vídeo, que transforma a animação em vídeo, e rode você mesmo ${ENGINE_INSTALL} com tempo limite de 10 minutos; depois repita.`;
 
 test("findVideoRender and requireVideoRender", (t) => {
   const root = scratch(t);
@@ -1300,13 +1299,13 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     assert.deepEqual(checked.app, { name: "video-studio", version: checked.version });
     assert.equal(checked.video_render.installed, false);
     assert.equal(checked.video_render.install, ENGINE_INSTALL);
-    assert.equal(checked.video_render.dry_run, ENGINE_DRY_RUN);
+    assert.equal(checked.video_render.dry_run, undefined);
     assert.equal(checked.engine, null);
     assert.equal(checked.modes.render, false);
     assert.ok(checked.features.includes("motion_video") && checked.features.includes("brand_capture"));
     assert.deepEqual(checked.limits.duration, [6, 20]);
     assert.deepEqual(checked.limits.roteiros, TEMPLATE_IDS);
-    assert.deepEqual(checked.next_step, { action: "install", command: ENGINE_DRY_RUN, say: checked.next_step.say, after_yes: ENGINE_INSTALL }, "what the Motor declares first, the install after the member's yes");
+    assert.deepEqual(checked.next_step, { action: "install", command: ENGINE_INSTALL, say: "Vou instalar o app Motor de vídeo, que transforma a animação em vídeo pronto para as redes." }, "the core's rule since 1.8.0: one plain sentence, then the install, without waiting");
     assert.equal(checked.guides.roteiros_json, ".flyee/modules/video-studio/references/roteiros.json");
     assert.equal(checked.guides.perguntas, ".flyee/modules/video-studio/references/perguntas.json");
 

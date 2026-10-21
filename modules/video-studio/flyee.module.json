@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "video-studio",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -104,8 +104,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Roteiro novo, o passo a passo: de dois a cinco passos em ordem, ligados por um caminho no alto que avança a cada passo, com o resultado no fim quando você diz qual é. Pedidos para explicar como algo funciona vão para ele; dicas e erros continuam na lista. Os textos da tela passam pela revisão de texto natural do flyee, e a conferência mostra cada item com um nome em português.",
-    "en": "A new storyboard, the step by step: two to five steps in order, joined by a path at the top that moves forward with each step, with the result at the end when you say what it is. Requests to explain how something works go to it; tips and mistakes stay in the list. The on-screen texts go through flyee's natural-text review, and the check report shows each item with a name in Portuguese."
+    "pt-BR": "Quando o Motor de vídeo ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.",
+    "en": "When the Video engine is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
   },
   "license": "member"
 }

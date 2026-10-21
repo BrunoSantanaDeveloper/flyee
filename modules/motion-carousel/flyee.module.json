@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "motion-carousel",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "skill",
   "trail": "divulgar",
   "title": {
@@ -168,8 +168,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "O texto dos slides e a sugestão de legenda passam pela revisão de texto natural do flyee antes do render e da entrega, com o tom do briefing mandando sobre ela. A conferência mostra cada item com um nome em português.",
-    "en": "The slides' text and the caption suggestion go through flyee's natural-text review before rendering and delivery, with the brief's tone taking precedence. The check report shows each item with a name in Portuguese."
+    "pt-BR": "Quando o Motor de vídeo ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.",
+    "en": "When the Video engine is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
   },
   "license": "member"
 }

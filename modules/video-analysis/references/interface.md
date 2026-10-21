@@ -10,7 +10,7 @@ node .flyee/modules/video-analysis/scripts/video.mjs <comando> [opções] --json
 
 ## 1. O app está instalado?
 
-Se `.flyee/modules/video-analysis/scripts/video.mjs` não existir, diga ao integrante que a análise de vídeo vem do app Análise de vídeo e ofereça instalá-lo. Com o sim, rode você mesmo `npx --yes flyee@latest add video-analysis --yes --json`. Sem o sim, siga o seu app sem ela, com o que houver (por exemplo, a descrição que o integrante der).
+Se `.flyee/modules/video-analysis/scripts/video.mjs` não existir, diga ao integrante numa frase simples que vai instalar o app e o que ele faz ("Vou instalar o app Análise de vídeo, que assiste ao vídeo e descreve o que aparece e o que é dito") e rode você mesmo `npx --yes flyee@latest add video-analysis --yes --json`, com tempo limite de 10 minutos, sem esperar resposta. Se a instalação falhar, ou se o integrante pedir para não instalar, siga o seu app sem ela, com o que houver (por exemplo, a descrição que o integrante der).
 
 Se existir, rode uma vez por sessão:
 

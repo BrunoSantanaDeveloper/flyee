@@ -38,7 +38,7 @@ Rode `check --json` uma vez por sessão.
 - `engine.installed` falso: as peças usam o app Motor de vídeo. Diga numa frase que vai instalá-lo e o que ele faz, e rode você mesmo `npx --yes flyee@latest add video-render --yes --json` (tempo limite de 10 minutos). A pesquisa e os conceitos não precisam dele.
 - `install` com comandos (ffmpeg, navegador): avise numa frase e rode cada um, com tempo limite longo; mostre ao integrante só um passo que volte como `needs_member`.
 - `apify_key` falso: a pesquisa é a guiada, pelos links. A chave é opcional; se o integrante quiser a coleta automática, rode você mesmo o comando de `apify_setup`, que abre uma página no navegador dele para colar a chave, e rode `check` de novo quando ele disser que salvou.
-- `partners`: os apps que trazem mais evidência. Quando um faltar e a campanha ganharia com ele, diga numa frase o que ele traz (`gives`) e pergunte se pode instalar; com o sim, rode o `install` dele (tempo limite de 10 minutos). Sem ele, siga, dizendo o que fica de fora.
+- `partners`: os apps que trazem mais evidência. Quando a pesquisa chegar à etapa de um deles e ele faltar, diga numa frase simples qual app vai instalar e o que ele traz (`gives`) e rode você mesmo o `install` dele, com tempo limite de 10 minutos, sem esperar resposta. Se a instalação falhar, ou se o integrante pedir para não instalar, siga sem ele, dizendo o que fica de fora.
 
 ## Passo 1: o briefing
 

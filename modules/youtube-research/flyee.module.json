@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "youtube-research",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "tool",
   "trail": "planejar",
   "title": {
@@ -72,8 +72,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Quando o YouTube recusa ou limita a entrega da legenda de um vídeo, o app agora diz isso, em vez de dizer que o vídeo não tem legenda. Um novo aviso separa a legenda que existe, mas não chegou desta vez, de um vídeo sem legenda.",
-    "en": "When YouTube refuses or limits the delivery of a video's captions, the app now says so instead of saying the video has no captions. A new notice tells a caption track that exists but did not arrive this time apart from a video with no captions."
+    "pt-BR": "Quando outro app precisa da Pesquisa no YouTube e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.",
+    "en": "When another app needs YouTube research and it is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
   },
   "license": "member"
 }

@@ -13,7 +13,7 @@ Quando a gravação ainda não existe, entregue o **roteiro de gravação** (o q
 ## 0. O que você precisa
 
 - **A gravação da tela**, um arquivo no computador do integrante (mp4, mov, mkv). Pode ter a voz dele ou não.
-- **O app Análise de vídeo.** Se `.flyee/modules/video-analysis/scripts/video.mjs` não existe, ofereça instalar: rode `npx --yes flyee@latest add video-analysis --dry-run --json`, diga ao integrante numa frase o que o app declara (o que lê e grava, os programas que instala) e, com o sim, rode `npx --yes flyee@latest add video-analysis --yes --json`, com um tempo limite de 10 minutos. Sem o app, siga pelo caminho simples: peça capturas de tela de cada passo, ou a lista dos passos, e escreva a narração com uma `[TELA: …]` por passo.
+- **O app Análise de vídeo.** Se `.flyee/modules/video-analysis/scripts/video.mjs` não existe, diga ao integrante numa frase simples que vai instalar o app e o que ele faz ("Vou instalar o app Análise de vídeo, que assiste à gravação e anota o que aparece em cada momento") e rode você mesmo `npx --yes flyee@latest add video-analysis --yes --json`, com um tempo limite de 10 minutos, sem esperar resposta. Se a instalação falhar, ou se o integrante pedir para não instalar, siga pelo caminho simples: peça capturas de tela de cada passo, ou a lista dos passos, e escreva a narração com uma `[TELA: …]` por passo.
 
 Rode o `check --json` do Análise de vídeo uma vez por sessão. Se ele listar programas em `install`, avise numa frase e instale você mesmo cada um com `npx --yes flyee@latest need <programa> --yes --json`, com um tempo limite de 10 minutos.
 

@@ -13,7 +13,7 @@ import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { brandSlug, findKit, findProjectSite, hostOf, hostSlug, KIT_MAX_AGE_DAYS, kitAgeDays, kitFile, kitFromCapture, kitSummary, listKits, NEUTRAL_PALETTE, readKit, sameBrandName, writeKit } from "./lib/brand.mjs";
-import { CAPTURE_ERRORS, DRY_RUN_VIDEO_RENDER, engineArgs, engineSupports, findVideoRender, INSTALL_VIDEO_RENDER, requireVideoRender, runEngine } from "./lib/engine.mjs";
+import { CAPTURE_ERRORS, engineArgs, engineSupports, findVideoRender, INSTALL_VIDEO_RENDER, requireVideoRender, runEngine } from "./lib/engine.mjs";
 import {
   adoptAssets,
   buildPage,
@@ -322,8 +322,8 @@ async function checkCommand() {
   const render = Boolean(engine.installed && check?.modes?.render && !missing.length);
   const analysis = isFile(join(ROOT, ".flyee", "modules", "video-analysis", "scripts", "video.mjs"));
   let next;
-  // another app: first what it declares, told to the member in one sentence, then the install with the member's yes
-  if (!engine.installed) next = { action: "install", command: DRY_RUN_VIDEO_RENDER, say: "O render vem do app Motor de vídeo, que ainda não está neste projeto; vou ver o que ele declara e te conto antes de instalar.", after_yes: INSTALL_VIDEO_RENDER };
+  // another app, by the core's rule since 1.8.0: one plain sentence to the member, then the install, without waiting
+  if (!engine.installed) next = { action: "install", command: INSTALL_VIDEO_RENDER, say: "Vou instalar o app Motor de vídeo, que transforma a animação em vídeo pronto para as redes." };
   else if (missing.length) next = { action: "install", command: INSTALL_SELF, say: "Faltam arquivos do Estúdio de vídeo; vou reinstalar o app." };
   else if (Object.keys(install).length) next = { action: "install", command: Object.values(install)[0], say: "Falta um programa que o vídeo usa; vou instalá-lo agora, pode levar alguns minutos." };
   else if (!render) next = { action: "check", command: command("check"), say: "O Motor de vídeo ainda não consegue renderizar nesta máquina; vou conferir de novo." };
@@ -342,7 +342,7 @@ async function checkCommand() {
       styles: STYLE_IDS,
       music_styles: MUSIC_STYLES,
     },
-    video_render: { installed: engine.installed, path: engine.installed ? rel(engine.script) : null, version: engine.version, dry_run: DRY_RUN_VIDEO_RENDER, install: INSTALL_VIDEO_RENDER },
+    video_render: { installed: engine.installed, path: engine.installed ? rel(engine.script) : null, version: engine.version, install: INSTALL_VIDEO_RENDER },
     engine: check ? { interface_version: check.interface_version ?? null, tools: check.tools ?? null, modes: check.modes ?? null, formats: check.formats ?? null, runtime: check.runtime ?? null, guides: check.guides ?? null } : null,
     modes: { render, capture: Boolean(engine.installed && check?.tools?.browser), sound: Boolean(engine.installed && check?.modes?.sheets) },
     install,
@@ -1574,7 +1574,7 @@ function humanText(result) {
         lines.push(`Motor de vídeo ${engine.version ?? "?"}: instalado (${engine.path}) · render ${result.modes.render ? "disponível" : "indisponível"}`);
         const tools = result.engine?.tools;
         if (tools) lines.push(`ffmpeg: ${tools.ffmpeg ?? "não encontrado"} · navegador: ${tools.browser ? `${tools.browser.name} (${tools.browser.path})` : "não encontrado"}`);
-      } else lines.push(`Motor de vídeo: não instalado. Rode você mesmo ${engine.dry_run}, diga ao integrante o que ele declara e, com o sim dele, rode ${engine.install}`);
+      } else lines.push(`Motor de vídeo: não instalado. Diga ao integrante numa frase que vai instalá-lo e rode você mesmo ${engine.install}, com tempo limite de 10 minutos.`);
       for (const [name, line] of Object.entries(result.install)) lines.push(`Instalar ${name}: ${line}`);
       if (result.install_note) lines.push(result.install_note);
       lines.push(`Guias: ${Object.values(result.guides).filter(Boolean).join(" · ") || "nenhum"}`);

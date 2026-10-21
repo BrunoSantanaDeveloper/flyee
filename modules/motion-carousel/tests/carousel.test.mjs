@@ -525,8 +525,8 @@ test("the CLI without the Motor: check says so, new refuses, bad input exits 2",
   assert.equal(checked.json.ok, true);
   assert.equal(checked.json.command, "check");
   assert.equal(checked.json.video_render.installed, false);
-  // first what the Motor declares, then, with the member's yes, the install itself
-  assert.equal(checked.json.video_render.install_dry_run, "npx --yes flyee@latest add video-render --dry-run --json");
+  // the core's rule since 1.8.0: one plain sentence, then the install, without a dry run or a yes
+  assert.equal(checked.json.video_render.install_dry_run, undefined);
   assert.equal(checked.json.video_render.install, "npx --yes flyee@latest add video-render --yes --json");
   assert.equal(checked.json.modes.render, false);
   assert.equal(checked.json.guides.storyboard, ".flyee/modules/motion-carousel/references/storyboard.md");
@@ -535,7 +535,8 @@ test("the CLI without the Motor: check says so, new refuses, bad input exits 2",
   assert.equal(made.code, 1);
   assert.equal(made.json.ok, false);
   assert.equal(made.json.error.code, "video_render_missing");
-  assert.match(made.json.error.fix, /npx --yes flyee@latest add video-render --dry-run --json/);
+  assert.doesNotMatch(made.json.error.fix, /--dry-run|com o sim/);
+  assert.match(made.json.error.fix, /^Para instalá-lo, diga ao integrante numa frase que vai instalar o app Motor de vídeo/);
   assert.match(made.json.error.fix, /npx --yes flyee@latest add video-render --yes --json/);
   const unknown = await cli(project, ["dance"]);
   assert.equal(unknown.code, 2);
@@ -559,7 +560,7 @@ test("new creates the folder, copies the runtimes, fills the templates, refuses 
   const checked = await cli(project, ["check"]);
   assert.equal(checked.code, 0, checked.stdout + checked.stderr);
   assert.equal(checked.json.video_render.installed, true);
-  assert.equal(checked.json.video_render.version, "1.0.0");
+  assert.equal(checked.json.video_render.version, JSON.parse(readFileSync(join(VIDEO_RENDER_DIR, "flyee.module.json"), "utf8")).version, "the version of the Motor copied in");
   assert.equal(checked.json.video_render.check?.command, "check");
   assert.equal(typeof checked.json.modes.render, "boolean");
   assert.equal(checked.json.runtime.complete, false, "the stand-in runtime has no example");

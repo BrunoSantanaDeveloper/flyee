@@ -40,7 +40,7 @@ With an Apify key, the app does the same research on its own: a public collector
 
 ## The other apps
 
-When they are in the project, three apps bring more evidence, each piece with its origin and date:
+Three apps bring more evidence, each piece with its origin and date. When the research needs one of them and it is not in the project yet, your AI installs it right away:
 
 - **Instagram research** measures your profile and your competitors': the posts that went far past their own profile's normal come in, with the normal beside them, Reels and static posts always apart;
 - **Instagram research and YouTube research** bring the most liked comments of posts and videos on the theme, without who wrote them: the audience's words;

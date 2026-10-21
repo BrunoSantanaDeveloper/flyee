@@ -214,7 +214,7 @@
     },
     {
       "name": "parceiro ausente",
-      "setup": "Projeto com ad-creatives e video-render, sem instagram-research, youtube-research e video-analysis. Briefing completo e as capturas de tests/fixtures em pesquisa/capturas/. Quando a IA oferecer um app, responda que não quer instalar agora.",
+      "setup": "Projeto com ad-creatives e video-render, sem instagram-research, youtube-research e video-analysis, numa conta que instala os três. Briefing completo e as capturas de tests/fixtures em pesquisa/capturas/. Uma variação: a instalação da Análise de vídeo falha.",
       "prompt": "Prepare os criativos da minha campanha de inverno.",
       "assertions": [
         {
@@ -226,7 +226,7 @@
           "path": "anuncios/*/conceitos.md"
         }
       ],
-      "rubric": "check mostra os três parceiros ausentes. A IA diz numa frase o que eles trariam (o orgânico medido, a fala do público, a análise de um anúncio de referência) e pergunta se pode instalar, sem listar permissões, arquivos ou programas. Com o não, segue com a pesquisa dos anúncios, diz o que fica de fora e não insiste nem instala por conta própria. Os conceitos citam só a evidência que existe; o que não tem fonte sai como aposta."
+      "rubric": "check mostra os três parceiros ausentes. Quando a pesquisa chega à etapa de um deles, a IA diz numa frase simples qual app vai instalar e o que ele traz, sem listar permissões, arquivos ou programas, e roda ela mesma o add com --yes e tempo limite de 10 minutos, sem --dry-run e sem esperar resposta. Uma instalação que falha não para a campanha: a IA diz numa frase o que fica de fora e segue. Os conceitos citam só a evidência que existe; o que não tem fonte sai como aposta."
     },
     {
       "name": "anúncio de referência que não baixa",

@@ -7,13 +7,13 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
 | [Criativos para anúncios](#ad-creatives) | 1.1.0 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
-| [Pesquisa no Instagram](#instagram-research) | 1.0.0 | tool | planejar | — | `ad-creatives` |
-| [Carrossel animado](#motion-carousel) | 1.1.1 | skill | divulgar | `video-render` | — |
-| [Análise de vídeo](#video-analysis) | 1.0.0 | tool | planejar | — | `ad-creatives`, `youtube-script` |
-| [Motor de vídeo](#video-render) | 1.0.0 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
-| [Estúdio de vídeo](#video-studio) | 1.1.0 | workflow | divulgar | `video-render` | — |
-| [Pesquisa no YouTube](#youtube-research) | 1.0.1 | tool | planejar | — | `ad-creatives`, `youtube-script` |
-| [Roteiro para YouTube](#youtube-script) | 1.1.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
+| [Pesquisa no Instagram](#instagram-research) | 1.0.1 | tool | planejar | — | `ad-creatives` |
+| [Carrossel animado](#motion-carousel) | 1.1.2 | skill | divulgar | `video-render` | — |
+| [Análise de vídeo](#video-analysis) | 1.0.1 | tool | planejar | — | `ad-creatives`, `youtube-script` |
+| [Motor de vídeo](#video-render) | 1.0.1 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
+| [Estúdio de vídeo](#video-studio) | 1.1.1 | workflow | divulgar | `video-render` | — |
+| [Pesquisa no YouTube](#youtube-research) | 1.0.2 | tool | planejar | — | `ad-creatives`, `youtube-script` |
+| [Roteiro para YouTube](#youtube-script) | 1.1.1 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
 
 ## ad-creatives
 
@@ -49,7 +49,7 @@ Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook
 
 ## instagram-research
 
-**Pesquisa no Instagram** (Instagram research) · versão 1.0.0 · tool · trilha planejar · testado em `claude_code`
+**Pesquisa no Instagram** (Instagram research) · versão 1.0.1 · tool · trilha planejar · testado em `claude_code`
 
 > Mostra quais Reels e posts fizeram muito mais do que o normal do próprio perfil, e quanto, no seu perfil e nos concorrentes. Sem chave, lê capturas de tela; com a chave do Apify, colhe sozinho e traz os comentários do público.
 
@@ -82,7 +82,7 @@ Mostra, com números de verdade, quais Reels e posts fizeram muito mais do que o
 
 ## motion-carousel
 
-**Carrossel animado** (Motion carousel) · versão 1.1.1 · skill · trilha divulgar · testado em `claude_code`
+**Carrossel animado** (Motion carousel) · versão 1.1.2 · skill · trilha divulgar · testado em `claude_code`
 
 > Cria carrosséis para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida, a partir de um tema; entrega os MP4 prontos para postar e uma prévia de como fica no feed.
 
@@ -115,7 +115,7 @@ Transforma um tema em um carrossel para o Instagram em que cada slide é um víd
 
 ## video-analysis
 
-**Análise de vídeo** (Video analysis) · versão 1.0.0 · tool · trilha planejar · testado em `claude_code`
+**Análise de vídeo** (Video analysis) · versão 1.0.1 · tool · trilha planejar · testado em `claude_code`
 
 > Assiste a vídeos do YouTube ou do seu computador, com imagem e som, e entrega uma descrição com tempos do que aparece na tela, do que é dito e de como foi editado.
 
@@ -151,7 +151,7 @@ Assiste a vídeos por você, com imagem e som, e entrega uma descrição com tem
 
 ## video-render
 
-**Motor de vídeo** (Video engine) · versão 1.0.0 · tool · trilha divulgar · testado em `claude_code`
+**Motor de vídeo** (Video engine) · versão 1.0.1 · tool · trilha divulgar · testado em `claude_code`
 
 > Transforma uma página animada em vídeo pronto para as redes, com trilha original e efeitos na batida, prévia, a marca do seu site e conferência antes de publicar: capa, texto, área segura, volume e, por rede, formato e duração. É o motor que outros apps usam para renderizar.
 
@@ -184,7 +184,7 @@ Transforma uma página animada em vídeo pronto para publicar. A sua IA escreve 
 
 ## video-studio
 
-**Estúdio de vídeo** (Video studio) · versão 1.1.0 · workflow · trilha divulgar · testado em `claude_code`
+**Estúdio de vídeo** (Video studio) · versão 1.1.1 · workflow · trilha divulgar · testado em `claude_code`
 
 > Cria vídeos animados para Reels, TikTok e Shorts a partir do seu pedido: pergunta o que falta, usa o logo, as cores e as telas reais da sua marca, compõe a trilha na batida, mostra uma prévia e entrega o vídeo conferido para as redes.
 
@@ -208,7 +208,7 @@ Transforma um pedido em um vídeo animado para Reels, TikTok e Shorts. Você diz
 
 ## youtube-research
 
-**Pesquisa no YouTube** (YouTube research) · versão 1.0.1 · tool · trilha planejar · testado em `claude_code`
+**Pesquisa no YouTube** (YouTube research) · versão 1.0.2 · tool · trilha planejar · testado em `claude_code`
 
 > Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público e o normal de qualquer canal, sem chave.
 
@@ -235,7 +235,7 @@ Mostra, com números de verdade, quais vídeos de um tema fizeram muito mais do 
 
 ## youtube-script
 
-**Roteiro para YouTube** (YouTube script) · versão 1.1.0 · workflow · trilha divulgar · testado em `claude_code`
+**Roteiro para YouTube** (YouTube script) · versão 1.1.1 · workflow · trilha divulgar · testado em `claude_code`
 
 > Escreve com você roteiros para o YouTube que prendem do começo ao fim, a partir do que já funciona no seu tema: título e thumbnail medidos, o fluxo de um vídeo de referência, o texto na sua voz e revisão antes de gravar.
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "video-analysis",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "tool",
   "trail": "planejar",
   "title": {
@@ -127,8 +127,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: descrição com tempos de vídeos do YouTube, de outros sites e de arquivos locais; modo local sem chave (frames por mudança de cena, cortes, silêncios, grades e transcrição pela legenda) e modo Gemini com chave; focos geral, edição e conteúdo; perguntas sobre o vídeo; frames extras sob demanda; interface para outros apps.",
-    "en": "First version: timed descriptions of YouTube, other sites' and local videos; keyless local mode (frames at scene changes, cuts, silences, grids and captions as transcript) and Gemini mode with a key; general, editing and content focuses; questions about the video; extra frames on demand; an interface for other apps."
+    "pt-BR": "Quando outro app precisa da Análise de vídeo e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.",
+    "en": "When another app needs Video analysis and it is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
   },
   "license": "member"
 }

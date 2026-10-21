@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "youtube-script",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -84,8 +84,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Pesquisa com dados antes do roteiro, pelo app Pesquisa no YouTube, com os traços de título medidos contra o normal de cada canal; o mapa batida a batida de um vídeo de referência, até de outro país, adaptado ao público e sem o que não vale aqui; a voz tirada dos seus vídeos ou de criadores que você indicar, com \"você fala assim?\"; pautas para \"o que eu gravo?\"; narração em cima da gravação de tela, pelo app Análise de vídeo; o documento completo e o roteiro em Word. Também tudo o que entrou na 1.0.0.",
-    "en": "Data-driven research before the script, through the YouTube research app, with title traits measured against each channel's normal; a beat-by-beat map of a reference video, even from another country, adapted to the audience and without what does not hold here; your voice taken from your videos or from creators you point to, with \"do you talk like this?\"; topic ideas for \"what should I record?\"; narration over a screen recording, through the Video analysis app; the full document and the script as a Word file. Plus everything in 1.0.0."
+    "pt-BR": "Quando a pesquisa ou a leitura de um vídeo precisa de outro app que ainda não está no projeto, a sua IA diz numa frase qual vai instalar e instala na hora, sem pedir confirmação.",
+    "en": "When the research or the reading of a video needs another app that is not in the project yet, your AI says in one sentence which one it will install and installs it right away, without asking for confirmation."
   },
   "license": "member"
 }

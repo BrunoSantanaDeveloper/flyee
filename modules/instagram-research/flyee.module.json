@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "instagram-research",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "tool",
   "trail": "planejar",
   "title": {
@@ -98,8 +98,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão. O normal de um perfil e os outliers de até 25 perfis, com Reels e posts estáticos medidos separados, faixas, avisos de isca de comentário e parceria paga, a duração dos Reels, relatório e planilha. Também o modo manual por capturas de tela, os comentários de um post e uma interface para outros apps.",
-    "en": "First version. A profile's normal and the outliers of up to 25 profiles, with Reels and static posts measured separately, bands, notices for comment bait and paid partnerships, Reels length, report and spreadsheet. Also the manual mode from screenshots, a post's comments and an interface for other apps."
+    "pt-BR": "Quando outro app precisa da Pesquisa no Instagram e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.",
+    "en": "When another app needs Instagram research and it is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
   },
   "license": "member"
 }

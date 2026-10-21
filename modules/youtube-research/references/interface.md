@@ -10,7 +10,7 @@ node .flyee/modules/youtube-research/scripts/research.mjs <comando> [opções] -
 
 ## 1. O app está instalado?
 
-Se `.flyee/modules/youtube-research/scripts/research.mjs` não existir, diga ao integrante que os dados vêm do app Pesquisa no YouTube e ofereça instalá-lo: com o sim, rode você mesmo `npx --yes flyee@latest add youtube-research --yes --json`. Sem ele, siga o seu app sem esses dados, dizendo o que fica de fora (por exemplo: "a pauta sai sem a prova de demanda").
+Se `.flyee/modules/youtube-research/scripts/research.mjs` não existir, diga ao integrante numa frase simples que vai instalar o app e o que ele faz ("Vou instalar o app Pesquisa no YouTube, que mostra quais vídeos do tema passaram do normal do canal") e rode você mesmo `npx --yes flyee@latest add youtube-research --yes --json`, com tempo limite de 10 minutos, sem esperar resposta. Se a instalação falhar, ou se o integrante pedir para não instalar, siga o seu app sem esses dados, dizendo o que fica de fora (por exemplo: "a pauta sai sem a prova de demanda").
 
 Se existir, rode uma vez por sessão:
 

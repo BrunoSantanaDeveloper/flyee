@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "video-render",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "tool",
   "trail": "divulgar",
   "title": {
@@ -136,8 +136,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: render de páginas animadas em .mp4, .mov e .webm, inclusive com camada transparente, nos formatos 9:16, 4:5, 3:4, 1:1, 16:9 e sob medida, a partir de uma só linha do tempo; prévia rápida, quadros por instante ou por batida e folhas de contato com tira de quadros e teste de celular; trilha original com arco (seis estilos) e trilha em loop de compassos inteiros (cinco estilos), as duas com a grade de batidas; efeitos sintetizados na batida; medição das batidas de qualquer música; mixagem de música, efeitos e voz no volume das redes; captura da marca a partir do site (logo, cores, fontes, textos, números, preços e telas); conferência de capa legível, área segura (inclusive os cantos do carrossel do Instagram), tamanho do texto, cortes na batida, emenda do loop, piscadas, tempo parado e volume, e de formato e duração em 12 destinos (Reels, Stories, feed, TikTok, Shorts, YouTube, LinkedIn, X, Status do WhatsApp, Kwai e anúncios da Meta e do TikTok); interface para outros apps.",
-    "en": "First version: renders animated pages to .mp4, .mov and .webm, including a transparent layer, in 9:16, 4:5, 3:4, 1:1, 16:9 and custom sizes from one timeline; quick preview, frames by instant or by beat and contact sheets with a frame strip and a phone test; original music with an arc (six styles) and loop-perfect music in whole bars (five styles), both with their beat grid; sound effects synthesized on the beat; beat detection on any music; mixing of music, effects and voice at the networks' loudness; brand capture from the site (logo, colors, fonts, texts, numbers, prices and screens); checks for a readable cover, safe areas (including the Instagram carousel corners), text size, cuts on the beat, loop seam, flashes, dead time and loudness, plus format and duration for 12 destinations (Reels, Stories, feed, TikTok, Shorts, YouTube, LinkedIn, X, WhatsApp Status, Kwai, and Meta and TikTok ads); an interface for other apps."
+    "pt-BR": "Quando outro app precisa do Motor de vídeo e ele ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.",
+    "en": "When another app needs the Video engine and it is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
   },
   "license": "member"
 }

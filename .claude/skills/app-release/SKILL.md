@@ -14,7 +14,7 @@ Follow `docs/RELEASE.md`; this is the checklist. Creating and pushing tags and p
 3. The version shows up as a draft in `/admin/catalogo/<slug>`. Without the service token, the manual path remains: create the module with the manifest's slug, trail and type, and upload the ZIP in two steps; the checksum must equal step 1.
 4. Publish in the console. The first published version of an app gets the **entry version** mark by itself (what an account without purchase installs, never changed by an update); check that it belongs there, or move it to another published version. A marked version cannot be yanked while it has the mark. On a fix, write the yank reason for the previous version only if it must be withdrawn.
 5. Check the public page `/verificar/<slug>@<version>` and the app page with its Guide tab (`guides/<pt-BR|en>/usar.md` for every member, `abrir-o-capo.md` for FlyeeClub Pro).
-6. End to end, in a scratch project, with an account without purchase and a paid one: the AI installs with `npx --yes flyee@latest add <slug> --dry-run --json` and then `--yes --json`; `update --json` on both; `status --json` shows the distance on the one without purchase.
+6. End to end, in a scratch project, with an account without purchase and a paid one: the AI says in one sentence which app it will install and runs `npx --yes flyee@latest add <slug> --yes --json`, without waiting for a yes; `update --json` on both; `status --json` shows the distance on the one without purchase.
 
 Engines first: `video-render` before `video-studio` and `motion-carousel`; `video-analysis` and `youtube-research` before `youtube-script`. A dependent app's skill installs its engine with `add`, which needs the engine published.
 

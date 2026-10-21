@@ -82,4 +82,5 @@ Tudo funciona no modo local: descrição, os três focos, perguntas, frames extr
 
 ## O que há de novo
 
+- 1.0.1: quando outro app precisa da Análise de vídeo e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.
 - 1.0.0: primeira versão. Modo local e modo Gemini, focos geral, edição e conteúdo, perguntas sobre o vídeo, frames extras sob demanda e uso por outros apps.

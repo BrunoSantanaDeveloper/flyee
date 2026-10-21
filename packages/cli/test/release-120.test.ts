@@ -176,3 +176,22 @@ describe("a key's page in a cloud session points to the environment", () => {
     }
   });
 });
+
+describe("1.2.1: a key kept as a network secret is never reported as missing in a cloud session", () => {
+  it("doctor and key list mark it, and say the app checks it", async () => {
+    const doctor = await run(context("nuvem", { CLAUDE_CODE_REMOTE: "true" }, cloudFetch(["api.coletor.com"])), ["doctor", "--json"]);
+    const credential = (doctor.credentials as { env: string; set: boolean; may_be_network_secret?: boolean }[]).find((entry) => entry.env === "COLETOR_TOKEN");
+    assert.equal(credential?.set, false);
+    assert.equal(credential?.may_be_network_secret, true);
+    assert.ok(output.some((line) => line.includes("COLETOR_TOKEN") && line.includes("segredo de rede")), output.join("\n"));
+    const list = await run(context("nuvem", { CLAUDE_CODE_REMOTE: "true" }), ["key", "list", "--json"]);
+    const key = (list.keys as { name: string; may_be_network_secret?: boolean }[]).find((entry) => entry.name === "COLETOR_TOKEN");
+    assert.equal(key?.may_be_network_secret, true);
+  });
+
+  it("outside a cloud session, a missing key is just missing", async () => {
+    const doctor = await run(context("computador", {}), ["doctor", "--json"]);
+    const credential = (doctor.credentials as { env: string; may_be_network_secret?: boolean }[]).find((entry) => entry.env === "COLETOR_TOKEN");
+    assert.equal(credential?.may_be_network_secret, undefined);
+  });
+});

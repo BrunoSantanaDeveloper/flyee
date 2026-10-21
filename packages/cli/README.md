@@ -63,6 +63,7 @@ Português e inglês, seguindo o idioma da sua conta.
 
 ## Mudanças
 
+- 1.2.1: numa sessão na nuvem, uma chave guardada como segredo de rede do ambiente não aparece mais como faltando, e a sua IA não a pede de novo: quem confere é o app.
 - 1.2.0: numa sessão do Claude Code na nuvem, a sua IA sabe na hora da instalação quais endereços um app usa e a sessão ainda não alcança, e pede para liberá-los de uma vez, em vez de descobrir cada bloqueio no meio do trabalho. Uma chave que a página não consegue receber ali pode ficar como segredo de rede do ambiente, nos apps que aceitam, e a sessão a usa sem vê-la.
 - 1.1.1: uma sessão do Claude Code na nuvem tem vaga própria e não conta mais no limite de computadores do seu plano. Com o computador conectado, a nuvem conecta também, e uma sessão nova na nuvem toma o lugar da anterior.
 - 1.1.0: a sua IA reconhece quando um pedido é trabalho de um app do flyee e usa o app, mesmo que você não diga o nome. O bloco do `AGENTS.md` passa a listar os outros apps do catálogo, renovado a cada login, instalação e atualização, e a IA instala o app que falta, avisando numa frase. Um pedido com várias etapas usa um app em cada uma, com a pesquisa antes da criação. O comando novo `catalog` mostra os apps do catálogo, a versão que a sua conta instala e os que o projeto já tem. A sua IA não diz mais que um app pode não estar liberado numa conta sem compra, que instala a versão de entrada de cada app. Numa sessão na nuvem, ela guarda no repositório o app que instalou, para ele continuar na próxima sessão.

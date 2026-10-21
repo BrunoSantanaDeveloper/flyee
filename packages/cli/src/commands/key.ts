@@ -6,6 +6,7 @@ import { freePort, KEY_PAGE_TTL_MS, type KeyPageInfo, serveKeyPage, waitForPort 
 import { t } from "../i18n.ts";
 import { KEY_NAME, keySource, keysPath, readKeys, writeKeys } from "../state/keys.ts";
 import { readLock } from "../state/lock.ts";
+import { isCloudSession } from "../api/network.ts";
 import { noBrowserReason } from "../util/os.ts";
 import { askOrExplain } from "./confirm.ts";
 import { has, type ParsedArgs, type Result } from "./types.ts";
@@ -151,12 +152,14 @@ function listKeys(ctx: Context): Result {
   const names = [...new Set([...Object.keys(store.keys), ...declared.keys()])].sort();
   const keys = names.map((name) => {
     const entry = declared.get(name);
-    return { name, source: keySource(ctx, name), saved: name in store.keys, apps: entry?.apps ?? [], required: entry?.required ?? false, url: entry?.url ?? null };
+    const source = keySource(ctx, name);
+    // A network secret of a cloud session's environment never reaches this machine: the app checks it its own way.
+    return { name, source, saved: name in store.keys, apps: entry?.apps ?? [], required: entry?.required ?? false, url: entry?.url ?? null, ...(!source && isCloudSession(ctx) ? { may_be_network_secret: true } : {}) };
   });
   ctx.io.out(t(ctx, "key.list_header", { file: keysPath(ctx) }));
   if (!keys.length) ctx.io.out(t(ctx, "key.list_empty"));
   for (const key of keys) {
-    const where = key.source === "environment" ? t(ctx, "key.where_environment") : key.source === "flyee" ? t(ctx, "key.where_saved") : t(ctx, key.required ? "key.where_missing_required" : "key.where_missing");
+    const where = key.source === "environment" ? t(ctx, "key.where_environment") : key.source === "flyee" ? t(ctx, "key.where_saved") : "may_be_network_secret" in key ? t(ctx, "key.where_cloud") : t(ctx, key.required ? "key.where_missing_required" : "key.where_missing");
     const apps = key.apps.length ? t(ctx, "key.list_apps", { apps: key.apps.join(", ") }) : "";
     const url = !key.source && key.url ? t(ctx, "key.list_url", { url: key.url }) : "";
     ctx.io.out(`  - ${key.name}: ${where}${apps}${url}`);

@@ -8,6 +8,7 @@ import { loadCoreAssets } from "../core-assets.ts";
 import { t } from "../i18n.ts";
 import { detectTools } from "../install/adapters.ts";
 import { cloudNetwork } from "../install/hosts.ts";
+import { isCloudSession } from "../api/network.ts";
 import { type KeySource, keySource } from "../state/keys.ts";
 import { moduleDir, readLock } from "../state/lock.ts";
 import { readText, sha256File } from "../util/fs.ts";
@@ -45,7 +46,8 @@ export async function runDoctor(ctx: Context): Promise<Result> {
   ctx.io.out(t(ctx, "doctor.adapters", { list: Object.entries(adapters).map(([name, ok]) => `${name} ${ok ? "ok" : "missing"}`).join(", ") }));
 
   const integrity: Record<string, { intact: number; changed: string[] }> = {};
-  const credentials: { slug: string; env: string; name: string; set: boolean; source: KeySource | null; required: boolean }[] = [];
+  const credentials: { slug: string; env: string; name: string; set: boolean; source: KeySource | null; required: boolean; may_be_network_secret?: boolean }[] = [];
+  const cloud = isCloudSession(ctx);
   const programs: { slug: string; name: string; present: boolean }[] = [];
   for (const [slug, module] of Object.entries(lock?.modules ?? {})) {
     const changed: string[] = [];
@@ -67,9 +69,11 @@ export async function runDoctor(ctx: Context): Promise<Result> {
     }
     for (const credential of module.external_credentials) {
       const source = keySource(ctx, credential.env);
-      credentials.push({ slug, env: credential.env, name: credential.name, set: source !== null, source, required: credential.required });
+      // In a cloud session a key may be a network secret of the environment, which never reaches this machine.
+      const secret = !source && cloud;
+      credentials.push({ slug, env: credential.env, name: credential.name, set: source !== null, source, required: credential.required, ...(secret ? { may_be_network_secret: true } : {}) });
       const where = source === "environment" ? t(ctx, "key.where_environment") : t(ctx, "key.where_saved");
-      ctx.io.out(source ? t(ctx, "doctor.env_ok", { slug, env: credential.env, where }) : t(ctx, "doctor.env_missing", { slug, env: credential.env, name: credential.name }));
+      ctx.io.out(source ? t(ctx, "doctor.env_ok", { slug, env: credential.env, where }) : t(ctx, secret ? "doctor.env_cloud" : "doctor.env_missing", { slug, env: credential.env, name: credential.name }));
     }
   }
 

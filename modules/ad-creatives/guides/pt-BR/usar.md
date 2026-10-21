@@ -24,7 +24,7 @@ Funciona também com pedidos mais curtos, como "quero fazer anúncios para a min
 - A oferta, a página de destino e a verba por dia.
 - De três a cinco concorrentes, ou as palavras do seu nicho.
 - Se tiver: o logo e algumas telas do produto. Se quiser prova com pessoa real, o depoimento com a autorização.
-- Se quiser a coleta automática: uma conta no Apify. A IA abre uma página no seu navegador para você colar a chave, e o Apify cobra pelo uso; acima de US$ 1 por coleta, ela pergunta antes.
+- Se quiser a coleta automática: uma conta no Apify. A IA abre uma página no seu navegador para você colar a chave, e o Apify cobra pelo uso; acima de US$ 1 por coleta, ela pergunta antes. Numa sessão do Claude Code na nuvem, a chave fica como segredo de rede do ambiente da sessão, que a sessão usa sem ver.
 
 ## O que esperar
 

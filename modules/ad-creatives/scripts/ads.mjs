@@ -12,7 +12,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { actorInput, adsToItems, collectionSources, looksLikeAdList } from "./lib/adlibrary.mjs";
-import { apifyApi, apifyKey, chargeCeiling, estimateUsd, keySetup, runActor } from "./lib/apify.mjs";
+import { apifyAccess, apifyApi, canCollect, chargeCeiling, estimateUsd, keySetup, runActor } from "./lib/apify.mjs";
 import { brl, learningBudget } from "./lib/budget.mjs";
 import { ADS_DIR, addJournal, briefingTemplate, campaignSlug, checkBriefing, hostOf, layout, parseMoney, readJournal, readState, requireCampaign, writeState } from "./lib/campaign.mjs";
 import { approvalContent, checkConcepts, CONFIDENCE_LABELS, confidenceChanges, ENABLED_PLACEMENTS, PLACEMENTS, TEMPLATES } from "./lib/concepts.mjs";
@@ -132,7 +132,7 @@ function conceptContext(name, key, { needsApproval = true } = {}) {
 
 // ---------------------------------------------------------------- check, new, list, status
 
-async function checkCommand() {
+async function checkCommand(values = {}) {
   const engine = findVideoRender(ROOT);
   let motor = null;
   let motorError = null;
@@ -150,19 +150,20 @@ async function checkCommand() {
     : motor && Object.keys(motor.install).length
       ? { say: "Faltam programas que o Motor de vídeo usa para renderizar.", commands: motor.install, how: motor.install_note ?? "Rode você mesmo cada comando, com tempo limite longo, e repita o check." }
       : null;
-  const { key, from } = apifyKey();
+  const access = await apifyAccess({ api: apifyApi(values["apify-url"]) });
+  const collects = canCollect(access);
   return {
     ...base("check"),
     node: process.versions.node,
     project: ROOT,
     engine: { installed: engine.installed, version: engine.version, ...(motor ?? {}), error: motorError },
     ready: Boolean(motor?.render),
-    modes: { research: true, apify: Boolean(key), concepts: true, pieces: Boolean(motor?.render) },
+    modes: { research: true, apify: collects, concepts: true, pieces: Boolean(motor?.render) },
     install,
     partners: partnerApps(ROOT),
-    apify_key: Boolean(key),
-    apify_key_from: from,
-    apify_setup: key ? null : keySetup(),
+    apify_key: collects,
+    apify_key_from: access.from,
+    apify_setup: collects ? null : keySetup(),
     prices: { checked_on: SOURCES.checked_on ?? null, ads_usd_each: SOURCES.ads?.usd_per_item ?? null, confirm_above_usd: SOURCES.cost_warn_usd ?? null },
     placements: ENABLED_PLACEMENTS.map((id) => PLACEMENTS[id]),
     meta_checked_on: META.checked_on ?? null,
@@ -426,15 +427,15 @@ async function collectCommand(positionals, values) {
   }
   const links = campaignLinks(brief);
   const sources = collectionSources(links, { perSearch: SOURCES.per_search ?? 30 }).slice(0, SOURCES.max_sources ?? 12);
-  const { key } = apifyKey();
-  if (!key) {
+  const access = await apifyAccess({ api: apifyApi(values["apify-url"]) });
+  if (!canCollect(access)) {
     return {
       ...base("collect"),
       campaign: ctx.slug,
       mode: "manual",
       collected: false,
       key: keySetup(),
-      next_step: { action: "manual", command: command(`links ${ctx.slug}`), say: "Sem a chave do Apify, a pesquisa é a guiada: mande os links e o roteiro ao integrante. Se ele quiser a coleta automática, rode o comando de key, que abre a página para ele colar a chave, e rode collect de novo." },
+      next_step: { action: "manual", command: command(`links ${ctx.slug}`), say: "Sem a chave do Apify, a pesquisa é a guiada: mande os links e o roteiro ao integrante. Se ele quiser a coleta automática, siga o que key diz para guardar a chave e rode collect de novo." },
     };
   }
   const sourcesHash = hashJson(sources.map((source) => [source.url, source.limit]));
@@ -453,7 +454,7 @@ async function collectCommand(positionals, values) {
   const collected = await runActor({
     actor: SOURCES.ads.actor,
     input,
-    token: key,
+    token: access.key,
     maxItems: total,
     maxChargeUsd: chargeCeiling(estimate),
     api: apifyApi(values["apify-url"]),
@@ -1444,7 +1445,7 @@ async function main(argv) {
   const { positionals, values } = parseArgs(rest, ARG_SPEC);
   switch (name) {
     case "check":
-      return checkCommand();
+      return checkCommand(values);
     case "new":
       return newCommand(positionals);
     case "brief":

@@ -22,6 +22,8 @@ const calls = [];
 const runs = new Map();
 let server;
 let api;
+/** When true, the fake behaves as Apify behind a cloud session's proxy that adds the environment's network secret. */
+let proxySecret = false;
 
 test.before(async () => {
   server = createServer((request, response) => {
@@ -33,7 +35,9 @@ test.before(async () => {
         response.writeHead(status, { "Content-Type": "application/json" });
         response.end(JSON.stringify(data));
       };
-      if (request.headers.authorization !== `Bearer ${GOOD}`) return send(401, { error: { type: "token-not-valid" } });
+      const authorized = request.headers.authorization === `Bearer ${GOOD}` || (proxySecret && !request.headers.authorization);
+      if (!authorized) return send(401, { error: { type: "token-not-valid" } });
+      if (request.url === "/v2/users/me") return send(200, { data: { username: "integrante" } });
       const run = /^\/v2\/acts\/([^/]+)\/runs\?(.*)$/.exec(request.url);
       if (run && request.method === "POST") {
         const id = `run${calls.length}`;
@@ -79,9 +83,11 @@ function project(t, { sources = null } = {}) {
 }
 
 /** Runs the script without blocking this process, which also serves the fake Apify. `key: null` leaves the variable out. */
-function run(p, args, { key = GOOD, url = true } = {}) {
-  const env = { ...process.env, HOME: join(p.root, "home"), USERPROFILE: join(p.root, "home"), APIFY_TOKEN: key };
+function run(p, args, { key = GOOD, url = true, env: extra = {} } = {}) {
+  const env = { ...process.env, HOME: join(p.root, "home"), USERPROFILE: join(p.root, "home"), APIFY_TOKEN: key, ...extra };
   if (key === null) delete env.APIFY_TOKEN;
+  // A run inside a cloud session would otherwise look for the environment's network secret.
+  if (!("CLAUDE_CODE_REMOTE" in extra)) delete env.CLAUDE_CODE_REMOTE;
   return new Promise((done, fail) => {
     const child = spawn(process.execPath, [p.script, ...args, ...(url ? ["--apify-url", api] : []), "--json"], { cwd: p.root, env, windowsHide: true });
     let stdout = "";
@@ -161,6 +167,37 @@ test("an empty key: the manual research, even with a key saved in flyee, and no 
   const saved = await run(p, ["collect", CAMPAIGN], { key: null });
   assert.equal(saved.json.mode, "apify", JSON.stringify(saved.json));
   assert.equal(saved.json.collected, true);
+});
+
+test("in a cloud session, the key kept as the environment's network secret collects, and the app never sends one", async (t) => {
+  const p = project(t);
+  await campaign(p);
+  proxySecret = true;
+  t.after(() => {
+    proxySecret = false;
+  });
+  const before = calls.length;
+  const check = await run(p, ["check"], { key: null, env: { CLAUDE_CODE_REMOTE: "true" } });
+  assert.equal(check.json.apify_key, true, JSON.stringify(check.json));
+  assert.equal(check.json.apify_key_from, "cloud_secret");
+  const { status, json } = await run(p, ["collect", CAMPAIGN], { key: null, env: { CLAUDE_CODE_REMOTE: "true" } });
+  assert.equal(status, 0, JSON.stringify(json));
+  assert.equal(json.mode, "apify");
+  assert.equal(json.collected, true);
+  const made = calls.slice(before);
+  assert.ok(made.some((call) => call.method === "POST"), "the collection ran");
+  assert.ok(made.every((call) => call.auth === null), "the key stays with the proxy, never in the app's requests");
+});
+
+test("in a cloud session with no secret, the research is the guided one and the key request names the environment", async (t) => {
+  const p = project(t);
+  await campaign(p);
+  const { status, json } = await run(p, ["collect", CAMPAIGN], { key: null, env: { CLAUDE_CODE_REMOTE: "true" } });
+  assert.equal(status, 0);
+  assert.equal(json.mode, "manual");
+  assert.equal(json.key.cloud, true);
+  assert.equal(json.key.command, undefined, "no page opens in a cloud session");
+  assert.match(json.key.how, /segredo de rede/);
 });
 
 test("above the cost ceiling: the value to say, no call, and the run only with --confirm-cost", async (t) => {

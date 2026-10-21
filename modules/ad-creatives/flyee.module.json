@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "ad-creatives",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -132,8 +132,8 @@
       "kind": "network",
       "scope": "api.apify.com",
       "reason": {
-        "pt-BR": "Só com a chave do Apify: roda a coleta dos anúncios públicos da Biblioteca de Anúncios, sempre com limite de itens e de gasto, e lê o resultado.",
-        "en": "Only with the Apify key: runs the collection of public ads from the Ad Library, always with an item and spending limit, and reads the result."
+        "pt-BR": "Só com a chave do Apify, ou com o segredo de rede do ambiente numa sessão na nuvem: roda a coleta dos anúncios públicos da Biblioteca de Anúncios, sempre com limite de itens e de gasto, e lê o resultado.",
+        "en": "Only with the Apify key, or with the environment's network secret in a cloud session: runs the collection of public ads from the Ad Library, always with an item and spending limit, and reads the result."
       }
     },
     {
@@ -151,11 +151,19 @@
         "pt-BR": "Lê a chave do Apify da variável de ambiente, se você preferir defini-la assim; ela tem prioridade sobre a salva no flyee. Nunca é pedida no chat, gravada ou mostrada.",
         "en": "Reads the Apify key from the environment variable, if you prefer to set it that way; it takes precedence over the one saved in flyee. Never asked for in the chat, written or shown."
       }
+    },
+    {
+      "kind": "env",
+      "scope": "CLAUDE_CODE_REMOTE",
+      "reason": {
+        "pt-BR": "Lê só se esta é uma sessão do Claude Code na nuvem. Ali, o app pode usar a chave do Apify guardada como segredo de rede do ambiente, que a sessão usa sem ver.",
+        "en": "Reads only whether this is a Claude Code cloud session. There, the app can use the Apify key kept as a network secret of the environment, which the session uses without seeing it."
+      }
     }
   ],
   "changelog": {
-    "pt-BR": "Cada conceito ganha também o vídeo 4:5 e a imagem 4:5 ou 1:1 para o feed, conferidos como o feed mostra. Com a chave do Apify, opcional, a coleta dos anúncios dos concorrentes é automática, com limite de itens e de gasto. Quando estão no projeto, a Pesquisa no Instagram traz o orgânico medido, as Pesquisas no Instagram e no YouTube trazem a fala do público, e a Análise de vídeo lê os anúncios de referência. E um guia de Reels de teste, para comparar as peças antes de pagar.",
-    "en": "Each concept also gets the 4:5 video and the 4:5 or 1:1 image for the feed, checked the way the feed shows them. With the optional Apify key, the collection of your competitors' ads runs on its own, with an item and spending limit. When they are in the project, Instagram research brings the measured organic content, Instagram and YouTube research bring the audience's words, and Video analysis reads the reference ads. And a guide to test Reels, to compare the pieces before paying."
+    "pt-BR": "Numa sessão do Claude Code na nuvem, a coleta usa a chave do Apify guardada como segredo de rede do ambiente, que a sessão usa sem ver, e o pedido da chave explica esse caminho, já que a página da chave não abre ali.",
+    "en": "In a Claude Code cloud session, the collection uses the Apify key kept as a network secret of the environment, which the session uses without seeing it, and the key request explains that path, since the key page does not open there."
   },
   "license": "member"
 }

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { apifyApi, apifyKey, chargeCeiling, chargedUsd, classifyApifyError, DEFAULT_API, estimateUsd } from "../scripts/lib/apify.mjs";
+import { apifyAccess, apifyApi, apifyKey, canCollect, chargeCeiling, chargedUsd, classifyApifyError, DEFAULT_API, estimateUsd, keySetup, runActor } from "../scripts/lib/apify.mjs";
 import { actorFailure, normalizeComment, normalizePost, parseCount, parsePost, parseProfile } from "../scripts/lib/instagram.mjs";
 import { readingToPosts } from "../scripts/lib/reading.mjs";
 import { csvValue, postsCsv } from "../scripts/lib/report.mjs";
@@ -127,6 +127,47 @@ test("the key: an empty variable means no key, the saved file comes after the va
   assert.deepEqual(apifyKey({ APIFY_TOKEN: "do-ambiente" }, file), { key: "do-ambiente", from: "environment" });
   assert.deepEqual(apifyKey({ APIFY_TOKEN: "" }, file), { key: null, from: null });
   assert.deepEqual(apifyKey({}, join(dir, "nao-existe.json")), { key: null, from: null });
+});
+
+test("the access: the key first, then, only in a cloud session, the environment's network secret", async () => {
+  const none = join(mkdtempSync(join(tmpdir(), "ig-access-")), "nao-existe.json");
+  let probes = 0;
+  const answer = (status) => async (url, init) => {
+    probes++;
+    assert.equal(url, `${DEFAULT_API}/users/me`);
+    assert.equal(init?.headers?.Authorization, undefined, "the probe never carries a key");
+    return new Response("{}", { status });
+  };
+  assert.deepEqual(await apifyAccess({ env: { APIFY_TOKEN: "do-ambiente", CLAUDE_CODE_REMOTE: "true" }, path: none, fetchImpl: answer(200) }), { key: "do-ambiente", from: "environment" });
+  assert.deepEqual(await apifyAccess({ env: { APIFY_TOKEN: "", CLAUDE_CODE_REMOTE: "true" }, path: none, fetchImpl: answer(200) }), { key: null, from: null }, "an empty variable still means no key");
+  assert.deepEqual(await apifyAccess({ env: {}, path: none, fetchImpl: answer(200) }), { key: null, from: null }, "a computer has no environment secret");
+  assert.equal(probes, 0);
+  assert.deepEqual(await apifyAccess({ env: { CLAUDE_CODE_REMOTE: "true" }, path: none, fetchImpl: answer(200) }), { key: null, from: "cloud_secret" });
+  assert.deepEqual(await apifyAccess({ env: { CLAUDE_CODE_REMOTE: "true" }, path: none, fetchImpl: answer(401) }), { key: null, from: null });
+  const refused = async () => {
+    throw new TypeError("fetch failed");
+  };
+  assert.deepEqual(await apifyAccess({ env: { CLAUDE_CODE_REMOTE: "true" }, path: none, fetchImpl: refused }), { key: null, from: null });
+  assert.equal(canCollect({ key: null, from: "cloud_secret" }), true);
+  assert.equal(canCollect({ key: "k", from: "flyee" }), true);
+  assert.equal(canCollect({ key: null, from: null }), false);
+});
+
+test("with the environment's secret, every request goes without a key, and the key request names the environment", async () => {
+  const seen = [];
+  const fetchImpl = async (url, init) => {
+    seen.push(init?.headers?.Authorization ?? null);
+    if (url.includes("/runs?")) return new Response(JSON.stringify({ data: { id: "r1", status: "SUCCEEDED", defaultDatasetId: "d1", usageTotalUsd: 0.01 } }), { status: 201 });
+    return new Response("[]", { status: 200 });
+  };
+  await runActor({ actor: "apify/instagram-post-scraper", input: {}, token: null, maxItems: 1, maxChargeUsd: 0.1, fetchImpl, pollMs: 1 });
+  assert.ok(seen.length >= 2);
+  assert.ok(seen.every((value) => value === null));
+  const cloud = keySetup({ CLAUDE_CODE_REMOTE: "true" });
+  assert.equal(cloud.cloud, true);
+  assert.equal(cloud.command, undefined);
+  assert.match(cloud.how, /segredo de rede/);
+  assert.equal(keySetup({}).command, "npx --yes flyee@latest key set APIFY_TOKEN --browser --json");
 });
 
 test("Apify answers become stable error codes, and every run has a ceiling", () => {

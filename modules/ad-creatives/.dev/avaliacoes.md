@@ -65,3 +65,15 @@ Depois desta rodada, o gancho passou para o tamanho grande de título (a capa fi
 - Saiu das notas a frase de que, no feed, a Meta mostra o centro do vídeo vertical e que o conteúdo já cabia ali: a conta não fecha (a zona do anúncio começa em 270 px, e o 4:5 central de um 9:16 começa em 285) e não foi conferida na fonte. Ficou o pedido de conferir na prévia do Gerenciador.
 
 **O que não foi verificado.** Uma coleta real pelo app (a T0.3 rodou o coletor em 2026-10-12, fora do app); `collation_count` contra a tela da Biblioteca; o download de um anúncio pela Análise de vídeo, pelo endereço do Apify ou pelo link da Biblioteca. Com o preço de 2026-10-21 (US$ 0,00075 por anúncio) e os limites do app (12 buscas, 10 anúncios por concorrente, 30 por palavra), a maior coleta possível custa US$ 0,27: o pedido de sim acima de US$ 1 só dispara se o preço subir.
+
+## 1.1.1, 2026-10-21
+
+A chave do Apify guardada como segredo de rede do ambiente numa sessão do Claude Code na nuvem, pedida pelo operador depois do teste da MedChina na nuvem, onde a sessão só alcançava `flyee.club`. Sem chave local e com `CLAUDE_CODE_REMOTE=true`, `apifyAccess` (em `scripts/lib/apify.mjs`, igual byte a byte ao da Pesquisa no Instagram 1.0.2) testa `GET /v2/users/me` sem a chave; com 200, o app colhe sem mandar `Authorization`, porque o proxy da sessão acrescenta o segredo. Fora da nuvem, ou com `APIFY_TOKEN` vazio, nada muda e nada é testado.
+
+**Os testes.** `node --test "modules/ad-creatives/tests/*.test.mjs"`: 55 testes, 54 passam e 1 é pulado sem `ADS_TEST_REAL=1`. Dois são novos em `tests/apify.test.mjs`, contra o servidor falso que imita o proxy: com o segredo, `check` dá `apify_key_from: "cloud_secret"` e a coleta roda sem nenhum `Authorization` nas chamadas do app; sem ele, a pesquisa é a guiada e `key` traz o caminho do segredo de rede, sem o comando da página. Os testes que herdam o ambiente tiram `CLAUDE_CODE_REMOTE`, para não testar o Apify real dentro de uma sessão na nuvem.
+
+**Os casos novos de `tests/eval.json`.** "segredo de rede na nuvem" e "nuvem sem chave", cobertos no nível do script pelos dois testes acima; a conversa continua sem avaliação.
+
+**Pacote.** `dist/modules/ad-creatives-1.1.1.zip` (32 arquivos), sha256 `7d8776ba5fdfaf9679b296526d2f86420fb402f01a3178d163f294367609b4be`.
+
+**O que não foi verificado.** Uma sessão real na nuvem com o segredo de rede: a documentação do Claude Code diz que o proxy acrescenta o cabeçalho a cada pedido para o endereço listado, e ninguém viu ainda essa parte do diálogo em português.

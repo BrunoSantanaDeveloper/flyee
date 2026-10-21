@@ -63,6 +63,7 @@ function cli(project, args, { json = true } = {}) {
   const home = join(project.root, "home");
   mkdirSync(home, { recursive: true });
   const env = { ...process.env, HOME: home, USERPROFILE: home, APIFY_TOKEN: "" };
+  delete env.CLAUDE_CODE_REMOTE;
   return new Promise((done) => {
     const child = spawn(process.execPath, [project.script, ...args, ...(json ? ["--json"] : [])], { cwd: project.root, env, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";

@@ -239,6 +239,30 @@
         }
       ],
       "rubric": "A IA roda o analyze da Análise de vídeo com o endereço de data.media_urls, o foco editing e o guia analise-anuncio.md do ad-creatives. Quando o download falha, diz isso ao integrante numa frase e segue sem a análise: não tenta o mesmo vídeo por outro programa, pelo navegador ou pelo login dele, e oferece analisar pelo link do anúncio, se ele quiser mandar. Nenhuma leitura tags com analysis é gravada, e nenhuma etiqueta é inventada para o anúncio."
+    },
+    {
+      "name": "segredo de rede na nuvem",
+      "setup": "Sessão do Claude Code na nuvem (CLAUDE_CODE_REMOTE=true), sem APIFY_TOKEN e sem ~/.flyee/keys.json, com a chave do Apify guardada como segredo de rede do ambiente para api.apify.com. Briefing completo com dois concorrentes.",
+      "prompt": "Pesquisa os anúncios dos meus concorrentes.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "anuncios/*/pesquisa/apify/*.json"
+        }
+      ],
+      "rubric": "check devolve apify_key verdadeiro, com apify_key_from igual a cloud_secret. A IA roda a coleta sem pedir a chave, sem abrir arquivo de chave e sem pôr chave em comando, e diz numa frase quanto custou."
+    },
+    {
+      "name": "nuvem sem chave",
+      "setup": "Sessão do Claude Code na nuvem (CLAUDE_CODE_REMOTE=true), sem APIFY_TOKEN, sem ~/.flyee/keys.json e sem segredo de rede. Briefing completo com dois concorrentes.",
+      "prompt": "Quero a coleta automática dos anúncios dos concorrentes.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "anuncios/*/pesquisa/links.md"
+        }
+      ],
+      "rubric": "check devolve apify_key falso e apify_setup sem comando. A IA não roda key set --browser: passa ao integrante, em frases simples, o apify_setup.how, com o segredo de rede para api.apify.com, e segue pela pesquisa guiada enquanto isso. Não pede a chave na conversa."
     }
   ]
 }

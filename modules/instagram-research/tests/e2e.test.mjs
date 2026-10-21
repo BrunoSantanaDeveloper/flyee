@@ -17,6 +17,8 @@ const GOOD = "chave-de-teste";
 const calls = [];
 const datasets = new Map();
 let server;
+/** When true, the fake behaves as Apify behind a cloud session's proxy that adds the environment's network secret. */
+let proxySecret = false;
 let api;
 
 function datasetFor(actor, input) {
@@ -33,12 +35,14 @@ test.before(async () => {
     let body = "";
     request.on("data", (chunk) => (body += chunk));
     request.on("end", () => {
-      calls.push({ method: request.method, url: request.url });
+      calls.push({ method: request.method, url: request.url, auth: request.headers.authorization ?? null });
       const send = (status, data) => {
         response.writeHead(status, { "Content-Type": "application/json" });
         response.end(JSON.stringify(data));
       };
-      if (request.headers.authorization !== `Bearer ${GOOD}`) return send(401, { error: { type: "token-not-valid" } });
+      const authorized = request.headers.authorization === `Bearer ${GOOD}` || (proxySecret && !request.headers.authorization);
+      if (!authorized) return send(401, { error: { type: "token-not-valid" } });
+      if (request.url === "/v2/users/me") return send(200, { data: { username: "integrante" } });
       const run = /^\/v2\/acts\/([^/]+)\/runs\?(.*)$/.exec(request.url);
       if (run && request.method === "POST") {
         const id = `run${calls.length}`;
@@ -64,8 +68,11 @@ function project() {
 }
 
 /** Runs the script without blocking this process, which also serves the fake Apify. */
-function run(root, args, { key = GOOD } = {}) {
-  const env = { ...process.env, HOME: join(root, "home"), USERPROFILE: join(root, "home"), APIFY_TOKEN: key };
+function run(root, args, { key = GOOD, env: extra = {} } = {}) {
+  const env = { ...process.env, HOME: join(root, "home"), USERPROFILE: join(root, "home"), APIFY_TOKEN: key, ...extra };
+  if (key === null) delete env.APIFY_TOKEN;
+  // A run inside a cloud session would otherwise look for the environment's network secret.
+  if (!("CLAUDE_CODE_REMOTE" in extra)) delete env.CLAUDE_CODE_REMOTE;
   return new Promise((done, fail) => {
     const child = spawn(process.execPath, [SCRIPT, ...args, "--apify-url", api, "--json"], { cwd: root, env, windowsHide: true });
     let stdout = "";
@@ -201,4 +208,33 @@ test("comments come without the names of whoever wrote them, most liked first", 
   assert.equal(json.comments[0].text, "Quanto custa?");
   const saved = readFileSync(join(root, json.files.md), "utf8") + readFileSync(join(root, json.files.json), "utf8");
   assert.equal(/alguem|outra\.pessoa/.test(saved), false);
+});
+
+test("in a cloud session, the key kept as the environment's network secret collects, and the app never sends one", async () => {
+  const root = project();
+  proxySecret = true;
+  try {
+    const check = await run(root, ["check"], { key: null, env: { CLAUDE_CODE_REMOTE: "true" } });
+    assert.equal(check.json.apify_key, true, JSON.stringify(check.json));
+    assert.equal(check.json.apify_key_from, "cloud_secret");
+    assert.equal(check.json.apify_setup, null);
+    const before = calls.length;
+    const { status, json } = await run(root, ["profile", "perfil.a"], { key: null, env: { CLAUDE_CODE_REMOTE: "true" } });
+    assert.equal(status, 0, JSON.stringify(json));
+    const made = calls.slice(before);
+    assert.ok(made.some((call) => call.method === "POST" && /\/runs\?/.test(call.url)), "the collection ran");
+    assert.ok(made.every((call) => call.auth === null), "the key stays with the proxy, never in the app's requests");
+  } finally {
+    proxySecret = false;
+  }
+});
+
+test("in a cloud session with no secret, the key request points to the environment, not to a page", async () => {
+  const root = project();
+  const { json } = await run(root, ["check"], { key: null, env: { CLAUDE_CODE_REMOTE: "true" } });
+  assert.equal(json.apify_key, false);
+  assert.equal(json.apify_setup.cloud, true);
+  assert.equal(json.apify_setup.command, undefined, "no page opens in a cloud session");
+  assert.match(json.apify_setup.how, /segredo de rede/);
+  assert.match(json.apify_setup.how, /api\.apify\.com/);
 });

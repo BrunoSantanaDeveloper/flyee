@@ -6,8 +6,8 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
-| [Criativos para anúncios](#ad-creatives) | 1.1.0 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
-| [Pesquisa no Instagram](#instagram-research) | 1.0.1 | tool | planejar | — | `ad-creatives` |
+| [Criativos para anúncios](#ad-creatives) | 1.1.1 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
+| [Pesquisa no Instagram](#instagram-research) | 1.0.2 | tool | planejar | — | `ad-creatives` |
 | [Carrossel animado](#motion-carousel) | 1.1.2 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.1 | tool | planejar | — | `ad-creatives`, `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.0.1 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
@@ -17,7 +17,7 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 ## ad-creatives
 
-**Criativos para anúncios** (Ad creatives) · versão 1.1.0 · workflow · trilha divulgar · testado em `claude_code`
+**Criativos para anúncios** (Ad creatives) · versão 1.1.1 · workflow · trilha divulgar · testado em `claude_code`
 
 > Prepara os criativos da sua campanha de tráfego pago na Meta (Instagram e Facebook): pesquisa os anúncios dos concorrentes, propõe três conceitos com a evidência de cada um e entrega os vídeos e as imagens conferidos, os textos dos anúncios e a conta da verba.
 
@@ -46,10 +46,11 @@ Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook
 - network: api.apify.com
 - fs:read: ~/.flyee/keys.json (só a chave APIFY_TOKEN)
 - env: APIFY_TOKEN
+- env: CLAUDE_CODE_REMOTE
 
 ## instagram-research
 
-**Pesquisa no Instagram** (Instagram research) · versão 1.0.1 · tool · trilha planejar · testado em `claude_code`
+**Pesquisa no Instagram** (Instagram research) · versão 1.0.2 · tool · trilha planejar · testado em `claude_code`
 
 > Mostra quais Reels e posts fizeram muito mais do que o normal do próprio perfil, e quanto, no seu perfil e nos concorrentes. Sem chave, lê capturas de tela; com a chave do Apify, colhe sozinho e traz os comentários do público.
 
@@ -79,6 +80,7 @@ Mostra, com números de verdade, quais Reels e posts fizeram muito mais do que o
 - fs:read: ~/.flyee/keys.json (só a chave APIFY_TOKEN)
 - fs:write: ./instagram-research/
 - env: APIFY_TOKEN
+- env: CLAUDE_CODE_REMOTE
 
 ## motion-carousel
 

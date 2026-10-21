@@ -34,7 +34,7 @@ A aba de Reels mostra só as visualizações. Por isso, sem a chave, ficam de fo
 
 ## Com a chave do Apify
 
-A coleta fica automática e mais completa: plays, curtidas, comentários, duração, data, legenda e parceria paga de cada post, e os comentários de um post. A chave nunca passa pelo chat: a sua IA abre uma página no seu navegador, você cola a chave lá uma vez e ela fica guardada só neste computador, fora dos seus projetos.
+A coleta fica automática e mais completa: plays, curtidas, comentários, duração, data, legenda e parceria paga de cada post, e os comentários de um post. A chave nunca passa pelo chat: a sua IA abre uma página no seu navegador, você cola a chave lá uma vez e ela fica guardada só neste computador, fora dos seus projetos. Numa sessão do Claude Code na nuvem, onde essa página não abre, a chave fica como segredo de rede do ambiente da sessão: a sessão usa a chave sem vê-la, e a sua IA diz onde guardá-la.
 
 O Apify cobra pelo que colhe, do crédito da sua conta lá. Pela tabela de outubro de 2026, cada perfil de 30 posts custa cerca de US$ 0,08 e cada 100 comentários, cerca de US$ 0,26. Antes de qualquer coleta acima de US$ 1, a sua IA diz o valor e espera o seu sim. Toda coleta tem um teto, e o app reaproveita o que colheu nas últimas 24 horas.
 
@@ -58,5 +58,6 @@ O Apify cobra pelo que colhe, do crédito da sua conta lá. Pela tabela de outub
 
 ## O que há de novo
 
+- 1.0.2: numa sessão do Claude Code na nuvem, o app usa a chave do Apify guardada como segredo de rede do ambiente, que a sessão usa sem ver, e explica esse caminho quando a chave falta.
 - 1.0.1: quando outro app precisa da Pesquisa no Instagram e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.
 - 1.0.0: primeira versão. O normal de um perfil e os outliers de até 25 perfis, com Reels e posts estáticos medidos separados, faixas, avisos de isca de comentário e parceria paga, duração dos Reels, relatório e planilha. Também o modo manual por capturas de tela, os comentários de um post e uma interface para outros apps.

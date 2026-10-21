@@ -51,7 +51,9 @@ async function setKeyInBrowser(ctx: Context, args: ParsedArgs, name: string): Pr
   // SSH, a server) nobody can reach it: say so instead of reporting a page that opened for no one.
   const noBrowser = noBrowserReason(ctx.env);
   if (noBrowser) {
-    const message = t(ctx, "key.no_browser", { name, where: t(ctx, `login.no_browser.${noBrowser}`) });
+    // A cloud session has two places for a key: a network secret of its environment, for an app that
+    // accepts one (the key never enters the session), or its environment variables.
+    const message = noBrowser === "cloud" ? t(ctx, "key.no_browser_cloud", { name }) : t(ctx, "key.no_browser", { name, where: t(ctx, `login.no_browser.${noBrowser}`) });
     ctx.io.err(message);
     return { ok: false, error: "no_browser", reason: noBrowser, name, message };
   }

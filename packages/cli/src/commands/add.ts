@@ -8,6 +8,7 @@ import type { Context } from "../context.ts";
 import { type CoreAssets, loadCoreAssets } from "../core-assets.ts";
 import { t } from "../i18n.ts";
 import { downloadBytes } from "../install/download.ts";
+import { cloudNetwork } from "../install/hosts.ts";
 import { installBytes, keepCatalog } from "../install/installer.ts";
 import { flushEvents, registerMachine } from "../registration.ts";
 import { compareSemver } from "../semver.ts";
@@ -210,7 +211,9 @@ export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
   await flushEvents(ctx, client);
   // The skills' folder only for an app that has skills: the AI reads its SKILL.md and goes on.
   ctx.io.out(t(ctx, result.module.skills.length ? "add.next" : "add.next_guide", { slug }));
-  return { ok: true, slug, version: result.module.version, changed: true, skills: result.module.skills, written: result.written, programs: result.programs };
+  // In a cloud session, the hosts the app needs and the session does not reach, asked for once.
+  const network = await cloudNetwork(ctx, [slug]);
+  return { ok: true, slug, version: result.module.version, changed: true, skills: result.module.skills, written: result.written, programs: result.programs, ...(network ? { network } : {}) };
 }
 
 async function runAddRecipe(ctx: Context, client: Client, assets: CoreAssets, slug: string, kind: "own" | "client" | undefined, args: ParsedArgs): Promise<Result> {
@@ -263,5 +266,6 @@ async function runAddRecipe(ctx: Context, client: Client, assets: CoreAssets, sl
   }
   await flushEvents(ctx, client);
   ctx.io.out(t(ctx, "recipe.installed", { slug, count: installed.length }));
-  return { ok: true, recipe: slug, modules: installed, workflow: Boolean(recipe.workflow), programs: [...programs.values()] };
+  const network = await cloudNetwork(ctx, installed);
+  return { ok: true, recipe: slug, modules: installed, workflow: Boolean(recipe.workflow), programs: [...programs.values()], ...(network ? { network } : {}) };
 }

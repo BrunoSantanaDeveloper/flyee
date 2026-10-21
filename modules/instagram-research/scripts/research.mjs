@@ -7,7 +7,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { apifyApi, apifyKey, chargeCeiling, estimateUsd, keySetup, runActor } from "./lib/apify.mjs";
+import { apifyAccess, apifyApi, canCollect, chargeCeiling, estimateUsd, keySetup, runActor } from "./lib/apify.mjs";
 import { actorFailure, normalizeComment, normalizePost, parsePost, parseProfile } from "./lib/instagram.mjs";
 import { apifyFileToPosts, readingToPosts } from "./lib/reading.mjs";
 import { commentsMarkdown, outliersMarkdown, postsCsv, profileMarkdown } from "./lib/report.mjs";
@@ -125,7 +125,7 @@ async function gatherProfiles(users, values) {
   const warnings = [];
   const toFetch = [];
   const missing = [];
-  const { key } = apifyKey();
+  const access = await apifyAccess({ api: apifyApi(values["apify-url"]) });
   for (const user of users) {
     const reading = savedReading(user);
     if (source === "reading") {
@@ -142,7 +142,7 @@ async function gatherProfiles(users, values) {
   }
   let cost = null;
   if (toFetch.length) {
-    if (!key) {
+    if (!canCollect(access)) {
       for (const user of toFetch) {
         const reading = source === "apify" ? null : savedReading(user);
         if (reading) got.set(user, { kind: "reading", data: reading });
@@ -161,7 +161,7 @@ async function gatherProfiles(users, values) {
       const collected = await runActor({
         actor: source.actor,
         input: { username: toFetch, resultsLimit: posts, skipPinnedPosts: true },
-        token: key,
+        token: access.key,
         maxItems: toFetch.length * posts,
         maxChargeUsd: chargeCeiling(estimate),
         api: apifyApi(values["apify-url"]),
@@ -292,8 +292,8 @@ async function commentsCommand(positionals, values) {
   const path = join(dir, "comments.json");
   const cached = readJson(path);
   if (cached && !values.refresh && ageHours(path) < FRESH.comments && (cached.requested ?? 0) >= max) return { ...cached, cached: true };
-  const { key } = apifyKey();
-  if (!key) {
+  const access = await apifyAccess({ api: apifyApi(values["apify-url"]) });
+  if (!canCollect(access)) {
     return {
       ok: true,
       command: "comments",
@@ -318,7 +318,7 @@ async function commentsCommand(positionals, values) {
   const collected = await runActor({
     actor: source.actor,
     input: { directUrls: [url], resultsLimit: max, includeNestedComments: false },
-    token: key,
+    token: access.key,
     maxItems: max,
     maxChargeUsd: chargeCeiling(estimate),
     api: apifyApi(values["apify-url"]),
@@ -351,8 +351,9 @@ async function commentsCommand(positionals, values) {
 
 // ---------------------------------------------------------------- check and list
 
-function checkCommand() {
-  const { key, from } = apifyKey();
+async function checkCommand(values = {}) {
+  const access = await apifyAccess({ api: apifyApi(values["apify-url"]) });
+  const ready = canCollect(access);
   return {
     ok: true,
     command: "check",
@@ -360,10 +361,10 @@ function checkCommand() {
     app: APP,
     node: process.versions.node,
     ready: true,
-    modes: { manual: true, apify: Boolean(key) },
-    apify_key: Boolean(key),
-    apify_key_from: from,
-    apify_setup: key ? null : keySetup(),
+    modes: { manual: true, apify: ready },
+    apify_key: ready,
+    apify_key_from: access.from,
+    apify_setup: ready ? null : keySetup(),
     prices: { checked_on: SOURCES.checked_on ?? null, posts_usd_each: SOURCES.posts?.usd_per_item ?? null, comments_usd_each: SOURCES.comments?.usd_per_item ?? null, confirm_above_usd: SOURCES.cost_warn_usd ?? null },
   };
 }
@@ -415,7 +416,7 @@ function humanText(result) {
     case "help":
       return result.text;
     case "check":
-      return [`Pesquisa no Instagram ${result.app.version} · Node ${result.node}`, `Chave do Apify: ${result.apify_key ? `salva (${result.apify_key_from})` : "ausente"}`, result.apify_setup && `Para salvar: ${result.apify_setup.command}`].filter(Boolean).join("\n");
+      return [`Pesquisa no Instagram ${result.app.version} · Node ${result.node}`, `Chave do Apify: ${result.apify_key ? (result.apify_key_from === "cloud_secret" ? "no segredo de rede do ambiente" : `salva (${result.apify_key_from})`) : "ausente"}`, result.apify_setup && (result.apify_setup.command ? `Para salvar: ${result.apify_setup.command}` : result.apify_setup.how)].filter(Boolean).join("\n");
     case "profile": {
       const normal = result.baseline.reels.value ? `normal de ${result.baseline.reels.value} plays em ${result.baseline.reels.n} Reels` : "sem normal de Reels";
       return [`@${result.id}: ${normal}. Resultado: ${result.files.md}`, ...result.top_reels.slice(0, 5).map((item, i) => `${i + 1}. ${times(item.multiplier)}${item.metric ?? ""} plays · ${item.url ?? ""}`), ...warnings].join("\n");
@@ -439,7 +440,7 @@ async function main(argv) {
   const { positionals, values } = parseArgs(rest, ARG_SPEC);
   switch (command) {
     case "check":
-      return checkCommand();
+      return checkCommand(values);
     case "profile":
       return profileCommand(positionals, values);
     case "outliers":

@@ -26,7 +26,7 @@ Shorter requests work too, such as "I want ads for my shop": the AI asks for the
 - The offer, the landing page and the daily budget.
 - Three to five competitors, or the words of your niche.
 - If you have them: the logo and a few screens of the product. For proof with a real person, the testimonial with permission.
-- For the automatic collection: an Apify account. The AI opens a page in your browser for you to paste the key, and Apify charges for usage; above US$ 1 per collection, the AI asks first.
+- For the automatic collection: an Apify account. The AI opens a page in your browser for you to paste the key, and Apify charges for usage; above US$ 1 per collection, the AI asks first. In a Claude Code cloud session, the key stays as a network secret of the session's environment, which the session uses without seeing it.
 
 ## What to expect
 

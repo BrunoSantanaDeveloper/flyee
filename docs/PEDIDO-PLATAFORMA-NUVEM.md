@@ -138,6 +138,21 @@ Isso supera o "um app com o que ele pede" do 7.2. O pedido à plataforma foi env
 - Os testes do guia não acham mais "Espere o sim dela" nem `add <app> --dry-run` em "Instalar um app", e acham `catalog --json`.
 - Numa sessão real na nuvem, um pedido de criativos num projeto sem apps instala os apps que ele pede sem perguntar, com uma frase para cada um.
 
+## Item 9: a rede dos apps e as chaves na nuvem
+
+**Estado:** ⬜ na plataforma. ✅ No produto, desde a CLI 1.2.0 (core 1.9.0, 2026-10-21):
+- **A rede dos apps:** numa sessão na nuvem, `add` e `doctor` testam os endereços que os apps declaram nas permissões `network` e devolvem `network: { blocked, notes, message }`, com uma mensagem só para o integrante (`packages/cli/src/install/hosts.ts`).
+- **A chave:** `key set` ali indica o segredo de rede do ambiente, para o app que aceita.
+- **Os apps do Apify:** Pesquisa no Instagram 1.0.2 e Criativos para anúncios 1.1.1 usam a chave guardada como segredo de rede, que o proxy da sessão acrescenta a cada pedido para `api.apify.com` sem a chave entrar na sessão. A documentação do Claude Code recomenda o segredo de rede no lugar das variáveis de ambiente para chaves: "Anyone who uses the environment can read the values" (code.claude.com/docs/en/cloud-environments, "Set environment variables").
+
+De onde vem: no teste do operador de 2026-10-21, a sessão alcançava só `flyee.club`. A IA descobriu no meio do trabalho que a página da marca, o Instagram e a Biblioteca da Meta estavam bloqueados, e o operador guardou a chave do Apify nas variáveis de ambiente, com o valor à vista no diálogo.
+
+- **9.1 A rede dos apps, no guia** (seção "Claude Code na nuvem"): "Depois de instalar um app, e no começo de cada sessão na nuvem, o resultado do `add` e do `doctor` pode trazer `network.blocked`: mostre `network.message` uma vez, já com o domínio de um endereço de `network.notes` que o trabalho vai usar, como o site da marca, e siga quando a pessoa disser que fez."
+- **9.2 A chave na nuvem, no guia:** a linha "Diga o nome da chave que falta e que ela pode guardá-la nas variáveis de ambiente desse mesmo ambiente" passa a "siga a mensagem do `key set` e o guia do app: um app que aceita a chave como segredo de rede do ambiente diz como guardá-la ali, onde a sessão a usa sem vê-la; para os outros, as variáveis de ambiente, valendo a partir da próxima sessão". "Nunca peça a chave na conversa" continua.
+- **9.3 O bloco da nuvem no painel:** a mesma troca, se ele fala de chaves.
+- **Aceite:** os testes do guia acham `network.blocked` e "segredo de rede" na seção da nuvem, nos dois idiomas. Numa sessão real na nuvem com só `flyee.club` liberado, a instalação do app de criativos pede de uma vez `api.apify.com`.
+- **Não visto:** a parte de segredos de rede do diálogo em português. A documentação a chama de Network secrets, com Add secret, Allowed websites e Custom headers, e diz que ela existe nos planos Pro, Max, Team e Enterprise.
+
 ## Correções ⚠️ que este pedido encontrou
 
 - **`CLI-CONTRACT.md:6`** promete respostas sem cache, mas `apps/web/src/app/api/cli/version/route.ts:21` manda `public, max-age=300`. Ou o contrato diz que 4.9 tem 5 minutos de cache, ou a rota passa a `no-store`. A decisão de cache em si é da plataforma.

@@ -35,7 +35,7 @@ Rode `check --json`.
 O Apify é um serviço à parte, pago pelo uso: cada coleta sai do crédito da conta do integrante lá. Os preços estão em `prices` do `check` (cerca de US$ 0,08 por perfil de 30 posts).
 
 1. Mostre `apify_setup.key_url`, a página do Apify onde ele cria a conta e copia o token pessoal da API.
-2. Rode você mesmo o comando de `apify_setup.command`. Ele volta na hora e abre uma página no navegador do integrante; diga que a página abriu e que é só colar o token lá e clicar em Salvar. Se a página expirar antes, rode o comando de novo.
+2. Rode você mesmo o comando de `apify_setup.command`. Ele volta na hora e abre uma página no navegador do integrante; diga que a página abriu e que é só colar o token lá e clicar em Salvar. Se a página expirar antes, rode o comando de novo. Numa sessão do Claude Code na nuvem, `apify_setup` não traz comando, porque a página não abre ali: passe ao integrante o `apify_setup.how`, que guarda a chave como segredo de rede do ambiente, e a sessão a usa sem vê-la.
 3. Quando ele disser que salvou, rode `check --json` de novo e confirme `apify_key: true`, sem mostrar o valor. Não é preciso reabrir a IA.
 
 ## Passo 1: entender o pedido

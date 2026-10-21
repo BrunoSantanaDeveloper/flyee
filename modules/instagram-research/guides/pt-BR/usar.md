@@ -22,7 +22,7 @@ Bastam os perfis. Se faltar alguma coisa, a IA pergunta. O app não procura perf
 
 **Com a chave do Apify, automático.** O Apify é um serviço que colhe dados públicos do Instagram sem usar a sua conta, e cobra pelo uso, do crédito que você tem lá. Com a chave, a IA colhe sozinha os últimos 30 posts de cada perfil, com plays, curtidas, comentários, duração, data e parceria paga, e também os comentários de um post.
 
-Para ligar a coleta automática, peça à IA: "ligue a coleta automática da pesquisa no Instagram". Ela mostra onde criar a conta e o token no Apify e abre uma página no seu navegador, onde você cola o token e clica em Salvar. A chave nunca passa pelo chat e fica guardada só neste computador, fora dos seus projetos.
+Para ligar a coleta automática, peça à IA: "ligue a coleta automática da pesquisa no Instagram". Ela mostra onde criar a conta e o token no Apify e abre uma página no seu navegador, onde você cola o token e clica em Salvar. A chave nunca passa pelo chat e fica guardada só neste computador, fora dos seus projetos. Numa sessão do Claude Code na nuvem, onde essa página não abre, a chave fica como segredo de rede do ambiente da sessão, que a sessão usa sem ver; a IA diz onde guardá-la.
 
 ## Quanto custa a coleta automática
 

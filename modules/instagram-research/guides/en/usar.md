@@ -22,7 +22,7 @@ The profiles are enough. If something is missing, your AI will ask. The app does
 
 **With an Apify key, automatically.** Apify is a service that collects public Instagram data without using your account, and charges for usage from the credit you have there. With the key, the AI collects the last 30 posts of each profile on its own, with plays, likes, comments, length, date and paid partnership, and also the comments of a post.
 
-To turn on automatic collection, ask your AI: "turn on automatic collection for Instagram research". It shows you where to create the account and the token on Apify and opens a page in your browser, where you paste the token and click Save. The key never goes through the chat and is stored only on this computer, outside your projects.
+To turn on automatic collection, ask your AI: "turn on automatic collection for Instagram research". It shows you where to create the account and the token on Apify and opens a page in your browser, where you paste the token and click Save. The key never goes through the chat and is stored only on this computer, outside your projects. In a Claude Code cloud session, where that page does not open, the key stays as a network secret of the session's environment, which the session uses without seeing it; the AI tells you where to keep it.
 
 ## What automatic collection costs
 

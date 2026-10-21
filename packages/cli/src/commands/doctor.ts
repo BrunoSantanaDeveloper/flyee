@@ -7,6 +7,7 @@ import type { Context } from "../context.ts";
 import { loadCoreAssets } from "../core-assets.ts";
 import { t } from "../i18n.ts";
 import { detectTools } from "../install/adapters.ts";
+import { cloudNetwork } from "../install/hosts.ts";
 import { type KeySource, keySource } from "../state/keys.ts";
 import { moduleDir, readLock } from "../state/lock.ts";
 import { readText, sha256File } from "../util/fs.ts";
@@ -85,6 +86,9 @@ export async function runDoctor(ctx: Context): Promise<Result> {
     ctx.io.out(t(ctx, "doctor.platform_fail", { base: ctx.baseUrl, detail: failure.message }));
   }
 
+  // In a cloud session, what the installed apps need from the network and this session does not reach.
+  const network = await cloudNetwork(ctx, Object.keys(lock?.modules ?? {}));
+
   return {
     ok: true,
     cli_version: CLI_VERSION,
@@ -96,5 +100,6 @@ export async function runDoctor(ctx: Context): Promise<Result> {
     programs,
     credentials,
     platform,
+    ...(network ? { network } : {}),
   };
 }

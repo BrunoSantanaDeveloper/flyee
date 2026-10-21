@@ -27,7 +27,7 @@ Na primeira campanha ainda não existe dado próprio de anúncio. O que existe �
 - Uma IA que leia imagens, como o Claude Code: ela lê as capturas dos anúncios e olha os quadros das peças.
 - O app **Motor de vídeo** (`video-render`), que copia a marca do seu site, compõe a trilha, renderiza e confere as peças. Quando ele faltar, a sua IA diz em uma frase o que vai instalar e instala.
 - O **ffmpeg** e um navegador sem janela. No Windows, o Microsoft Edge já vem instalado. Você não instala nada: a sua IA cuida disso na primeira vez, depois de avisar.
-- Opcional: a chave do **Apify**, para a coleta automática, criada em console.apify.com. A sua IA abre uma página no seu navegador para você colar a chave; ela não passa pela conversa. O Apify cobra pelo uso, do crédito da sua conta lá, e o app sempre manda um limite de itens e de gasto e pede o seu sim antes de uma coleta acima de US$ 1.
+- Opcional: a chave do **Apify**, para a coleta automática, criada em console.apify.com. A sua IA abre uma página no seu navegador para você colar a chave; ela não passa pela conversa. Numa sessão do Claude Code na nuvem, a chave fica como segredo de rede do ambiente da sessão, que a sessão usa sem ver, e a sua IA diz onde guardá-la. O Apify cobra pelo uso, do crédito da sua conta lá, e o app sempre manda um limite de itens e de gasto e pede o seu sim antes de uma coleta acima de US$ 1.
 - Opcional: os apps **Pesquisa no Instagram** (`instagram-research`), **Pesquisa no YouTube** (`youtube-research`) e **Análise de vídeo** (`video-analysis`). Quando a pesquisa precisa de um deles e ele ainda não está no projeto, a sua IA diz numa frase qual vai instalar e instala na hora.
 
 ## Sem a chave
@@ -70,5 +70,6 @@ Tudo fica em `anuncios/` dentro do seu projeto, uma pasta por campanha:
 
 ## O que há de novo
 
+- 1.1.1: numa sessão do Claude Code na nuvem, a coleta usa a chave do Apify guardada como segredo de rede do ambiente, que a sessão usa sem ver, e o app explica esse caminho quando a chave falta.
 - 1.1.0: o vídeo 4:5 e a imagem 4:5 ou 1:1 para o feed; a coleta pelo Apify, com a chave opcional; a evidência da Pesquisa no Instagram, da Pesquisa no YouTube e da Análise de vídeo; o guia de Reels de teste.
 - 1.0.0: primeira versão. Pesquisa guiada dos concorrentes, três conceitos com ficha, um vídeo vertical por conceito, a conferência dos textos, a conta da verba e o diário.

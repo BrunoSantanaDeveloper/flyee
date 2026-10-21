@@ -1,4 +1,5 @@
 import { Client } from "./api/client.ts";
+import { CLOUD_MARK, isCloudSession } from "./api/network.ts";
 import type { InstallsPayload, InstallsResponse } from "./api/types.ts";
 import type { Context } from "./context.ts";
 import type { CoreAssets } from "./core-assets.ts";
@@ -30,6 +31,8 @@ export function buildInstallsPayload(ctx: Context, assets: CoreAssets, options: 
   const kind = options.kind ?? lock?.project_kind;
   if (kind) payload.project_kind = kind;
   if (options.updated) payload.updated = true;
+  // A cloud session takes the account's cloud place, outside the plan's computers, and a newer one replaces it (4.2).
+  if (isCloudSession(ctx)) payload.cloud = CLOUD_MARK;
   return payload;
 }
 

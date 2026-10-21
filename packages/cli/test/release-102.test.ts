@@ -221,13 +221,14 @@ describe("a cloud session's computer", () => {
     }
   });
 
-  it("explains, past the platform's own message, that each cloud session counts as a computer today", async () => {
-    const platform = await startFakePlatform({ tier: "kit", deviceLimit: 0, modules: [], recipes: [] });
+  it("explains, past the platform's own message, that this plan counts a cloud session as a computer", async () => {
+    // Since 2026-10-21 a cloud session has a place of its own (4.2); a plan with none still answers the 409.
+    const platform = await startFakePlatform({ tier: "kit", deviceLimit: 0, cloudSessions: 0, modules: [], recipes: [] });
     try {
       const result = await run(makeContext(platform, "home-cloud-full", { CLAUDE_CODE_REMOTE: "true" }), ["login", "--device"]);
       assert.equal(result.error, "device_limit_reached");
       assert.equal(result.cloud, true);
-      assert.ok(output.some((line) => line.includes("cada sessão conta como um computador")), output.join("\n"));
+      assert.ok(output.some((line) => line.includes("uma sessão na nuvem conta como um computador")), output.join("\n"));
     } finally {
       await platform.close();
     }

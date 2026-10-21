@@ -35,6 +35,8 @@ export type FakeOptions = {
   modules?: FakeModule[];
   recipes?: FakeRecipe[];
   deviceLimit?: number;
+  /** The account's cloud places (`plans.limits.cloud_sessions`, 4.2); 1 by default, 0 counts a cloud session as a computer. */
+  cloudSessions?: number;
   /** What /me says of the account (CLI-CONTRACT.md 4.1): an inactive account answers /me and nothing else. */
   accessActive?: boolean;
   suspended?: boolean;
@@ -53,6 +55,8 @@ export type FakeState = {
   refreshes: number;
   downloads: string[];
   requests: { method: string; path: string }[];
+  /** The forms of POST /api/oauth/device, as they came (2.2). */
+  deviceRequests: Record<string, string>[];
 };
 
 function sha256(bytes: Uint8Array): string {
@@ -106,7 +110,9 @@ export function buildModuleZip(input: {
 export class FakePlatform {
   baseUrl = "";
   options: FakeOptions;
-  state: FakeState = { installs: [], events: [], revoked: [], refreshes: 0, downloads: [], requests: [] };
+  state: FakeState = { installs: [], events: [], revoked: [], refreshes: 0, downloads: [], requests: [], deviceRequests: [] };
+  /** The account's one cloud place (4.2): the device holding it, outside the computers' limit. */
+  private cloudDevice: string | null = null;
   private server: Server | null = null;
   private tokens = new Map<string, TokenRecord>();
   private refreshIndex = new Map<string, TokenRecord>();
@@ -290,6 +296,8 @@ export class FakePlatform {
 
     if (path === "/api/oauth/device" && method === "POST") {
       const form = new URLSearchParams(await this.readBody(request));
+      this.state.deviceRequests.push(Object.fromEntries(form));
+      if (form.has("cloud") && form.get("cloud") !== "claude_code") return this.deny(response, 400, "invalid_request");
       const deviceCode = `mcdc_${randomBytes(8).toString("hex")}`;
       this.deviceCodes.set(deviceCode, { deviceId: form.get("device_id") });
       return this.json(response, 200, {
@@ -374,16 +382,26 @@ export class FakePlatform {
 
     if (path === "/api/cli/installs" && method === "POST") {
       if (!this.gateDevice(request, response, record, false)) return;
-      const body = JSON.parse((await this.readBody(request)) || "{}") as { device_id?: string };
+      const body = JSON.parse((await this.readBody(request)) || "{}") as { device_id?: string; cloud?: unknown };
       if (!body.device_id) return this.deny(response, 400, "invalid_request");
+      if (body.cloud !== undefined && body.cloud !== "claude_code") return this.deny(response, 400, "invalid_request");
       const created = !this.devices.has(body.device_id);
-      if (created && this.devices.size >= (this.options.deviceLimit ?? 3)) {
-        return this.deny(response, 409, "device_limit_reached", { limit: this.options.deviceLimit, live_devices: this.devices.size, action_url: `${this.baseUrl}/settings/devices` });
+      // 4.2: a cloud session holds the account's one cloud place, outside the computers' limit; a newer one replaces it.
+      const cloud = created ? body.cloud === "claude_code" && (this.options.cloudSessions ?? 1) > 0 : this.cloudDevice === body.device_id;
+      const computers = () => this.devices.size - (this.cloudDevice ? 1 : 0);
+      if (created && cloud) {
+        if (this.cloudDevice) {
+          this.devices.delete(this.cloudDevice);
+          this.revokedDevices.add(this.cloudDevice);
+        }
+        this.cloudDevice = body.device_id;
+      } else if (created && computers() >= (this.options.deviceLimit ?? 3)) {
+        return this.deny(response, 409, "device_limit_reached", { limit: this.options.deviceLimit, live_devices: computers(), action_url: `${this.baseUrl}/settings/devices` });
       }
       this.devices.add(body.device_id);
       if (!record.deviceId) record.deviceId = body.device_id;
       this.state.installs.push(body);
-      return this.json(response, created ? 201 : 200, { status: created ? "created" : "updated", device: { device_id: body.device_id }, limit: this.options.deviceLimit, live_devices: this.devices.size });
+      return this.json(response, created ? 201 : 200, { status: created ? "created" : "updated", device: { device_id: body.device_id, cloud: cloud ? "claude_code" : null }, limit: this.options.deviceLimit, live_devices: computers() });
     }
 
     if (path === "/api/cli/catalog" && method === "GET") {

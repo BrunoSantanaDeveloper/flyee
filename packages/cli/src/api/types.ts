@@ -124,6 +124,8 @@ export type InstallsPayload = {
   installed_modules?: { slug: string; version: string }[];
   project_kind?: "own" | "client";
   updated?: boolean;
+  /** Since 2026-10-21 (4.2): a Claude Code cloud session; absent on a computer. */
+  cloud?: "claude_code";
 };
 
 export type InstallsResponse = {

@@ -7,7 +7,7 @@ import type { Context } from "../context.ts";
 import { t } from "../i18n.ts";
 import { ensureDir } from "../util/fs.ts";
 import { ApiError, CliError } from "./errors.ts";
-import { reach, readBody } from "./network.ts";
+import { CLOUD_MARK, isCloudSession, reach, readBody } from "./network.ts";
 import type { DeviceAuthorization, ErrorBody, TokenResponse } from "./types.ts";
 
 /**
@@ -159,10 +159,13 @@ export async function loginWithDeviceCode(
   onCode: (authorization: DeviceAuthorization) => void | Promise<void>,
   sleep: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 ): Promise<TokenResponse> {
+  // A Claude Code cloud session has a place of its own, outside the plan's computers (2.2, since 2026-10-21):
+  // /ativar then never asks to disconnect a computer for it.
   const authorization = await postForm<DeviceAuthorization>(ctx, "/api/oauth/device", {
     client_id: CLIENT_ID,
     scope: SCOPES,
     device_id: deviceId,
+    ...(isCloudSession(ctx) ? { cloud: CLOUD_MARK } : {}),
   });
   // Awaited: the address and the code are flushed before the first poll starts the wait.
   await onCode(authorization);

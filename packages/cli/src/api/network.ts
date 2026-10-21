@@ -76,6 +76,9 @@ export function isCloudSession(ctx: Pick<Context, "env">): boolean {
   return ctx.env.CLAUDE_CODE_REMOTE === "true";
 }
 
+/** How a cloud session marks itself to the platform (CLI-CONTRACT.md 2.2 and 4.2, since 2026-10-21); the only value it takes. */
+export const CLOUD_MARK = "claude_code";
+
 /** Whether this Node's fetch honors NODE_USE_ENV_PROXY: 22.21 or later on the 22 line, and every 24 or later (measured). */
 export function nodeHonorsEnvProxy(version: string = process.versions.node): boolean {
   const [major, minor] = version.split(".").map(Number);

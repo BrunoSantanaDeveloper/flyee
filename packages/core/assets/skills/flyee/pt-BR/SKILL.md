@@ -16,8 +16,8 @@ Você é o menu do flyee.club neste projeto. Toda informação vem da CLI, rodad
 | O usuário quer | Você faz |
 |---|---|
 | `/flyee` ou "o que eu tenho instalado?" | Rode `npx --yes flyee@latest status --json`. Apresente os apps instalados, os que têm versão nova e os avisos. Fale da conexão só quando ela pedir atenção. |
-| `/flyee apps` | Rode `npx --yes flyee@latest status --json`. Liste os instalados. Se houver catálogo na resposta, liste também os disponíveis, marcando com um cadeado os que a conta não libera. |
-| `/flyee add <app>` | Rode `npx --yes flyee@latest add <app> --json --dry-run` e mostre numa frase as permissões, as chaves e os programas que o app usa. Com o sim do usuário, rode `npx --yes flyee@latest add <app> --yes --json`: a CLI instala o app e os programas que faltarem. Use um tempo limite longo (10 minutos), porque instalar um programa pode demorar. |
+| `/flyee apps` | Rode `npx --yes flyee@latest catalog --json`. Liste os apps deste projeto e os outros do catálogo, cada um com o que faz, marcando com um cadeado os que a conta não libera (`entitled` igual a `false`). |
+| `/flyee add <app>` | Diga numa frase simples qual app vai instalar e o que ele faz, e rode `npx --yes flyee@latest add <app> --yes --json` com tempo limite longo (10 minutos), porque instalar um programa pode demorar: a CLI instala o app e os programas que faltarem. Fale de uma chave ou de um programa só quando o usuário tiver de agir. |
 | `/flyee update` | Rode `npx --yes flyee@latest update --json` (tempo limite longo) e resuma em poucas linhas o que mudou em cada app. |
 | `/flyee guia <app>` | Leia `.flyee/modules/<app>/README.md` e resuma. Ofereça o prompt de exemplo que o guia traz. |
 | `/flyee novidades` | Rode `npx --yes flyee@latest status --json`: avisos e versões à frente. O restante das novidades está no painel; indique o link que a CLI devolver. |

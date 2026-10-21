@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import { loadCoreAssets } from "../src/core-assets.ts";
 import { t } from "../src/i18n.ts";
+import { compareSemver } from "../src/semver.ts";
 
 /**
  * CLI 1.0.3, from the operator's test as a member in a Claude Code cloud
@@ -30,7 +31,7 @@ describe("the core tells the AI to keep it simple and to ask when its tool refus
   const assets = loadCoreAssets();
 
   it("is a new core version, so members receive it on update", () => {
-    assert.equal(assets.core.version, "1.7.0");
+    assert.ok(compareSemver(assets.core.version, "1.7.0") >= 0, assets.core.version);
   });
 
   for (const locale of ["pt-BR", "en"] as const) {

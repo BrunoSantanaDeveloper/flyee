@@ -7,7 +7,7 @@ import { loadCoreAssets } from "../core-assets.ts";
 import { localeOf, t } from "../i18n.ts";
 import { flushEvents, registerMachine } from "../registration.ts";
 import { ensureConfig, machineName, readConfig, writeConfig } from "../state/config.ts";
-import { newLock, readLock, writeLock } from "../state/lock.ts";
+import { catalogSnapshot, newLock, readLock, writeLock } from "../state/lock.ts";
 import { applyAdapters } from "../install/adapters.ts";
 import { isCloudSession } from "../api/network.ts";
 import { noBrowserReason } from "../util/os.ts";
@@ -100,10 +100,17 @@ export async function runLogin(ctx: Context, args: ParsedArgs): Promise<Result> 
     throw error;
   }
 
-  // The project gets its harness even before the first app, so the AI already knows about /flyee.
+  // The project gets its harness even before the first app, so the AI already knows about /flyee and,
+  // from the catalog (CLI-CONTRACT.md 4.3), which apps it can install when a request is the work of one.
   const lock = readLock(ctx) ?? newLock(ctx, assets.core.version);
   if (kind) lock.project_kind = kind;
   lock.locale = ctx.locale;
+  try {
+    lock.catalog = catalogSnapshot(await client.catalog(ctx.locale), ctx.now());
+  } catch (error) {
+    // The connection is made; the list comes with the next add or update.
+    if (!(error instanceof ApiError) && !(error instanceof CliError)) throw error;
+  }
   applyAdapters(ctx, assets, lock);
   writeLock(ctx, lock);
   await flushEvents(ctx, client);

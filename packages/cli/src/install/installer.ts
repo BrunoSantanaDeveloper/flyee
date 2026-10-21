@@ -7,7 +7,7 @@ import type { Context } from "../context.ts";
 import type { CoreAssets } from "../core-assets.ts";
 import { localeOf } from "../i18n.ts";
 import { programsDeclared } from "../programs.ts";
-import { type Lock, type LockModule, moduleDir, modulesDir, newLock, readLock, writeLock } from "../state/lock.ts";
+import { type CatalogSnapshot, type Lock, type LockModule, moduleDir, modulesDir, newLock, readLock, writeLock } from "../state/lock.ts";
 import { copyDir, ensureDir, removeDir, sha256Hex, walkFiles, writeFileAtomic } from "../util/fs.ts";
 import { applyAdapters, removeBridges, type SkillInfo, writeSkillBridges } from "./adapters.ts";
 import { parseFrontmatter } from "./frontmatter.ts";
@@ -124,6 +124,15 @@ export function installBytes(
 ): InstallResult {
   const inspected = inspectPackage(bytes, expected);
   return installInspected(ctx, assets, inspected, expected.sha256.toLowerCase(), license);
+}
+
+/** Keeps what the catalog offers in this project's lock and AGENTS.md block, after a command that read it. */
+export function keepCatalog(ctx: Context, assets: CoreAssets, snapshot: CatalogSnapshot): void {
+  const lock = readLock(ctx);
+  if (!lock) return;
+  lock.catalog = snapshot;
+  applyAdapters(ctx, assets, lock);
+  writeLock(ctx, lock);
 }
 
 export function removeModule(ctx: Context, assets: CoreAssets, slug: string): { removed: boolean; lock: Lock | null } {

@@ -16,8 +16,8 @@ You are the flyee.club menu in this project. Every fact comes from the CLI, run 
 | The user wants | You do |
 |---|---|
 | `/flyee` or "what do I have installed?" | Run `npx --yes flyee@latest status --json`. Present the installed apps, the ones with a new version and the notices. Mention the connection only when it needs attention. |
-| `/flyee apps` | Run `npx --yes flyee@latest status --json`. List the installed apps. If the answer carries the catalog, list the available ones too, marking with a lock the ones the account does not include. |
-| `/flyee add <app>` | Run `npx --yes flyee@latest add <app> --json --dry-run` and state in one sentence the permissions, keys and programs the app uses. With the user's yes, run `npx --yes flyee@latest add <app> --yes --json`: the CLI installs the app and any missing program. Use a long time limit (10 minutes), since installing a program can take a while. |
+| `/flyee apps` | Run `npx --yes flyee@latest catalog --json`. List this project's apps and the catalog's other ones, each with what it does, marking with a lock the ones the account does not include (`entitled` as `false`). |
+| `/flyee add <app>` | Say in one plain sentence which app you will install and what it does, and run `npx --yes flyee@latest add <app> --yes --json` with a long time limit (10 minutes), since installing a program can take a while: the CLI installs the app and any missing program. Mention a key or a program only when the user has to act. |
 | `/flyee update` | Run `npx --yes flyee@latest update --json` (long time limit) and summarize in a few lines what changed in each app. |
 | `/flyee guide <app>` | Read `.flyee/modules/<app>/README.md` and summarize it. Offer the example prompt the guide carries. |
 | `/flyee news` | Run `npx --yes flyee@latest status --json`: notices and versions ahead. The rest is on the dashboard; point to the link the CLI returns. |

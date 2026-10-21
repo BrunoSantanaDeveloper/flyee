@@ -18,8 +18,9 @@ Comandos de referência, escritos como uma IA precisa rodá-los: `--yes` respond
 npx --yes flyee@latest login                   # conecta este computador à sua conta (abre o navegador)
 npx --yes flyee@latest login --device          # o mesmo, com um código, sem navegador nesta máquina
 npx --yes flyee@latest add <app> --dry-run     # mostra o que o app declara, sem instalar
-npx --yes flyee@latest add <app> --yes         # instala o app no projeto atual, depois do seu sim
+npx --yes flyee@latest add <app> --yes         # instala o app no projeto atual
 npx --yes flyee@latest add receita:<nome>      # instala os apps de uma receita
+npx --yes flyee@latest catalog                 # os apps do catálogo que a sua conta instala e os que o projeto tem
 npx --yes flyee@latest update                  # atualiza os apps instalados e renova a conexão
 npx --yes flyee@latest status                  # conexão, apps instalados, versões e avisos
 npx --yes flyee@latest doctor                  # confere a instalação, os programas e as chaves
@@ -35,7 +36,7 @@ Todo comando aceita `--json`, para a sua IA ler a saída, e `--yes`, que confirm
 
 ## O que a CLI escreve no projeto
 
-- `AGENTS.md`, com um bloco gerenciado entre `<!-- flyee:begin -->` e `<!-- flyee:end -->`; `CLAUDE.md` e `GEMINI.md` recebem uma linha que aponta para ele. Arquivos que você já tinha nunca são sobrescritos: o bloco é anexado.
+- `AGENTS.md`, com um bloco gerenciado entre `<!-- flyee:begin -->` e `<!-- flyee:end -->`; `CLAUDE.md` e `GEMINI.md` recebem uma linha que aponta para ele. Arquivos que você já tinha nunca são sobrescritos: o bloco é anexado. O bloco lista os apps instalados e os outros apps do catálogo, para a sua IA usar o app certo quando você pede um trabalho, sem você precisar saber o nome dele.
 - `.agents/skills/` e `.claude/skills/`: uma ponte por skill de cada app, para a sua IA encontrá-las.
 - `.flyee/`: os apps instalados e o registro do que está instalado. Não edite: a atualização substitui.
 
@@ -62,6 +63,7 @@ Português e inglês, seguindo o idioma da sua conta.
 
 ## Mudanças
 
+- 1.1.0: a sua IA reconhece quando um pedido é trabalho de um app do flyee e usa o app, mesmo que você não diga o nome. O bloco do `AGENTS.md` passa a listar os outros apps do catálogo, renovado a cada login, instalação e atualização, e a IA instala o app que falta, avisando numa frase. Um pedido com várias etapas usa um app em cada uma, com a pesquisa antes da criação. O comando novo `catalog` mostra os apps do catálogo, a versão que a sua conta instala e os que o projeto já tem. A sua IA não diz mais que um app pode não estar liberado numa conta sem compra, que instala a versão de entrada de cada app. Numa sessão na nuvem, ela guarda no repositório o app que instalou, para ele continuar na próxima sessão.
 - 1.0.3: a sua IA fala mais simples. Ela diz só o que você precisa fazer ou decidir e o resultado, sem listar arquivos, pastas ou versões. Quando a ferramenta em que ela roda recusa um comando do flyee, como o modo automático do Claude Code, ela pergunta uma vez, dizendo o que vai fazer, sem procurar outro caminho. Numa sessão na nuvem, o commit dos arquivos do flyee vem com o passo certo, e as mensagens de rede e de limite de computadores falam com você e usam os nomes da tela do claude.ai em português.
 - 1.0.2: a conta sem compra lê que instala a versão de entrada de cada app, e o que o FlyeeClub libera, em vez de ler que não tem acesso. Um endereço que a rede recusa vira a resposta `host_not_allowed`, com o endereço: numa sessão do Claude Code na nuvem, com o ajuste único do ambiente; fora dela, dizendo que um proxy da rede recusou o endereço. Toda chamada tem um prazo para a resposta, e uma rede que não responde não deixa mais a CLI parada. Na nuvem, o computador aparece no painel como Claude Code na nuvem, e o limite de computadores vem explicado. O `doctor` traz o código em `platform.error` e o texto em `platform.message`, e o `status` mostra a mensagem inteira de uma falha de rede. Uma conta sem plano ativo ou suspensa aparece como tal. Um certificado recusado ganha uma mensagem pela causa, como o relógio do computador, e um proxy que o Node deste computador ignora passa a ser dito. Depois de instalar um app, o `add` diz onde estão as skills dele, sem mandar abrir a IA de novo. Os projetos de cada marca ficam dentro da pasta onde o flyee foi instalado, e não mais ao lado dela, e o `new` cria um projeto mesmo sem apps para levar.
 - 1.0.1: funciona no macOS e no Linux, onde a 1.0.0 terminava sem fazer nada. No Windows, o login pelo navegador abre o endereço inteiro, e no WSL abre o navegador do Windows. Numa sessão na nuvem, por SSH ou num computador sem tela, o login pelo navegador e a página da chave avisam na hora que não há navegador na frente da pessoa e indicam o login por código e a variável de ambiente; o login faz o mesmo quando o navegador não abre. Com um proxy em `HTTPS_PROXY`, como nas sessões na nuvem, as chamadas passam por ele, com o Node 22.21 ou mais novo. Quando a plataforma não responde, o erro e o `doctor` dizem o motivo, como um endereço que não resolve ou um certificado em que o computador não confia. Numa imagem nova, o apt baixa as listas de pacotes antes de instalar. O resultado do `add` diz como ficou cada programa. A ferramenta de IA também é reconhecida pelo programa no PATH: com o Windsurf ou o Aider instalados, o projeto recebe o arquivo que cada um lê (`.windsurfrules`, `CONVENTIONS.md`).

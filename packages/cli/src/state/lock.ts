@@ -1,5 +1,6 @@
 import { join } from "node:path";
 
+import type { Catalog } from "../api/types.ts";
 import type { Context, Locale } from "../context.ts";
 import { readJson, writeJsonAtomic } from "../util/fs.ts";
 
@@ -30,6 +31,12 @@ export type LockModule = {
   license?: string;
 };
 
+/** One app of the catalog as the AGENTS.md block lists it: enough for the AI to match a request to it. */
+export type CatalogApp = { slug: string; name: string; summary: string; entitled: boolean };
+
+/** The catalog as the platform last served it to this project (CLI-CONTRACT.md 4.3). */
+export type CatalogSnapshot = { fetched_at: string; channel: string; apps: CatalogApp[] };
+
 export type Lock = {
   lock_version: 1;
   core_version: string;
@@ -40,7 +47,21 @@ export type Lock = {
   managed_files: string[];
   modules: Record<string, LockModule>;
   recipes: Record<string, { modules: string[]; installed_at: string }>;
+  /** What the catalog offers, kept by login, add, update and new for the AGENTS.md block; absent before the first. */
+  catalog?: CatalogSnapshot;
 };
+
+/** The apps of a catalog response, in a stable order: an app with no version for anyone has nothing to install. */
+export function catalogSnapshot(catalog: Catalog, now: number): CatalogSnapshot {
+  return {
+    fetched_at: new Date(now).toISOString(),
+    channel: catalog.channel,
+    apps: catalog.modules
+      .filter((module) => module.latest)
+      .map((module) => ({ slug: module.slug, name: module.name, summary: (module.summary ?? "").replace(/\s+/g, " ").trim(), entitled: module.entitled }))
+      .sort((a, b) => a.slug.localeCompare(b.slug)),
+  };
+}
 
 export function flyeeDir(ctx: Context): string {
   return join(ctx.cwd, ".flyee");

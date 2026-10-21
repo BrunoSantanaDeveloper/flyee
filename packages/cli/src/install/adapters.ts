@@ -3,7 +3,8 @@ import { dirname, join } from "node:path";
 
 import type { Context } from "../context.ts";
 import type { CoreAssets, ToolEntry } from "../core-assets.ts";
-import type { Lock } from "../state/lock.ts";
+import { t } from "../i18n.ts";
+import type { CatalogApp, Lock } from "../state/lock.ts";
 import { ensureDir, readText, writeFileAtomic } from "../util/fs.ts";
 import { hasBinary } from "../util/os.ts";
 
@@ -139,6 +140,33 @@ export function writeCoreSkills(ctx: Context, assets: CoreAssets): string[] {
   return written;
 }
 
+/** The block enters every session of the member's AI: past this, the catalog's lines keep a first sentence, then a name. */
+export const CATALOG_BUDGET = 6000;
+
+function firstSentence(text: string): string {
+  return /^.*?\.(?=\s|$)/su.exec(text)?.[0] ?? text;
+}
+
+/**
+ * The apps of the catalog this project does not have, as login, add, update and
+ * new last read them (`lock.catalog`). With them in its context, the member's AI
+ * matches a request to an app and installs it, instead of doing the job alone
+ * because nothing told it the app exists.
+ */
+export function renderCatalog(ctx: Context, lock: Lock): string {
+  if (!lock.catalog) return t(ctx, "agents.catalog_unknown");
+  const others = lock.catalog.apps.filter((app) => !lock.modules[app.slug]);
+  if (others.length === 0) return t(ctx, "agents.catalog_all");
+  const line = (app: CatalogApp, summary: string) =>
+    `- **${app.name}** (\`${app.slug}\`)${summary ? `: ${summary}` : ""}${app.entitled ? "" : ` ${t(ctx, "agents.catalog_locked")}`}`;
+  let text = "";
+  for (const shorten of [(summary: string) => summary, firstSentence, () => ""]) {
+    text = others.map((app) => line(app, shorten(app.summary))).join("\n");
+    if (text.length <= CATALOG_BUDGET) break;
+  }
+  return text;
+}
+
 export function renderAgentsBlock(ctx: Context, assets: CoreAssets, lock: Lock): string {
   const template = assets.agentsTemplate(ctx.locale);
   const entries = Object.entries(lock.modules).sort(([a], [b]) => a.localeCompare(b));
@@ -152,13 +180,13 @@ export function renderAgentsBlock(ctx: Context, assets: CoreAssets, lock: Lock):
             : `- **${module.title}** (\`${slug}\` ${module.version}): ${module.summary}${skills} Guia: \`${guide}\``;
         })
         .join("\n")
-    : ctx.locale === "en"
-      ? "_No app installed yet. The `flyee` skill installs one (/flyee add <app>)._"
-      : "_Nenhum app instalado ainda. A skill `flyee` instala um (/flyee add <app>)._";
+    : t(ctx, "agents.no_apps");
+  // Replacers, not strings: a "$&" or "$1" in a summary would otherwise be read as a pattern.
   return template
-    .replace("{{apps}}", apps)
-    .replace("{{core_version}}", assets.core.version)
-    .replace("{{site}}", ctx.baseUrl);
+    .replace("{{apps}}", () => apps)
+    .replace("{{catalog}}", () => renderCatalog(ctx, lock))
+    .replace("{{core_version}}", () => assets.core.version)
+    .replace("{{site}}", () => ctx.baseUrl);
 }
 
 export type AdapterReport = { written: string[]; unchanged: string[]; detected: DetectedTool[] };

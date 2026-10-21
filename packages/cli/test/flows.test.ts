@@ -327,7 +327,10 @@ describe("the member's journey against the contract", () => {
     assert.equal(result.ok, true);
     assert.ok(!existsSync(join(ctx.cwd, ".flyee", "modules", "radar")));
     assert.ok(!existsSync(join(ctx.cwd, ".agents", "skills", "radar-outliers")));
-    assert.ok(!readFileSync(join(ctx.cwd, "AGENTS.md"), "utf8").includes("`radar`"));
+    // Out of the installed apps, back among what the catalog offers.
+    const [installed, others] = readFileSync(join(ctx.cwd, "AGENTS.md"), "utf8").split("## Outros apps do catálogo");
+    assert.ok(!installed.includes("`radar`"));
+    assert.ok(others.includes("`radar`"));
     const last = platform.state.installs[platform.state.installs.length - 1] as { installed_modules: { slug: string }[] };
     assert.ok(!last.installed_modules.some((module) => module.slug === "radar"));
   });

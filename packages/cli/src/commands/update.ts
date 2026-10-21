@@ -9,7 +9,7 @@ import { installBytes } from "../install/installer.ts";
 import { flushEvents, registerMachine } from "../registration.ts";
 import { compareSemver } from "../semver.ts";
 import { enqueueEvent } from "../state/events.ts";
-import { readLock, writeLock } from "../state/lock.ts";
+import { catalogSnapshot, readLock, writeLock } from "../state/lock.ts";
 import { CLI_VERSION } from "../version.ts";
 import { ensurePrograms, specsForApp } from "./need.ts";
 import type { Result } from "./types.ts";
@@ -35,8 +35,9 @@ export async function runUpdate(ctx: Context): Promise<Result> {
   const lock = readLock(ctx);
   const lines: UpdateLine[] = [];
   let billing: string | undefined;
-  if (lock && Object.keys(lock.modules).length > 0) {
-    const catalog = await client.catalog(ctx.locale);
+  // Read in any flyee project, with apps or not: it also renews what the AGENTS.md block lists besides them.
+  const catalog = lock ? await client.catalog(ctx.locale) : null;
+  if (lock && catalog && Object.keys(lock.modules).length > 0) {
     for (const [slug, installed] of Object.entries(lock.modules)) {
       if (installed.dev) {
         lines.push({ slug, from: installed.version, to: null, status: "dev" });
@@ -86,6 +87,7 @@ export async function runUpdate(ctx: Context): Promise<Result> {
   if (current) {
     const coreChanged = current.core_version !== assets.core.version;
     current.locale = ctx.locale;
+    if (catalog) current.catalog = catalogSnapshot(catalog, ctx.now());
     applyAdapters(ctx, assets, current);
     current.core_version = assets.core.version;
     writeLock(ctx, current);

@@ -9,10 +9,10 @@ import type { Context } from "../context.ts";
 import { loadCoreAssets } from "../core-assets.ts";
 import { t } from "../i18n.ts";
 import { applyAdapters } from "../install/adapters.ts";
-import { installFromDirectory } from "../install/installer.ts";
+import { installFromDirectory, keepCatalog } from "../install/installer.ts";
 import { flushEvents, registerMachine } from "../registration.ts";
 import { compareSemver } from "../semver.ts";
-import { type Lock, newLock, readLock, writeLock } from "../state/lock.ts";
+import { type CatalogSnapshot, catalogSnapshot, type Lock, newLock, readLock, writeLock } from "../state/lock.ts";
 import { isFlyeeFolder, projectsIn, rememberProject, samePath } from "../state/projects.ts";
 import { billingLink, installModule, printReview } from "./add.ts";
 import { askOrExplain } from "./confirm.ts";
@@ -193,7 +193,7 @@ export async function runNew(ctx: Context, args: ParsedArgs): Promise<Result> {
       ctx.io.out(t(ctx, "new.done", { path: target, count: apps.length }));
       return { ok: true, path: target, created: false, apps, ...goOn(ctx, target) };
     }
-    return createEmptyProject(ctx, targetCtx, args, kind, adopted);
+    return createEmptyProject(ctx, targetCtx, args, kind, adopted, source?.catalog);
   }
 
   // Apps the operator linked from a directory never came from the platform; the rest pass its gates again.
@@ -252,7 +252,10 @@ export async function runNew(ctx: Context, args: ParsedArgs): Promise<Result> {
     const url = client && lines.some((line) => line.status === "locked") ? await billingLink(client) : undefined;
     // With no --apps, a project whose apps cannot come (locked, or linked outside dev mode) still gets
     // its folder, as a folder with no apps does; the lines above said why each app stays behind.
-    if (!flag(args, "apps")) return createEmptyProject(ctx, targetCtx, args, kind, adopted, { apps: lines, ...(url ? { action_url: url } : {}) });
+    if (!flag(args, "apps")) {
+      const listed = catalog ? catalogSnapshot(catalog, ctx.now()) : source?.catalog;
+      return createEmptyProject(ctx, targetCtx, args, kind, adopted, listed, { apps: lines, ...(url ? { action_url: url } : {}) });
+    }
     const message = t(ctx, "new.nothing", { path: target });
     ctx.io.out(message);
     if (url) ctx.io.out(url);
@@ -296,6 +299,9 @@ export async function runNew(ctx: Context, args: ParsedArgs): Promise<Result> {
     lock.in_projects_folder = true;
     writeLock(targetCtx, lock);
   }
+  // The brand's block lists what else the catalog offers: the list just read, or the one of the project it came from.
+  const listed = catalog ? catalogSnapshot(catalog, ctx.now()) : source?.catalog;
+  if (listed) keepCatalog(targetCtx, assets, listed);
   if (client) {
     try {
       await registerMachine(targetCtx, client, assets, { kind });
@@ -314,9 +320,18 @@ export async function runNew(ctx: Context, args: ParsedArgs): Promise<Result> {
 /**
  * A project with no apps yet: the folder of projects had none to take and no
  * `--apps` came. The folder gets what the AI needs in a project (the AGENTS.md
- * block, the pointers, the core skills, the lock), so `add` can run in it next.
+ * block with what the catalog offers, the pointers, the core skills, the lock),
+ * so `add` can run in it next.
  */
-async function createEmptyProject(ctx: Context, targetCtx: Context, args: ParsedArgs, kind: "own" | "client" | undefined, adopted: boolean, extra: Record<string, unknown> = {}): Promise<Result> {
+async function createEmptyProject(
+  ctx: Context,
+  targetCtx: Context,
+  args: ParsedArgs,
+  kind: "own" | "client" | undefined,
+  adopted: boolean,
+  catalog: CatalogSnapshot | undefined,
+  extra: Record<string, unknown> = {},
+): Promise<Result> {
   const target = targetCtx.cwd;
   ctx.io.out(t(ctx, "new.review_empty", { path: target }));
   if (ctx.dryRun) {
@@ -336,6 +351,7 @@ async function createEmptyProject(ctx: Context, targetCtx: Context, args: Parsed
   if (kind) lock.project_kind = kind;
   lock.in_projects_folder = true;
   lock.locale = ctx.locale;
+  if (catalog) lock.catalog = catalog;
   applyAdapters(targetCtx, assets, lock);
   writeLock(targetCtx, lock);
   rememberProject(targetCtx, kind);

@@ -8,14 +8,14 @@ import type { Context } from "../context.ts";
 import { type CoreAssets, loadCoreAssets } from "../core-assets.ts";
 import { t } from "../i18n.ts";
 import { downloadBytes } from "../install/download.ts";
-import { installBytes } from "../install/installer.ts";
+import { installBytes, keepCatalog } from "../install/installer.ts";
 import { flushEvents, registerMachine } from "../registration.ts";
 import { compareSemver } from "../semver.ts";
 import { enqueueEvent } from "../state/events.ts";
 import { keySource } from "../state/keys.ts";
 import { programsDeclared } from "../programs.ts";
 import { ensurePrograms, isPresent, specsForApp } from "./need.ts";
-import { readLock, writeLock } from "../state/lock.ts";
+import { catalogSnapshot, readLock, writeLock } from "../state/lock.ts";
 import { projectsIn } from "../state/projects.ts";
 import { writeFileAtomic } from "../util/fs.ts";
 import { CLI_VERSION } from "../version.ts";
@@ -200,6 +200,8 @@ export async function runAdd(ctx: Context, args: ParsedArgs): Promise<Result> {
   }
 
   const result = await installModule(ctx, client, assets, module, kind);
+  // The catalog just read refreshes what the block lists besides the apps installed.
+  keepCatalog(ctx, assets, catalogSnapshot(catalog, ctx.now()));
   try {
     await registerMachine(ctx, client, assets, { kind });
   } catch (error) {

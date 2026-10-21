@@ -3,6 +3,7 @@ import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { runAdd } from "./commands/add.ts";
+import { runCatalog } from "./commands/catalog.ts";
 import { runDev } from "./commands/dev.ts";
 import { runDoctor } from "./commands/doctor.ts";
 import { runKey } from "./commands/key.ts";
@@ -60,6 +61,7 @@ Run it as: npx --yes flyee@latest <command> [options]. The member's AI runs the 
 
   login [--device] [--name <computer>] [--kind own|client]   connects this computer to the account (opens the browser; --device shows a code)
   add <app> | add receita:<name> [--dry-run] [--yes]   installs an app (or a recipe's apps) into this project
+  catalog                      the catalog's apps this account installs, and the ones this project has
   update                       updates the apps and renews the connection
   status [--quiet]             the connection, the apps and the notices
   doctor                       checks the installation, the programs and the keys
@@ -79,6 +81,7 @@ Rode assim: npx --yes flyee@latest <comando> [opções]. A IA do integrante roda
 
   login [--device] [--name <computador>] [--kind own|client]   conecta este computador à conta (abre o navegador; --device mostra um código)
   add <app> | add receita:<nome> [--dry-run] [--yes]   instala um app (ou os apps de uma receita) neste projeto
+  catalog                      os apps do catálogo que esta conta instala, e os que este projeto tem
   update                       atualiza os apps e renova a conexão
   status [--quiet]             a conexão, os apps e os avisos
   doctor                       confere a instalação, os programas e as chaves
@@ -103,6 +106,8 @@ export async function runCommand(ctx: Context, args: ParsedArgs): Promise<Result
       return runLogout(ctx);
     case "add":
       return runAdd(ctx, args);
+    case "catalog":
+      return runCatalog(ctx);
     case "remove":
       return runRemove(ctx, args);
     case "update":

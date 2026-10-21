@@ -5,9 +5,7 @@ Este guia é para a IA. O app prescreve; quem cria a campanha no Gerenciador de 
 ## 1. A estrutura
 
 - Uma campanha, um conjunto, três anúncios, um por conceito.
-- Em cada anúncio, o vídeo vertical vai para Stories e Reels, e o vídeo 4:5 ou a imagem vai para o feed, pela opção de personalizar a peça por posicionamento do Gerenciador. Os arquivos da entrega trazem o posicionamento no nome (`reels`, `feed`, `imagem`, `quadrado`), e `nomes.json` liga cada um ao anúncio.
-- Se o Gerenciador não deixar misturar as peças no mesmo anúncio, o integrante usa só o vídeo vertical e confere na prévia do Gerenciador como ele aparece no feed.
-- O vídeo 4:5 e as imagens foram conferidos na zona do feed do Instagram, porque a tabela de redes do Motor de vídeo ainda não tem a zona de anúncio do feed. `lancamento.md` diz isso e pede a prévia do Gerenciador antes de publicar.
+- Em cada anúncio, o vídeo vertical vai para Stories e Reels.
 - Um conjunto só, e não um por conceito: a fase de aprendizado conta eventos por conjunto, e a verba dividida não ensina nenhum.
 
 Depois que o integrante montar a campanha, registre com `journal <campanha> --kind launched --note "…"` se a estrutura coube no Gerenciador e o que ele precisou mudar.
@@ -45,7 +43,3 @@ Pela Meta, trocar o público, o criativo ou o evento de otimização, acrescenta
 Depois de 7 dias, o integrante exporta do Gerenciador a tabela no nível de anúncio, com o período inteiro: nome do anúncio, valor usado, impressões, alcance, reproduções de vídeo de 3 segundos, ThruPlays, cliques no link, CTR do link, visualizações da página de destino, o evento de otimização e o passo antes dele. O nome do anúncio liga cada linha à peça de `entrega/nomes.json`.
 
 Com verba pequena, o que dá para comparar é quem para no gancho (reproduções de 3 segundos ÷ impressões), quem clica e quanto custa cada visita à página. Para o evento final, a resposta mais provável na primeira semana é dado insuficiente, e isso não é fracasso da peça.
-
-## 6. Antes de pagar
-
-Os vídeos verticais podem sair antes como Reels de teste, que o Instagram mostra só para quem não segue o perfil. O passo a passo está em `reels-de-teste.md`, nesta pasta: o resultado volta como resultado próprio, a evidência mais forte da próxima rodada.

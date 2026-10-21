@@ -1,6 +1,6 @@
 # Ad creatives: how to use it
 
-This app prepares the creatives of a paid traffic campaign on Instagram and Facebook. You talk to your AI; it asks what is missing, researches your competitors' ads, proposes three concepts with the evidence behind each and delivers, for each concept, a vertical video, the same video in 4:5 and an image for the feed, all checked, with the ad texts, the ad names and the budget math.
+This app prepares the creatives of a paid traffic campaign on Instagram and Facebook. You talk to your AI; it asks what is missing, researches your competitors' ads with your help, proposes three concepts with the evidence behind each and delivers a checked vertical video for each concept, with the ad texts, the ad names and the budget math.
 
 The app works in Portuguese: the brief, the cards and the texts it writes are in Brazilian Portuguese.
 
@@ -14,19 +14,17 @@ Shorter requests work too, such as "I want ads for my shop": the AI asks for the
 
 1. **The brief.** In a single message, the AI asks what it does not know yet: the offer, the page the ad leads to, the event the campaign optimizes for (purchase, sign up, message), the daily budget, the audience, the competitors and what cannot be said. It never makes up an offer, a price or a cost.
 2. **The budget math.** Before any piece, you see whether your budget takes the campaign out of Meta's learning phase. When it does not, the AI shows three ways out, and the choice is yours.
-3. **The research.** With an Apify key, the AI collects your competitors' active ads from Meta's Ad Library on its own and tells you what it cost. Without it, the AI sends links to the Ad Library, already filtered, and a five line script: you open each link in your browser, take screenshots of each competitor's first ads and save them in the folder the AI names. The Ad Library is public and asks for no login.
-4. **What the market shows.** The AI tells you, in a few sentences, who keeps ads running for months, what repeats across competitors and what nobody says. With the Instagram research, YouTube research and Video analysis apps, which it installs when they are missing, it also uses what your profile has already shown, what your audience writes and what happens each second of a competitor's longest running ad.
+3. **The research.** The AI sends links to Meta's Ad Library, already filtered, and a five line script. You open each link in your browser, take screenshots of each competitor's first ads and save them in the folder the AI names. The Ad Library is public and asks for no login.
+4. **What the market shows.** The AI reads the screenshots and tells you, in a few sentences, who keeps ads running for months, what repeats across competitors and what nobody says.
 5. **The three concepts.** You get one card per concept: the buyer's barrier or desire, the hook, the proof, the evidence for and against, and the confidence, computed by the app. Nothing is produced before your yes.
-6. **The pieces.** For each concept, a vertical video of up to 15 seconds for Stories and Reels, the same video in 4:5 and an image for the feed, with the logo and colours of your site and an original soundtrack. You see the preview and the image, and only then the AI makes the final pieces.
-7. **The delivery.** The pieces named after each ad, the texts to paste in Ads Manager, the list of what to check before switching the campaign on and what not to touch while it learns.
-8. **Before paying, if you like.** Post the videos as test Reels, which only people who do not follow your profile see, and compare them after 72 hours. The AI reads the statistics and takes the result to the next round.
+6. **The pieces.** For each concept, a vertical video of up to 15 seconds, with the logo and colours of your site and an original soundtrack. You watch the preview, and only then the AI makes the final video.
+7. **The delivery.** The videos named after each ad, the texts to paste in Ads Manager, the list of what to check before switching the campaign on and what not to touch while it learns.
 
 ## What to have at hand
 
 - The offer, the landing page and the daily budget.
 - Three to five competitors, or the words of your niche.
 - If you have them: the logo and a few screens of the product. For proof with a real person, the testimonial with permission.
-- For the automatic collection: an Apify account. The AI opens a page in your browser for you to paste the key, and Apify charges for usage; above US$ 1 per collection, the AI asks first.
 
 ## What to expect
 

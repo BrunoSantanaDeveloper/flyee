@@ -6,7 +6,7 @@
       { "label": "Mercado", "text": "3 concorrentes, 24 anúncios ativos lidos das suas capturas; 5 estão no ar há 30 dias ou mais. O ângulo de tempo devolvido aparece em dois deles: validado e disputado." },
       { "label": "Conceito 1 · confiança média", "text": "Barreira: o cliente esquece o horário e falta. Gancho: \"Quantos horários ficaram vazios esta semana?\". A favor: dois anúncios mantidos e a frase de uma cliente." },
       { "label": "Conceito 3 · aposta", "text": "Nenhum concorrente fala de pagamento antecipado. Lacuna não é demanda, e a ficha diz que é aposta." },
-      { "label": "Peças", "text": "Para cada conceito, um vídeo vertical de 15 segundos, o mesmo vídeo em 4:5 e uma imagem para o feed, com o seu logo, as suas cores e trilha original, conferidos: capa legível, texto longe dos botões, cortes na batida e volume certo." },
+      { "label": "Peças", "text": "Três vídeos verticais de 15 segundos com o seu logo, as suas cores e trilha original, conferidos na zona segura dos anúncios da Meta: capa legível, texto longe dos botões, cortes na batida e volume certo." },
       { "label": "Textos", "text": "O gancho antes do ver mais, títulos de até 27 caracteres e nenhuma promessa de resultado. Cada anúncio leva um nome que liga o resultado de volta à peça." }
     ],
     "saved": "Salvo em anuncios/primeira-campanha/entrega/, com os textos, os nomes dos anúncios e as notas de lançamento"

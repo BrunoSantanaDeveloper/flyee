@@ -284,50 +284,6 @@ function checkItem(item, { path, scene, first, pieceDir, logo }) {
   return out;
 }
 
-// ---------------------------------------------------------------- the still image
-
-export const POSTER_FORMATS = ["4:5", "1:1"];
-
-/**
- * The still image of a piece (kind "poster"), for the feed: the hook, the proof of the mechanism
- * (the product's screen or card, else its statement), the logo and the button, all on screen at
- * once. The AI can write its own in peca.json (`poster`); without it, it comes from the scenes.
- */
-export function posterOf(piece) {
-  if (piece.poster && typeof piece.poster === "object") return { version: PIECE_VERSION, ...piece.poster, kind: "poster", duration: 1, brand: piece.poster.brand ?? piece.brand, concept: piece.concept };
-  const first = piece.scenes[0];
-  const items = [];
-  const list = first.items.find((item) => item.type === "list");
-  const titles = first.items.filter((item) => item.type === "title" || item.type === "caption");
-  if (list) items.push({ type: "title", text: list.items.join(" "), accent: list.items[list.items.length - 1], at: -1 });
-  else titles.slice(0, 2).forEach((item, index) => items.push({ type: "title", text: item.text, accent: index === 1 ? true : item.accent, at: -1 }));
-  const middle = piece.scenes.slice(1, -1).flatMap((scene) => scene.items);
-  const visual = middle.find((item) => item.type === "screen" || item.type === "card");
-  if (visual?.type === "screen") items.push({ type: "screen", src: visual.src, motion: "parado", height: 0.42, at: -1 });
-  else if (visual?.type === "card") items.push({ type: "card", title: visual.title, fields: visual.fields.slice(0, 2).map((field) => ({ ...field, at: -10 })), at: -1 });
-  else {
-    const statement = middle.find((item) => item.type === "title" || item.type === "caption");
-    if (statement && items.length < 2) items.push({ type: "caption", text: statement.text, at: -1 });
-  }
-  const closing = piece.scenes[piece.scenes.length - 1].items;
-  if (closing.some((item) => item.type === "logo")) items.push({ type: "logo", scale: 0.8, at: -1 });
-  const pill = closing.find((item) => item.type === "pill");
-  if (pill) items.push({ type: "pill", text: pill.text, at: -1 });
-  return { version: PIECE_VERSION, kind: "poster", concept: piece.concept, title: `${piece.title} imagem`, format: "4:5", duration: 1, bpm: piece.bpm, brand: piece.brand, scenes: [{ from: 0, to: 1, role: "imagem", align: "start", items }] };
-}
-
-/** Checks a still image: known items with texts that fit, a text on it, files inside the piece. */
-export function checkPoster(poster, { pieceDir, brand }) {
-  if (!poster || poster.kind !== "poster") throw invalid("poster", "a imagem precisa ser um objeto com kind poster.");
-  if (!POSTER_FORMATS.includes(poster.format)) throw invalid("poster.format", `a imagem é desenhada em ${POSTER_FORMATS.join(" ou ")}.`);
-  const scene = Array.isArray(poster.scenes) && poster.scenes.length === 1 ? poster.scenes[0] : null;
-  if (!scene || !Array.isArray(scene.items) || !scene.items.length || scene.items.length > LIMITS.scene_items) throw invalid("poster.scenes", `a imagem tem uma cena só, com de 1 a ${LIMITS.scene_items} itens.`);
-  const box = { from: 0, to: 1 };
-  const items = scene.items.map((item, index) => checkItem({ ...item, at: item.at ?? -1 }, { path: `poster.scenes[0].items[${index}]`, scene: box, first: true, pieceDir, logo: brand.logo }));
-  if (!items.some((item) => TEXT_TYPES.includes(item.type))) throw invalid("poster", "a imagem precisa de um texto: ela é lida parada no feed.");
-  return { ...poster, version: PIECE_VERSION, duration: 1, brand, scenes: [{ from: 0, to: 1, role: "imagem", align: scene.align === "center" ? "center" : "start", items }] };
-}
-
 /** When each part of an item appears: one instant, or one per part of a list. */
 export function itemTimes(item) {
   if (item.type === "list") return item.times ?? item.items.map((_, index) => round(item.at + index * (item.every ?? 0.5)));

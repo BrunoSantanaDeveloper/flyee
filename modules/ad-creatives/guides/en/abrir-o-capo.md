@@ -13,7 +13,6 @@ Everything lives in `anuncios/<campanha>/` inside your project. One campaign per
 | `pesquisa/links.md` | the Ad Library links and the collection script |
 | `pesquisa/capturas/` | your screenshots, one folder per competitor |
 | `pesquisa/leituras/` | what the AI read in each screenshot, with the text as it appears |
-| `pesquisa/apify/` | what Apify collected, as it came, with the cost of each collection |
 | `evidencias.json` and `evidencias.md` | every data point with its origin (screenshot, link, what you said) and its date |
 | `conceitos.json` and `conceitos.md` | the concepts and their cards |
 | `pecas/<conceito>/` | the `peca.json` (the scenes), the page, the preview and the final video |
@@ -34,18 +33,6 @@ The collection rule is to capture the first 10 active ads of each competitor, in
 
 The AI copies dates and numbers as they appear on screen ("Veiculação iniciada em 3 de jul de 2026", "3 anúncios usam esse criativo e esse texto"), and the app converts them. A missing screenshot drops the card: data without an origin does not go in.
 
-## The Apify collection
-
-With an Apify key, the app does the same research on its own: a public collector reads the Ad Library, without your Meta account, and returns each ad with its start date, versions, text and the address of its video. The app keeps what came in `pesquisa/apify/` and puts each ad in the evidence with its origin and date. Every collection carries an item limit and a spending cap that Apify itself enforces; above an estimated cost of US$ 1, the AI asks first. Repeating the same collection within 24 hours costs nothing again. The collector charges per ad collected, from your Apify account's credit; the price checked is kept in the app, with its date.
-
-## The other apps
-
-Three apps bring more evidence, each piece with its origin and date. When the research needs one of them and it is not in the project yet, your AI installs it right away:
-
-- **Instagram research** measures your profile and your competitors': the posts that went far past their own profile's normal come in, with the normal beside them, Reels and static posts always apart;
-- **Instagram research and YouTube research** bring the most liked comments of posts and videos on the theme, without who wrote them: the audience's words;
-- **Video analysis** breaks down the ad a competitor has kept running the longest: the hook, the proof, the structure and the lines, second by second.
-
 ## Concepts and confidence
 
 Each concept starts from a barrier (what stops the purchase) or a motivator (what pulls it), with an angle, a hook in the first 3 seconds, a proof and a visual style. The campaign tests three, all three in the same ad set.
@@ -64,8 +51,6 @@ Each piece is a page that the Video engine app renders frame by frame. It lives 
 
 The engine's check measures, in the preview and in the final video: the cover (frame 0 with readable text), the safe area, the text size (44 px at least), cuts on the beat, flashes, still time and loudness (−14 LUFS). A page without the text and logo boxes never counts as checked.
 
-The same page recomposes in 4:5 for the feed video, and the feed image (4:5 or 1:1) brings together the hook, the product screen, the logo and the button. Both are checked against the Instagram feed's zone: the engine's network table does not have the feed's ad zone yet, and the delivery says so.
-
 The music and the effects are generated on your computer and are yours to use in ads.
 
 ## Texts and names
@@ -74,18 +59,6 @@ The text check (`copy`) blocks promises of results (guaranteed sales, return, "i
 
 Each ad name follows your site's pattern, when the site picks the page by `utm_content`, or `<conceito>-<formato>-<gancho>-v<n>`. The `nomes.json` file ties each name to each file: that is how the result of each piece comes back to the next round.
 
-## Test Reels
-
-Before paying, the vertical videos can go out as test Reels, which Instagram shows only to people who do not follow the profile. After 72 hours, the AI reads the screenshot of each one's statistics and records the result as your own result, the strongest kind of evidence for the next round. With a few hundred accounts reached, a small difference is an indication, and the AI says so.
-
-## Advanced requests
-
-- "Show me the evidence against the second concept."
-- "Use the product in use template in the trust concept, with the screen in materiais."
-- "Swap the soundtrack of the third video for a calmer one and redo the preview."
-- "Redo the budget math with R$ 45 per event."
-- "Write in the journal that the campaign started today and that the structure fit."
-
 ## Privacy
 
-Screenshots, readings and pieces stay in your project. The app connects only to your brand's site, to copy the logo, colours and screens, and to Apify, when you saved the key. The key stays on your computer, outside every project, and never goes through the conversation. No customer or patient data goes into the pieces: recreated screens use made up data.
+Screenshots, readings and pieces stay in your project. The app's only connection is the visit to your brand's site, to copy the logo, colours and screens. No customer or patient data goes into the pieces: recreated screens use made up data.

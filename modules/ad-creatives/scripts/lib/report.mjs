@@ -29,8 +29,7 @@ export function describeItem(item) {
       return `${item.who}, ${time}${versions}${state}${data.text ? `: ${quote(shorten(data.text, 110))}` : ""} (${origin})`;
     }
     case "organic_post": {
-      const amount = typeof data.plays === "number" ? data.plays : data.metric;
-      const plays = typeof amount === "number" ? `${number(amount)} ${data.metric_name ?? "plays"}` : "";
+      const plays = typeof data.plays === "number" ? `${number(data.plays)} plays` : "";
       const times = typeof data.multiplier === "number" ? `, ${decimal(data.multiplier)} vezes o normal do perfil${typeof data.baseline === "number" ? ` (${number(data.baseline)})` : ""}` : "";
       const caution = data.small_sample ? ", indício: o normal do perfil saiu de poucos posts" : typeof data.baseline === "number" && data.baseline < 200 ? ", indício: perfil com normal baixo" : "";
       return `${item.who}: ${plays}${times}${caution}${data.text ? `, ${quote(shorten(data.text, 90))}` : ""} (${origin})`;
@@ -82,7 +81,7 @@ export function evidenceMarkdown(summary, { campaign, labels, updatedAt }) {
     lines.push("## Orgânico", "", "Multiplicador alto em perfil pequeno é indício: o número absoluto vai ao lado.", "");
     for (const item of summary.organic) {
       if (item.kind === "organic_pattern") lines.push(`- ${item.who}: ${item.text}${item.n ? ` (${item.n} posts)` : ""} (\`${item.id}\`)`);
-      else lines.push(`- ${item.who}: ${item.metric === null ? "" : `${number(item.metric)} ${item.metric_name}`}${item.multiplier === null ? "" : `, ${decimal(item.multiplier)} vezes o normal${item.baseline === null ? "" : ` (${number(item.baseline)})`}`}${item.small_sample ? ", indício" : ""} (\`${item.id}\`)`);
+      else lines.push(`- ${item.who}: ${item.plays === null ? "" : `${number(item.plays)} plays`}${item.multiplier === null ? "" : `, ${decimal(item.multiplier)} vezes o normal${item.baseline === null ? "" : ` (${number(item.baseline)})`}`}${item.small_sample ? ", indício" : ""} (\`${item.id}\`)`);
     }
     lines.push("");
   }
@@ -191,12 +190,7 @@ export function launchMarkdown(concepts, { campaign, brief, budget, pending = []
   lines.push(`Escritas em ${day(generatedAt)}. O app não cria a campanha nem mexe na conta de anúncios: quem monta é você. Nada aqui é previsão de resultado.`, "");
   lines.push("## Estrutura", "");
   lines.push(`- Uma campanha, um conjunto, ${concepts.length} anúncio(s): ${names}.`);
-  const feed = concepts.some((concept) => (concept.formats ?? []).some((placement) => placement !== "vertical"));
-  if (feed) {
-    lines.push("- Em cada anúncio, o vídeo vertical vai para Stories e Reels, e o vídeo 4:5 ou a imagem vai para o feed, pela opção de personalizar a peça por posicionamento do Gerenciador.");
-    lines.push("- Se o Gerenciador não deixar misturar as peças no mesmo anúncio, use só o vídeo vertical e confira na prévia do Gerenciador como ele aparece no feed.");
-    lines.push("- O vídeo 4:5 e as imagens foram conferidos na zona do feed do Instagram. A tabela de redes do Motor de vídeo ainda não tem a zona de anúncio do feed: confira a prévia do Gerenciador antes de publicar.");
-  } else lines.push("- Em cada anúncio, o vídeo vertical vai para Stories e Reels.");
+  lines.push("- Em cada anúncio, o vídeo vertical vai para Stories e Reels.");
   lines.push("- Um conjunto só, e não um por conceito: com a verba dividida, nenhum conjunto aprende.", "");
   lines.push("## A conta da verba", "");
   if (!budget) lines.push("A verba diária não está no briefing: sem ela, não há conta.", "");
@@ -237,7 +231,5 @@ export function launchMarkdown(concepts, { campaign, brief, budget, pending = []
   lines.push("Com uma semana de verba pequena, o que dá para comparar entre os anúncios é quem para no gancho (reproduções de 3 segundos ÷ impressões), quem clica e quanto custa cada visita à página. Para o evento final, a resposta mais provável é dado insuficiente, e isso não é fracasso da peça.", "");
   const criteria = [...new Set(concepts.map((concept) => concept.success_criterion))];
   lines.push(`Critério combinado: ${criteria.join(" ")}`);
-  lines.push("", "## Sem pagar: Reels de teste", "");
-  lines.push("Antes de gastar, dá para publicar os vídeos verticais como Reels de teste: o Instagram mostra cada um só para quem não segue o perfil. Compare os vídeos entre si depois de 72 horas, com a captura das estatísticas de cada um, e o resultado entra na próxima rodada como resultado próprio. Nem toda conta tem esse recurso.");
   return `${lines.join("\n").trimEnd()}\n`;
 }

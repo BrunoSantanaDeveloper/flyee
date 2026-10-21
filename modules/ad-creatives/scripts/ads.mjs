@@ -7,12 +7,10 @@
 // to stdout with --json; progress goes to stderr; every failure has a stable code; every result
 // carries `next_step` with what comes next.
 
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { actorInput, adsToItems, collectionSources, looksLikeAdList } from "./lib/adlibrary.mjs";
-import { apifyApi, apifyKey, chargeCeiling, estimateUsd, keySetup, runActor } from "./lib/apify.mjs";
 import { brl, learningBudget } from "./lib/budget.mjs";
 import { ADS_DIR, addJournal, briefingTemplate, campaignSlug, checkBriefing, hostOf, layout, parseMoney, readJournal, readState, requireCampaign, writeState } from "./lib/campaign.mjs";
 import { approvalContent, checkConcepts, CONFIDENCE_LABELS, confidenceChanges, ENABLED_PLACEMENTS, PLACEMENTS, TEMPLATES } from "./lib/concepts.mjs";
@@ -21,8 +19,7 @@ import { CAPTURE_ERRORS, engineArgs, findVideoRender, INSTALL_VIDEO_RENDER, INST
 import { adCardsToItems, applyTags, declaredToItems, mergeItems, readEvidence, readingKind, summarize } from "./lib/evidence.mjs";
 import { copyFile, dirsIn, ensureDir, filesIn, hashJson, isFile, removeDir, sha256File } from "./lib/files.mjs";
 import { campaignLinks, linksMarkdown } from "./lib/links.mjs";
-import { commentsToItems, instagramPostsToItems, partnerApps, partnerKind } from "./lib/partners.mjs";
-import { beatGrid, checkPiece, checkPoster, draftPiece, eventsOf, FONT_FILE, fontWeight, IMAGE_FILE, imageSize, imageTarget, pageHtml, paletteFrom, posterOf, screenTexts } from "./lib/pieces.mjs";
+import { beatGrid, checkPiece, draftPiece, eventsOf, FONT_FILE, fontWeight, IMAGE_FILE, imageSize, imageTarget, pageHtml, paletteFrom, screenTexts } from "./lib/pieces.mjs";
 import { conceptsMarkdown, evidenceMarkdown, launchMarkdown, textsMarkdown } from "./lib/report.mjs";
 import { AppError, isoDay, parseArgs, progress, projectRoot, readJson, slugify, toPosix, writeFileAtomic, writeJson } from "./lib/util.mjs";
 
@@ -35,14 +32,11 @@ const INTERFACE_VERSION = 1;
 const SCRIPT_COMMAND = `node ${toPosix(ROOT, join(SCRIPTS_DIR, "ads.mjs"))}`;
 const LABELS = readJson(join(APP_DIR, "references", "etiquetas.json"), { dimensions: {} });
 const META = readJson(join(APP_DIR, "references", "meta-anuncios.json"), {});
-const SOURCES = readJson(join(APP_DIR, "references", "fontes.json"), {});
 const RUNTIME_FILES = ["ad.js", "ad.css"];
 const FPS = 30;
-/** How long a paid collection stays fresh, in hours: the same search the next day is paid again. */
-const FRESH_COLLECTION_HOURS = 24;
 const ARG_SPEC = {
-  flags: ["json", "force", "refresh", "confirm-cost"],
-  options: ["cost", "daily", "event", "note", "kind", "url", "template", "apify-url"],
+  flags: ["json", "force", "refresh"],
+  options: ["cost", "daily", "event", "note", "kind", "url", "template"],
 };
 
 const rel = (path) => toPosix(ROOT, path);
@@ -150,20 +144,14 @@ async function checkCommand() {
     : motor && Object.keys(motor.install).length
       ? { say: "Faltam programas que o Motor de vídeo usa para renderizar.", commands: motor.install, how: motor.install_note ?? "Rode você mesmo cada comando, com tempo limite longo, e repita o check." }
       : null;
-  const { key, from } = apifyKey();
   return {
     ...base("check"),
     node: process.versions.node,
     project: ROOT,
     engine: { installed: engine.installed, version: engine.version, ...(motor ?? {}), error: motorError },
     ready: Boolean(motor?.render),
-    modes: { research: true, apify: Boolean(key), concepts: true, pieces: Boolean(motor?.render) },
+    modes: { research: true, concepts: true, pieces: Boolean(motor?.render) },
     install,
-    partners: partnerApps(ROOT),
-    apify_key: Boolean(key),
-    apify_key_from: from,
-    apify_setup: key ? null : keySetup(),
-    prices: { checked_on: SOURCES.checked_on ?? null, ads_usd_each: SOURCES.ads?.usd_per_item ?? null, confirm_above_usd: SOURCES.cost_warn_usd ?? null },
     placements: ENABLED_PLACEMENTS.map((id) => PLACEMENTS[id]),
     meta_checked_on: META.checked_on ?? null,
     campaigns: campaigns.map((entry) => entry.campaign),
@@ -410,89 +398,6 @@ function linksCommand(positionals) {
   };
 }
 
-const usdText = (value) => `US$ ${Number(value).toFixed(2).replace(".", ",")}`;
-
-/**
- * The same research through Apify, with the member's key: the Ad Library searches of `links`, run
- * by the collector of references/fontes.json with an item limit and a charge ceiling, the raw file
- * kept and every ad turned into evidence with its origin and date. Without the key, the manual
- * research is the way, and the result says so. A collection of less than a day is reused.
- */
-async function collectCommand(positionals, values) {
-  const ctx = campaignOf(positionals[0]);
-  const brief = briefOf(ctx).brief;
-  if (!brief.concorrentes?.length && !brief.palavras_busca?.length) {
-    throw fail("brief_incomplete", "O briefing não tem concorrentes nem palavras de busca.", `Pergunte ao integrante de 3 a 5 concorrentes ou as palavras do nicho, grave no briefing.md e rode ${command(`collect ${ctx.slug}`)}.`, { missing: ["concorrentes"] });
-  }
-  const links = campaignLinks(brief);
-  const sources = collectionSources(links, { perSearch: SOURCES.per_search ?? 30 }).slice(0, SOURCES.max_sources ?? 12);
-  const { key } = apifyKey();
-  if (!key) {
-    return {
-      ...base("collect"),
-      campaign: ctx.slug,
-      mode: "manual",
-      collected: false,
-      key: keySetup(),
-      next_step: { action: "manual", command: command(`links ${ctx.slug}`), say: "Sem a chave do Apify, a pesquisa é a guiada: mande os links e o roteiro ao integrante. Se ele quiser a coleta automática, rode o comando de key, que abre a página para ele colar a chave, e rode collect de novo." },
-    };
-  }
-  const sourcesHash = hashJson(sources.map((source) => [source.url, source.limit]));
-  const previous = ctx.state.collect;
-  const rawPrevious = previous?.raw ? resolve(ROOT, previous.raw) : null;
-  if (!values.refresh && previous?.hash === sourcesHash && rawPrevious && isFile(rawPrevious) && Date.now() - Date.parse(previous.at) < FRESH_COLLECTION_HOURS * 3.6e6) {
-    const evidence = readEvidence(ctx.paths.evidence, ctx.slug);
-    return { ...base("collect"), campaign: ctx.slug, mode: "apify", collected: false, cached: true, raw: previous.raw, cost: null, counts: summarize(evidence, { labels: LABELS }).counts, next_step: { action: "evidence", command: command(`evidence ${ctx.slug}`), say: "A coleta de hoje já está na evidência; nada foi cobrado de novo. Para colher de novo, use --refresh." } };
-  }
-  const { total, input } = actorInput(sources, { country: links.country });
-  const estimate = estimateUsd(SOURCES.ads ?? {}, total);
-  const ceiling = SOURCES.cost_warn_usd ?? 1;
-  if (estimate > ceiling && !values["confirm-cost"]) {
-    throw new AppError("needs_confirmation", `Colher até ${total} anúncios de ${sources.length} busca(s) deve custar até ${usdText(estimate)} no Apify, acima do limite de ${usdText(ceiling)} que o app pede para confirmar.`, "Diga o valor ao integrante. Com o sim, repita com --confirm-cost; ou tire concorrentes e palavras do briefing.");
-  }
-  const collected = await runActor({
-    actor: SOURCES.ads.actor,
-    input,
-    token: key,
-    maxItems: total,
-    maxChargeUsd: chargeCeiling(estimate),
-    api: apifyApi(values["apify-url"]),
-    label: `${sources.length} busca(s) na Biblioteca de Anúncios`,
-  });
-  const collectedAt = isoDay();
-  const raw = join(ctx.paths.research, "apify", `anuncios-${collectedAt}-${slugify(collected.run.id, 24)}.json`);
-  writeJson(raw, { format_version: 1, kind: "apify_ads", actor: SOURCES.ads.actor, run_id: collected.run.id, collected_at: collectedAt, sources, cost: { estimate_usd: estimate, charged_usd: collected.run.usage_usd }, items: collected.items });
-  const items = adsToItems(collected.items, { collectedAt, actor: SOURCES.ads.actor });
-  const evidence = readEvidence(ctx.paths.evidence, ctx.slug);
-  const merged = mergeItems(evidence, items);
-  const summary = saveEvidence(ctx, evidence);
-  ctx.state.collect = { at: nowIso(), hash: sourcesHash, raw: rel(raw), run_id: collected.run.id };
-  writeState(ctx.paths, ctx.state);
-  const pages = [...new Set(items.map((item) => item.who))];
-  const fold = (text) => String(text).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-  const warnings = [];
-  for (const competitor of links.competitors.filter((entry) => entry.kind === "name")) {
-    if (!pages.some((page) => fold(page).includes(fold(competitor.who).replace(/^@/, "")))) warnings.push(`A busca por ${competitor.who} não trouxe anúncios de uma página com esse nome: confira o nome com o integrante, ou use as palavras do nicho.`);
-  }
-  if (collected.items.length >= total) warnings.push(`A coleta parou no limite de ${total} anúncios: pode haver mais.`);
-  return {
-    ...base("collect"),
-    campaign: ctx.slug,
-    mode: "apify",
-    collected: true,
-    sources: sources.map((source) => ({ kind: source.kind, who: source.who, limit: source.limit })),
-    ads: items.length,
-    pages,
-    added: merged.added.length,
-    replaced: merged.replaced.length,
-    raw: rel(raw),
-    cost: { estimate_usd: estimate, charged_usd: collected.run.usage_usd, run_id: collected.run.id },
-    counts: summary.counts,
-    warnings: [...warnings, ...summary.warnings],
-    next_step: { action: "tag", command: command(`evidence ${ctx.slug}`), say: "Leia o texto de cada anúncio, tire da análise (leitura tags, exclude) o que não fala com o mesmo público, etiquete os ativos e rode evidence. Diga ao integrante quanto a coleta custou." },
-  };
-}
-
 /** A file the member's AI points at, inside the project: from the campaign folder or from the root. */
 function projectInput(ctx, path) {
   for (const baseDir of [process.cwd(), ctx.paths.dir, ROOT]) {
@@ -525,8 +430,7 @@ function importCommand(positionals) {
   const ctx = campaignOf(positionals[0]);
   const file = projectInput(ctx, positionals[1]);
   const data = readInput(file);
-  const partner = partnerKind(data);
-  const kind = readingKind(data) ?? (data?.kind === "apify_ads" ? "apify_ads" : looksLikeAdList(data) ? "apify_list" : partner);
+  const kind = readingKind(data);
   const evidence = readEvidence(ctx.paths.evidence, ctx.slug);
   const options = { file: rel(file), root: ROOT, campaignDir: ctx.paths.dir, labels: LABELS, today: isoDay() };
   let merged = { added: [], replaced: [] };
@@ -534,16 +438,8 @@ function importCommand(positionals) {
   if (kind === "ad_cards") merged = mergeItems(evidence, adCardsToItems(data, options));
   else if (kind === "declared") merged = mergeItems(evidence, declaredToItems(data, options));
   else if (kind === "tags") tagged = applyTags(data, evidence, options);
-  else if (kind === "apify_ads") merged = mergeItems(evidence, adsToItems(data.items ?? [], { collectedAt: data.collected_at ?? isoDay(), actor: data.actor ?? SOURCES.ads?.actor }));
-  // a list of the collector's ads saved by hand carries no date: the day the file was saved is the closest one
-  else if (kind === "apify_list") merged = mergeItems(evidence, adsToItems(data, { collectedAt: isoDay(statSync(file).mtime), actor: SOURCES.ads?.actor }));
-  else if (kind === "instagram_posts") merged = mergeItems(evidence, instagramPostsToItems(data, options));
-  else if (kind === "instagram_comments" || kind === "youtube_comments") merged = mergeItems(evidence, commentsToItems(data, kind, options));
   else {
-    throw new AppError("reading_invalid", `${rel(file)} não é uma leitura que o app conhece.`, "Uma leitura tem version 1 e kind ad_cards (cartões de anúncios), declared (o que o integrante diz) ou tags (etiquetas); o app também lê a coleta do Apify, um perfil ou uma comparação da Pesquisa no Instagram e os comentários das Pesquisas no Instagram e no YouTube. Os formatos estão em references/pesquisa-manual.md.");
-  }
-  if (!merged.added.length && !merged.replaced.length && !tagged.length) {
-    throw new AppError("reading_invalid", `${rel(file)} não trouxe nenhum item para a evidência.`, "Confira se é o arquivo certo: um perfil sem posts acima do normal, por exemplo, não vira evidência.");
+    throw new AppError("reading_invalid", `${rel(file)} não é uma leitura que o app conhece.`, "Uma leitura tem version 1 e kind ad_cards (cartões de anúncios), declared (o que o integrante diz) ou tags (etiquetas); o formato está em references/pesquisa-manual.md.");
   }
   const summary = saveEvidence(ctx, evidence);
   return {
@@ -659,10 +555,8 @@ function approveCommand(positionals) {
 function pageHash(dir) {
   const sha = (name) => (isFile(join(dir, name)) ? sha256File(join(dir, name)) : null);
   const images = filesIn(join(dir, "imagens")).map((file) => [relative(dir, file).split(sep).join("/"), sha256File(file)]);
-  return hashJson({ page: sha("pagina.html"), poster: sha("imagem.html"), ad: sha("ad.js"), css: sha("ad.css"), motion: sha("motion.js"), images });
+  return hashJson({ page: sha("pagina.html"), ad: sha("ad.js"), css: sha("ad.css"), motion: sha("motion.js"), images });
 }
-
-const hasImage = (formats) => (formats ?? []).some((id) => PLACEMENTS[id]?.kind === "image");
 
 /** The safe zones the pieces use, read from the Motor's table of networks: the ad zone in 9:16. */
 async function adZones(engine) {
@@ -735,43 +629,33 @@ function collectAssets(ctx, brief, dir) {
   };
 }
 
-/**
- * Checks peca.json, copies the runtime and writes pagina.html, and imagem.html when the concept
- * has an image (the still image of the same piece); remembers what was built.
- */
-function buildPage(ctx, key, dir, raw, zones, engine, formats) {
+/** Checks peca.json, copies the runtime and writes pagina.html; remembers what was built. */
+function buildPage(ctx, key, dir, raw, zones, engine) {
   const piece = checkPiece(raw, { pieceDir: dir });
   for (const file of RUNTIME_FILES) copyFile(join(APP_DIR, "runtime", file), join(dir, file));
   copyFile(engine.runtime, join(dir, "motion.js"));
   writeFileAtomic(join(dir, "pagina.html"), pageHtml(piece, { zones: zones.zones }));
-  let poster = null;
-  if (hasImage(formats)) {
-    poster = checkPoster(posterOf(piece), { pieceDir: dir, brand: piece.brand });
-    writeFileAtomic(join(dir, "imagem.html"), pageHtml(poster, { zones: zones.zones }));
-  } else removeDir(join(dir, "imagem.html"));
   const entry = ctx.state.pieces?.[key] ?? {};
-  ctx.state.pieces = { ...(ctx.state.pieces ?? {}), [key]: { ...entry, zones, formats, peca_hash: hashJson(raw), page_hash: pageHash(dir), built_at: nowIso(), template: piece.template } };
+  ctx.state.pieces = { ...(ctx.state.pieces ?? {}), [key]: { ...entry, zones, peca_hash: hashJson(raw), page_hash: pageHash(dir), built_at: nowIso(), template: piece.template } };
   writeState(ctx.paths, ctx.state);
-  return { piece, poster };
+  return piece;
 }
 
-/** The piece as it is now: rebuilt first when the AI edited peca.json (or the formats changed) since the last build. */
-async function currentPiece(ctx, key, dir, engine, warnings, formats) {
+/** The piece as it is now: rebuilt first when the AI edited peca.json since the last build. */
+async function currentPiece(ctx, key, dir, engine, warnings) {
   const raw = readJson(join(dir, "peca.json"), null);
   if (!raw) throw new AppError("piece_missing", `A peça ${key} ainda não existe.`, `Rode ${command(`piece ${ctx.slug} ${key}`)}.`);
   const entry = ctx.state.pieces?.[key];
-  const sameFormats = JSON.stringify(entry?.formats ?? []) === JSON.stringify(formats);
-  if (!entry?.zones || entry.peca_hash !== hashJson(raw) || !sameFormats || !isFile(join(dir, "pagina.html"))) {
+  if (!entry?.zones || entry.peca_hash !== hashJson(raw) || !isFile(join(dir, "pagina.html"))) {
     const zones = entry?.zones ?? (await adZones(engine));
-    if (entry?.page_hash) warnings.push(sameFormats ? "O peca.json mudou desde a última montagem: a página foi refeita antes de renderizar." : "As peças do conceito mudaram: as páginas foram refeitas antes de renderizar.");
-    return buildPage(ctx, key, dir, raw, zones, engine, formats);
+    if (entry?.page_hash) warnings.push("O peca.json mudou desde a última montagem: a página foi refeita antes de renderizar.");
+    return buildPage(ctx, key, dir, raw, zones, engine);
   }
   if (entry.page_hash !== pageHash(dir)) {
     warnings.push("A pagina.html ou uma imagem da peça mudou fora do app: a página foi refeita a partir do peca.json.");
-    return buildPage(ctx, key, dir, raw, entry.zones, engine, formats);
+    return buildPage(ctx, key, dir, raw, entry.zones, engine);
   }
-  const piece = checkPiece(raw, { pieceDir: dir });
-  return { piece, poster: hasImage(formats) ? checkPoster(posterOf(piece), { pieceDir: dir, brand: piece.brand }) : null };
+  return checkPiece(raw, { pieceDir: dir });
 }
 
 async function pieceCommand(positionals, values) {
@@ -797,7 +681,7 @@ async function pieceCommand(positionals, values) {
     todo = draft.todo;
     writeJson(pecaPath, raw);
   }
-  const { piece, poster } = buildPage(ctx, key, dir, raw, zones, engine, concept.formats);
+  const piece = buildPage(ctx, key, dir, raw, zones, engine);
   const texts = screenTexts(piece);
   return {
     ...base("piece"),
@@ -805,16 +689,13 @@ async function pieceCommand(positionals, values) {
     concept: key,
     dir: rel(dir),
     page: rel(join(dir, "pagina.html")),
-    image_page: poster ? rel(join(dir, "imagem.html")) : null,
     peca: rel(pecaPath),
     drafted,
     template: piece.template,
-    formats: concept.formats,
     duration: piece.duration,
     bpm: piece.bpm,
     scenes: piece.scenes.map((scene, index) => ({ n: index + 1, role: scene.role, from: scene.from, to: scene.to, items: scene.items.map((item) => item.type) })),
     texts,
-    image_texts: poster ? screenTexts(poster).map((entry) => entry.text) : [],
     brand: { name: piece.brand.name, logo: piece.brand.logo, colors: piece.brand.colors, sources },
     zone: zones.zones["9:16"],
     todo,
@@ -830,7 +711,6 @@ async function pieceCommand(positionals, values) {
 function piecePaths(dir) {
   return {
     page: join(dir, "pagina.html"),
-    poster: join(dir, "imagem.html"),
     audio: join(dir, "audio"),
     music: join(dir, "audio", "trilha.wav"),
     events: join(dir, "audio", "efeitos.json"),
@@ -890,34 +770,7 @@ export function acceptSummary(result, report) {
   return { passed: result?.passed !== false && failed.length === 0, failed, warned, checks, safe: result?.safe ?? null, networks: result?.networks ?? null, report };
 }
 
-const previewTimes = (piece, step = 1) => Array.from({ length: Math.ceil(piece.duration / step) }, (_, index) => index * step).filter((t) => t < piece.duration);
-const shortAccept = (summary) => ({ passed: summary.passed, failed: summary.failed, warned: summary.warned, report: summary.report });
-
-/**
- * The preview of the other placements of the ad: the 4:5 video as a sheet of frames and the
- * page's own check in that format, and the still image as itself with its check (D9).
- */
-async function previewPlacements(ctx, key, concept, engine, paths, piece) {
-  const results = [];
-  for (const id of concept.formats.filter((placement) => placement !== "vertical")) {
-    const placement = PLACEMENTS[id];
-    const report = join(paths.previewDir, `aceite-${id}.json`);
-    if (placement.kind === "video") {
-      progress(`Prévia: o vídeo ${placement.format}, um quadro a cada 2 segundos, e a conferência no feed`);
-      const frames = await engineCall(engine, engineArgs.frames({ page: rel(paths.page), out: rel(join(paths.previewDir, `quadros-${id}`)), times: previewTimes(piece, 2), scale: 0.5, format: placement.format }));
-      const accepted = await engineCall(engine, engineArgs.accept({ page: rel(paths.page), format: placement.format, beats: rel(paths.grid) }));
-      writeJson(report, { app: APP, command: "preview", placement: id, generated_at: nowIso(), campaign: ctx.slug, concept: key, ...accepted });
-      results.push({ id, format: placement.format, kind: placement.kind, sheet: frames.sheet ?? null, ...shortAccept(acceptSummary(accepted, rel(report))) });
-    } else {
-      progress(`Prévia: a imagem ${placement.format}`);
-      const frames = await engineCall(engine, engineArgs.frames({ page: rel(paths.poster), out: rel(join(paths.previewDir, id)), times: [0.5], format: placement.format }));
-      const accepted = await engineCall(engine, engineArgs.accept({ page: rel(paths.poster), format: placement.format }));
-      writeJson(report, { app: APP, command: "preview", placement: id, generated_at: nowIso(), campaign: ctx.slug, concept: key, ...accepted });
-      results.push({ id, format: placement.format, kind: placement.kind, image: frames.frames?.[0]?.file ?? null, ...shortAccept(acceptSummary(accepted, rel(report))) });
-    }
-  }
-  return results;
-}
+const previewTimes = (piece) => Array.from({ length: Math.floor(piece.duration) }, (_, index) => index);
 
 async function previewCommand(positionals, values) {
   const [name, key] = positionals;
@@ -926,17 +779,16 @@ async function previewCommand(positionals, values) {
   const engine = requireVideoRender(ROOT);
   const dir = join(ctx.paths.pieces, key);
   const warnings = [];
-  const { piece } = await currentPiece(ctx, key, dir, engine, warnings, concept.formats);
+  const piece = await currentPiece(ctx, key, dir, engine, warnings);
   const paths = piecePaths(dir);
   ensureDir(paths.previewDir);
   const audio = await ensureAudio(ctx, key, piece, engine, paths, { refresh: Boolean(values.refresh), warnings });
   const entry = ctx.state.pieces[key];
-  const id = hashJson({ page: entry.page_hash, music: audio.music_hash, sfx: audio.sfx_hash, formats: concept.formats });
+  const id = hashJson({ page: entry.page_hash, music: audio.music_hash, sfx: audio.sfx_hash });
   const reused = !values.refresh && entry.preview?.id === id && isFile(paths.preview) && isFile(paths.previewReport);
   let summary;
   let sheet = entry.preview?.sheet ?? null;
   let loudness = entry.preview?.loudness ?? null;
-  let placements = entry.preview?.placements ?? [];
   if (reused) {
     summary = acceptSummary(readJson(paths.previewReport, {}), rel(paths.previewReport));
   } else {
@@ -955,15 +807,10 @@ async function previewCommand(positionals, values) {
     for (const warning of accepted.warnings ?? []) warnings.push(`Conferência: ${warning}`);
     writeJson(paths.previewReport, { app: APP, command: "preview", generated_at: nowIso(), campaign: ctx.slug, concept: key, ...accepted });
     summary = acceptSummary(accepted, rel(paths.previewReport));
-    placements = await previewPlacements(ctx, key, concept, engine, paths, piece);
-    const failedNames = [...summary.failed.map((item) => item.name), ...placements.flatMap((entryOf) => entryOf.failed.map((item) => `${entryOf.id}:${item.name}`))];
-    const allPassed = summary.passed && placements.every((entryOf) => entryOf.passed);
-    entry.preview = { id, at: nowIso(), file: rel(paths.preview), sheet, loudness, passed: allPassed, failed: failedNames, report: rel(paths.previewReport), page_hash: entry.page_hash, placements };
+    entry.preview = { id, at: nowIso(), file: rel(paths.preview), sheet, loudness, passed: summary.passed, failed: summary.failed.map((item) => item.name), report: rel(paths.previewReport), page_hash: entry.page_hash };
     writeState(ctx.paths, ctx.state);
   }
-  const passed = summary.passed && placements.every((entryOf) => entryOf.passed);
   if (!summary.passed) warnings.push(`A conferência reprovou: ${summary.failed.map((item) => item.name).join(", ")}. Corrija o peca.json e refaça a prévia antes de mostrar.`);
-  for (const entryOf of placements.filter((item) => !item.passed)) warnings.push(`A conferência da peça ${PLACEMENTS[entryOf.id].label} reprovou: ${entryOf.failed.map((item) => item.name).join(", ")}.`);
   const approved = ctx.state.approvals?.previews?.[key]?.id === id;
   return {
     ...base("preview"),
@@ -974,15 +821,13 @@ async function previewCommand(positionals, values) {
     sheet,
     duration: piece.duration,
     loudness,
-    passed,
-    accept: shortAccept(summary),
-    placements,
+    accept: { passed: summary.passed, failed: summary.failed, warned: summary.warned, report: summary.report },
     texts: screenTexts(piece),
     reused,
     approved,
     warnings,
     elapsed_s: Math.round((Date.now() - started) / 100) / 10,
-    next_step: !passed
+    next_step: !summary.passed
       ? { action: "fix", command: command(`preview ${ctx.slug} ${key}`), say: "Corrija o que reprovou (accept.failed, com o fix de cada item) no peca.json e refaça a prévia." }
       : approved
         ? { action: "final", command: command(`final ${ctx.slug} ${key}`), say: "Prévia já aprovada: faça o vídeo final." }
@@ -997,7 +842,8 @@ async function finalCommand(positionals) {
   const engine = requireVideoRender(ROOT);
   const dir = join(ctx.paths.pieces, key);
   const warnings = [];
-  const { piece } = await currentPiece(ctx, key, dir, engine, warnings, concept.formats);
+  await currentPiece(ctx, key, dir, engine, warnings);
+  const piece = checkPiece(readJson(join(dir, "peca.json")), { pieceDir: dir });
   const entry = ctx.state.pieces[key];
   const approval = ctx.state.approvals?.previews?.[key];
   if (!entry.preview?.id || entry.preview.page_hash !== entry.page_hash || !approval || approval.id !== entry.preview.id) {
@@ -1049,76 +895,23 @@ async function finalCommand(positionals) {
   for (const check of delivery.filter((item) => item.status === "fail")) summary.failed.push({ name: check.name, summary: check.summary, fix: null });
   summary.passed = summary.passed && !delivery.some((item) => item.status === "fail");
   writeJson(paths.finalReport, { app: APP, command: "final", generated_at: nowIso(), campaign: ctx.slug, concept: key, ad_name: name916, file: rel(video), cover: isFile(cover) ? rel(cover) : null, passed: summary.passed, failed: summary.failed, delivery_checks: delivery, media, accept: accepted });
-  const files = [{ placement: "vertical", format: "9:16", kind: "video", file: rel(video), cover: isFile(cover) ? rel(cover) : null, passed: summary.passed, report: rel(paths.finalReport) }];
-  for (const id of concept.formats.filter((placement) => placement !== "vertical")) files.push(await finalPlacement(ctx, key, concept, id, { engine, paths, piece, audio, warnings }));
-  const passed = files.every((file) => file.passed);
-  const failed = [...summary.failed.map((item) => item.name), ...files.slice(1).flatMap((file) => file.failed.map((name) => `${file.placement}:${name}`))];
-  entry.final = { at: nowIso(), id: entry.preview.id, page_hash: entry.page_hash, passed, failed, report: rel(paths.finalReport), files };
+  entry.final = { at: nowIso(), id: entry.preview.id, page_hash: entry.page_hash, passed: summary.passed, failed: summary.failed.map((item) => item.name), report: rel(paths.finalReport), files: [{ placement: "vertical", format: "9:16", kind: "video", file: rel(video), cover: isFile(cover) ? rel(cover) : null }] };
   writeState(ctx.paths, ctx.state);
-  if (!passed) warnings.push(`A conferência reprovou: ${failed.join(", ")}. Corrija e gere de novo, ou conte ao integrante exatamente o que ficou assim.`);
+  if (!summary.passed) warnings.push(`A conferência reprovou: ${summary.failed.map((item) => item.name).join(", ")}. Corrija e gere de novo, ou conte ao integrante exatamente o que ficou assim.`);
   return {
     ...base("final"),
     campaign: ctx.slug,
     concept: key,
     ad_name: name916,
-    passed,
     file: rel(video),
     cover: isFile(cover) ? rel(cover) : null,
     media: media ? { width: media.width, height: media.height, duration: media.duration, has_audio: media.has_audio } : null,
     loudness: mixed.loudness ?? null,
-    accept: shortAccept(summary),
-    files: files.map(({ placement, format, kind, file, passed: ok, failed: wrong, report }) => ({ placement, format, kind, file, passed: ok, failed: wrong ?? [], report })),
+    accept: { passed: summary.passed, failed: summary.failed, warned: summary.warned, report: summary.report },
     warnings,
     elapsed_s: Math.round((Date.now() - started) / 100) / 10,
-    next_step: passed ? nextAfterFinal(ctx) : { action: "fix", command: command(`preview ${ctx.slug} ${key}`), say: "Corrija o que reprovou e refaça a prévia." },
+    next_step: summary.passed ? nextAfterFinal(ctx) : { action: "fix", command: command(`preview ${ctx.slug} ${key}`), say: "Corrija o que reprovou e refaça a prévia." },
   };
-}
-
-/**
- * One more placement of the same ad: the 4:5 video (rendered in that format, with the same sound,
- * checked against the feed, because the Motor's table has no ad zone for the feed) or the still
- * image (taken from its page and checked as the feed shows it).
- */
-async function finalPlacement(ctx, key, concept, id, { engine, paths, piece, audio, warnings }) {
-  const placement = PLACEMENTS[id];
-  const name = concept.ad_names[id];
-  const report = join(paths.finalDir, `aceite-${id}.json`);
-  const [width, height] = placement.format === "4:5" ? [1080, 1350] : [1080, 1080];
-  if (placement.kind === "video") {
-    const silent = join(paths.finalDir, `${name}-mudo.mp4`);
-    const video = join(paths.finalDir, `${name}.mp4`);
-    progress(`Final: o vídeo ${placement.format} para o feed`);
-    const rendered = await engineCall(engine, engineArgs.render({ page: rel(paths.page), out: rel(silent), format: placement.format, fps: FPS, sub: 2 }));
-    for (const warning of rendered.warnings ?? []) warnings.push(`Página ${placement.format}: ${warning}`);
-    await engineCall(engine, engineArgs.mix({ video: rel(silent), out: rel(video), music: audio.music, sfx: audio.sfx, fadeOut: 0.4 }));
-    const accepted = await engineCall(engine, engineArgs.accept({ page: rel(paths.page), format: placement.format, beats: rel(paths.grid), video: rel(video), networks: ["feed"] }));
-    let media = null;
-    try {
-      media = await engineCall(engine, engineArgs.probe({ file: rel(video) }));
-    } catch (error) {
-      warnings.push(`Não consegui medir o vídeo ${placement.format}: ${error.message}`);
-    }
-    const summary = acceptSummary(accepted, rel(report));
-    if (media && !(media.width === width && media.height === height)) summary.failed.push({ name: "video_size", summary: `O vídeo tem ${media.width}×${media.height}; o esperado é ${width}×${height}.`, fix: null });
-    if (media && !media.has_audio) summary.failed.push({ name: "has_audio", summary: "O vídeo saiu sem som.", fix: null });
-    const passed = summary.passed && summary.failed.length === 0;
-    writeJson(report, { app: APP, command: "final", placement: id, generated_at: nowIso(), campaign: ctx.slug, concept: key, file: rel(video), zone: "feed", zone_note: "Conferido na zona do feed do Instagram: a tabela de redes do Motor de vídeo não tem a zona de anúncio do feed.", passed, failed: summary.failed, media, accept: accepted });
-    return { placement: id, format: placement.format, kind: "video", file: rel(video), passed, failed: summary.failed.map((item) => item.name), report: rel(report) };
-  }
-  progress(`Final: a imagem ${placement.format}`);
-  const framesDir = join(paths.finalDir, `${id}-quadros`);
-  removeDir(framesDir);
-  const frames = await engineCall(engine, engineArgs.frames({ page: rel(paths.poster), out: rel(framesDir), times: [0.5], format: placement.format }));
-  const image = join(paths.finalDir, `${name}.png`);
-  const first = frames.frames?.[0]?.file ? resolve(ROOT, frames.frames[0].file) : join(framesDir, "quadro-0001.png");
-  if (isFile(first)) copyFile(first, image);
-  removeDir(framesDir);
-  const accepted = await engineCall(engine, engineArgs.accept({ page: rel(paths.poster), format: placement.format }));
-  const summary = acceptSummary(accepted, rel(report));
-  if (!isFile(image)) summary.failed.push({ name: "image", summary: "O Motor de vídeo não devolveu a imagem.", fix: null });
-  const passed = summary.passed && summary.failed.length === 0;
-  writeJson(report, { app: APP, command: "final", placement: id, generated_at: nowIso(), campaign: ctx.slug, concept: key, file: rel(image), passed, failed: summary.failed, accept: accepted });
-  return { placement: id, format: placement.format, kind: "image", file: rel(image), passed, failed: summary.failed.map((item) => item.name), report: rel(report) };
 }
 
 function nextAfterFinal(ctx) {
@@ -1133,9 +926,7 @@ function pieceTexts(dir) {
   const raw = readJson(join(dir, "peca.json"), null);
   if (!raw) return [];
   try {
-    const piece = checkPiece(raw, { pieceDir: dir });
-    const own = raw.poster ? screenTexts(checkPoster(posterOf(piece), { pieceDir: dir, brand: piece.brand })) : [];
-    return [...screenTexts(piece), ...own].filter((entry) => !entry.ui && !entry.logo).map((entry) => entry.text);
+    return screenTexts(checkPiece(raw, { pieceDir: dir })).filter((entry) => !entry.ui && !entry.logo).map((entry) => entry.text);
   } catch {
     const texts = [];
     for (const scene of raw.scenes ?? []) {
@@ -1322,9 +1113,7 @@ Comandos
   capture <campanha>             Copia do site da marca o logo, as cores e as telas (pelo Motor de vídeo).
   budget <campanha>              A conta da verba para a fase de aprendizado.
   links <campanha>               Os links da Biblioteca de Anúncios e o roteiro da coleta.
-  collect <campanha>             A mesma pesquisa pelo Apify, com a chave do integrante, com limite de itens e de gasto.
-  import <campanha> <arquivo>    Junta à evidência uma leitura de capturas, o que o integrante disse, etiquetas,
-                                 a coleta do Apify ou o que a Pesquisa no Instagram e a Pesquisa no YouTube gravaram.
+  import <campanha> <arquivo>    Junta à evidência uma leitura de capturas, o que o integrante disse ou etiquetas.
   evidence <campanha>            O resumo da evidência: tempo no ar, versões, padrões, indícios.
   concepts <campanha>            Confere os conceitos, calcula a confiança e grava as fichas.
   approve <campanha> concepts    Registra o sim do integrante aos conceitos.
@@ -1346,8 +1135,7 @@ Opções
   --url <endereço>               (capture) Outro endereço do site da marca.
   --template <modelo>            (piece) problema-mecanismo, produto-em-uso ou lista.
   --force                        (piece) Reescreve o peca.json a partir do modelo.
-  --refresh                      (preview) Refaz a trilha, os efeitos e a prévia; (collect) colhe de novo.
-  --confirm-cost                 (collect) Confirma uma coleta acima do limite de custo, depois do sim do integrante.
+  --refresh                      (preview) Refaz a trilha, os efeitos e a prévia.
   --kind round|launched|note     (journal) O tipo do registro.
   --note "<texto>"               (journal) O texto do registro.
   --json                         Saída em JSON, para a IA.`;
@@ -1382,13 +1170,6 @@ function humanText(result) {
     case "import":
       body = [`Leitura ${result.kind} importada: ${result.added.length} novo(s), ${result.replaced.length} atualizado(s), ${result.tagged.length} etiquetado(s). Evidência: ${result.evidence}`];
       break;
-    case "collect":
-      body = result.mode === "manual"
-        ? ["Sem a chave do Apify: a pesquisa é a guiada, pelos links.", `Chave: ${result.key.command}`]
-        : result.cached
-          ? [`A coleta de hoje já está na evidência (${result.raw}); nada foi cobrado de novo.`]
-          : [`Coleta pelo Apify: ${result.ads} anúncio(s) de ${result.pages.length} página(s), ${result.added} novo(s). Custo: ${result.cost.charged_usd === null ? "ainda não informado" : usdText(result.cost.charged_usd)} (estimativa de até ${usdText(result.cost.estimate_usd)}).`];
-      break;
     case "evidence":
       body = [`Evidência: ${result.counts.used} item(ns), ${result.counts.competitor_ads} anúncio(s) de ${result.counts.competitors} concorrente(s). Resumo: ${result.file}`, ...result.competitors.map((entry) => `  ${entry.who}: ${entry.active} ativo(s), ${entry.kept} no ar há 30 dias ou mais${entry.indication ? " (indício)" : ""}`), ...result.patterns.map((pattern) => `  Padrão: ${pattern.dimension} ${pattern.value} em ${pattern.competitors.join(", ")}`)];
       break;
@@ -1402,20 +1183,10 @@ function humanText(result) {
       body = [`Peça ${result.concept}: ${result.page} (${result.template}, ${result.duration} s)`, ...result.texts.map((text) => `  ${String(text.t).padStart(5)} s  ${text.text}`), ...result.todo.map((item) => `  A fazer: ${item}`)];
       break;
     case "preview":
-      body = [
-        `Prévia: ${result.preview} (${result.duration} s)${result.reused ? ", reaproveitada" : ""}`,
-        `Folha de quadros: ${result.sheet ?? ""}`,
-        verdict(result.accept),
-        ...result.placements.map((entry) => `${PLACEMENTS[entry.id].label}: ${entry.sheet ?? entry.image ?? ""} · ${verdict(entry)}`),
-      ];
+      body = [`Prévia: ${result.preview} (${result.duration} s)${result.reused ? ", reaproveitada" : ""}`, `Folha de quadros: ${result.sheet ?? ""}`, verdict(result.accept)];
       break;
     case "final":
-      body = [
-        `Vídeo final: ${result.file}${result.media ? ` (${result.media.width}×${result.media.height}, ${result.media.duration} s)` : ""}`,
-        result.cover ? `Capa: ${result.cover}` : "",
-        verdict(result.accept),
-        ...result.files.slice(1).map((entry) => `${PLACEMENTS[entry.placement].label}: ${entry.file} · ${entry.passed ? "APROVADA" : `REPROVADA (${entry.failed.join(", ")})`}`),
-      ];
+      body = [`Vídeo final: ${result.file}${result.media ? ` (${result.media.width}×${result.media.height}, ${result.media.duration} s)` : ""}`, result.cover ? `Capa: ${result.cover}` : "", verdict(result.accept)];
       break;
     case "copy":
       body = [`Textos: ${result.passed ? "APROVADOS" : "REPROVADOS"} (${result.file})`, ...result.results.flatMap((entry) => [...entry.problems.map((problem) => `  ${entry.key} ✗ ${problem.say}`), ...entry.warnings.map((warning) => `  ${entry.key} △ ${warning.say}`)])];
@@ -1455,8 +1226,6 @@ async function main(argv) {
       return budgetCommand(positionals, values);
     case "links":
       return linksCommand(positionals);
-    case "collect":
-      return collectCommand(positionals, values);
     case "import":
       return importCommand(positionals);
     case "evidence":

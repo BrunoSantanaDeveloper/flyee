@@ -34,7 +34,6 @@
   const TAP = 0.3;
 
   let peca = null;
-  let still = false;
   let zones = {};
   let format = "9:16";
   let stage = null;
@@ -360,12 +359,8 @@
     return true;
   }
 
-  /** Uma imagem parada (kind "poster") é o fim da animação dela, em qualquer instante pedido. */
-  const momentOf = (t) => (still ? 100 + t : t);
-
   function start(spec, safeZones) {
     peca = spec;
-    still = spec.kind === "poster";
     zones = safeZones || {};
     format = SIZES[spec.format] ? spec.format : "9:16";
     stage = document.getElementById("stage");
@@ -392,11 +387,11 @@
     };
     global.seek = function (t) {
       return settle().then(function () {
-        return draw(momentOf(t));
+        return draw(t);
       });
     };
     global.boxes = function (t) {
-      if (fitted === format) draw(momentOf(t));
+      if (fitted === format) draw(t);
       return M.domBoxes(stage);
     };
     return film;

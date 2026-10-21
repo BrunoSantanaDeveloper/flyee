@@ -308,32 +308,16 @@ export function declaredToItems(reading, { file, root, campaignDir, labels, toda
   });
 }
 
-/** "1,2%" → 1.2, "R$ 45,90" → 45.9, "12,3 mil" → 12300, and a duration in seconds: "6,4 s" → 6.4, "0:06" → 6. */
+/** "1,2%" → 1.2, "R$ 45,90" → 45.9, "12,3 mil" → 12300. */
 export function parseMetric(text) {
   if (typeof text === "number") return Number.isFinite(text) ? text : null;
-  const folded = foldText(text).replace(/r\$|%/g, "").replace(/\s+/g, " ").trim();
+  const folded = foldText(text).replace(/r\$|%/g, "").trim();
   if (/^\d{1,3}(?:\.\d{3})*,\d+$|^\d+,\d+$/.test(folded)) return Number(folded.replace(/\./g, "").replace(",", "."));
-  const seconds = parseDuration(folded);
-  if (seconds !== undefined) return seconds;
-  // a clock that is not a duration would read as its first digits
-  if (/\d:\d/.test(folded)) return null;
   return parseCount(folded);
 }
 
-/** A duration as Instagram shows it ("6 s", "1 min 5 s", "1h 2min", "0:06"), in seconds; undefined when the text is not one. */
-function parseDuration(folded) {
-  const clock = /^(\d+):([0-5]\d)(?::([0-5]\d))?$/.exec(folded);
-  if (clock) return clock[3] === undefined ? Number(clock[1]) * 60 + Number(clock[2]) : Number(clock[1]) * 3600 + Number(clock[2]) * 60 + Number(clock[3]);
-  const parts = /^(?:(\d+) ?h(?:oras?)?)? ?(?:(\d+) ?min(?:utos?)?)? ?(?:(\d+(?:,\d+)?) ?s(?:eg(?:undos?)?)?)?$/.exec(folded);
-  if (!parts || parts.slice(1).every((part) => part === undefined)) return undefined;
-  return Number(parts[1] ?? 0) * 3600 + Number(parts[2] ?? 0) * 60 + Number((parts[3] ?? "0").replace(",", "."));
-}
-
-/**
- * Tags, groups and exclusions the AI sets on items that already exist (kind "tags"), and the
- * reading of a reference ad by the Análise de vídeo app (`analysis`, a file in the project).
- */
-export function applyTags(reading, evidence, { file, labels, root, campaignDir }) {
+/** Tags, groups and exclusions the AI sets on items that already exist (kind "tags"). */
+export function applyTags(reading, evidence, { file, labels }) {
   if (!Array.isArray(reading.items) || !reading.items.length) throw invalid(file, "items", "a leitura de etiquetas não tem itens.");
   const changed = [];
   reading.items.forEach((entry, index) => {
@@ -345,11 +329,6 @@ export function applyTags(reading, evidence, { file, labels, root, campaignDir }
     if (entry.group !== undefined) item.group = entry.group === null ? null : String(entry.group);
     if (entry.exclude !== undefined) item.excluded = Boolean(entry.exclude);
     if (typeof entry.note === "string") item.note = entry.note;
-    if (entry.analysis !== undefined) {
-      const analysis = root ? projectFile(root, campaignDir ?? root, entry.analysis) : null;
-      if (!analysis) throw invalid(file, `${path}.analysis`, `não encontrei ${entry.analysis} no projeto.`, "Aponte o arquivo da descrição que o app Análise de vídeo gravou.");
-      item.data = { ...(item.data ?? {}), analysis };
-    }
     changed.push(item.id);
   });
   evidence.updated_at = new Date().toISOString();
@@ -432,7 +411,7 @@ export function summarize(evidence, { labels = null } = {}) {
   const untagged = ads.filter((ad) => ad.data.active && !Object.keys(ad.tags ?? {}).length).map((ad) => ad.id);
   const organic = items
     .filter((item) => item.kind === "organic_post" || item.kind === "organic_pattern")
-    .map((item) => ({ id: item.id, kind: item.kind, who: item.who, plays: item.data.plays ?? null, metric: item.data.metric ?? item.data.plays ?? null, metric_name: item.data.metric_name ?? "plays", baseline: item.data.baseline ?? null, multiplier: item.data.multiplier ?? null, n: item.data.n ?? null, small_sample: item.data.small_sample ?? null, text: shorten(item.data.text ?? item.data.caption, 140), collected_at: item.source.collected_at }));
+    .map((item) => ({ id: item.id, kind: item.kind, who: item.who, plays: item.data.plays ?? null, baseline: item.data.baseline ?? null, multiplier: item.data.multiplier ?? null, n: item.data.n ?? null, small_sample: item.data.small_sample ?? null, text: shorten(item.data.text ?? item.data.caption, 140), collected_at: item.source.collected_at }));
   const audience = items.filter((item) => item.kind === "audience_comment").map((item) => ({ id: item.id, who: item.who, text: shorten(item.data.text, 200), likes: item.data.likes ?? null }));
   const own = items.filter((item) => item.kind === "own_result").map((item) => ({ id: item.id, text: shorten(item.data.text, 200), metrics: item.data.metrics ?? [] }));
   const families = [...new Set(items.map((item) => SOURCE_FAMILY[item.kind]).filter(Boolean))];

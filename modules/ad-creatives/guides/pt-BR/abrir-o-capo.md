@@ -13,7 +13,6 @@ Tudo fica em `anuncios/<campanha>/` dentro do seu projeto. Uma campanha por past
 | `pesquisa/links.md` | os links da Biblioteca de Anúncios e o roteiro da coleta |
 | `pesquisa/capturas/` | as suas capturas, uma pasta por concorrente |
 | `pesquisa/leituras/` | o que a IA leu em cada captura, com o texto como aparece |
-| `pesquisa/apify/` | o que o Apify colheu, como veio, com o custo de cada coleta |
 | `evidencias.json` e `evidencias.md` | cada dado com a origem (captura, link, o que você disse) e a data |
 | `conceitos.json` e `conceitos.md` | os conceitos e as fichas |
 | `pecas/<conceito>/` | o `peca.json` (as cenas), a página, a prévia e o vídeo final |
@@ -34,18 +33,6 @@ A regra da coleta é fotografar os 10 primeiros anúncios ativos de cada concorr
 
 A IA copia as datas e os números como aparecem na tela ("Veiculação iniciada em 3 de jul de 2026", "3 anúncios usam esse criativo e esse texto"), e o app os converte. Uma captura que falta derruba o cartão: dado sem origem não entra.
 
-## A coleta pelo Apify
-
-Com a chave do Apify, o app faz a mesma pesquisa sozinho: um coletor público lê a Biblioteca de Anúncios, sem a sua conta da Meta, e devolve cada anúncio com a data de início, as versões, o texto e o endereço do vídeo. O app guarda o que veio em `pesquisa/apify/` e põe cada anúncio na evidência com a origem e a data. Toda coleta vai com um limite de itens e um teto de gasto que o próprio Apify respeita; acima de US$ 1 de custo estimado, a IA pergunta antes. Repetir a mesma coleta em menos de 24 horas não custa de novo. O coletor cobra por anúncio colhido, do crédito da sua conta no Apify; o preço conferido fica no app, com a data.
-
-## Os outros apps
-
-Três apps trazem mais evidência, e cada uma entra com a origem e a data. Quando a pesquisa precisa de um deles e ele ainda não está no projeto, a IA o instala na hora:
-
-- a **Pesquisa no Instagram** mede o seu perfil e o dos concorrentes: entram os posts que passaram muito o normal do próprio perfil, com o normal ao lado, Reels e posts estáticos sempre separados;
-- as **Pesquisas no Instagram e no YouTube** trazem os comentários mais curtidos de posts e vídeos do tema, sem o nome de quem escreveu: a fala do público;
-- a **Análise de vídeo** destrincha o anúncio que um concorrente mantém há mais tempo: o gancho, a prova, a estrutura e as frases, segundo a segundo.
-
 ## Os conceitos e a confiança
 
 Cada conceito parte de uma barreira (o que impede a compra) ou de um motivador (o que puxa a compra), com um ângulo, um gancho nos 3 primeiros segundos, uma prova e um estilo visual. A campanha testa três, os três no mesmo conjunto.
@@ -64,8 +51,6 @@ Cada peça é uma página que o app Motor de vídeo renderiza quadro a quadro. E
 
 A conferência do Motor mede, na prévia e no vídeo final: a capa (o quadro 0 com texto legível), a área segura, o tamanho do texto (44 px no mínimo), os cortes na batida, piscadas, tempo parado e o volume (−14 LUFS). Uma página sem as caixas de texto e logo nunca conta como conferida.
 
-A mesma página se recompõe em 4:5 para o vídeo do feed, e a imagem do feed (4:5 ou 1:1) junta o gancho, a tela do produto, o logo e o botão. As duas são conferidas na zona do feed do Instagram: a tabela de redes do Motor ainda não tem a zona de anúncio do feed, e a entrega diz isso.
-
 A trilha e os efeitos são gerados no seu computador e são livres para usar em anúncio.
 
 ## Os textos e os nomes
@@ -73,10 +58,6 @@ A trilha e os efeitos são gerados no seu computador e são livres para usar em 
 A conferência dos textos (`copy`) bloqueia promessa de resultado (venda garantida, retorno, "vai vender"), os termos que você proibiu no briefing e frases que afirmam uma condição de quem vê, como "Você sofre de…", que a política de atributos pessoais da Meta recusa. Ela avisa, sem bloquear, quando o texto passa dos limites do Guia de Anúncios da Meta: 125 caracteres antes do ver mais no feed, 44 visíveis nos Reels e 27 no título.
 
 O nome de cada anúncio segue o padrão do seu site, quando ele escolhe a página pelo `utm_content`, ou `<conceito>-<formato>-<gancho>-v<n>`. O `nomes.json` liga cada nome a cada arquivo: é por ele que o resultado de cada peça volta para a próxima rodada.
-
-## Reels de teste
-
-Antes de pagar, os vídeos verticais podem sair como Reels de teste, que o Instagram mostra só para quem não segue o perfil. Depois de 72 horas, a IA lê a captura das estatísticas de cada um e grava o resultado como resultado próprio, o tipo de evidência mais forte da próxima rodada. Com poucas centenas de contas alcançadas, uma diferença pequena é indício, e ela diz isso.
 
 ## Pedidos avançados
 
@@ -88,4 +69,4 @@ Antes de pagar, os vídeos verticais podem sair como Reels de teste, que o Insta
 
 ## Privacidade
 
-As capturas, as leituras e as peças ficam no seu projeto. O app se conecta só ao site da sua marca, para copiar o logo, as cores e as telas, e ao Apify, quando você salvou a chave. A chave fica no seu computador, fora de todo projeto, e nunca passa pela conversa. Nenhum dado de cliente ou paciente entra nas peças: as telas recriadas usam dados fictícios.
+As capturas, as leituras e as peças ficam no seu projeto. A única conexão do app é a visita ao site da sua marca, para copiar o logo, as cores e as telas. Nenhum dado de cliente ou paciente entra nas peças: as telas recriadas usam dados fictícios.

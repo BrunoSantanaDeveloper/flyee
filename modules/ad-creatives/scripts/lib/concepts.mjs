@@ -21,17 +21,14 @@ export const TEMPLATES = ["problema-mecanismo", "produto-em-uso", "lista"];
 export const DEFAULT_SUCCESS = "Entre os anúncios, a maior taxa de quem passa dos 3 primeiros segundos e o menor custo por resultado na primeira semana.";
 
 /**
- * The pieces a concept can have, one per placement of the same ad (D9). `token` is what the file
- * name carries for that piece; the ad's own name is the vertical video's.
+ * The pieces a concept can have. `token` is what the ad name carries for that piece.
+ * In this version, only the vertical video.
  */
 export const PLACEMENTS = {
   vertical: { id: "vertical", label: "Vídeo vertical 9:16 (Stories e Reels)", format: "9:16", kind: "video", token: "reels" },
-  feed: { id: "feed", label: "Vídeo 4:5 (feed)", format: "4:5", kind: "video", token: "feed" },
-  imagem: { id: "imagem", label: "Imagem 4:5 (feed)", format: "4:5", kind: "image", token: "imagem" },
-  quadrado: { id: "quadrado", label: "Imagem 1:1 (feed e coluna da direita)", format: "1:1", kind: "image", token: "quadrado" },
 };
-export const ENABLED_PLACEMENTS = ["vertical", "feed", "imagem", "quadrado"];
-export const DEFAULT_PLACEMENTS = ["vertical", "feed", "imagem"];
+export const ENABLED_PLACEMENTS = ["vertical"];
+export const DEFAULT_PLACEMENTS = ["vertical"];
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const invalid = (path, problem, fix) => new AppError("concepts_invalid", `conceitos.json tem um problema em ${path}: ${problem}`, fix ?? "Corrija o conceitos.json e rode concepts de novo.");
@@ -136,17 +133,10 @@ export function checkConcepts(data, { evidence, labels, brief, root, campaignDir
     const cited = (concept.evidence ?? []).map((id) => byId.get(id)).filter((item) => item && !item.excluded);
     const families = [...new Set(cited.map((item) => SOURCE_FAMILY[item.kind]).filter(Boolean))].sort();
     const confidence = confidenceOf(families);
-    // the ad is named once, after its vertical video; a pattern without <formato> names every piece
-    // alike, so the file of each other piece carries its placement after the ad's name
-    const nameOf = (placement) => adName(checkedPattern.pattern, { concept, placement, version });
-    const mainName = nameOf("vertical");
-    const names = Object.fromEntries(formats.map((placement) => {
-      const name = nameOf(placement);
-      return [placement, placement === "vertical" || name !== mainName ? name : `${mainName}-${PLACEMENTS[placement].token}`];
-    }));
+    const names = Object.fromEntries(formats.map((placement) => [placement, adName(checkedPattern.pattern, { concept, placement, version })]));
     for (const [placement, name] of Object.entries(names)) {
       if (!SLUG.test(name)) throw invalid(at("formats"), `o nome do anúncio "${name}" (${placement}) tem caracteres que o site não lê: só minúsculas sem acento, números e hífens.`, "Confira o ângulo, a etiqueta do gancho e o padrão do nome.");
-      if (placement === "vertical" && name.length > 64) throw invalid(at("formats"), `o nome do anúncio "${name}" passa de 64 caracteres.`, "Encurte o ângulo ou a etiqueta do gancho.");
+      if (name.length > 64) throw invalid(at("formats"), `o nome do anúncio "${name}" passa de 64 caracteres.`, "Encurte o ângulo ou a etiqueta do gancho.");
       if (brief.le_nome && name.split("-")[0] !== concept.angle && checkedPattern.pattern.startsWith("<angulo>")) {
         throw invalid(at("angle"), `o nome "${name}" não começa pelo ângulo ${concept.angle}: o site escolheria a manchete errada.`);
       }

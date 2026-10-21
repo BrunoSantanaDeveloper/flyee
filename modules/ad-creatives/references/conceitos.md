@@ -8,7 +8,6 @@ Leia o resumo da evidência (`evidence <campanha>`) e procure:
 
 - **O que o mercado mantém.** Anúncios no ar há 30 dias ou mais são os que alguém continua pagando. Um ângulo que aparece em dois concorrentes ou mais é validado e também disputado: entrar nele pede um gancho que só a marca do integrante tem.
 - **O que ninguém diz.** Uma lacuna (nenhum concorrente fala daquilo) é uma oportunidade, mas lacuna não é demanda. Sem outra fonte, o conceito sai com confiança baixa ou como aposta, e a ficha diz isso.
-- **O orgânico medido.** Um post que fez muitas vezes o normal do próprio perfil mostra um assunto e um gancho que o público já escolheu sem verba. Reels e posts estáticos contam separados, e um perfil pequeno é indício.
 - **A fala do público e o resultado próprio.** Uma frase de cliente e um resultado da própria marca valem mais que qualquer opinião: cite pelo id.
 - **A execução dominante.** Se os anúncios mantidos do mercado são uma pessoa falando para a câmera, diga isso ao integrante: este app entrega peças animadas, e uma versão com uma pessoa real fica como roteiro para ele gravar.
 
@@ -31,7 +30,7 @@ Grave os conceitos em `anuncios/<campanha>/conceitos.json` e rode `concepts <cam
       "structure": "problema-mecanismo",
       "visual": "frase-que-some",
       "template": "problema-mecanismo",
-      "formats": ["vertical", "feed", "imagem"],
+      "formats": ["vertical"],
       "evidence": ["ad-nome-da-pagina-1234567890", "fala-fio-da-conversa"],
       "against": [],
       "copy": { "primary_text": "…", "headline": "…", "description": "…", "cta": "Assinar" },
@@ -50,7 +49,7 @@ Grave os conceitos em `anuncios/<campanha>/conceitos.json` e rode `concepts <cam
 | `proof` | `type` de `etiquetas.json` e `text`; `depoimento`, `antes-depois` e `pessoa-real` exigem `material`, um arquivo do integrante em `materiais/`; `numero` exige `source` |
 | `structure`, `visual` | valores de `etiquetas.json` |
 | `template` | o modelo da página: `problema-mecanismo`, `produto-em-uso` (com uma tela do produto) ou `lista` (o gancho é uma lista curta, como "Língua. Pulso. Pontos.") |
-| `formats` | as peças do anúncio: `vertical` (o vídeo 9:16 para Stories e Reels, sempre presente), `feed` (o mesmo vídeo em 4:5), `imagem` (a imagem 4:5 do feed) e `quadrado` (a imagem 1:1 do feed e da coluna da direita); sem o campo, `vertical`, `feed` e `imagem` |
+| `formats` | as peças; nesta versão, `vertical` (o vídeo 9:16 para Stories e Reels) |
 | `evidence`, `against` | ids de `evidencias.json` a favor e contra; um id que não existe é recusado |
 | `copy` | o texto do anúncio: `primary_text`, `headline`, `description` (opcional) e `cta`, um botão da lista da Meta |
 | `success_criterion` | como o integrante vai comparar os anúncios; sem ele, o app usa o critério padrão |
@@ -81,9 +80,7 @@ Quando chega evidência nova depois do sim do integrante, `concepts` recalcula a
 
 ## 5. O nome do anúncio
 
-O nome sai do padrão do briefing: o do site, quando o site lê o nome que chega no link (`utm_content`), ou `<conceito>-<formato>-<gancho>-v<n>`. Fica em minúsculas sem acento, com hífens e até 64 caracteres. Com um site que lê o nome, o primeiro trecho é o ângulo, e o app confere.
-
-O nome do anúncio é o do vídeo vertical, com o formato `reels`. As outras peças do mesmo anúncio saem na entrega com o próprio formato no nome do arquivo (`feed`, `imagem`, `quadrado`), para o integrante pôr cada uma no posicionamento certo; `nomes.json` liga todas ao nome do anúncio.
+O nome sai do padrão do briefing: o do site, quando o site lê o nome que chega no link (`utm_content`), ou `<conceito>-<formato>-<gancho>-v<n>`. Fica em minúsculas sem acento, com hífens e até 64 caracteres. O formato do vídeo vertical é `reels`. Com um site que lê o nome, o primeiro trecho é o ângulo, e o app confere.
 
 ## 6. As fichas
 

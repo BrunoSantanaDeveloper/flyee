@@ -1,0 +1,55 @@
+/* Criativos para anúncios · estilo base das peças. As cores e a fonte da marca chegam pelas
+   variáveis que a página define. Sem transition nem animation: o tempo é o do filme. */
+:root {
+  --fundo: #F6F4EE;
+  --texto: #2B2A27;
+  --destaque: #1F6F78;
+  --destaque-suave: rgba(31, 111, 120, 0.28);
+  --superficie: #FFFFFF;
+  --suave: #5E5A53;
+  --fonte: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+html, body { margin: 0; padding: 0; background: var(--fundo); overflow: hidden; }
+#stage { position: relative; overflow: hidden; background: var(--fundo); font-family: var(--fonte); color: var(--texto); }
+
+.blob { position: absolute; border-radius: 50%; pointer-events: none; opacity: 0.16; }
+.blob-0 { background: radial-gradient(closest-side, var(--destaque), transparent); }
+.blob-1 { background: radial-gradient(closest-side, var(--suave), transparent); opacity: 0.12; }
+
+.scene { position: absolute; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; box-sizing: border-box; }
+.scene > * { max-width: 100%; box-sizing: border-box; transform-origin: 0 50%; }
+.scene.center { align-items: center; text-align: center; }
+.scene.center > * { transform-origin: 50% 50%; }
+
+.title, .list-item, .brand-name { margin: 0; font-weight: 700; line-height: 1.08; letter-spacing: -0.01em; overflow-wrap: break-word; }
+.title.big { letter-spacing: -0.02em; }
+/* o destaque ganha um sublinhado que corre da esquerda, desenhado pelo ad.js a cada quadro */
+.accent { color: var(--destaque); background-image: linear-gradient(var(--destaque-suave), var(--destaque-suave)); background-repeat: no-repeat; background-position: 0 92%; background-size: 0% 0.2em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.caption { margin: 0; font-weight: 600; line-height: 1.18; color: var(--texto); overflow-wrap: break-word; }
+
+.list { display: flex; flex-direction: column; gap: 0.12em; }
+.list-item { transform-origin: 0 50%; }
+
+.quote { align-self: stretch; background: var(--superficie); border-radius: 40px 40px 40px 8px; padding: 34px 40px 38px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.10); }
+.quote .when { display: block; font-weight: 700; color: var(--destaque); letter-spacing: 0.04em; margin-bottom: 10px; }
+.quote .quote-text { margin: 0; font-weight: 500; line-height: 1.15; }
+
+.card { align-self: stretch; background: var(--superficie); border-radius: 36px; padding: 32px 38px 36px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.10); text-align: left; transform-origin: 50% 0; }
+.card-title { font-weight: 700; margin-bottom: 6px; }
+.field { margin-top: 20px; }
+.field-head { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
+.field .label { font-weight: 700; }
+.chip { display: inline-block; border-radius: 999px; padding: 6px 16px; background: rgba(0, 0, 0, 0.06); color: var(--suave); font-weight: 500; white-space: nowrap; }
+.chip.warn { background: rgba(180, 84, 58, 0.14); color: #B4543A; }
+.value { margin-top: 12px; box-sizing: border-box; min-height: 1.9em; line-height: 1.9em; padding: 0 22px; border: 2px solid rgba(0, 0, 0, 0.10); border-radius: 22px; font-weight: 500; background: var(--superficie); white-space: nowrap; overflow: hidden; text-overflow: clip; }
+.value.focus { border-color: var(--destaque); }
+.value.blank { border-style: dashed; color: var(--suave); }
+
+.screen { align-self: stretch; position: relative; overflow: hidden; border-radius: 28px; background: var(--superficie); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14); transform-origin: 50% 50%; }
+.screen.phone { align-self: center; aspect-ratio: 9 / 18; border-radius: 48px; border: 14px solid #141414; }
+.screen-img { display: block; width: 100%; height: auto; min-height: 100%; object-fit: cover; object-position: top center; transform-origin: 50% 0; }
+
+.stamp { display: inline-flex; align-items: center; background: var(--destaque); color: var(--superficie); font-weight: 700; border-radius: 999px; padding: 18px 36px; }
+.pill { display: inline-block; background: var(--destaque); color: var(--superficie); font-weight: 700; border-radius: 999px; padding: 22px 46px; }
+.logo { display: block; width: auto; height: auto; object-fit: contain; }

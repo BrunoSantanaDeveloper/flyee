@@ -257,6 +257,8 @@ Falta: o commit, que fica com o operador, e a publicação, que é passo de cons
 
 **Bloqueia:** só o rótulo do vídeo de feed no `ad-creatives` 1.1.0 (T2.2). A T2.1 não muda código.
 
+**Andamento em 2026-10-21.** T2.1 🟡: o caminho foi provado pelo `ad-creatives` 1.1.0 sem mudar o motor. A imagem sai de `frames --format 4:5` ou `1:1` e é conferida por `accept --safe instagram-feed`; o vídeo 4:5 sai de `render --format 4:5` e é conferido por `accept --networks feed` (`modules/ad-creatives/tests/templates.test.mjs` e a rodada real até o `final`, em `modules/ad-creatives/.dev/avaliacoes.md`). O aceite no projeto do MedChina não rodou, porque a pasta da rodada não existe mais (ÉPICO 3). T2.2 ⬜: não feita. O `ad-creatives` confere contra `feed`, como esta tarefa prevê, e a entrega diz isso.
+
 ### T2.1: provar a imagem estática e o vídeo de feed sem mudar o motor
 **Estado: 🟡** o caminho existe e nunca serviu a anúncio:
 - `frames` grava PNG no tamanho do formato, sempre monta a folha com o ffmpeg e apaga os `quadro-*.png` antigos da pasta (`modules/video-render/scripts/render.mjs:288-311`);
@@ -279,6 +281,35 @@ O que fazer:
 ## ÉPICO 3: `ad-creatives` 1.0.0 e 1.1.0
 
 **Bloqueia:** a T4.5. Depende da T0.8 para as regras e os modelos de página.
+
+**Andamento em 2026-10-21** (o texto de cada tarefa abaixo continua como foi aprovado). O app existe em `modules/ad-creatives` 1.1.0, sem commit; a 1.0.0 é o ZIP de `dist/modules`, que passa a ser a fonte dela. `npm run validate` dá os 8 apps válidos, sem avisos. O app passa em 53 testes (`node --test "modules/ad-creatives/tests/*.test.mjs"`: 52 aprovados e 1 pulado, o do Motor de verdade, que passa com `ADS_TEST_REAL=1` em 4 minutos). `npm run apps -- catalog --check` está em dia, e o catálogo lê que o app usa `video-render`, `instagram-research`, `youtube-research` e `video-analysis`.
+
+| Tarefa | Estado | Evidência |
+|---|---|---|
+| T3.1 | ✅ | `flyee.module.json`: `workflow · divulgar`, `compatible_ais` só `claude_code`, `min_core >=1.3.0`, sem `./saida/`; desde a 1.1.0, `APIFY_TOKEN` com `required: false` e as três permissões da T3.8 |
+| T3.2 | ✅ | `scripts/ads.mjs` com os 13 comandos da tabela e mais seis: `capture` (a marca do site antes das peças; quando falha, as peças usam os arquivos do integrante), `approve` (o sim dos conceitos e de cada prévia, gravado com o hash do conteúdo, para que mudar o aprovado peça o sim de novo), `collect` (a coleta da 1.1.0), `status` (retomar uma campanha pelo `next_step`), `list` e `help`. Um teste por comando em `tests/commands.test.mjs`, contra o motor substituto `tests/fixtures/engine/render.mjs`, com a sequência do `final` conferida: no vertical `render`, `mix`, `frames` (a capa), `accept`, `probe`; no vídeo 4:5 `render`, `mix`, `accept`, `probe`; na imagem `frames`, `accept`. Os dois casos do `budget` estão em `tests/unit.test.mjs` |
+| T3.3 | ✅ | `scripts/lib/evidence.mjs` e `concepts.mjs`; os três casos do aceite em `tests/unit.test.mjs` ("concepts (D11, D21)"). Entraram também o tipo `organic_pattern` (um padrão, com `n`) e a origem `apify` |
+| T3.4 | 🟡 | `references/pesquisa-manual.md` e os casos do aceite em `tests/unit.test.mjs` ("evidence (D12)"), com leituras sintéticas (`tests/fixtures/campanha.mjs`). A T0.4 não rodou: o roteiro nunca foi seguido por uma pessoa, e o tempo que ele pede não foi medido |
+| T3.5 | ✅ | `runtime/ad.js` e `ad.css`; os modelos `problema-mecanismo`, `produto-em-uso` e `lista` em `scripts/lib/pieces.mjs`. `tests/templates.test.mjs` com `ADS_TEST_REAL=1` passa no `accept` real: 9:16 com `ads_meta` (zona de 270, 672, 65 e 140 px) e, na 1.1.0, o vídeo 4:5 e as imagens 4:5 e 1:1 |
+| T3.6 | ✅ | `skills/ad-creatives/SKILL.md` (passos 0 a 7), as seis referências da tarefa, README e guias `usar` e `abrir-o-capo` nas duas línguas; `validate` sem avisos |
+| T3.7 | ✅ | `tests/eval.json` com 13 casos na 1.0.0; os resultados em `modules/ad-creatives/.dev/avaliacoes.md`: 11 passaram rodados por script em pastas isoladas de `C:\AppsProjects\flyee-eval`, 1 é coberto por teste e 1 não rodou ("vídeo avulso vai para o Estúdio", que depende da escolha da IA). `dist/modules/ad-creatives-1.0.0.zip`, sha256 `0df5d5a9c180bcfb57a1df99bcc74384346661b8b33582e3b8e436c20edd1ff6` |
+| T3.8 | ✅ | a coleta (`collect`, `scripts/lib/adlibrary.mjs`, `apify.mjs` copiado do `instagram-research`), os parceiros (`scripts/lib/partners.mjs`), as três peças por conceito e `references/reels-de-teste.md`. `tests/apify.test.mjs` passa (5 testes, servidor falso do Apify). `tests/eval.json` tem 18 casos, os 5 novos da tarefa. `dist/modules/ad-creatives-1.1.0.zip` (32 arquivos), sha256 `1507fc02eab9ba9ed45167fccd47212e9315045b1d650bb3e49c5c9e8ab52bdc`; o ZIP da 1.0.0 continua com `0df5d5a9…`. A rodada com o Motor de verdade foi do `new` ao `final` com as quatro peças: as nove finais passaram sem aviso (`.dev/avaliacoes.md`) |
+
+⚠️ **Correções (2026-10-21).**
+
+- D10 foi conferida numa página da própria Meta, em 2026-10-21: `developers.meta.com/vr/resources/optimize-ad-campaign/` (50 eventos em 7 dias por conjunto). O valor e a fonte estão em `LEARNING`, `modules/ad-creatives/scripts/lib/budget.mjs:6-11`.
+- D20: no Guia de Anúncios da Meta, o título tem 27 caracteres, não 40; o texto principal mostra 125 no feed e 44 nos Reels (`modules/ad-creatives/references/meta-anuncios.json`, conferido em 2026-10-21, com as fontes).
+- A T2.2 não foi feita. Como ela mesma prevê, o vídeo 4:5 é conferido contra `feed`, e as imagens com `--safe instagram-feed`; a entrega diz isso (`zone_note` no relatório do `final` e uma linha de `lancamento.md`).
+- As pastas citadas pelo ÉPICO 0 não existem mais: `C:\AppsProjects\conteudo` inteira, com `medchina\anuncios\medchina-rodada-0\`, e `C:\AppsProjects\flyee-workspace\prototipos\anuncios` (procuradas em 2026-10-21). O app foi destilado deste plano, das regras e de 13 arquivos da rodada recuperados da conversa em que ela foi feita: o briefing, os conceitos, as notas de lançamento, os textos, o teste dos atores e a base das páginas. Onde guardá-los é decisão do operador.
+- A lista "O que este plano não cobre e o que não foi verificado", no fim, é a de 2026-10-12. A T0.3 rodou o coletor; o que segue sem verificação está nas lacunas abaixo.
+
+**Lacunas declaradas.**
+
+- A conversa não foi avaliada: os casos rodaram por script, no papel da IA do integrante. O executor de avaliações é a fase P7.
+- O app nunca rodou uma coleta real no Apify; o coletor rodou na T0.3, fora do app. `collation_count` continua sem conferência na tela da Biblioteca.
+- O download de um anúncio pela Análise de vídeo, pelo endereço do Apify ou pelo link da Biblioteca, não foi testado.
+- Com o preço de 2026-10-21 (US$ 0,00075 por anúncio) e os limites do app (12 buscas, 10 anúncios por concorrente, 30 por palavra), a maior coleta custa US$ 0,27. O sim acima de US$ 1 (D7) só aparece se o preço subir.
+- A 1.0.0 lê "0:06" e "6,4 s" errado num resultado próprio declarado (0 e 6). A 1.1.0 corrigiu; na 1.0.0, nenhum guia pede duração, e o ZIP ficou como estava, para manter o checksum da T3.7.
 
 Recorte proposto (D8):
 

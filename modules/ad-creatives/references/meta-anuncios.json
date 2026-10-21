@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-21",
+  "note": "Números do Guia de Anúncios da Meta, conferidos na data acima. O texto que passa do limite não é recusado pela Meta: ele é cortado com um ver mais. O app avisa para o gancho ficar antes do corte.",
+  "sources": [
+    { "what": "texto principal e botões no feed do Instagram", "url": "https://www.facebook.com/business/ads-guide/update/video/instagram-feed" },
+    { "what": "texto principal e título no feed do Facebook", "url": "https://www.facebook.com/business/ads-guide/update/video/facebook-feed" },
+    { "what": "texto principal e zona segura nos Reels", "url": "https://www.facebook.com/business/ads-guide/update/video/instagram-reels" },
+    { "what": "fase de aprendizado", "url": "https://developers.meta.com/vr/resources/optimize-ad-campaign/" }
+  ],
+  "text": {
+    "primary_text": {
+      "visible_chars": 125,
+      "reels_visible_chars": 44,
+      "facebook_feed_range": [50, 150]
+    },
+    "headline": {
+      "max_chars": 27
+    },
+    "description": {
+      "max_chars": null
+    }
+  },
+  "cta": [
+    "Saiba mais",
+    "Comprar agora",
+    "Cadastre-se",
+    "Assinar",
+    "Inscrever-se agora",
+    "Agendar agora",
+    "Solicitar hora marcada",
+    "Baixar",
+    "Ver detalhes",
+    "Pedir cotação",
+    "Pedir agora",
+    "Enviar mensagem",
+    "Enviar mensagem pelo WhatsApp",
+    "Fale conosco",
+    "Ligar agora",
+    "Candidate-se",
+    "Assistir mais",
+    "Ouvir agora",
+    "Ver cardápio",
+    "Como chegar",
+    "Horário das sessões",
+    "Experimentar na câmera"
+  ],
+  "cta_note": "Nem todo botão aparece para todo setor: a lista do Gerenciador de Anúncios da conta é a que vale.",
+  "safe_zone_reels_stories": {
+    "top_pct": 14,
+    "bottom_pct": 35,
+    "side_pct": 6
+  }
+}

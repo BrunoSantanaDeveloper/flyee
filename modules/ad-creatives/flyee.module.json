@@ -1,0 +1,161 @@
+{
+  "manifest_version": 1,
+  "name": "ad-creatives",
+  "version": "1.1.0",
+  "type": "workflow",
+  "trail": "divulgar",
+  "title": {
+    "pt-BR": "Criativos para anúncios",
+    "en": "Ad creatives"
+  },
+  "summary": {
+    "pt-BR": "Prepara os criativos da sua campanha de tráfego pago na Meta (Instagram e Facebook): pesquisa os anúncios dos concorrentes, propõe três conceitos com a evidência de cada um e entrega os vídeos e as imagens conferidos, os textos dos anúncios e a conta da verba.",
+    "en": "Prepares the creatives of your paid traffic campaign on Meta (Instagram and Facebook): researches your competitors' ads, proposes three concepts with the evidence behind each and delivers the checked videos and images, the ad texts and the budget math."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.3.0",
+  "entry": "skills/ad-creatives/SKILL.md",
+  "files": [
+    "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
+    "references/analise-anuncio.md",
+    "references/conceitos.md",
+    "references/etiquetas.json",
+    "references/fontes.json",
+    "references/lancamento.md",
+    "references/meta-anuncios.json",
+    "references/pagina-anuncio.md",
+    "references/pesquisa-manual.md",
+    "references/reels-de-teste.md",
+    "runtime/ad.css",
+    "runtime/ad.js",
+    "scripts/ads.mjs",
+    "scripts/lib/adlibrary.mjs",
+    "scripts/lib/apify.mjs",
+    "scripts/lib/budget.mjs",
+    "scripts/lib/campaign.mjs",
+    "scripts/lib/concepts.mjs",
+    "scripts/lib/copy.mjs",
+    "scripts/lib/engine.mjs",
+    "scripts/lib/evidence.mjs",
+    "scripts/lib/files.mjs",
+    "scripts/lib/links.mjs",
+    "scripts/lib/partners.mjs",
+    "scripts/lib/pieces.mjs",
+    "scripts/lib/report.mjs",
+    "scripts/lib/util.mjs",
+    "skills/ad-creatives/SKILL.md"
+  ],
+  "external_credentials": [
+    {
+      "name": "Token da API do Apify",
+      "env": "APIFY_TOKEN",
+      "url": "https://console.apify.com/settings/integrations",
+      "required": false,
+      "purpose": {
+        "pt-BR": "Opcional. Colhe sozinho os anúncios ativos dos concorrentes na Biblioteca de Anúncios da Meta, com a data de início, as versões e o texto de cada um. O Apify cobra pelo uso, do crédito da sua conta. Sem a chave, você abre os links no navegador e a IA lê as capturas.",
+        "en": "Optional. Collects your competitors' active ads from Meta's Ad Library on its own, with each one's start date, versions and text. Apify charges for usage from your account credit. Without the key, you open the links in your browser and your AI reads the screenshots."
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/ad-creatives/scripts/ads.mjs",
+      "reason": {
+        "pt-BR": "O script do app confere o briefing, monta os links da Biblioteca de Anúncios ou colhe os anúncios pelo Apify, lê a pesquisa, calcula a confiança de cada conceito, faz a conta da verba, escreve a página de cada peça, confere os textos e monta a entrega.",
+        "en": "The app's script checks the brief, builds the Ad Library links or collects the ads through Apify, reads the research, computes each concept's confidence, does the budget math, writes each piece's page, checks the ad texts and assembles the delivery."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/video-render/scripts/render.mjs",
+      "reason": {
+        "pt-BR": "O Motor de vídeo captura o site da marca, compõe a trilha e os efeitos, renderiza cada peça quadro a quadro, mixa o som no volume das redes e confere a peça na zona segura dos anúncios da Meta.",
+        "en": "The Video engine captures the brand's site, composes the music and the effects, renders each piece frame by frame, mixes the sound at the networks' loudness and checks the piece against the safe zone of Meta ads."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/instagram-research/scripts/research.mjs, node .flyee/modules/youtube-research/scripts/research.mjs e node .flyee/modules/video-analysis/scripts/video.mjs, quando instalados",
+      "reason": {
+        "pt-BR": "Os apps Pesquisa no Instagram, Pesquisa no YouTube e Análise de vídeo, quando estão no projeto: o orgânico medido do perfil e dos concorrentes, a fala do público nos comentários e o que acontece em cada segundo de um anúncio de referência.",
+        "en": "The Instagram research, YouTube research and Video analysis apps, when they are in the project: the measured organic content of the profile and the competitors, the audience's words in the comments and what happens each second of a reference ad."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "ffmpeg, ffprobe",
+      "reason": {
+        "pt-BR": "Codifica os quadros em vídeo, junta e mixa o áudio e mede o volume. A sua IA instala o ffmpeg na primeira vez que o app precisar, depois de avisar.",
+        "en": "Encodes the frames into video, joins and mixes the audio and measures loudness. Your AI installs ffmpeg the first time the app needs it, after telling you."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "o navegador já instalado (Microsoft Edge, Google Chrome ou Chromium), aberto sem janela para fotografar a página",
+      "reason": {
+        "pt-BR": "Fotografa cada quadro das peças e visita o site da marca, sem abrir janela. No Windows o Microsoft Edge já vem instalado; no Mac e no Linux a sua IA instala o Chromium se faltar.",
+        "en": "Photographs every frame of the pieces and visits the brand's site without opening a window. Microsoft Edge comes with Windows; on Mac and Linux your AI installs Chromium when none exists."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "a pasta da campanha em anuncios/<campanha>/, com os arquivos que você puser em materiais/ e as capturas de tela em pesquisa/capturas/",
+      "reason": {
+        "pt-BR": "Lê o briefing, o logo, as telas e os depoimentos que você fornecer e as capturas de tela dos anúncios dos concorrentes. Os seus arquivos são lidos onde estão e nunca são alterados.",
+        "en": "Reads the brief, the logo, the screens and the testimonials you provide and the screenshots of your competitors' ads. Your files are read where they are and never changed."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./anuncios/ e ./capturas/",
+      "reason": {
+        "pt-BR": "Grava, uma pasta por campanha, o briefing, os links da pesquisa, a evidência, os conceitos com as fichas, as peças, os textos, as notas de lançamento e o diário; as telas capturadas do site da marca ficam em capturas/.",
+        "en": "Writes, one folder per campaign, the brief, the research links, the evidence, the concepts with their cards, the pieces, the texts, the launch notes and the journal; the screens captured from the brand's site go in capturas/."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "o site da marca que você indicar",
+      "reason": {
+        "pt-BR": "Visita o site da sua marca para copiar o logo, as cores e as telas reais. O app nunca entra na sua conta de anúncios nem usa o seu login da Meta.",
+        "en": "Visits your brand's site to copy the logo, colours and real screens. The app never enters your ad account nor uses your Meta login."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "api.apify.com",
+      "reason": {
+        "pt-BR": "Só com a chave do Apify: roda a coleta dos anúncios públicos da Biblioteca de Anúncios, sempre com limite de itens e de gasto, e lê o resultado.",
+        "en": "Only with the Apify key: runs the collection of public ads from the Ad Library, always with an item and spending limit, and reads the result."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "~/.flyee/keys.json (só a chave APIFY_TOKEN)",
+      "reason": {
+        "pt-BR": "Lê a chave do Apify que você salvou na página que a sua IA abriu no navegador, quando ela existe.",
+        "en": "Reads the Apify key you saved in the page your AI opened in your browser, when there is one."
+      }
+    },
+    {
+      "kind": "env",
+      "scope": "APIFY_TOKEN",
+      "reason": {
+        "pt-BR": "Lê a chave do Apify da variável de ambiente, se você preferir defini-la assim; ela tem prioridade sobre a salva no flyee. Nunca é pedida no chat, gravada ou mostrada.",
+        "en": "Reads the Apify key from the environment variable, if you prefer to set it that way; it takes precedence over the one saved in flyee. Never asked for in the chat, written or shown."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Cada conceito ganha também o vídeo 4:5 e a imagem 4:5 ou 1:1 para o feed, conferidos como o feed mostra. Com a chave do Apify, opcional, a coleta dos anúncios dos concorrentes é automática, com limite de itens e de gasto. Quando estão no projeto, a Pesquisa no Instagram traz o orgânico medido, as Pesquisas no Instagram e no YouTube trazem a fala do público, e a Análise de vídeo lê os anúncios de referência. E um guia de Reels de teste, para comparar as peças antes de pagar.",
+    "en": "Each concept also gets the 4:5 video and the 4:5 or 1:1 image for the feed, checked the way the feed shows them. With the optional Apify key, the collection of your competitors' ads runs on its own, with an item and spending limit. When they are in the project, Instagram research brings the measured organic content, Instagram and YouTube research bring the audience's words, and Video analysis reads the reference ads. And a guide to test Reels, to compare the pieces before paying."
+  },
+  "license": "member"
+}

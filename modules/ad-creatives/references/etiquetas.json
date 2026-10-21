@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "note": "As etiquetas deste app, para os anúncios dos concorrentes e para os conceitos. A IA escolhe um valor de cada lista olhando o anúncio; o app recusa um valor que não está aqui. O ângulo é livre, porque é da campanha: minúsculas sem acento e hífens.",
+  "dimensions": {
+    "angle": {
+      "label": "Ângulo",
+      "free": true,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "help": "A ideia que o anúncio vende, em uma ou duas palavras: presenca, memoria, economia, tempo, confianca."
+    },
+    "driver": {
+      "label": "Barreira ou motivador",
+      "values": {
+        "barreira": "O que impede a compra: medo, desconfiança, falta de tempo, preço, um hábito.",
+        "motivador": "O que puxa a compra: um desejo, um ganho, uma identidade, um alívio."
+      }
+    },
+    "hook_family": {
+      "label": "Família de gancho",
+      "values": {
+        "pergunta": "Abre com uma pergunta que a pessoa responde por dentro.",
+        "cena": "Abre com uma cena concreta, com hora, lugar ou detalhe.",
+        "confissao": "Abre com algo que quem fala admite, na primeira pessoa.",
+        "contraste": "Abre com duas coisas lado a lado: o que se espera e o que acontece.",
+        "demonstracao": "Abre já mostrando o produto funcionando.",
+        "lista": "Abre com uma lista curta de palavras ou itens.",
+        "numero": "Abre com um número que tem fonte.",
+        "novidade": "Abre com algo novo: um lançamento, um recurso, uma mudança.",
+        "oferta": "Abre com a condição: preço, prazo, bônus.",
+        "historia": "Abre com o começo de uma história de alguém."
+      }
+    },
+    "proof": {
+      "label": "Tipo de prova",
+      "values": {
+        "demonstracao": "O produto ou a tela em uso, mostrando o que faz.",
+        "depoimento": "Um cliente contando a própria experiência. Só com material e autorização do integrante.",
+        "antes-depois": "A comparação de antes e depois. Só com material do integrante.",
+        "pessoa-real": "Uma pessoa real em cena: o dono, a equipe, um cliente. Só com material do integrante.",
+        "numero": "Um número com fonte: clientes, anos, resultado medido.",
+        "autoridade": "Quem fala tem credencial: formação, cargo, prêmio, mídia.",
+        "comparacao": "Lado a lado com o jeito antigo ou com a alternativa.",
+        "nenhuma": "O anúncio não mostra prova."
+      }
+    },
+    "structure": {
+      "label": "Estrutura",
+      "values": {
+        "problema-mecanismo": "O problema, a causa e como o produto resolve, nessa ordem.",
+        "produto-em-uso": "O produto aparece cedo e o anúncio mostra o uso.",
+        "lista": "Uma lista de itens, um por vez, até o fechamento.",
+        "historia": "Uma pessoa, um problema e uma virada.",
+        "depoimento": "Um cliente fala do começo ao fim.",
+        "oferta": "A condição é o assunto: o que se ganha, por quanto, até quando.",
+        "comparacao": "O jeito antigo contra o novo."
+      }
+    },
+    "visual": {
+      "label": "Estilo visual",
+      "values": {
+        "pessoa-falando": "Uma pessoa falando para a câmera.",
+        "tela-do-produto": "A tela do produto gravada ou capturada.",
+        "interface": "Uma interface animada, campos e botões se montando.",
+        "tipografia-cinetica": "Texto grande em movimento, palavra por palavra.",
+        "frase-que-some": "Frases curtas que entram e saem, com o produto no meio.",
+        "foto-do-produto": "A foto do produto ou do serviço.",
+        "animacao": "Ilustração ou formas animadas.",
+        "ugc": "Gravado no celular, com cara de conteúdo de cliente.",
+        "carrossel": "Vários cartões lado a lado."
+      }
+    }
+  },
+  "requires_member_material": ["depoimento", "antes-depois", "pessoa-real"]
+}

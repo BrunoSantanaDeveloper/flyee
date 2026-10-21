@@ -1,0 +1,18 @@
+{
+  "format_version": 1,
+  "checked_on": "2026-10-21",
+  "note": "O coletor do Apify que o app usa para ler a Biblioteca de Anúncios da Meta e o preço de tabela dele, conferidos na página pública do coletor. A estimativa usa esse preço; toda coleta vai com limite de itens e teto de gasto de uma vez e meia a estimativa. Acima de cost_warn_usd o app pede o sim do integrante antes de coletar. O coletor roda sem a conta do integrante na Meta.",
+  "cost_warn_usd": 1,
+  "max_sources": 12,
+  "per_search": 30,
+  "ads": {
+    "actor": "curious_coder/facebook-ads-library-scraper",
+    "usd_per_item": 0.00075,
+    "usd_per_run": 0.00005,
+    "observed": "2026-10-12: a busca por uma palavra devolveu 30 anúncios em 13 s; o limite por fonte do coletor não é teto (pedidos 30, vieram 60 de duas páginas), por isso o app manda também o limite de itens e o teto de gasto da execução. O número de versões (collation_count) ainda não foi conferido contra a tela da Biblioteca."
+  },
+  "ads_reserve": {
+    "actor": "apify/facebook-ads-scraper",
+    "note": "Mantido pela própria Apify; devolveu os mesmos 30 anúncios no teste de 2026-10-12, mais devagar e mais caro, e sem o endereço de cada anúncio na Biblioteca. Não é usado sozinho pelo app: fica anotado para quando o principal mudar."
+  }
+}

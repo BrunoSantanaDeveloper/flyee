@@ -6,13 +6,46 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
-| [Pesquisa no Instagram](#instagram-research) | 1.0.0 | tool | planejar | — | — |
+| [Criativos para anúncios](#ad-creatives) | 1.1.0 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
+| [Pesquisa no Instagram](#instagram-research) | 1.0.0 | tool | planejar | — | `ad-creatives` |
 | [Carrossel animado](#motion-carousel) | 1.1.1 | skill | divulgar | `video-render` | — |
-| [Análise de vídeo](#video-analysis) | 1.0.0 | tool | planejar | — | `youtube-script` |
-| [Motor de vídeo](#video-render) | 1.0.0 | tool | divulgar | — | `motion-carousel`, `video-studio` |
+| [Análise de vídeo](#video-analysis) | 1.0.0 | tool | planejar | — | `ad-creatives`, `youtube-script` |
+| [Motor de vídeo](#video-render) | 1.0.0 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
 | [Estúdio de vídeo](#video-studio) | 1.1.0 | workflow | divulgar | `video-render` | — |
-| [Pesquisa no YouTube](#youtube-research) | 1.0.1 | tool | planejar | — | `youtube-script` |
+| [Pesquisa no YouTube](#youtube-research) | 1.0.1 | tool | planejar | — | `ad-creatives`, `youtube-script` |
 | [Roteiro para YouTube](#youtube-script) | 1.1.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
+
+## ad-creatives
+
+**Criativos para anúncios** (Ad creatives) · versão 1.1.0 · workflow · trilha divulgar · testado em `claude_code`
+
+> Prepara os criativos da sua campanha de tráfego pago na Meta (Instagram e Facebook): pesquisa os anúncios dos concorrentes, propõe três conceitos com a evidência de cada um e entrega os vídeos e as imagens conferidos, os textos dos anúncios e a conta da verba.
+
+Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook: pesquisa os anúncios que os seus concorrentes mantêm no ar, propõe três conceitos com a evidência de cada um, produz os vídeos e as imagens conferidos de cada conceito e entrega os textos, os nomes dos anúncios e a conta da verba.
+
+**Skills**
+
+- `ad-creatives`: Prepara os criativos de uma campanha de tráfego pago na Meta (Instagram e Facebook): pesquisa os anúncios dos concorrentes, propõe três conceitos com a evidência de cada um, produz os vídeos e as imagens conferidos e entrega textos, nomes e a conta da verba. Use quando pedirem criativos, anúncios ou a primeira campanha paga. Para um vídeo animado avulso, use o Estúdio de vídeo.
+
+**Chaves externas**
+
+- `APIFY_TOKEN` (Token da API do Apify), opcional
+
+**Usa** `instagram-research`, `video-analysis`, `video-render`, `youtube-research` · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/ad-creatives/scripts/ads.mjs
+- shell: node .flyee/modules/video-render/scripts/render.mjs
+- shell: node .flyee/modules/instagram-research/scripts/research.mjs, node .flyee/modules/youtube-research/scripts/research.mjs e node .flyee/modules/video-analysis/scripts/video.mjs, quando instalados
+- shell: ffmpeg, ffprobe
+- shell: o navegador já instalado (Microsoft Edge, Google Chrome ou Chromium), aberto sem janela para fotografar a página
+- fs:read: a pasta da campanha em anuncios/<campanha>/, com os arquivos que você puser em materiais/ e as capturas de tela em pesquisa/capturas/
+- fs:write: ./anuncios/ e ./capturas/
+- network: o site da marca que você indicar
+- network: api.apify.com
+- fs:read: ~/.flyee/keys.json (só a chave APIFY_TOKEN)
+- env: APIFY_TOKEN
 
 ## instagram-research
 
@@ -36,7 +69,7 @@ Mostra, com números de verdade, quais Reels e posts fizeram muito mais do que o
 - Entrada: `node .flyee/modules/instagram-research/scripts/research.mjs <comando> --json`
 - Comandos nos exemplos: `check`, `comments`, `import`, `outliers`, `profile`
 
-**Usa** — · **Usado por** —
+**Usa** — · **Usado por** `ad-creatives`
 
 **Permissões declaradas**
 
@@ -102,7 +135,7 @@ Assiste a vídeos por você, com imagem e som, e entrega uma descrição com tem
 - Entrada: `node .flyee/modules/video-analysis/scripts/video.mjs <comando> --json`
 - Comandos nos exemplos: `analyze`, `check`, `prepare`
 
-**Usa** — · **Usado por** `youtube-script`
+**Usa** — · **Usado por** `ad-creatives`, `youtube-script`
 
 **Permissões declaradas**
 
@@ -134,7 +167,7 @@ Transforma uma página animada em vídeo pronto para publicar. A sua IA escreve 
 - Entrada: `node .flyee/modules/video-render/scripts/render.mjs <comando> --json`
 - Comandos nos exemplos: `accept`, `beats`, `capture`, `check`, `frames`, `help`, `loudness`, `mix`, `music`, `networks`, `open`, `preview`, `probe`, `render`, `scaffold`, `sfx`, `sheet`, `synth`
 
-**Usa** — · **Usado por** `motion-carousel`, `video-studio`
+**Usa** — · **Usado por** `ad-creatives`, `motion-carousel`, `video-studio`
 
 **Permissões declaradas**
 
@@ -191,7 +224,7 @@ Mostra, com números de verdade, quais vídeos de um tema fizeram muito mais do 
 - Entrada: `node .flyee/modules/youtube-research/scripts/research.mjs <comando> --json`
 - Comandos nos exemplos: `channel`, `check`, `comments`, `outliers`, `titles`, `transcript`
 
-**Usa** — · **Usado por** `youtube-script`
+**Usa** — · **Usado por** `ad-creatives`, `youtube-script`
 
 **Permissões declaradas**
 

@@ -108,7 +108,7 @@ Todas decididas pelo operador em 2026-10-20.
 O produto já cuidou da parte dele na CLI 1.0.3 (core 1.7.0): a regra "Fale simples" no bloco do `AGENTS.md` e na skill `/flyee`, a pergunta única quando a ferramenta recusa um comando, o commit da nuvem com um pedido só, e as mensagens que o guia mostra como vieram, que agora falam com o integrante. O guia é lido antes de tudo isso existir no projeto, então precisa das mesmas regras:
 
 - **7.1 Fale simples, no topo do guia** (pt-BR e en, perto de "Antes de começar"): "Fale com a pessoa em poucas frases, só sobre o que ela precisa fazer ou decidir e o resultado. Esta página é para você: não repita a ela comandos, arquivos, pastas, campos do JSON, versões ou o que você leu e conferiu, a menos que ela pergunte."
-- **7.2 Sem pergunta repetida** ("Antes de começar", 2): o pedido de instalação já é o sim. "Diga em uma frase o que vai fazer e siga." Pergunte só onde o guia pede um sim: o Node.js, um app com o que ele pede, o commit na nuvem.
+- **7.2 Sem pergunta repetida** ("Antes de começar", 2): o pedido de instalação já é o sim. "Diga em uma frase o que vai fazer e siga." Pergunte só onde o guia pede um sim: o Node.js, um app com o que ele pede, o commit na nuvem. ⚠️ Superado em 2026-10-21 pela decisão do operador no item 8: a IA instala sem esperar o app que um pedido pede, depois de uma frase simples, e a lista fica com o Node.js e o commit na nuvem.
 - **7.3 O fim da instalação** (passo 4): "Diga em uma frase que o flyee está pronto e o que ela pode pedir agora", no lugar de "Diga à pessoa o que ficou instalado".
 - **7.4 O pedido da nuvem nomeia os comandos** (`cloud-prompt`, pt-BR e en), para o filtro do modo automático ver a intenção da pessoa: "Instale o flyee seguindo {url}. Pode rodar `npx --yes flyee@latest doctor --json` e `npx --yes flyee@latest login --device`. Se a página não abrir nesta sessão, rode o doctor e me peça o ajuste que ele descrever." O pedido do computador (`ask-ai-install`) fica curto: no modo padrão, a própria ferramenta pede a aprovação de cada comando.
 - **7.5 Uma recusa da ferramenta** ("Quando algo não sai como esperado"): "Se o sistema de permissões da sua ferramenta recusar um comando do flyee (no Claude Code, o modo automático), não procure outro caminho: pergunte numa frase se pode fazer aquilo, dizendo o que é, e repita com o sim."
@@ -119,6 +119,24 @@ O produto já cuidou da parte dele na CLI 1.0.3 (core 1.7.0): a regra "Fale simp
   - Os nomes dos modos na tela em português ainda não foram vistos. A documentação diz Auto e Accept edits, e a tela em português mostrou "Automático".
 - **7.7 O limite de computadores na aprovação** (`/ativar`): com a conta no teto, a página mostra os computadores conectados e deixa a pessoa desconectar um ali, antes de aprovar, para uma aprovação só bastar. Também deixa a mensagem no singular ou no plural ("1 computador", "3 computadores").
 - **Aceite:** os testes do guia acham "Fale simples" e "Keep it simple". Também acham `login --device` no `cloud-prompt` dos dois idiomas, e não acham mais "Diga à pessoa o que ficou instalado". Numa sessão real na nuvem em modo automático, com o pedido do botão, o login roda sem recusa, e a IA não lista arquivos nem campos do `doctor`. Com a conta no teto, `/ativar` conecta com uma aprovação só.
+
+**Estado em 2026-10-21:** ✅ construído na plataforma como `b10ce4f` (7.1 a 7.7) e `2b57401` (a mesma regra do 7.7 no login pelo navegador, `/oauth/authorize`), e publicado pelo operador. O guia publicado começa com "Fale simples" e, com a chave dos pacotes em `platform`, lista só `flyee.club`. Ninguém viu ainda as duas páginas de aprovação com a conta no teto.
+
+## Item 8: o app que o pedido pede, instalado sem esperar
+
+**Decisão do operador em 2026-10-21:** quando um pedido da pessoa é trabalho de um app do catálogo, a IA usa o app mesmo sem o nome dele. Se o projeto não tem o app, ela diz numa frase simples qual vai instalar e o que ele faz, como "Vou instalar o app X, que faz Y", instala sem esperar e segue. O produto fez a parte dele na CLI 1.1.0 (core 1.8.0, tag `cli-v1.1.0` no `1b68e21`):
+- o comando `catalog`;
+- a lista "Outros apps do catálogo" no bloco do `AGENTS.md`;
+- a regra no bloco e na skill `/flyee`.
+
+Isso supera o "um app com o que ele pede" do 7.2. O pedido à plataforma foi enviado pela sessão do produto que fez a 1.1.0:
+- **Guia, "Instalar um app":** sem `add <app> --dry-run` e sem "Espere o sim dela". O app sai da lista do catálogo no `AGENTS.md` ou de `npx --yes flyee@latest catalog --json`, e a IA o anuncia numa frase simples antes de `npx --yes flyee@latest add <app> --yes --json`. Fala de uma chave ou de um programa só quando a pessoa tiver de agir.
+- **7.2:** a lista de onde o guia pede um sim fica com o Node.js e o commit na nuvem.
+- **Contrato, seção 8.2:** o que o guia diz sobre `add` e `catalog`.
+
+**Aceite:**
+- Os testes do guia não acham mais "Espere o sim dela" nem `add <app> --dry-run` em "Instalar um app", e acham `catalog --json`.
+- Numa sessão real na nuvem, um pedido de criativos num projeto sem apps instala os apps que ele pede sem perguntar, com uma frase para cada um.
 
 ## Correções ⚠️ que este pedido encontrou
 

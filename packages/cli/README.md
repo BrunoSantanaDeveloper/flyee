@@ -63,6 +63,7 @@ Português e inglês, seguindo o idioma da sua conta.
 
 ## Mudanças
 
+- 1.2.2: um computador que você desconectou no painel volta a se conectar com um login novo. Antes, a aprovação no navegador dava certo e a conexão falhava com "este computador foi desconectado", sem saída. A página depois da aprovação agora diz que a aprovação chegou, e a conversa confirma a conexão.
 - 1.2.1: numa sessão na nuvem, uma chave guardada como segredo de rede do ambiente não aparece mais como faltando, e a sua IA não a pede de novo: quem confere é o app.
 - 1.2.0: numa sessão do Claude Code na nuvem, a sua IA sabe na hora da instalação quais endereços um app usa e a sessão ainda não alcança, e pede para liberá-los de uma vez, em vez de descobrir cada bloqueio no meio do trabalho. Uma chave que a página não consegue receber ali pode ficar como segredo de rede do ambiente, nos apps que aceitam, e a sessão a usa sem vê-la.
 - 1.1.1: uma sessão do Claude Code na nuvem tem vaga própria e não conta mais no limite de computadores do seu plano. Com o computador conectado, a nuvem conecta também, e uma sessão nova na nuvem toma o lugar da anterior.

@@ -119,6 +119,8 @@ export class FakePlatform {
   private deviceCodes = new Map<string, { deviceId: string | null }>();
   private devices = new Set<string>();
   private revokedDevices = new Set<string>();
+  /** The token family a revoked computer had: a login with a newer family brings it back (4.2). */
+  private revokedFamilies = new Map<string, string>();
 
   constructor(options: FakeOptions) {
     this.options = { tier: "kit", minCliVersion: "0.1.0", modules: [], recipes: [], deviceLimit: 3, locale: "pt-BR", ...options };
@@ -256,13 +258,22 @@ export class FakePlatform {
     return record;
   }
 
-  private gateDevice(request: IncomingMessage, response: ServerResponse, record: TokenRecord, required: boolean): boolean {
+  /** The member disconnects a computer in the panel: it and its token family stop working (4.2, migration 0044). */
+  revokeDevice(deviceId: string): void {
+    const family = [...this.tokens.values()].find((token) => token.deviceId === deviceId)?.family;
+    for (const token of this.tokens.values()) if (token.deviceId === deviceId) token.revoked = true;
+    this.devices.delete(deviceId);
+    this.revokedDevices.add(deviceId);
+    if (family) this.revokedFamilies.set(deviceId, family);
+  }
+
+  private gateDevice(request: IncomingMessage, response: ServerResponse, record: TokenRecord, required: boolean, allowRevoked = false): boolean {
     const header = (request.headers["x-flyee-device"] as string | undefined)?.trim() || null;
     if (record.deviceId && header && header !== record.deviceId) {
       this.deny(response, 403, "device_mismatch");
       return false;
     }
-    if (header && this.revokedDevices.has(header)) {
+    if (header && this.revokedDevices.has(header) && !allowRevoked) {
       this.deny(response, 403, "device_revoked");
       return false;
     }
@@ -381,9 +392,15 @@ export class FakePlatform {
     }
 
     if (path === "/api/cli/installs" && method === "POST") {
-      if (!this.gateDevice(request, response, record, false)) return;
+      // The one route that takes a revoked computer (allowRevokedDevice): a newer token family revives it.
+      if (!this.gateDevice(request, response, record, false, true)) return;
       const body = JSON.parse((await this.readBody(request)) || "{}") as { device_id?: string; cloud?: unknown };
       if (!body.device_id) return this.deny(response, 400, "invalid_request");
+      if (this.revokedDevices.has(body.device_id)) {
+        if (this.revokedFamilies.get(body.device_id) === record.family) return this.deny(response, 403, "device_revoked");
+        this.revokedDevices.delete(body.device_id);
+        this.revokedFamilies.delete(body.device_id);
+      }
       if (body.cloud !== undefined && body.cloud !== "claude_code") return this.deny(response, 400, "invalid_request");
       const created = !this.devices.has(body.device_id);
       // 4.2: a cloud session holds the account's one cloud place, outside the computers' limit; a newer one replaces it.

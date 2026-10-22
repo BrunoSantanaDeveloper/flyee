@@ -74,7 +74,31 @@ export async function runLogin(ctx: Context, args: ParsedArgs): Promise<Result> 
   }
   client.storeTokens(tokens);
 
-  const me = await client.me();
+  const kind = flag(args, "kind") === "client" ? "client" : flag(args, "kind") === "own" ? "own" : undefined;
+  const limitReached = (error: ApiError): Result => {
+    ctx.io.err(error.message);
+    if (error.actionUrl) ctx.io.err(error.actionUrl);
+    // Every cloud session starts on a new VM; a plan with no cloud place counts it as a computer.
+    if (cloud) ctx.io.err(t(ctx, "login.device_limit_cloud"));
+    return { ok: false, error: error.code, message: error.message, action_url: error.actionUrl, limit: error.extra.limit, live_devices: error.extra.live_devices, ...(cloud ? { cloud: true } : {}) };
+  };
+
+  let me: Awaited<ReturnType<typeof client.me>>;
+  try {
+    me = await client.me();
+  } catch (error) {
+    // A computer the member disconnected comes back with a new login (CLI-CONTRACT.md 4.2: a new token
+    // family revives it), but only /installs takes a revoked computer. Every other route answers
+    // device_revoked, and "log in again" would loop: register first, then ask again.
+    if (!(error instanceof ApiError) || error.code !== "device_revoked") throw error;
+    try {
+      await registerMachine(ctx, client, assets, { kind });
+    } catch (registering) {
+      if (registering instanceof ApiError && registering.code === "device_limit_reached") return limitReached(registering);
+      throw registering;
+    }
+    me = await client.me();
+  }
   const locale = localeOf(me.member.locale);
   if (locale !== config.locale) writeConfig(ctx, { ...config, locale });
   ctx.locale = locale;
@@ -85,18 +109,11 @@ export async function runLogin(ctx: Context, args: ParsedArgs): Promise<Result> 
     if (current && current.device_name !== name) writeConfig(ctx, { ...current, device_name: name });
   }
 
-  const kind = flag(args, "kind") === "client" ? "client" : flag(args, "kind") === "own" ? "own" : undefined;
   let registration: Awaited<ReturnType<typeof registerMachine>> | null = null;
   try {
     registration = await registerMachine(ctx, client, assets, { kind });
   } catch (error) {
-    if (error instanceof ApiError && error.code === "device_limit_reached") {
-      ctx.io.err(error.message);
-      if (error.actionUrl) ctx.io.err(error.actionUrl);
-      // Every cloud session starts on a new VM and registers as a new computer of the plan.
-      if (cloud) ctx.io.err(t(ctx, "login.device_limit_cloud"));
-      return { ok: false, error: error.code, message: error.message, action_url: error.actionUrl, limit: error.extra.limit, live_devices: error.extra.live_devices, ...(cloud ? { cloud: true } : {}) };
-    }
+    if (error instanceof ApiError && error.code === "device_limit_reached") return limitReached(error);
     throw error;
   }
 

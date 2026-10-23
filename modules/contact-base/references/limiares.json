@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-23",
+  "note": "Os limiares do app, todos rotulados: regras de bolso de quem cuida de base de contatos, para uma marca sem histórico próprio. O plano (plano.json) e, depois, os números da própria base valem mais do que eles.",
+  "groups": {
+    "active_days": 30,
+    "stalled_days": 180,
+    "label": "ativo é quem usou nos últimos 30 dias; parado, entre 30 e 180; inativo, há mais de 180 ou nunca"
+  },
+  "repermission": {
+    "stale_days": 180,
+    "label": "quem não recebe nada há 6 meses ou mais recebe primeiro uma repermissão (ainda quer receber?), nunca uma promoção; decisão D30 do plano de anúncios",
+    "messages": 2,
+    "keep_link_days": 5
+  },
+  "engagement": {
+    "windows_days": [30, 90, 180],
+    "label": "engajamento por cliques, pedidos e último uso, nunca por abertura sozinha: o Mail do iPhone abre tudo sozinho e infla a abertura"
+  },
+  "rfm": {
+    "quantiles": 5,
+    "vip_share": 0.1,
+    "label": "recência, frequência e valor em quintis; os 10% de maior valor em 12 meses são os melhores clientes, e recebem acesso antecipado, não desconto"
+  },
+  "cadence": {
+    "min_hours_between_marketing": 16,
+    "max_per_week": 5,
+    "comfortable_per_week": 3,
+    "recent_buyer_quiet_days": 7,
+    "label": "até 1 e-mail de marketing por 16 horas e de 3 a 5 por semana por pessoa; quem comprou nos últimos 7 dias fica fora das promoções; o aumento numa data de pico tem fim marcado"
+  },
+  "health": {
+    "hard_bounce_pct_max": 1,
+    "complaint_pct_max": 0.1,
+    "unsubscribe_pct_max": 0.3,
+    "label": "rejeição dura abaixo de 1% por envio, reclamação abaixo de 0,1%, descadastro abaixo de 0,3%; acima disso, só o grupo mais engajado recebe até limpar"
+  },
+  "offer_ladder": {
+    "clientes": "nunca pagam mais do que quem entra agora: acesso antecipado e bônus, sem desconto",
+    "ex-clientes": "a volta com um bônus, nunca um desconto mais fundo do que o do pico",
+    "testaram": "a oferta do pico, com a prova do que mudou desde que testaram",
+    "nunca-ativaram": "o convite para testar antes da oferta; a promoção vem depois do primeiro uso",
+    "label": "a escada de ofertas por grupo; as formas e os preços vêm do plano"
+  },
+  "sequence": {
+    "steps": [
+      { "id": "repermissao", "label": "Repermissão", "offset": -16, "anchor": "aquecimento", "job": "perguntar se a pessoa ainda quer receber, com um link de um clique para ficar; quem não responder em 5 dias sai da régua", "cta": "Quero continuar recebendo", "only_when_stale": true },
+      { "id": "novidade", "label": "A novidade", "offset": -10, "anchor": "aquecimento", "job": "contar o que mudou no produto desde o último contato, em uma coisa só", "cta": "Ver o que mudou" },
+      { "id": "convite-teste", "label": "Convite para testar", "offset": -7, "anchor": "aquecimento", "job": "convidar para usar de novo, com o primeiro passo decidido pelo texto", "cta": "Entrar e testar", "groups": ["testaram", "nunca-ativaram", "ex-clientes"] },
+      { "id": "prova", "label": "A prova", "offset": -4, "anchor": "aquecimento", "job": "mostrar uma prova autorizada: um número com fonte, a história de quem usa, uma tela real", "cta": "Ver como funciona" },
+      { "id": "lista", "label": "A lista", "offset": -2, "anchor": "aquecimento", "job": "abrir a lista de quem quer saber da oferta primeiro, com a data", "cta": "Quero saber primeiro" },
+      { "id": "acesso-antecipado", "label": "Acesso antecipado", "offset": 0, "anchor": "aquecimento", "job": "abrir a oferta para a base antes do público, com o preço, o prazo e as regras escritos", "cta": "Garantir a oferta" },
+      { "id": "abertura", "label": "A abertura", "offset": 0, "anchor": "pico", "job": "a oferta aberta a todos, com o prazo e a hora de fim", "cta": "Ver a oferta" },
+      { "id": "lembrete", "label": "Lembrete", "offset": "middle", "anchor": "pico", "job": "lembrar quem abriu e não entrou, com uma objeção respondida", "cta": "Resolver agora" },
+      { "id": "ultimo-dia", "label": "Último dia", "offset": "end", "anchor": "pico", "job": "o último dia, com a hora de fim verdadeira; sem prorrogação", "cta": "Entrar antes de fechar" }
+    ],
+    "label": "a régua de uma data de pico, ancorada nas fases do plano; sem plano, numa data alvo informada, com o aquecimento começando 7 dias antes e o pico durando 4"
+  }
+}

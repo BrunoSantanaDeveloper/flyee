@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-23",
+  "note": "Os cabeçalhos dos exports do Gerenciador de Anúncios da Meta e do Google Ads, em português e em inglês, como as plataformas os escrevem por padrão. O app casa o cabeçalho sem acento, sem maiúsculas e sem o que vem entre parênteses; uma coluna que não casa vai para unknown_columns e um campo que o export não traz vai para missing, nunca para zero. Os nomes mudam com o tempo: o primeiro export real de um integrante confere esta lista.",
+  "meta": {
+    "ad_name": ["nome do anuncio", "ad name"],
+    "adset_name": ["nome do conjunto de anuncios", "ad set name"],
+    "campaign_name": ["nome da campanha", "campaign name"],
+    "delivery": ["veiculacao do anuncio", "veiculacao", "ad delivery", "delivery", "status de veiculacao"],
+    "period_start": ["inicio do relatorio", "inicio dos relatorios", "reporting starts"],
+    "period_end": ["termino do relatorio", "fim do relatorio", "termino dos relatorios", "reporting ends"],
+    "day": ["dia", "day", "data", "date"],
+    "spend": ["valor usado", "valor gasto", "amount spent"],
+    "impressions": ["impressoes", "impressions"],
+    "reach": ["alcance", "reach"],
+    "frequency": ["frequencia", "frequency"],
+    "cpm": ["cpm", "cpm (custo por 1.000 impressoes)", "cpm (cost per 1,000 impressions)"],
+    "link_clicks": ["cliques no link", "link clicks"],
+    "link_ctr": ["ctr (taxa de cliques no link)", "ctr (link click-through rate)", "ctr do link", "link ctr"],
+    "clicks_all": ["cliques (todos)", "clicks (all)"],
+    "landing_page_views": ["visualizacoes da pagina de destino", "landing page views"],
+    "video_plays_3s": ["reproducoes de video de 3 segundos", "reproducoes de 3 segundos do video", "3-second video plays", "3-second video views"],
+    "thruplays": ["thruplays", "thruplay"],
+    "video_plays_100": ["reproducoes do video ate 100%", "reproducoes de video ate 100%", "video plays at 100%", "video watches at 100%"],
+    "results": ["resultados", "results"],
+    "result_type": ["indicador de resultados", "tipo de resultado", "result indicator", "result type"],
+    "cost_per_result": ["custo por resultado", "custo por resultados", "cost per result", "cost per results"],
+    "leads": ["leads", "cadastros", "leads (formulario)", "leads (form)"],
+    "purchases": ["compras", "purchases"],
+    "purchase_value": ["valor de conversao das compras", "valor de conversao de compras", "purchases conversion value", "purchase conversion value"],
+    "registrations": ["cadastros concluidos", "registrations completed", "complete registration"],
+    "initiate_checkout": ["finalizacoes de compra iniciadas", "checkouts initiated"]
+  },
+  "google": {
+    "campaign_name": ["campanha", "campaign"],
+    "adgroup_name": ["grupo de anuncios", "ad group"],
+    "keyword": ["palavra-chave", "palavra chave", "keyword", "search keyword", "palavra-chave de pesquisa"],
+    "match_type": ["tipo de correspondencia", "match type"],
+    "search_term": ["termo de pesquisa", "search term"],
+    "ad_name": ["anuncio", "ad", "nome do anuncio", "ad name"],
+    "status": ["status", "status da campanha", "campaign status", "status do anuncio", "ad status"],
+    "day": ["dia", "day", "data", "date"],
+    "impressions": ["impr.", "impressoes", "impressions", "impr"],
+    "clicks": ["cliques", "clicks"],
+    "ctr": ["ctr"],
+    "avg_cpc": ["cpc med.", "cpc medio", "avg. cpc", "avg cpc"],
+    "spend": ["custo", "cost"],
+    "conversions": ["conversoes", "conversions", "conv."],
+    "cost_per_conversion": ["custo / conv.", "custo/conv.", "custo por conversao", "cost / conv.", "cost/conv.", "cost per conversion"],
+    "conversion_rate": ["taxa de conv.", "taxa de conversao", "conv. rate", "conversion rate"],
+    "conversion_value": ["valor de conv.", "valor da conversao", "conv. value", "conversion value"],
+    "impression_share": ["parcela de impr. da rede de pesquisa", "parcela de impressoes", "search impr. share", "impression share"],
+    "quality_score": ["indice de qualidade", "quality score"]
+  },
+  "fields_by_level": {
+    "meta": {
+      "ad": ["ad_name", "spend", "impressions", "reach", "frequency", "link_clicks", "landing_page_views", "video_plays_3s", "thruplays", "results"],
+      "adset": ["adset_name", "spend", "impressions", "reach", "frequency", "link_clicks", "landing_page_views", "results"],
+      "campaign": ["campaign_name", "spend", "impressions", "reach", "link_clicks", "landing_page_views", "results"]
+    },
+    "google": {
+      "campaign": ["campaign_name", "spend", "impressions", "clicks", "conversions"],
+      "adgroup": ["adgroup_name", "spend", "impressions", "clicks", "conversions"],
+      "keyword": ["keyword", "spend", "impressions", "clicks", "conversions"],
+      "search_term": ["search_term", "spend", "impressions", "clicks", "conversions"],
+      "ad": ["ad_name", "spend", "impressions", "clicks", "conversions"]
+    }
+  }
+}

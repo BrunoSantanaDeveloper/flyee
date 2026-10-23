@@ -1,0 +1,16 @@
+{
+  "pt-BR": {
+    "request": "Quero um plano de tráfego pago para a minha agenda de nutricionistas até a Black Friday. Temos 480 contatos antigos e nunca anunciamos. Com R$ 4.000 dá para chegar a 30 assinaturas?",
+    "reply": [
+      { "label": "Achado", "text": "A meta de 30 assinaturas cabe no cenário esperado só se a base antiga responder: 19 das 30 vêm dela, por e-mail e mensagem, não por anúncio." },
+      { "label": "Custo por cliente", "text": "Um cliente pode custar até R$ 1.430 (12 meses de payback sobre a margem); um lead, até R$ 214." },
+      { "label": "Fase de aprendizado", "text": "Com R$ 125 por dia, só um lead de até R$ 17,50 tira o conjunto da fase de aprendizado: a campanha otimiza por lead, e a pré-campanha mede custo e conversão, não vendas." },
+      { "label": "Oferta", "text": "A promoção de agora termina 24 dias antes do pico: ela vira o acesso antecipado da oferta anual, em vez de um desconto mais fundo." },
+      { "label": "Calendário", "text": "Preparação até 29/10, testes de 30/10 a 12/11, escala, aquecimento de 20/11 a 26/11 e o pico de 27/11 a 30/11; ponto de decisão em 13/11." },
+      { "label": "Primeiro passo", "text": "Escrever a oferta anual com a migração de dados como bônus na página até 10 de novembro." },
+      { "label": "Decisões suas", "text": "A oferta do pico, a verba e o evento de otimização estão como sugestões, cada uma com o que muda se a resposta for outra." }
+    ],
+    "saved": "Salvo em media-plan/black-friday-2026/plano.md, com as premissas, os cenários e o calendário ao lado"
+  },
+  "en": null
+}

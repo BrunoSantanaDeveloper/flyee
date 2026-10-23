@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "campaign": "black-friday-2026",
+  "generated_at": "2026-10-29T12:00:00.000Z",
+  "name_pattern": "AL-BF26-<angulo>-<gancho>-<nn>",
+  "site_reads_name": true,
+  "ads": [
+    { "ad_name": "AL-BF26-presenca-cena-01", "concept": "presenca", "angle": "presenca", "files": [] },
+    { "ad_name": "AL-BF26-tempo-pergunta-02", "concept": "tempo", "angle": "tempo", "files": [] },
+    { "ad_name": "AL-BF26-economia-numero-03", "concept": "economia", "angle": "economia", "files": [] },
+    { "ad_name": "AL-BF26-confianca-confissao-04", "concept": "confianca", "angle": "confianca", "files": [] },
+    { "ad_name": "AL-BF26-presenca-contraste-05", "concept": "presenca-b", "angle": "presenca", "files": [] }
+  ]
+}

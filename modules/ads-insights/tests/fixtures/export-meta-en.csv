@@ -1,0 +1,8 @@
+Reporting starts,Reporting ends,Campaign name,Ad set name,Ad name,Ad delivery,Amount spent (BRL),Impressions,Reach,Frequency,Link clicks,CTR (link click-through rate),Landing page views,3-second video plays,ThruPlays,Results,Result indicator,Cost per result
+2026-10-30,2026-11-12,AL-BF26-testes,AL-BF26-frio-amplo,AL-BF26-presenca-cena-01,active,520.00,"26,000","18,000",1.44,390,1.50%,320,"7,800","2,600",36,actions:lead,14.44
+2026-10-30,2026-11-12,AL-BF26-testes,AL-BF26-frio-amplo,AL-BF26-tempo-pergunta-02,active,410.00,"30,000","21,000",1.43,120,0.40%,95,"4,200",900,3,actions:lead,136.67
+2026-10-30,2026-11-12,AL-BF26-testes,AL-BF26-frio-amplo,AL-BF26-economia-numero-03,active,150.00,"9,000","7,000",1.29,90,1.00%,70,"2,700","1,200",0,actions:lead,
+2026-10-30,2026-11-12,AL-BF26-testes,AL-BF26-frio-amplo,AL-BF26-confianca-confissao-04,active,60.00,"3,000","2,500",1.20,36,1.20%,30,900,300,1,actions:lead,60.00
+2026-10-30,2026-11-12,AL-BF26-testes,AL-BF26-frio-amplo,AL-BF26-presenca-contraste-05,active,300.00,"20,000","15,000",1.33,360,1.80%,300,"6,000","2,400",4,actions:lead,75.00
+2026-10-30,2026-11-12,Perfil sempre ativo,Perfil seguidores,Anuncio antigo do perfil,active,90.00,"5,000","4,000",1.25,45,0.90%,40,"1,500",500,1,actions:lead,90.00
+2026-10-30,2026-11-12,,,,,"1,530.00","93,000","67,500",1.38,"1,041",1.12%,855,"23,100","7,900",45,actions:lead,34.00

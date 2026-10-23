@@ -1,0 +1,56 @@
+{
+  "app": "ads-insights",
+  "cases": [
+    {
+      "name": "medição pronta antes do primeiro real",
+      "setup": "Projeto com o plano aprovado em media-plan/black-friday-2026/plano.json e a página de destino em um endereço público.",
+      "prompt": "Confere se a medição está pronta antes de eu ligar a campanha. A página é esta: https://exemplo.test/oferta",
+      "assertions": [
+        { "kind": "file_exists", "path": "ads-insights/medicao.json" },
+        { "kind": "file_exists", "path": "ads-insights/rastreamento.md" }
+      ],
+      "rubric": "A IA roda check e contract, pergunta numa mensagem só o que o contrato não sabe (tipo de negócio, árbitro, campo de origem), cada pergunta com a sugestão, grava as respostas e fecha o contrato. Roda tags na página e diz o que está no HTML servido e o que isso não prova. Roda events e percorre o roteiro de teste com o integrante. Não pede senha de nada."
+    },
+    {
+      "name": "links pela regra única",
+      "setup": "Entrega do app de criativos em anuncios/black-friday-2026/entrega/nomes.json com cinco anúncios.",
+      "prompt": "Monta o link do anúncio AL-BF26-presenca-cena-01 para a página da oferta.",
+      "assertions": [],
+      "rubric": "A IA roda utm build com --names e entrega o link exato, com utm_content igual ao nome do anúncio letra por letra. Um link do integrante sem utm_campaign recebe utm_invalid e a IA monta de novo em vez de corrigir à mão."
+    },
+    {
+      "name": "leitura de um export com amostra curta",
+      "setup": "Export da Meta em português, ponto e vírgula, em ads-insights/entrada/, com seis anúncios; contrato com custo permitido R$ 40.",
+      "prompt": "Exportei a tabela da campanha. O que escalar, o que cortar e o que ainda não dá para ler?",
+      "assertions": [
+        { "kind": "file_exists", "path": "ads-insights/leituras/*/report.json" },
+        { "kind": "file_exists", "path": "ads-insights/leituras/*/leitura.md" }
+      ],
+      "rubric": "A IA roda import, link e report. Cita os vereditos e as certezas do script sem recalcular; para a peça com zero resultados depois de 3 vezes o permitido diz cortar; para as com 1 resultado diz dado insuficiente e com quanto fica legível; para a que falha no gancho diz iterar e o que trocar. Nunca chama a contagem da Meta de venda real. Na conversa vão poucas frases e o caminho da leitura."
+    },
+    {
+      "name": "planilha de origem sem dado pessoal",
+      "setup": "Lista de leads exportada do formulário, com nome, e-mail, telefone e utm_source, salva em ads-insights/entrada/leads.csv.",
+      "prompt": "Aqui está a lista de quem se cadastrou esta semana. Põe na medição.",
+      "assertions": [{ "kind": "file_exists", "path": "ads-insights/origens.csv" }],
+      "rubric": "A IA roda ledger import a partir de entrada/. Diz quantas linhas entraram e que nome, e-mail e telefone ficaram de fora; nenhum e-mail ou nome aparece na conversa nem em origens.csv. Uma lista fora de entrada/ é recusada e a IA pede para copiar para lá."
+    },
+    {
+      "name": "a leitura da semana e os movimentos",
+      "setup": "Uma leitura da Meta julgada, uma do Google Ads por termo de pesquisa, a planilha de origem com 12 linhas, 13 compras reivindicadas.",
+      "prompt": "Monta a leitura da semana e me diz o que fazer.",
+      "assertions": [
+        { "kind": "file_exists", "path": "ads-insights/semanal/*.md" },
+        { "kind": "file_exists", "path": "ads-insights/movimentos.json" }
+      ],
+      "rubric": "A IA roda weekly com --claimed e responde com as três linhas de say e as decisões, indicando onde está o documento. Não cola a leitura. Os movimentos vêm com por quê, certeza, data e gatilho; o termo de pesquisa sem conversão vira negativa; a razão de reivindicação é dita com a palavra certa (dentro do normal, ou atenção). Quando o integrante disser que fez um movimento, ela roda move applied com a data."
+    },
+    {
+      "name": "o pulso só fala do que quebrou",
+      "setup": "Export de um dia com um anúncio reprovado, um com gasto sem resultado e o gasto total acima do plano da fase.",
+      "prompt": "Tem alguma coisa pegando fogo hoje?",
+      "assertions": [{ "kind": "file_exists", "path": "ads-insights/pulso/*.md" }],
+      "rubric": "A IA roda pulse com o export do dia e abre dizendo o que vê. Lista só os pontos que quebraram um limiar, cada um com a evidência e a proposta; não dá tudo bem sobre o que não vê e não decide por ele."
+    }
+  ]
+}

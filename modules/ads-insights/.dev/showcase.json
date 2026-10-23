@@ -1,0 +1,28 @@
+{
+  "pt-BR": {
+    "request": "Exportei a tabela da primeira semana da campanha, no nível de anúncio. O que escalar, o que cortar e o que ainda não dá para ler?",
+    "reply": [
+      { "label": "Lido", "text": "Seis anúncios, 30/10 a 12/11, R$ 1.530 gastos, 45 leads pela contagem da Meta; custo permitido por lead R$ 40, do plano." },
+      { "label": "Escalar", "text": "O anúncio da cena de consultório fez 36 leads a R$ 14,44 cada: dentro do permitido com amostra. Subir a verba do conjunto 20 a 30% por semana enquanto o custo segurar; a planilha de origem confirma antes." },
+      { "label": "Iterar", "text": "O da pergunta sobre tempo tem só 14% passando dos 3 segundos (piso 20%): o gancho falha. O do contraste converte 1,3% das visitas contra 2,8% da mediana: a página falha. Nova versão mudando só essa parte." },
+      { "label": "Cortar", "text": "O do número gastou R$ 150, quase quatro vezes o permitido, sem nenhum lead." },
+      { "label": "Dado insuficiente", "text": "Dois anúncios têm 1 lead cada: a leitura do custo começa com 10 e fica firme com 30. Segurar, com gatilho de pausa em R$ 120 gastos sem resultado." },
+      { "label": "Encanamento", "text": "As plataformas reivindicam 1,3 compra para cada compra real da planilha de origem: dentro do normal." },
+      { "label": "Decisões suas", "text": "Subir a verba do conjunto que escala; o que fizer, me diga a data, e em 14 dias a leitura diz se funcionou." }
+    ],
+    "saved": "Salvo em ads-insights/semanal/2026-11-13.md, com a tabela completa em ads-insights/leituras/meta-testes/leitura.md"
+  },
+  "en": {
+    "request": "I exported the first week of the campaign, at ad level. What do we scale, what do we cut and what can't be read yet?",
+    "reply": [
+      { "label": "Read", "text": "Six ads, Oct 30 to Nov 12, R$ 1,530 spent, 45 leads by Meta's count; allowable cost per lead R$ 40, from the plan." },
+      { "label": "Scale", "text": "The consulting-room scene ad made 36 leads at R$ 14.44 each: within the allowable with a sample. Raise the ad set's budget 20 to 30% a week while the cost holds; the origin ledger confirms first." },
+      { "label": "Iterate", "text": "The time-question ad has only 14% passing the 3 seconds (floor 20%): the hook fails. The contrast ad converts 1.3% of visits against a 2.8% median: the page fails. New version changing only that part." },
+      { "label": "Cut", "text": "The number ad spent R$ 150, almost four times the allowable, with no lead." },
+      { "label": "Insufficient data", "text": "Two ads have 1 lead each: the cost read starts at 10 and firms up at 30. Hold, with a pause trip-wire at R$ 120 spent with no result." },
+      { "label": "Plumbing", "text": "The platforms claim 1.3 purchases for each real purchase in the origin ledger: within the normal range." },
+      { "label": "Your decisions", "text": "Raise the budget of the ad set that scales; whatever you do, tell me the date, and in 14 days the read says whether it worked." }
+    ],
+    "saved": "Saved to ads-insights/semanal/2026-11-13.md, with the full table in ads-insights/leituras/meta-testes/leitura.md"
+  }
+}

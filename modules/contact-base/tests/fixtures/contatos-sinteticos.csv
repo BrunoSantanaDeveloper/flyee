@@ -1,0 +1,15 @@
+Nome,E-mail,Telefone,Data de cadastro,Último acesso,Último contato,Status,Pedidos,Receita,Origem,Aceita marketing,Descadastrado,CPF
+Ana Exemplo,ana@exemplo.test,11 99999-0001,2026-02-10,2026-10-20,2026-10-01,ativo,3,447,site,sim,nao,000.000.000-01
+Bruno Exemplo,BRUNO@exemplo.test,+55 (21) 99999-0002,2025-11-05,2026-09-30,2026-02-15,ativo,1,149,instagram,sim,nao,
+Carla Exemplo,carla@exemplo.test,99999-0003,2026-01-20,2026-07-10,2026-02-15,trial,0,0,evento,,nao,
+Daniel Exemplo,daniel@exemplo.test,5531999990004,2025-08-12,2026-03-02,2025-12-01,cancelado,2,298,site,sim,nao,
+Elisa Exemplo,elisa@,11 99999-0005,2026-03-03,,2026-02-15,trial,0,0,indicacao,,nao,
+Fabio Exemplo,fabio@exemplo.test,,2025-06-18,2025-09-01,2025-09-01,cancelado,1,149,site,nao,sim,
+Gabriela Exemplo,gabriela@exemplo.test,11 99999-0007,2026-04-22,2026-10-18,2026-10-01,ativo,12,1788,site,sim,nao,
+Helena Exemplo,,11 99999-0008,2026-05-30,2026-06-02,,trial,0,0,evento,,nao,
+Igor Exemplo,igor@exemplo.test,11 99999-0009,2026-06-14,,,trial,0,0,site,,nao,
+Ana Exemplo,ana@exemplo.test,11 99999-0001,2026-02-10,2026-10-21,2026-10-01,ativo,3,447,site,sim,nao,
+Julia Exemplo,julia@exemplo.test,21 99999-0007,2026-07-07,2026-08-01,2026-08-01,trial,0,0,instagram,sim,nao,
+Karen Exemplo,karen@exemplo.test,11 99999-0011,2024-12-01,2025-01-15,2025-01-20,cancelado,1,149,site,sim,nao,
+Lucas Exemplo,sem-arroba.test,11 99999-0012,2026-09-09,2026-09-10,,trial,0,0,site,,nao,
+Marta Exemplo,marta@exemplo.test,11 99999-0013,2026-10-15,2026-10-22,2026-10-20,ativo,1,149,site,sim,nao,

@@ -7,7 +7,10 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
 | [Criativos para anúncios](#ad-creatives) | 1.1.1 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
+| [Medição e leitura de resultados](#ads-insights) | 1.0.0 | tool | escalar | — | — |
+| [Base de contatos e CRM](#contact-base) | 1.0.0 | workflow | vender | — | — |
 | [Pesquisa no Instagram](#instagram-research) | 1.0.2 | tool | planejar | — | `ad-creatives` |
+| [Plano de estratégia e mídia](#media-plan) | 1.0.0 | workflow | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.2 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.1 | tool | planejar | — | `ad-creatives`, `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.0.1 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
@@ -48,6 +51,55 @@ Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook
 - env: APIFY_TOKEN
 - env: CLAUDE_CODE_REMOTE
 
+## ads-insights
+
+**Medição e leitura de resultados** (Measurement and results reading) · versão 1.0.0 · tool · trilha escalar · testado em `claude_code`
+
+> Deixa a medição pronta antes do primeiro real e lê os resultados depois: o contrato do que conta, as tags da página, a regra única de link, a planilha de origem sem dado pessoal, o veredito de cada anúncio com a amostra que ele tem e a leitura da semana com o que fazer.
+
+Deixa a medição pronta antes do primeiro real e lê os resultados depois, com a honestidade que uma semana de dados permite. Este texto é o guia dentro do projeto; a página do app no flyee.club lê os guias em `guides/`.
+
+**Skills**
+
+- `ads-insights`: Deixa a medição de tráfego pago pronta antes do primeiro real (contrato do que conta, tags da página, regra de link, planilha de origem sem dado pessoal) e lê os resultados depois pelo export da Meta ou do Google Ads, com o veredito de cada anúncio, a leitura da semana e o pulso diário. Use para conferir o rastreamento, ler uma campanha, decidir o que escalar ou cortar, ou fazer a leitura da semana.
+
+**Serve outros apps**
+
+- Guia: `modules/ads-insights/references/interface.md`
+
+**Usa** — · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/ads-insights/scripts/insights.mjs
+- network: a página de destino do integrante, só leitura do HTML público
+- fs:read: ads-insights/entrada/, anuncios/*/entrega/nomes.json e media-plan/*/plano.json
+- fs:write: ./ads-insights/
+
+## contact-base
+
+**Base de contatos e CRM** (Contact base and CRM) · versão 1.0.0 · workflow · trilha vender · testado em `claude_code`
+
+> Transforma a sua base antiga de contatos numa régua que pode ser enviada: limpa e conta a base sem tirar nenhum dado do projeto, registra a base legal de cada grupo e escreve a régua de e-mail nas datas do plano, com repermissão para quem não ouve da marca há seis meses.
+
+Transforma a sua base antiga de contatos numa régua que pode ser enviada, sem tirar nenhum dado do projeto. Este texto é o guia dentro do projeto; a página do app no flyee.club lê os guias em `guides/`.
+
+**Skills**
+
+- `contact-base`: Transforma a base de contatos de uma marca numa régua que pode ser enviada. Limpa e conta os exports sem tirar dado do projeto, registra a base legal de cada grupo, separa quem usa de quem parou e escreve a régua de e-mail nas datas do plano, com repermissão para quem não ouve da marca há seis meses. Use para a base antiga, uma régua, um CRM simples, a lista de espera ou o e-mail do lançamento.
+
+**Serve outros apps**
+
+- Guia: `modules/contact-base/references/interface.md`
+
+**Usa** — · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/contact-base/scripts/contacts.mjs
+- fs:read: os exports de usuários e contatos que você puser em contatos/entrada/, e media-plan/<plano>/plano.json
+- fs:write: ./contatos/
+
 ## instagram-research
 
 **Pesquisa no Instagram** (Instagram research) · versão 1.0.2 · tool · trilha planejar · testado em `claude_code`
@@ -81,6 +133,32 @@ Mostra, com números de verdade, quais Reels e posts fizeram muito mais do que o
 - fs:write: ./instagram-research/
 - env: APIFY_TOKEN
 - env: CLAUDE_CODE_REMOTE
+
+## media-plan
+
+**Plano de estratégia e mídia** (Strategy and media plan) · versão 1.0.0 · workflow · trilha planejar · testado em `claude_code`
+
+> Monta o plano de tráfego pago da sua marca a nível de especialista: olha o que o projeto já sabe, pergunta só o que falta, já com uma sugestão, e entrega a conta do que um cliente pode custar, a oferta, o calendário por fases até a data alvo e o plano escrito para você aprovar.
+
+Monta o plano de tráfego pago da sua marca a nível de especialista, antes de qualquer anúncio: o que um cliente pode custar, de onde vem a meta, a oferta, o calendário até a data alvo e o que fazer primeiro. Este texto é o guia dentro do projeto; a página do app no flyee.club lê os guias em `guides/`.
+
+**Skills**
+
+- `media-plan`: Monta o plano de tráfego pago de uma marca a nível de especialista, antes de qualquer anúncio. Olha o que o projeto já sabe, pergunta só o que falta, com uma sugestão por pergunta, e entrega quanto um cliente pode custar, o funil com cenários, a oferta, o calendário até a data alvo e o plano para aprovação. Use quando pedirem plano, estratégia, verba por fase, oferta ou por onde começar.
+
+**Serve outros apps**
+
+- Guia: `modules/media-plan/references/interface.md`, interface v1
+- Entrada: `node .flyee/modules/media-plan/scripts/plan.mjs <comando> --json`
+- Comandos nos exemplos: `list`
+
+**Usa** — · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/media-plan/scripts/plan.mjs
+- fs:read: anuncios/*/briefing.md, capturas/*/captura.json, instagram-research/ e contatos/inventario.json, quando existem
+- fs:write: ./media-plan/
 
 ## motion-carousel
 

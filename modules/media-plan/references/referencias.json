@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-23",
+  "note": "Faixas de referência que o app usa quando o integrante ainda não tem o próprio número. Toda faixa é regra de bolso: o plano a mostra com este rótulo, a fonte e a data, e troca pelo número do integrante assim que ele existe. Nenhuma faixa prevê resultado.",
+  "currency": "BRL",
+  "sources": [
+    { "id": "meta-learning", "what": "fase de aprendizado: 50 eventos de otimização em 7 dias por conjunto", "url": "https://developers.meta.com/vr/resources/optimize-ad-campaign/", "checked_on": "2026-10-21" },
+    { "id": "saas-rules", "what": "regras de bolso de SaaS self-serve: visita para cadastro de 2 a 5%, teste para pago de 10 a 25% sem cartão, payback de até 12 meses", "url": "https://github.com/gooseworks-ai/goose-skills/blob/main/marketing-agent/skills/plan-campaign/references/unit-economics.md", "checked_on": "2026-10-23", "note": "faixas escritas para o mercado dos Estados Unidos em dólar; aqui valem só como ordem de grandeza" },
+    { "id": "email-rules", "what": "uma lista própria converte de 0,1 a 0,5% dos destinatários por envio de oferta; quem já conhece a marca converte mais do que quem nunca ouviu falar", "url": "https://github.com/gooseworks-ai/goose-skills/blob/main/marketing-agent/skills/plan-campaign/references/unit-economics.md", "checked_on": "2026-10-23" },
+    { "id": "frequency-rules", "what": "público pequeno: frequência semanal perto de 5, até 8 só com criativos trocando; casamento de uma lista enviada entre 40 e 60%", "url": "https://github.com/gooseworks-ai/goose-skills/blob/main/marketing-agent/skills/plan-campaign/references/budget-and-tests.md", "checked_on": "2026-10-23" },
+    { "id": "peak-cpm", "what": "na semana da Black Friday o CPM da Meta costuma ficar de 1,5 a 2 vezes o normal", "url": "https://github.com/gooseworks-ai/goose-skills/blob/main/marketing-agent/skills/plan-campaign/references/unit-economics.md", "checked_on": "2026-10-23" }
+  ],
+  "rules_of_thumb": {
+    "margin_pct": { "low": 70, "mid": 80, "high": 90, "label": "margem bruta de um SaaS", "source": "saas-rules" },
+    "payback_months": { "value": 12, "label": "meses de payback que um SaaS self-serve costuma aceitar", "source": "saas-rules" },
+    "first_year_share": { "value": 0.3333, "label": "teto de um terço da receita do primeiro ano quando faltam margem e retenção", "source": "saas-rules" },
+    "visit_to_lead_pct": { "low": 2, "mid": 3, "high": 5, "label": "visita para cadastro ou lead numa página de SaaS", "source": "saas-rules" },
+    "lead_to_customer_pct": { "low": 10, "mid": 15, "high": 25, "label": "cadastro ou teste para cliente pagante, sem cartão", "source": "saas-rules" },
+    "known_to_customer_pct": { "low": 1, "mid": 3, "high": 5, "label": "quem já conhece a marca e recebe a oferta por e-mail ou mensagem", "source": "email-rules" },
+    "cost_per_lead_brl": { "low": 8, "mid": 20, "high": 45, "label": "custo por lead numa campanha fria da Meta para um nicho profissional no Brasil, ordem de grandeza sem medição", "source": "saas-rules" },
+    "cpm_brl": { "low": 15, "mid": 30, "high": 60, "label": "CPM da Meta no Brasil fora do pico, ordem de grandeza sem medição", "source": "peak-cpm" },
+    "peak_cpm_multiplier": { "low": 1.5, "high": 2, "label": "quanto o CPM sobe na semana da Black Friday", "source": "peak-cpm" },
+    "list_match_rate": { "low": 0.4, "mid": 0.5, "high": 0.6, "label": "parte de uma lista enviada que a Meta reconhece", "source": "frequency-rules" },
+    "weekly_frequency_cap": { "value": 5, "max_with_rotation": 8, "label": "frequência semanal máxima para um público pequeno", "source": "frequency-rules" },
+    "learning": { "events": 50, "days": 7, "label": "eventos de otimização em 7 dias por conjunto para sair da fase de aprendizado", "source": "meta-learning" },
+    "stale_months": { "value": 6, "label": "meses sem contato a partir dos quais a primeira mensagem a uma base é repermissão", "source": "email-rules" }
+  }
+}

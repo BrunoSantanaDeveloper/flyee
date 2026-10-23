@@ -1,0 +1,76 @@
+{
+  "manifest_version": 1,
+  "name": "media-plan",
+  "version": "1.0.0",
+  "type": "workflow",
+  "trail": "planejar",
+  "title": {
+    "pt-BR": "Plano de estratégia e mídia",
+    "en": "Strategy and media plan"
+  },
+  "summary": {
+    "pt-BR": "Monta o plano de tráfego pago da sua marca a nível de especialista: olha o que o projeto já sabe, pergunta só o que falta, já com uma sugestão, e entrega a conta do que um cliente pode custar, a oferta, o calendário por fases até a data alvo e o plano escrito para você aprovar.",
+    "en": "Builds your brand's paid-traffic plan at an expert level: it reads what the project already knows, asks only what is missing, each question with a suggestion, and delivers what a customer may cost, the offer, the phased calendar to the target date and the plan for you to approve."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.10.0",
+  "entry": "skills/media-plan/SKILL.md",
+  "files": [
+    "NOTICE.txt",
+    "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
+    "references/feriados.json",
+    "references/interface.md",
+    "references/oferta.md",
+    "references/pagina.md",
+    "references/referencias.json",
+    "references/situacao.md",
+    "references/voz-do-cliente.md",
+    "scripts/lib/calendar.mjs",
+    "scripts/lib/economics.mjs",
+    "scripts/lib/look.mjs",
+    "scripts/lib/offer.mjs",
+    "scripts/lib/premises.mjs",
+    "scripts/lib/report.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/plan.mjs",
+    "skills/media-plan/SKILL.md"
+  ],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/media-plan/scripts/plan.mjs",
+      "reason": {
+        "pt-BR": "O script do app faz as contas (custo permitido por cliente, funil ao contrário, cenários, fase de aprendizado, oferta e calendário) e monta o plano escrito.",
+        "en": "The app's script does the arithmetic (allowable cost per customer, the funnel worked backwards, scenarios, learning phase, offer and calendar) and assembles the written plan."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "anuncios/*/briefing.md, capturas/*/captura.json, instagram-research/ e contatos/inventario.json, quando existem",
+      "reason": {
+        "pt-BR": "Lê o que os outros apps do flyee já gravaram no projeto, para não perguntar o que o projeto já sabe.",
+        "en": "Reads what the other flyee apps already wrote in the project, so it never asks what the project already knows."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./media-plan/",
+      "reason": {
+        "pt-BR": "Grava os fatos da marca, as premissas, as contas, o plano em JSON e em texto, as versões aprovadas e as decisões.",
+        "en": "Writes the brand facts, the premises, the arithmetic, the plan as JSON and as text, the approved versions and the decisions."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: olhar antes de perguntar, até quatro perguntas com sugestão, premissas rotuladas, a conta do que um cliente pode custar, o funil ao contrário com cenários, a fase de aprendizado, as formas de oferta com a colisão entre promoções, o calendário por fases com feriados e o plano escrito como rascunho até o sim.",
+    "en": "First version: look before asking, up to four questions with a suggestion each, labelled premises, what a customer may cost, the funnel worked backwards with scenarios, the learning phase, the forms of the offer with the collision between promotions, the phased calendar with holidays and the written plan as a draft until the yes."
+  },
+  "license": "member"
+}

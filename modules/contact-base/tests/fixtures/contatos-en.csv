@@ -1,0 +1,4 @@
+Name;Email address;Mobile;Created at;Last login;Plan;Orders;Revenue;Source;Unsubscribed
+Nora Example;nora@exemplo.test;+55 11 99999-0021;2026-05-01;2026-10-19;paid;2;298;google;no
+Otto Example;otto@exemplo.test;11999990022;2026-08-15;2026-08-20;free;0;0;instagram;no
+Paula Example;paula@exemplo.test;;2026-09-01;;free;0;0;site;yes

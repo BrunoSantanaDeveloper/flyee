@@ -1,0 +1,14 @@
+{
+  "pt-BR": {
+    "request": "Tenho uma planilha com 480 contatos antigos da primeira versão, muitos sem contato há meses. Quero usar na Black Friday. Me ajuda a limpar e a montar a régua.",
+    "reply": [
+      { "label": "Inventário", "text": "480 linhas viraram 452 pessoas depois de tirar 28 duplicadas; 431 podem receber e-mail (14 pediram para sair, 7 sem e-mail nem telefone). Por grupo: 22 clientes, 61 ex-clientes, 298 testaram, 71 nunca ativaram." },
+      { "label": "Sem contato", "text": "389 pessoas estão sem contato há 6 meses ou mais: para elas a primeira mensagem é a pergunta se ainda querem receber, em duas vezes, e a oferta vem depois do sim." },
+      { "label": "Base legal", "text": "Para escrever para quem testou, preciso de quatro coisas suas: como eles entraram, o texto que leram ao se cadastrar, onde a lista está guardada e quantas mensagens por semana aceita como teto. Minha sugestão para a base: legítimo interesse, porque testaram a marca." },
+      { "label": "Régua", "text": "Com as datas do plano: repermissão em 4/11 e 9/11, novidade em 10/11, prova em 16/11, lista em 18/11, acesso antecipado em 20/11, abertura em 27/11, lembrete em 28/11 e último dia em 30/11. Uma mensagem de marketing por 16 horas, três por semana, cinco só no pico." },
+      { "label": "Decisões suas", "text": "As quatro respostas da base legal; a régua fica pendente até lá. Quem envia é você, pela sua ferramenta, nas datas da régua." }
+    ],
+    "saved": "Salvo em contatos/regua.md, com o inventário, a base legal e os segmentos ao lado; a lista limpa fica no projeto e não sai dele"
+  },
+  "en": null
+}

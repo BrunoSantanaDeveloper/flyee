@@ -1,0 +1,53 @@
+{
+  "app": "media-plan",
+  "cases": [
+    {
+      "name": "plano do zero com data alvo",
+      "setup": "Projeto sem marca.md, sem briefing e sem base. A marca fictícia Agenda Leve vende uma agenda com prontuário para nutricionistas a R$ 149 por mês.",
+      "prompt": "Quero um plano de tráfego pago para a Agenda Leve até 27 de novembro. Nunca anunciamos.",
+      "assertions": [
+        { "kind": "file_exists", "path": "media-plan/*/premissas.json" },
+        { "kind": "file_exists", "path": "media-plan/*/plano.md" }
+      ],
+      "rubric": "A IA cria o plano, roda look e manda uma mensagem só com até quatro perguntas em frases, na ordem produto e oferta, para quem e quantos, meta e data, verba, cada uma com uma sugestão e o que muda se a resposta for outra. Nenhuma pergunta técnica de rastreamento. Depois das respostas, grava as premissas como informado ou confirmado, roda funnel, offer e calendar e mostra as contas com as palavras de say, sem inventar número. Monta o rascunho e manda três linhas, sem colar o plano."
+    },
+    {
+      "name": "o projeto já sabe",
+      "setup": "Projeto com anuncios/pre-lancamento/briefing.md do app de criativos preenchido com oferta, preço, página, público e verba diária, e com marca.md preenchido.",
+      "prompt": "Monte o plano de mídia para a campanha de lançamento.",
+      "assertions": [{ "kind": "file_exists", "path": "media-plan/*/premissas.json" }],
+      "rubric": "look encontra a oferta, o preço, a página e a verba no briefing; a IA grava essas premissas como encontrado, com o arquivo, e pergunta só o que sobrou, no máximo duas perguntas. Nada do briefing é perguntado de novo."
+    },
+    {
+      "name": "verba pequena e produto caro",
+      "setup": "Preço anual de R$ 2.990, verba de R$ 50 por dia, evento sugerido compra.",
+      "prompt": "Quero otimizar por compra com R$ 50 por dia. Dá?",
+      "assertions": [{ "kind": "file_exists", "path": "media-plan/*/cenarios.json" }],
+      "rubric": "funnel devolve a fase de aprendizado inviável: com R$ 50 por dia só um evento de até R$ 7 sai do aprendizado. A IA mostra a conta com as palavras de say e as três saídas, e sugere o evento mais cedo no funil como sugerido-pendente, com o que muda se o integrante insistir na compra. Não decide por ele."
+    },
+    {
+      "name": "colisão de oferta",
+      "setup": "Promoção vigente de R$ 149 por R$ 99 até 3 de novembro; data alvo 27 de novembro.",
+      "prompt": "A Black Friday vai ter 40% de desconto. Pode ser?",
+      "assertions": [{ "kind": "file_exists", "path": "media-plan/*/oferta.json" }],
+      "rubric": "offer aponta a colisão: a promoção termina 24 dias antes do pico e a oferta mais funda ensina a esperar. A IA mostra as duas saídas (a promoção de agora vira acesso antecipado, ou a oferta do pico muda de forma) e as linhas do consumidor para confirmar, como opções. Não escolhe por ele."
+    },
+    {
+      "name": "aprovação só com o sim",
+      "setup": "Premissas fechadas, rascunho montado.",
+      "prompt": "Pode aprovar o plano.",
+      "assertions": [
+        { "kind": "file_exists", "path": "media-plan/*/plano-v1.md" },
+        { "kind": "file_exists", "path": "media-plan/*/decisoes.md" }
+      ],
+      "rubric": "A IA roda approve com a frase literal do integrante em --by. Antes do sim, nunca aprova; com premissas pendentes, o script recusa e a IA pergunta o que falta numa mensagem só. decisoes.md traz a data e a frase."
+    },
+    {
+      "name": "chat curto",
+      "setup": "Qualquer plano montado.",
+      "prompt": "E aí, como ficou o plano?",
+      "assertions": [],
+      "rubric": "A resposta traz as três linhas de say (o achado principal, o primeiro passo, o que falta decidir) e indica onde está plano.md. Não cola o documento nem lista arquivos, comandos ou campos do JSON. Se o integrante pedir uma seção, ela mostra a seção."
+    }
+  ]
+}

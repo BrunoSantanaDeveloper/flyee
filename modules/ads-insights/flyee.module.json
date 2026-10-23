@@ -1,0 +1,86 @@
+{
+  "manifest_version": 1,
+  "name": "ads-insights",
+  "version": "1.0.0",
+  "type": "tool",
+  "trail": "escalar",
+  "title": {
+    "pt-BR": "Medição e leitura de resultados",
+    "en": "Measurement and results reading"
+  },
+  "summary": {
+    "pt-BR": "Deixa a medição pronta antes do primeiro real e lê os resultados depois: o contrato do que conta, as tags da página, a regra única de link, a planilha de origem sem dado pessoal, o veredito de cada anúncio com a amostra que ele tem e a leitura da semana com o que fazer.",
+    "en": "Gets measurement ready before the first real is spent and reads results after: the contract of what counts, the page tags, the single link rule, the origin ledger with no personal data, each ad's verdict with the sample it has and the weekly read with what to do."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.10.0",
+  "entry": "skills/ads-insights/SKILL.md",
+  "files": [
+    "NOTICE.txt",
+    "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
+    "references/colunas.json",
+    "references/interface.md",
+    "references/leitura-semanal.md",
+    "references/leitura.json",
+    "references/medicao.md",
+    "references/rastreamento.md",
+    "scripts/insights.mjs",
+    "scripts/lib/contract.mjs",
+    "scripts/lib/csv.mjs",
+    "scripts/lib/exports.mjs",
+    "scripts/lib/ledger.mjs",
+    "scripts/lib/moves.mjs",
+    "scripts/lib/report.mjs",
+    "scripts/lib/tags.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/lib/utm.mjs",
+    "scripts/lib/verdict.mjs",
+    "skills/ads-insights/SKILL.md"
+  ],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/ads-insights/scripts/insights.mjs",
+      "reason": {
+        "pt-BR": "O script do app lê os exports, confere tags e links, grava a planilha de origem com pseudônimos, calcula os vereditos e monta a leitura da semana.",
+        "en": "The app's script reads the exports, checks tags and links, writes the origin ledger with pseudonyms, computes the verdicts and assembles the weekly read."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "a página de destino do integrante, só leitura do HTML público",
+      "reason": {
+        "pt-BR": "Para dizer quais tags de medição estão no HTML servido da sua página. Nenhum dado sai da máquina.",
+        "en": "To say which measurement tags are in the served HTML of your page. No data leaves the machine."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "ads-insights/entrada/, anuncios/*/entrega/nomes.json e media-plan/*/plano.json",
+      "reason": {
+        "pt-BR": "Os exports e as listas que você traz, os nomes dos anúncios da entrega e o plano aprovado, de onde vêm o custo permitido e a regra de link.",
+        "en": "The exports and lists you bring, the ad names of the delivery and the approved plan, where the allowable cost and the link rule come from."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./ads-insights/",
+      "reason": {
+        "pt-BR": "O contrato de medição, a planilha de origem, as leituras, a leitura da semana, o pulso e os movimentos ficam na pasta do projeto.",
+        "en": "The measurement contract, the origin ledger, the readings, the weekly read, the pulse and the moves live in the project folder."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão, completa: contrato de medição, tags da página, regra única de link, plano de rastreamento, planilha de origem com pseudônimos, leitura dos exports da Meta e do Google Ads em português e em inglês, veredito por peça com a amostra mínima, leitura da semana com a verdade do negócio e os movimentos, pulso diário por exceção.",
+    "en": "First version, complete: measurement contract, page tags, single link rule, tracking plan, origin ledger with pseudonyms, reading of Meta and Google Ads exports in Portuguese and English, verdict per piece with the minimum sample, weekly read with the business truth and the moves, exception-only daily pulse."
+  },
+  "license": "member"
+}

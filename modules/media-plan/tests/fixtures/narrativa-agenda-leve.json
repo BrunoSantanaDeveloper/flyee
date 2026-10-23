@@ -1,0 +1,19 @@
+{
+  "findings": [
+    { "text": "A meta de 30 assinaturas cabe no cenário esperado só se a base antiga responder: 19 das 30 vêm dela.", "certainty": "confirmado" },
+    { "text": "A promoção de agora termina 24 dias antes do pico com 34% de desconto: quem comprou agora pagaria mais do que quem esperar.", "certainty": "confirmado" },
+    { "text": "Com R$ 125 por dia, só um lead de até R$ 17,50 tira o conjunto da fase de aprendizado: a pré-campanha mede custo por lead, não vendas.", "certainty": "provavel" }
+  ],
+  "story": "A marca chega ao pico com uma base que conhece o produto, uma página de venda pronta e nenhum dado de anúncio. O caminho é usar os 35 dias para aprender o ângulo e o custo por lead com gente nova, formar o público morno e deixar a base para o e-mail e a mensagem, onde ela converte sem pagar CPM de pico.",
+  "first_move": "Transformar a promoção que termina em 3 de novembro no acesso antecipado da oferta anual, com a migração de dados como bônus, escrito na página até 10 de novembro.",
+  "not_doing": [
+    "Otimizar por compra: com esta verba o conjunto não sairia da fase de aprendizado.",
+    "Abrir TikTok ou LinkedIn: 35 dias e uma pessoa só não pagam um canal novo."
+  ],
+  "could_not_check": [
+    "Se a Meta restringe os eventos de conversão de um produto de saúde: aparece como aviso no Gerenciador de Eventos ao montar a campanha."
+  ],
+  "decisions": [
+    { "question": "A oferta do pico é a anual pelo preço de 10 meses, parcelada, com a migração incluída?", "recommendation": "Sim: preserva o preço de tabela e concentra a receita; o desconto no mensal só se o anual não vender nos primeiros 7 dias.", "by": "2026-10-27" }
+  ]
+}

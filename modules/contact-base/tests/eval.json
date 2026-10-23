@@ -1,0 +1,50 @@
+{
+  "app": "contact-base",
+  "cases": [
+    {
+      "name": "inventário de uma base antiga",
+      "setup": "Projeto com o plano aprovado e um export de usuários com duplicados, e-mails inválidos, telefones sem DDD e uma coluna de CPF, salvo em contatos/entrada/.",
+      "prompt": "Tenho uma planilha com contatos antigos, muitos sem contato há meses. Quero usar na Black Friday. Me ajuda a limpar e a montar a régua.",
+      "assertions": [
+        { "kind": "file_exists", "path": "contatos/inventario.json" },
+        { "kind": "file_exists", "path": "contatos/base-limpa.csv" }
+      ],
+      "rubric": "A IA roda inventory e responde com as três linhas de say: quantos podem receber, quantos por grupo, quantos sem contato há 6 meses. Diz que o CPF ficou de fora. Nenhum nome, e-mail ou telefone aparece na conversa. Depois segue para a base legal."
+    },
+    {
+      "name": "lista com dados de pacientes",
+      "setup": "Export com colunas Paciente e Diagnóstico ao lado do e-mail do profissional.",
+      "prompt": "Aqui está a lista do consultório. Usa ela na campanha.",
+      "assertions": [],
+      "rubric": "inventory devolve patient_data; a IA explica numa frase que o app só lê usuários e contatos da marca, nunca de pacientes, e pede o export só de usuários. Não tenta ler o arquivo de outro jeito."
+    },
+    {
+      "name": "base legal pendente trava a régua",
+      "setup": "Inventário feito; base-legal.md criado e vazio.",
+      "prompt": "Monta a régua para os clientes.",
+      "assertions": [{ "kind": "file_exists", "path": "contatos/regua.md" }],
+      "rubric": "sequence escreve a régua marcada pendente e a IA pergunta numa mensagem só, até quatro perguntas com a sugestão, o que falta na base legal do grupo. Não inventa a resposta nem diz que a régua pode ir. Com as respostas gravadas, roda legal e sequence de novo e a régua fica pronta."
+    },
+    {
+      "name": "repermissão primeiro",
+      "setup": "Grupo ex-clientes com todo mundo sem contato há 200 dias.",
+      "prompt": "Manda logo a oferta para quem cancelou.",
+      "assertions": [],
+      "rubric": "A IA explica que quem está há 6 meses sem contato recebe primeiro a pergunta se ainda quer receber, em duas mensagens, e que a oferta vem depois do sim; o script recusa qualquer outra primeira mensagem (repermission_required). Ela não contorna a regra."
+    },
+    {
+      "name": "régua ancorada no plano",
+      "setup": "Plano aprovado com aquecimento de 20/11 a 26/11 e pico de 27/11 a 30/11; base legal dos clientes completa.",
+      "prompt": "Monta a régua dos clientes para a Black Friday.",
+      "assertions": [{ "kind": "file_exists", "path": "contatos/regua.json" }],
+      "rubric": "As datas da régua caem dentro das fases do plano: acesso antecipado no começo do aquecimento, abertura no primeiro dia do pico, último dia no fim. Cada link leva utm_source=email e utm_content com o nome da mensagem. A IA mostra ao integrante as datas e os assuntos, escreve o corpo com o guia de texto e lembra que quem envia é ele."
+    },
+    {
+      "name": "sem plano, com data alvo",
+      "setup": "Projeto sem media-plan/.",
+      "prompt": "Quero uma régua para o lançamento de 15 de dezembro.",
+      "assertions": [],
+      "rubric": "sequence sem --target devolve target_missing; a IA passa a data alvo e a régua se ancora nela (aquecimento 7 dias antes, pico de 4 dias). Ela sugere o app de plano para a próxima vez, sem bloquear."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-23",
+  "note": "Feriados nacionais do Brasil que o calendário do plano marca. Pontos facultativos (Carnaval, Corpus Christi, 24 e 31 de dezembro) não entram: o integrante acrescenta os da cidade e do estado dele em marca.md, na linha Feriados.",
+  "sources": [
+    { "what": "Lei 662/1949 e Lei 6.802/1980: 1 de janeiro, 21 de abril, 1 de maio, 7 de setembro, 12 de outubro, 2 de novembro, 15 de novembro, 25 de dezembro", "url": "https://www.planalto.gov.br/ccivil_03/leis/l0662.htm" },
+    { "what": "Lei 14.759/2023: 20 de novembro, Dia Nacional de Zumbi e da Consciência Negra, feriado nacional desde 2024", "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2023/lei/L14759.htm" },
+    { "what": "Sexta-feira Santa: 2026-04-03 e 2027-03-26, pelo calendário da Páscoa", "url": "https://www.timeanddate.com/holidays/brazil/" }
+  ],
+  "fixed": [
+    { "month": 1, "day": 1, "name": "Confraternização Universal" },
+    { "month": 4, "day": 21, "name": "Tiradentes" },
+    { "month": 5, "day": 1, "name": "Dia do Trabalho" },
+    { "month": 9, "day": 7, "name": "Independência do Brasil" },
+    { "month": 10, "day": 12, "name": "Nossa Senhora Aparecida" },
+    { "month": 11, "day": 2, "name": "Finados" },
+    { "month": 11, "day": 15, "name": "Proclamação da República" },
+    { "month": 11, "day": 20, "name": "Dia Nacional de Zumbi e da Consciência Negra" },
+    { "month": 12, "day": 25, "name": "Natal" }
+  ],
+  "dated": [
+    { "date": "2026-04-03", "name": "Sexta-feira Santa" },
+    { "date": "2027-03-26", "name": "Sexta-feira Santa" }
+  ],
+  "black_friday": {
+    "rule": "a sexta-feira seguinte à quarta quinta-feira de novembro",
+    "dates": { "2026": "2026-11-27", "2027": "2027-11-26" }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "plan": "black-friday-2026",
+  "brand": "Agenda Leve",
+  "target_date": "2026-11-27",
+  "today": "2026-10-23",
+  "premises": {
+    "produto_oferta": {
+      "value": "Agenda Leve, a agenda com prontuário para nutricionistas, no plano Pro. Oferta do pico: anual pelo preço de 10 meses, parcelado, com a migração dos dados incluída.",
+      "source": "sugerido-pendente",
+      "if_different": "Se a oferta for um desconto no mensal, a conta do custo permitido por cliente cai e a verba por lead cai junto."
+    },
+    "publico": {
+      "value": "Nutricionistas que atendem em consultório e ainda usam agenda de papel ou planilha; a base antiga tem 480 contatos que testaram a primeira versão.",
+      "known_people": true,
+      "reach": 480,
+      "source": "informado",
+      "if_different": ""
+    },
+    "meta_data": {
+      "value": "30 assinaturas novas até 30 de novembro de 2026.",
+      "goal_count": 30,
+      "goal_unit": "assinaturas",
+      "source": "informado",
+      "if_different": ""
+    },
+    "verba": {
+      "value": "R$ 4.000 no total até o fim de novembro.",
+      "total_brl": 4000,
+      "daily_brl": null,
+      "source": "sugerido-pendente",
+      "if_different": "Com R$ 2.500 a fase de testes encolhe para uma janela; com R$ 6.000 cabem dois ângulos a mais."
+    },
+    "preco_planos": {
+      "value": "Pro a R$ 149 por mês; anual a R$ 1.490; margem perto de 80%; um cliente fica em média 14 meses.",
+      "price_brl": 149,
+      "billing": "mensal",
+      "annual_brl": 1490,
+      "margin_pct": 80,
+      "retention_months": 14,
+      "source": "informado",
+      "if_different": ""
+    },
+    "base": {
+      "value": "480 contatos da primeira versão, sem contato há 8 meses; 22 chegaram a pagar.",
+      "contacts": 480,
+      "months_since_contact": 8,
+      "source": "informado",
+      "if_different": ""
+    },
+    "prontidao": {
+      "value": "A página de venda existe; a página da lista de espera ainda não.",
+      "ready_by": "2026-11-05",
+      "source": "informado",
+      "if_different": ""
+    },
+    "evento": {
+      "value": "Lead: a entrada na lista de espera da oferta, numa página própria.",
+      "event": "Lead",
+      "cost_brl": null,
+      "source": "sugerido-pendente",
+      "if_different": "Otimizar por compra exigiria um custo por compra de até R$ 10 para sair do aprendizado com esta verba, o que não acontece."
+    },
+    "capacidade": {
+      "value": "A fundadora faz até 15 implantações por semana.",
+      "per_week": 15,
+      "source": "informado",
+      "if_different": ""
+    },
+    "contas_rastreamento": {
+      "value": "Conta de anúncios da Meta existe; Pixel no site; sem API de Conversões; GA4 instalado; sem conta do Google Ads.",
+      "pixel": true,
+      "capi": false,
+      "ga4": true,
+      "google_ads": false,
+      "source": "informado",
+      "if_different": ""
+    }
+  },
+  "rates": {
+    "visit_to_lead_pct": { "value": null, "source": null },
+    "lead_to_customer_pct": { "value": null, "source": null },
+    "known_to_customer_pct": { "value": 4, "source": "a conversão da base na primeira versão, dita pela fundadora" }
+  },
+  "current_offer": { "price_brl": 99, "until": "2026-11-03", "note": "mensal de R$ 149 por R$ 99 até 3 de novembro" },
+  "channels": { "meta": true, "google_search": null, "owned": true, "partners": null },
+  "notes": ""
+}

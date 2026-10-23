@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-23",
+  "note": "As regras de leitura do app, todas rotuladas: a amostra mínima, os limiares de cada veredito e os pisos de criativo. São regras de bolso para uma conta sem histórico; o plano (plano.json.rules) e, depois, o histórico da própria conta valem mais do que elas. Revisão com o primeiro export real de qualquer integrante.",
+  "sources": [
+    { "what": "fase de aprendizado da Meta: cerca de 50 eventos de otimização por conjunto em 7 dias", "url": "https://www.facebook.com/business/help/112167992830700", "checked_on": "2026-10-21" },
+    { "what": "ruído de contagem: conversões se comportam como Poisson, incerteza relativa de cerca de 1 dividido pela raiz de n", "note": "regra de estatística, não de plataforma", "checked_on": "2026-10-23" }
+  ],
+  "verdicts": ["escalar", "manter", "iterar", "cortar", "negativar", "dado_insuficiente"],
+  "certainty": ["confirmado", "provavel", "primeira-leitura"],
+  "sample": {
+    "impressions": 1000,
+    "link_clicks": 30,
+    "results": 30,
+    "visits": 30,
+    "label": "gancho e CTR legíveis com ao menos 1.000 impressões e 30 cliques no link por anúncio; custo por resultado legível com 30 resultados ou mais; abaixo disso, indício",
+    "source": "decisão D28 do plano de anúncios, 2026-10-23, sobre a regra de Poisson"
+  },
+  "cut": {
+    "zero_results_spend_multiple": 3,
+    "cost_multiple": 2,
+    "min_results": 10,
+    "spend_multiple": 3,
+    "label": "cortar com zero resultados depois de 3 vezes o custo permitido gasto, ou com o custo por resultado acima de 2 vezes o permitido depois de 3 vezes o permitido gasto e ao menos 10 resultados"
+  },
+  "scale": {
+    "cost_multiple_max": 1.0,
+    "min_results": 30,
+    "step_pct": [20, 30],
+    "label": "escalar só com 30 resultados ou mais e custo por resultado dentro do permitido, 20 a 30% por semana, nunca o dobro de uma vez; a planilha de origem precisa concordar"
+  },
+  "hold": {
+    "cost_multiple_max": 1.5,
+    "near_threshold": [0.8, 1.3],
+    "label": "manter entre 1,0 e 1,5 vez o permitido; entre 0,8 e 1,3 a leitura mostra as duas interpretações e deixa a escolha com o integrante"
+  },
+  "floors": {
+    "hook_rate": 0.2,
+    "link_ctr_pct": 0.5,
+    "search_ctr_pct": 2.0,
+    "page_conversion_fraction_of_median": 0.5,
+    "label": "pisos de criativo: quem para nos 3 segundos abaixo de 20% das impressões é gancho fraco; CTR do link abaixo de 0,5% é miolo fraco; conversão da página abaixo da metade da mediana da tabela é página fraca; CTR da Busca abaixo de 2% é anúncio ou palavra fracos",
+    "source": "ordens de grandeza para anúncios de alcance na Meta e na Busca do Google, sem medição própria; o histórico da conta substitui"
+  },
+  "new": {
+    "spend_multiple_min": 1.0,
+    "days_min": 3,
+    "label": "um anúncio com menos de 1 vez o custo permitido gasto, ou com menos de 3 dias, só tem indício"
+  },
+  "fatigue": {
+    "ctr_drop_fraction": 0.35,
+    "frequency_prospecting": 3,
+    "frequency_retargeting": 6,
+    "label": "fadiga: CTR caindo 35% ou mais entre duas leituras com a verba parada, ou frequência semanal acima de 3 em público frio e de 6 em remarketing"
+  },
+  "search": {
+    "negative": { "min_clicks": 10, "spend_multiple_min": 1.0 },
+    "label": "um termo de pesquisa com 10 cliques ou mais, nenhuma conversão e ao menos 1 vez o custo permitido gasto vira negativa"
+  },
+  "moves": {
+    "legible_days": 14,
+    "maturity_days": 3,
+    "window_days": 7,
+    "recheck_days": 7,
+    "label": "um movimento aplicado fica legível 14 dias depois: 7 dias de janela depois, 3 de maturação, comparados com os 7 dias de antes; um segundo movimento no mesmo objeto nesse prazo torna os dois ilegíveis"
+  },
+  "pulse": {
+    "pacing_tolerance": 0.15,
+    "spend_spike_multiple": 1.5,
+    "cpa_multiple": 2,
+    "ctr_drop_fraction": 0.4,
+    "label": "o pulso diário só fala quando um limiar quebra: ritmo de gasto 15% fora do plano, gasto do dia 1,5 vez acima do normal, reprovação, custo acima de 2 vezes o permitido em dado maduro, zero conversões com gasto normal, CTR do dia 40% abaixo da leitura"
+  }
+}

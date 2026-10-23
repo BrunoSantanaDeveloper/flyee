@@ -17,6 +17,8 @@ Decidido pelo operador em 2026-10-12:
 
 **Objetivo:** um integrante pede "prepare os criativos da minha primeira campanha" e recebe três conceitos produzidos e conferidos, cada um com a ficha da evidência que o sustenta, sem chave nenhuma; com a chave do Apify a coleta é automática; depois que a campanha roda, o app lê o resultado exportado e propõe a rodada seguinte.
 
+⚠️ **Correção (2026-10-23, D22).** Este plano nasceu de uma campanha do operador e cita o caso dela nos épicos 0 a 4. Daqui em diante, tudo o que ele constrói é produto do flyee: nenhum épico, aceite, data ou fixture se vincula a um pedido de uma marca, e as menções anteriores ficam como história. Os épicos 6 a 11 seguem essa regra.
+
 > Auditado contra o código em 2026-10-12 (HEAD `e57ec73` mais a árvore não commitada). Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
 >
 > Caminhos fora deste repositório: `medchina/…` é o repositório irmão `C:\AppsProjects\medchina`; `radar-instagram/…` é o plugin Radar, em `~/.claude/plugins/synced/<id>/radar-de-conteudo~g4/skills/`.
@@ -46,6 +48,25 @@ Decidido pelo operador em 2026-10-12:
 | D19 | Etiquetas próprias | Proposto: barreira ou motivador, ângulo, família de gancho, tipo de prova, estrutura e estilo visual, em listas do próprio app. Fecham com os conceitos da T0.5 | `references/etiquetas.json` do `ad-creatives` |
 | D20 | Limites do texto do anúncio | Texto principal com 125 caracteres visíveis antes do "ver mais", título com 40, os botões aceitos pela Meta. São números de guias de terceiros: conferir no Guia de Anúncios da Meta e gravar a data | `references/meta-anuncios.json`, com `checked_on` |
 | D21 | Nome de cada anúncio | O do site do integrante, perguntado no briefing: um site pode escolher a manchete pelo nome que chega no `utm_content`. O MedChina usa `<ângulo>-<formato>-<gancho>-v<n>` (`medchina/apps/web/src/lib/offer-angles.ts`). Sem convenção, o app usa `<conceito>-<formato>-<gancho>-v<n>`, em minúsculas, ASCII e com hífen | briefing da campanha; `entrega/nomes.json` |
+
+### Decisões de 2026-10-23: o plano, a medição e a base
+
+Decididas pelo operador em 2026-10-23, depois de uma avaliação de prontidão: um pedido de plano de tráfego pago a nível de especialista precisa de 36 coisas, 20 essenciais; nenhuma era coberta inteira por um app, 16 em parte e 20 só pelo conhecimento geral da IA, 10 delas essenciais. O desenho passou por uma crítica adversarial antes destas decisões.
+
+| # | Decisão | Valor | Onde mora |
+|---|---|---|---|
+| D22 | Produto, não um pedido de marca | ⚠️ Decidido: tudo o que este plano constrói é produto do flyee. Nenhum épico, aceite, data, fixture ou exemplo se vincula a um pedido de uma marca do operador; os casos de teste usam uma marca fictícia. Vale para o que já estava escrito acima: onde um épico anterior cita o caso de uma marca como razão ou prazo, leia como história | este plano; `modules/*/tests` |
+| D23 | Faixas de referência e cenários | Decidido: um app pode carregar faixas de mercado (custo por lead, taxas de conversão, CPM) e calcular cenários condicionais, desde que toda faixa venha rotulada como regra de bolso com fonte, moeda e data, e todo cenário seja aritmética sobre suposições rotuladas ("se o lead custar X, a verba Y traz Z"). Nenhum app prevê resultado. A regra "nenhum número sai de estimativa" passa a "nenhum número sem rótulo e fonte" | `references/referencias.json` do `media-plan`; o verificador de promessa continua |
+| D24 | O que o plano sugere | Decidido: evento de otimização e ponto de conversão, verba por fase e por canal, públicos, a forma da oferta (anual parcelado, bônus, vagas, prazo, condição para quem já é cliente) e faixas de desconto calculadas dos números do integrante, como opções com `source: sugerido-pendente` até o sim. Nunca sugere resultado nem inventa fato da marca | `premissas.json` e `plano.json` do `media-plan` |
+| D25 | Onde vive o plano | Decidido: app próprio, `media-plan` (workflow · planejar), com `plano.json` como interface v1 lida pelo `ad-creatives`, pelo `contact-base` e pelo `ads-insights` | manifesto; `references/interface.md` |
+| D26 | Publicação | ⚠️ Decidido, contra a recomendação de instalar só num projeto: construir para publicar. `media-plan` e `contact-base` saem com a 1.0 reduzida e a 1.1 completa no mesmo dia, como os workflows; `ads-insights` sai completo na 1.0.0, como os tools. Guias em pt-BR e en, exemplo da loja nos dois idiomas | console da plataforma; `changelog` |
+| D27 | Busca do Google | ⚠️ Corrige a D4: a Busca do Google entra. No plano (veredito, palavras, correspondências, negativas, campanha de marca), na medição (tag do Google Ads e conversão) e na leitura (export do Google Ads). Os criativos do `ad-creatives` ganham os anúncios de texto da Busca; as peças de vídeo e imagem seguem só na Meta | `media-plan`, `ads-insights`, `ad-creatives` |
+| D28 | Amostra mínima | Fecha a D15 com um padrão rotulado: gancho e CTR legíveis com ao menos 1.000 impressões e 30 cliques no link por anúncio; custo por resultado legível com 30 resultados ou mais; "cortar" com zero resultados depois de 3 vezes o custo permitido; abaixo disso, indício, e o texto diz. Revisão com o primeiro export real de qualquer integrante | `references/leitura.json` do `ads-insights` |
+| D29 | Dados pessoais de uma base | Decidido: a base limpa fica na pasta do projeto da marca, nunca em `~`, nunca sai da máquina, nunca entra em relatório, contagem, telemetria ou saída de outro app; o público para a Meta sai com os valores já transformados em hash | `contact-base`, invariante 13 |
+| D30 | LGPD como método | Decidido: o `contact-base` registra a base legal de cada grupo e marca a régua como pendente enquanto ela faltar; a primeira mensagem a quem não é contatado há 6 meses ou mais é repermissão. Sem cerimônia de assinatura e sem regra derivada da história de uma marca | `contact-base`, `references/base-legal.md` |
+| D31 | Avisos MIT | Decidido: cada app que adapta trechos substanciais do goose-skills (Copyright (c) 2026 GooseWorks) ou do agency-agents (Copyright (c) 2025 AgentLand Contributors) leva um `NOTICE.txt` com o aviso de copyright e o de permissão; o opensquad declara MIT sem arquivo de licença, então entra só como ideia de método, sem texto copiado. O `.txt` passa pela regra de texto do pacote: sem travessão | `modules/<slug>/NOTICE.txt` |
+| D32 | Nomes e trilhas | `media-plan` "Plano de estratégia e mídia" (workflow · planejar); `ads-insights` "Medição e leitura de resultados" (tool · escalar, a trilha que a D1 propôs); `contact-base` "Base de contatos e CRM" (workflow · vender). Skill nova `ad-landing-page` no `ad-creatives` | manifestos |
+| D33 | Exceção do "fale simples" | Decidido: quando o pedido é um plano, um relatório ou uma leitura de resultados, o chat traz o que foi olhado, dois ou três achados e o primeiro passo, e o documento completo vai para o arquivo do app, indicado numa frase; as perguntas vão numa mensagem só, até quatro, cada uma com a sugestão e o que muda se a resposta for outra. Entra no core 1.10.0 (CLI 1.2.3) e se repete nas skills dos apps de plano e leitura | `packages/core/assets/agents/*.md`; skills |
 
 ## 0.5 Convenções do repositório que valem para todas as tarefas
 
@@ -480,6 +501,193 @@ Roda ao fim do ÉPICO 3 e de novo ao fim do ÉPICO 4.
 ### T5.3: entrega para publicação
 - Publicar é passo de console do operador (`docs/RELEASE.md`) e não faz parte deste plano. Este plano entrega os ZIPs, os checksums e a indicação de qual versão é a gratuita.
 - **Aceite:** em `dist/modules/` existem `instagram-research-1.0.0`, `ad-creatives-1.0.0` e `ad-creatives-1.1.0`, cada um com o `.sha256`; depois do ÉPICO 4, também `ads-insights-1.0.0` e `ad-creatives-1.2.0`.
+
+## O que falta para um plano de especialista (2026-10-23)
+
+> Auditado contra o código em 2026-10-23 (HEAD `c24271e`). Os épicos abaixo foram desenhados a partir da avaliação de prontidão descrita nas decisões D22 a D33, de três repositórios MIT lidos na íntegra (goose-skills `marketing-agent`, agency-agents `marketing/` e `paid-media/`, opensquad) e das interfaces que já existem (`nomes.json`, `diario.json` e a conta da verba do `ad-creatives`). O caso de teste de todos eles é uma marca fictícia (D22).
+
+### Passo 0 do catálogo, de novo
+
+| Grupo | Apps | O que o plano faz |
+|---|---|---|
+| Chamar em execução | `video-render` (`capture`, para olhar o site antes de perguntar e para auditar a página), `instagram-research`, `youtube-research`, `video-analysis` (o plano só lê o que eles gravaram) | O `media-plan` lê o projeto; o `ad-creatives` passa a ler `plano.json`; o `ads-insights` lê `entrega/nomes.json` |
+| Usar na construção | `humanizer-pt-br`, `texto-natural`, `project-doc`, `app-author` | Todo texto distribuído passa pelo humanizer; cada app novo tem o seu `.dev/SPEC.md` |
+| Sobreposição | `ad-creatives` 1.1.1 (briefing, conta da verba, `lancamento.md`) | Sobrepõe o começo do plano. Estende, não duplica: o plano fica no `media-plan` e o `ad-creatives` 1.2 o consome; a conta da D10 continua no `ad-creatives` e é reimplementada no plano com a mesma fonte |
+| Ferramenta que falta | medição e leitura de resultados; plano de estratégia e mídia; base de contatos e CRM | Viram `ads-insights`, `media-plan` e `contact-base`. Construtor de UTM, consulta de DNS, varredura de tags e leitor de CSV são finos demais para apps próprios e moram dentro deles |
+
+### Invariantes que estes épicos acrescentam
+
+14. **Nenhum número sem origem e data.** Dado medido vem de coleta, export ou do integrante; faixa de referência vem rotulada como regra de bolso com fonte, moeda e data; cenário é aritmética condicional sobre suposição rotulada. Nenhum app promete ou prevê resultado.
+15. **O app prescreve; o integrante executa o que mexe em dinheiro ou envia.** Nenhum app escreve na conta de anúncios, na ferramenta de e-mail ou no WhatsApp, nem pede a credencial delas.
+16. **Perguntas numa mensagem só, até quatro, cada uma com sugestão** e o que muda se a resposta for outra; uma sugestão nunca inventa fato da marca e fica `sugerido-pendente` até o sim.
+17. **Os fatos da marca vivem no projeto** (`media-plan/marca.md`, `plano.json`) com fonte e data; todo app olha o projeto antes de perguntar.
+18. **Contratos entre apps só crescem:** `plano.json`, `report.json`, `nomes.json` e `origens.csv` com `interface_version` 1 e mudanças aditivas; cada app que serve outro traz `references/interface.md`.
+19. **Vereditos, confiança e datas legíveis são calculados pelo script, nunca escritos pela IA;** abaixo da amostra mínima (D28) a leitura é indício e o texto diz.
+20. **Chat curto, documento completo** (D33).
+21. **Oferta honesta:** preço de referência verdadeiro, prazo e regras escritas, arrependimento de 7 dias na compra à distância, cliente antigo nunca paga mais que o novo; o app aponta a colisão entre uma promoção vigente e a seguinte.
+
+## ÉPICO 6: core 1.10.0, planos e relatórios
+
+**Bloqueia:** nada; reforça as skills dos apps de plano e leitura, que repetem a regra.
+
+### T6.1: a exceção do "fale simples"
+**Estado: ✅ 2026-10-23** core 1.10.0 (`packages/core/assets/core.json`), a exceção do plano, relatório e leitura e a regra das perguntas em `agents/pt-BR.md` e `agents/en.md`; o pedido de plano vai ao app de plano e a leitura ao app de medição; CLI 1.2.3 (`packages/cli/package.json`) com `packages/cli/test/release-123.test.ts`.
+- A regra "Fale simples" ganha a exceção da D33; a regra "use o app do pedido" ganha o exemplo: plano, estratégia, verba por fase e oferta vão para o app de plano, não para o briefing de criativos.
+- Core 1.10.0 e CLI 1.2.3, só para publicar o core.
+- **Aceite:** `packages/cli/test/release-123.test.ts` confere nos dois idiomas a exceção e o exemplo de roteamento; depois do `release-cli`, `npx --yes flyee@latest --version` imprime 1.2.3.
+
+## ÉPICO 7: `media-plan` 1.0.0 e 1.1.0
+
+**Bloqueia:** o ÉPICO 9 (o `ad-creatives` lê o plano) e as datas da régua do ÉPICO 10.
+
+Pasta `./media-plan/` no projeto: `marca.md` (fatos estáveis da marca com fonte e data: planos e preços, funil e eventos que existem, base, contas, o que pode ser dito) e uma pasta por plano, `./media-plan/<plano>/`, com `premissas.json`, `cenarios.json`, `calendario.json`, `plano.json` (interface v1), `plano.md`, `decisoes.md` e as versões anteriores. Script `scripts/plan.mjs`, comandos com `--json`.
+
+### T7.1: criar o app e as referências de método
+**Estado: ✅ 2026-10-23** `modules/media-plan` 1.0.0: `references/referencias.json` (faixas rotuladas, `checked_on`), `feriados.json`, `situacao.md`, `oferta.md`, `pagina.md`, `voz-do-cliente.md`, `interface.md`, `NOTICE.txt`.
+- `npm run apps -- new media-plan --type workflow --trail planejar`.
+- `references/situacao.md` (a restrição vinculante, o calendário, re-alcançar quem já conhece antes de comprar atenção, o que uma fase de preparação pode e não pode dar com conta sem histórico), `references/oferta.md` (escada da oferta, nunca vitalício nem desconto só no primeiro mês, as linhas do CDC), `references/pagina.md` (o briefing da página de destino: hero que continua a frase do anúncio, telas reais, prova autorizada, um chamado, objeções, as linhas do CDC e da LGPD, UTM preservada até o cadastro, perguntas de qualificação do lead), `references/voz-do-cliente.md` (questionário curto e roteiro de 5 a 10 conversas; a saída no formato `declared` do `ad-creatives`), `references/referencias.json` (as faixas de referência da D23, cada uma com fonte, moeda e data), `references/feriados.json` (feriados nacionais com fonte e `checked_on`).
+- `NOTICE.txt` (D31). Adaptados do goose-skills: `plan-campaign` (intake, unit-economics, budget-and-tests, launch-and-calendar), `where-to-start` (situation-lens, questions, output-shape), `write-report`; do agency-agents, `paid-media-paid-social-strategist` (públicos e frequência).
+- **Aceite:** `npm run validate media-plan` sem `[PREENCHER]` depois da T7.4; todo texto passou pelo `humanizer-pt-br`.
+
+### T7.2: olhar antes de perguntar, e as premissas com sugestão
+**Estado: ✅ 2026-10-23** `scripts/lib/look.mjs` e `premises.mjs`; `look` lê marca.md, os briefings, as capturas, a pesquisa no Instagram e o inventário; `premises` devolve até quatro perguntas com `suggestion` e `if_different`; testes em `tests/unit.test.mjs` e `tests/e2e.test.mjs`.
+- `look <plano>`: inventaria o que o projeto já tem (`marca.md`, `anuncios/*/briefing.md` e as capturas do `ad-creatives`, `instagram-research/`, `contatos/inventario.json`; a captura do site pelo Motor quando o integrante dá o endereço e nada foi capturado) e devolve o que dispensa pergunta e `questions`: até quatro, na ordem produto e oferta, para quem e quantos, meta e data, verba, cada uma com `suggestion` e `if_different`.
+- `premises <plano>`: a tabela fixa (produto e oferta, para quem e quantos, meta e data, verba, preço e planos, base e estado, prontidão do produto, evento e ponto de conversão, capacidade do time, contas e rastreamento), cada linha com `value`, `source` (`informado`, `encontrado`, `sugerido-pendente`, `confirmado`) e `if_different`; as cinco bloqueantes nomeadas (produto e oferta, para quem, meta e data, verba, evento). O script recusa um valor sem `source` e nunca preenche sozinho.
+- **Aceite:** teste com um projeto fictício em que `look` encontra oferta, página e verba num `briefing.md` do `ad-creatives` e devolve só duas perguntas; `premises` recusa `source` ausente com `premise_invalid`.
+
+### T7.3: a aritmética
+**Estado: ✅ 2026-10-23** `scripts/lib/economics.mjs`, `offer.mjs`, `calendar.mjs`: custo permitido R$ 1.430,40 na fixture Agenda Leve, 19 da base e 11 do frio, piso de aprendizado R$ 143 contra R$ 125, colisão de 24 dias, seis fases para 27/11 a partir de 23/10 com os feriados de 2/11, 15/11 e 20/11 e ponto de decisão em 13/11 (`tests/unit.test.mjs`).
+- `funnel <plano>`: custo permitido por cliente (preço × margem × meses de payback, ou o teto de um terço da receita do primeiro ano quando faltam margem e retenção), metas por origem com taxa rotulada, leads necessários, custo por lead permitido, dois ou três cenários de verba por fase e canal; a conta da fase de aprendizado da D10 com a mesma fonte e data do `ad-creatives`; frequência estimada por semana (impressões ÷ alcance) só como rótulo de alerta.
+- `offer <plano>`: colisão entre uma promoção vigente e a seguinte (prazo que termina a menos de 30 dias de um desconto mais fundo), faixas de desconto calculadas do preço, verificação das linhas do CDC (preço de referência, prazo, regras, arrependimento de 7 dias), condição para quem já é cliente, alternativas ao desconto.
+- `calendar <plano>`: fases de trás para frente da data alvo (preparação, testes, escala e captação, aquecimento, pico, depois), prazos fixos (rastreamento e oferta na página até T-7, revisão de anúncios 1 a 2 dias, subida programada antes do pico, régua 1 a 2 semanas), quantas janelas de 7 dias cabem, feriados nacionais, um ponto de decisão ao menos 7 dias antes do aquecimento.
+- **Aceite:** testes de tabela para cada conta, com os números de entrada e a saída esperada; `calendar` para uma data alvo numa sexta a 35 dias dali devolve as fases, marca os feriados que caem no intervalo e um ponto de decisão; `offer` sinaliza a colisão de um prazo que termina 24 dias antes do pico.
+
+### T7.4: o plano escrito, a aprovação e a 1.0.0
+**Estado: ✅ 2026-10-23** `scripts/plan.mjs` (`plan` sempre rascunho, `approve` recusa `premises_pending`, versões congeladas em `plano-v<n>`); skill, README, guias pt-BR e en, `tests/eval.json` (6 casos), `.dev/showcase.json`; 37 testes; `validate` sem avisos; `dist/modules/media-plan-1.0.0.zip`. Não publicado: a tag espera o commit.
+- `plan <plano>`: monta `plano.json` e `plano.md` sempre como rascunho (`estado: rascunho`), com as premissas `sugerido-pendente` dentro, no formato de topo curto (In short até 150 palavras, decisões para você, a história, o que fazer em até seis movimentos, o que não vamos fazer, o que não conseguimos conferir, fontes com viés) e as três linhas para o chat (`say`). `approve <plano>` exige as cinco bloqueantes `confirmado` ou `informado`, grava a frase do integrante e a data em `decisoes.md` e muda o estado para `aprovado`. `status`, `list`.
+- Skill `media-plan`: o fluxo (olhar, perguntar numa mensagem só, premissas, as contas, o rascunho, as decisões, o sim), a regra do chat curto (D33) e a regra de que a IA escreve a narrativa e as sugestões rotuladas, nunca os números.
+- `references/interface.md` v1: o esquema de `plano.json` (oferta, página, evento, verba por fase, públicos, datas das fases, padrão de nome, regra de UTM, termos proibidos, regras de decisão quando houver) e como outro app o lê.
+- README, guias pt-BR e en, `tests/eval.json`, `.dev/showcase.json` nos dois idiomas.
+- **Aceite:** `npm run validate media-plan` sem avisos; `npm run pack media-plan` gera o ZIP; `plan` num projeto fictício com duas premissas pendentes escreve o rascunho e `approve` recusa com `premises_pending` listando as duas.
+
+### T7.5: 1.1.0, canais, estrutura, regras e replan
+**Estado: ⬜** `npm run apps -- bump media-plan minor` depois do pacote da 1.0.0.
+- `channels <plano>`: veredito Run, Test, Later ou No por canal (Meta, Busca do Google, e-mail e WhatsApp da base, parceiros, TikTok, LinkedIn, YouTube) pelas lentes (público e intenção, economia, prontidão, tempo até sinal, evidência, horas de quem executa), com o mínimo para aprender rotulado e a condição de virada.
+- `structure <plano>`: por canal, em linguagem de negócio. Meta: objetivo honesto, um conjunto com razão, amplo contra interesses, exclusões, posicionamentos, verba diária contra o piso, padrão de nomes, públicos de remarketing por etapa (visitou, cadastrou e não ativou, ativou e não pagou, viu a oferta) e o público semelhante a partir da base. Google: campanha de Busca por grupos de palavras de alta intenção, correspondências, negativas, campanha de marca na semana do pico, lance e verba contra o mínimo de conversões.
+- `rules <plano>`: `plano.json.rules` (o que é "dado suficiente", indicadores por fase, quando pausar, escalar e trocar, cadência semanal e diária) e `triggers` com o plano B de cada risco (custo, conta, base, produto).
+- `replan <plano> --from <leitura semanal do ads-insights>`: a versão N+1 com "o que mudou e por quê".
+- `references/estrutura-meta.md`, `references/estrutura-google.md`, `references/regras.md`, `references/conformidade.md` (política de saúde e de atributos pessoais da Meta, CDC, LGPD; método, não parecer), `references/lancamento.md` (demonstração ao vivo, gravação para remarketing, pagamento e recuperação, parcerias com link rastreado, contas e infraestrutura).
+- **Aceite:** `channels` com uma verba pequena e sem evidência dá Later para TikTok e LinkedIn e Test para a Busca; `structure` recusa um conjunto cuja verba diária fica abaixo do piso de aprendizado; `replan` lendo uma leitura semanal fixture cria `plano-v2.md` com a seção "o que mudou"; `validate` e `pack` da 1.1.0.
+
+## ÉPICO 8: `ads-insights` 1.0.0, medição e leitura
+
+⚠️ **Substitui o ÉPICO 4** (2026-10-23): as tarefas T4.1 a T4.4 passam para cá, sem depender do export de uma marca; a T4.5 vira a 1.3.0 do `ad-creatives` (ÉPICO 9). A D15 fecha pela D28.
+
+**Bloqueia:** a 1.3.0 do `ad-creatives` e o `replan` do `media-plan`.
+
+Pasta `./ads-insights/` no projeto: `medicao.json` (o contrato de medição), `origens.csv` (a planilha de origem, sem dado pessoal), `entrada/` (os exports que o integrante traz), `leituras/`, `movimentos.json`. Script `scripts/insights.mjs`. Tool completo na 1.0.0 (D26).
+
+### T8.1: criar o app e a medição
+**Estado: ✅ 2026-10-23** `modules/ads-insights` 1.0.0: `contract`, `tags` (HTML servido, nunca "dispara"), `utm build|check`, `events` (rastreamento.md), `ledger init|add|import|summary` (pseudônimo SHA-256 com sal do contrato; `import` só de `entrada/`); fixture de 12 linhas dá a razão 1,3 (`tests/unit.test.mjs`).
+- `npm run apps -- new ads-insights --type tool --trail escalar`.
+- `contract`: `medicao.json` com o árbitro por tipo de negócio, a semana de reporte e o fuso, receita líquida e cliente novo, o campo de origem que viaja com a conta, o evento de ativação, margem e o MER de equilíbrio, a atribuição das plataformas como reivindicação; cada item `verificado`, `informado` ou `desconhecido`.
+- `tags <url>`: lê o HTML público e detecta o Pixel da Meta, GA4 e gtag, GTM, a tag do Google Ads, TikTok, LinkedIn e o aviso de cookies; o resultado diz "presente no HTML servido", nunca que a tag dispara; uma página que injeta as tags depois do aceite de cookies é dita como tal.
+- `utm build` e `utm check`: pela regra única do plano (`plano.json.tracking.utm_rule`) ou pela regra padrão do app, para anúncios, e-mails, WhatsApp e parceiros; recusa link sem os cinco campos; `utm_content` igual ao nome do anúncio.
+- `events`: `references/rastreamento.md` renderizado para o caso: mapa de eventos do funil (visita, lead, cadastro, ativação, início de pagamento, compra com valor) por navegador e servidor, deduplicação, a conversão do Google Ads, o plano de teste no Gerenciador de Eventos, a restrição de categoria (eventos padrão, nenhum termo clínico em URL ou parâmetro), a origem que viaja com a conta.
+- `ledger init|add|import|summary`: `origens.csv` com data, etapa, origem, meio, campanha, conteúdo, parceiro, valor, qualificado e um pseudônimo (SHA-256 do e-mail normalizado com um sal do projeto guardado em `medicao.json`); `import leads` lê só arquivos em `entrada/` e nunca grava nome, e-mail ou telefone; `summary` por origem e etapa e a razão de reivindicação (compras das plataformas ÷ compras reais).
+- `NOTICE.txt`. Adaptados: goose-skills `analyze-performance` (measurement-contract, revenue-join), `plan-campaign/brief-template` (a regra de UTM); agency-agents `paid-media-tracking-specialist` (o que "rastreamento pronto" significa).
+- **Aceite:** um HTML fixture com Pixel, GA4 e GTM devolve os três presentes e uma página vazia devolve `absent` em cada um; `utm build` devolve a string exata e um link sem `utm_campaign` dá `utm_invalid`; `ledger summary` numa fixture de 12 linhas dá as contagens e a razão 1,3; `import leads` com uma coluna de e-mail grava só o pseudônimo.
+
+### T8.2: a leitura do export
+**Estado: ✅ 2026-10-23** `import` (pt e en, coluna ausente em `missing`), `link` (5 casam, 1 `unmatched`), `report` (D28 em `references/leitura.json`), `weekly` (movimentos.json, `move applied`, legível em 14 dias), `pulse`; 27 testes; `validate` sem avisos; `dist/modules/ads-insights-1.0.0.zip`. Não publicado.
+- `import <export.csv> --source meta|google`: leitor do export do Gerenciador da Meta (nível de anúncio, conjunto e campanha) e do Google Ads (campanha, grupo, palavra e anúncio), cabeçalhos em pt e en, vírgula ou ponto e vírgula, decimal com vírgula, BOM; coluna ausente vai para `missing` e nunca vira zero.
+- `link <leitura> --names anuncios/<campanha>/entrega/nomes.json`: liga cada linha ao nome do anúncio; o que não casa sai em `unmatched`, nunca é adivinhado.
+- `report <leitura>`: por peça, quem passou dos 3 segundos, quem assistiu até o fim, CTR do link, custo por visita e por resultado; veredito escalar, manter, iterar, cortar ou dado insuficiente pelas regras de `plano.json.rules` ou pelo padrão de `references/leitura.json` (D28), com a indicação de onde a peça falha (gancho, miolo ou página); `report.json` com `interface_version` 1.
+- `weekly`: a leitura semanal (In short, o veredito de cada movimento anterior pela linha de base com janelas antes e depois e a data em que fica legível, a verdade do negócio pela planilha de origem, a tabela por peça e por canal, o que fazer na semana); `movimentos.json` com `proposto_em`, `aplicado_em` (preenchido por `move applied <id> --on <data>` quando o integrante diz que fez) e `legivel_em`; movimento sem `aplicado_em` fica fora do veredito.
+- `pulse`: a leitura diária só por exceção (ritmo de gasto fora do plano, gasto do dia acima do normal, reprovações, custo acima do permitido em dado maduro, zero conversões com gasto normal, queda de CTR).
+- `references/interface.md` v1, skill `ads-insights`, README, guias pt-BR e en, `.dev/showcase.json`, eval com fixtures sintéticas.
+- `NOTICE.txt`: goose-skills `run-paid-campaigns` (reading-results, moves, proposal-and-log), `analyze-performance` (diagnosis, monday-report, monthly-and-pulse); agency-agents `paid-media-auditor`, `academic-statistician` (a cadeia da afirmação).
+- **Aceite:** um export fixture em pt-BR com ponto e vírgula e um em inglês com vírgula produzem a mesma tabela normalizada e uma coluna ausente aparece em `missing`; 6 anúncios com 5 nomes em `nomes.json` dão 1 `unmatched`; um teste por veredito com tabelas sintéticas e uma peça abaixo da amostra mínima sempre `insufficient_data`; um movimento aplicado numa quarta fica legível 14 dias depois; `validate` e `pack`.
+
+## ÉPICO 9: `ad-creatives` 1.2.0 e 1.3.0, e a zona de anúncio do feed
+
+**Bloqueia:** nada. Depende do ÉPICO 7 (o plano) e, para a 1.3.0, do ÉPICO 8.
+
+### T9.1: `video-render` 1.0.2, a zona de anúncio do feed
+**Estado: ✅ 2026-10-23, não commitado** (D16). As sessões Geral e atrupe-34 confirmaram não tocar no motor. `references/redes.json` ganhou `ads_meta_feed` (22 linhas aditivas; 4:5 com 135/135/108/108 e 1:1 com 108): o Guia de Anúncios da Meta, conferido no dia, não publica recuo de interface para o feed, então a nota diz que é respiro de design. 31 testes do motor passam. O commit e a tag esperam o sim do operador.
+- Entrada aditiva `ads_meta_feed` em `references/redes.json` com as zonas seguras de 4:5 e 1:1 dos anúncios da Meta, valores do Guia de Anúncios da Meta conferidos no dia, `checked_on` e a fonte.
+- **Aceite:** `networks --json` lista `ads_meta_feed`; os testes do motor passam; o `preview` de uma peça 4:5 do `ad-creatives` não traz mais a nota da zona orgânica.
+
+### T9.2: 1.2.0, o plano, a matriz, a página e a Busca
+**Estado: ✅ 2026-10-23, não commitado** `brief` preenche 10 campos do plano com `sources: plano` (`scripts/lib/plan.mjs`); `matrix` (`matrix.mjs`: 7 peças recusadas, 10 aceitas, `needs_recording`); skill `ad-landing-page` com `page brief` e `page audit` (`page.mjs`); `search` (`search.mjs`, `references/google-busca.json`: título de 31 recusado); `politica-meta.md`, `interface.md`, `NOTICE.txt`; 67 testes; `validate` sem avisos. O commit espera o sim do operador.
+- `brief` pré-preenche o briefing de `plano.json` (oferta, página, evento, verba diária da fase, público, datas, padrão de nome, parâmetros de URL, termos proibidos), marcando `source: plano` em cada campo; sem plano, segue como hoje. A regra "nunca invente oferta, preço, custo ou concorrente" fica e ganha a condição: com plano, o valor vem do plano e a fonte é mostrada; sem plano, a skill encaminha plano, oferta e verba ao app de plano.
+- `matrix <campanha>`: valida `matriz.json` com 3 a 4 ângulos cruzados com formatos (Reels 9:16 com tela real, vídeo 4:5, imagem, carrossel estático, depoimento e fundador falando como roteiro e plano de cena marcados `needs_recording`), 8 a 12 peças na primeira leva, dois ângulos que diferem numa dimensão só dão `matrix_invalid`; os três conceitos de hoje são o caso mínimo.
+- Skill nova `ad-landing-page`: `page brief <campanha>` escreve o briefing da página a partir de `references/pagina.md` do plano e do que o anúncio promete; `page audit <campanha>` lê o `captura.json` do Motor (posição do primeiro chamado contra a altura da tela, palavras do `h1` em comum com o título do anúncio, preços e prazo contra o plano, as linhas legais no texto) e devolve o que não dá para conferir como `nao_conferido`, nunca como reprovado.
+- `search <campanha>`: os anúncios de texto da Busca do Google (até 15 títulos de 30 caracteres, 4 descrições de 90, fixações, as extensões), conferidos pelos mesmos verificadores de promessa e termos proibidos do `copy`; os grupos de palavras vêm do plano.
+- `references/politica-meta.md` (atributos pessoais, antes e depois, saúde), `copy` estendido ao texto da página e aos anúncios de texto, evidência `declared` para o questionário do `voz-do-cliente.md`, 4:5 conferido em `ads_meta_feed` quando o motor a tem.
+- `references/interface.md` v1 (status, o esquema de `nomes.json`, o import de `own_result`, a matriz), README e guias, `NOTICE.txt` (goose-skills `make-static-ads`, `claims-gate`, `ad-policy-check`; agency-agents `paid-media-creative-strategist`, `paid-media-ppc-strategist`).
+- **Aceite:** `brief` com um `plano.json` fixture preenche nove campos com `source: plano`; `matrix` recusa 7 peças e aceita 10 com 4 ângulos e marca `needs_recording`; `page audit` sobre um `captura.json` fixture devolve chamado acima da dobra, palavras em comum e prazo igual ou diferente do plano; `search` recusa um título de 31 caracteres; `validate` e `pack`.
+
+### T9.3: 1.3.0, a rodada seguinte e a sequência da data alvo
+**Estado: ⚠️ ⬜** A 1.2.0 ainda não tem commit nem rascunho na plataforma, então um bump para 1.3.0 deixaria a 1.2.0 sem commit para a tag. Decisão de 2026-10-23: `round next` e `sequence` entram na própria 1.2.0 (uma versão só, com um changelog só), e esta tarefa deixa de ser uma versão. O que ela descreve continua valendo como aceite.
+- `round next <campanha>`: lê o `report.json` do `ads-insights`, grava cada resultado como `own_result` com o id do resultado, registra a rodada no diário (`results`) e propõe a rodada seguinte com os resultados próprios como a evidência mais forte: conceito cortado não volta igual, os nomes terminam em `-v2`.
+- `sequence <campanha>`: as quatro peças datadas pelo calendário do plano (abertura para a lista, oferta no ar, contagem regressiva, último dia) com preço, prazo e regras da oferta e as linhas do CDC, conferidas em `ads_meta` (9:16) e `ads_meta_feed` (4:5 e 1:1), com a nota de subir com data programada antes da revisão.
+- Lembrete de reposição semanal (2 a 3 conceitos novos em teste); changelog; guias.
+- **Aceite:** caso de eval com um `report.json` fixture em que os conceitos da rodada 2 citam ids `res-…`, nenhum conceito cortado volta igual e os nomes terminam em `-v2`; `sequence` devolve 4 peças com as datas do plano, cada uma aprovada na rede certa; `validate` e `pack`.
+
+## ÉPICO 10: `contact-base` 1.0.0 e 1.1.0
+
+**Bloqueia:** nada. Lê `plano.json` quando existe (datas e segmentos) e o `utm` do `ads-insights`.
+
+Pasta `./contatos/` no projeto: `inventario.json` (só contagens), `base-limpa.csv` (D29), `base-legal.md`, `segmentos.json`, `regua.json` e `regua.md`, `envio.md`, `publicos/`, `atendimento.md`, `voz-do-cliente.md`. Script `scripts/contacts.mjs`.
+
+### T10.1: criar o app, o inventário e a base legal
+**Estado: ✅ 2026-10-23** `modules/contact-base` 1.0.0: `inventory` (`scripts/lib/inventory.mjs`; a fixture de 17 linhas dá 16 pessoas, 1 duplicada, 2 e-mails inválidos, 1 telefone sem DDD; `contatos-pacientes.csv` dá `patient_data`; `inventario.json` sem nome, e-mail ou telefone), `legal` (`legal.mjs`, oito campos, `pendente` ou `completo`).
+- `npm run apps -- new contact-base --type workflow --trail vender`.
+- `inventory <csv…>`: mapeia colunas por sinônimos em pt e en, conta, tira duplicados por e-mail e telefone normalizados, valida sintaxe (e-mail, telefone com 55 e DDD), agrupa (ainda ativos, parados, nunca ativados; pagantes e ex-pagantes) pelos limiares do plano ou pelos padrões do app; lê só exports de usuários e contatos e recusa colunas que pareçam de paciente ou de terceiro (`patient_data`); `inventario.json` sem nenhuma coluna de pessoa.
+- `legal`: `base-legal.md` por grupo (como entrou, texto aceito, dados presentes, último contato e descadastros, onde está guardada, consentimento ou legítimo interesse, teto de contatos, retenção) e o estado `pendente` ou `completo` (D30).
+- **Aceite:** uma base sintética com duplicados, e-mails inválidos e telefones sem DDD devolve as contagens certas e um `inventario.json` sem nenhuma coluna de pessoa; uma coluna `paciente` dá `patient_data`.
+
+### T10.2: segmentos, régua e a 1.0.0
+**Estado: ✅ 2026-10-23** `segments` (`segments.mjs`), `sequence` (`sequence.mjs`: repermissão primeiro para quem está sem contato há 180 dias ou mais, `repermission_required` para outra primeira mensagem, `pendente` enquanto a base legal falta, datas dentro das fases do plano, UTM pela regra do plano); `references/copy-regua.md`, `base-legal.md`, `interface.md`, `NOTICE.txt`; skill, README, guias, eval (6 casos), showcase; 16 testes; `validate` sem avisos; `dist/modules/contact-base-1.0.0.zip`. Não publicado.
+- `segments`: engajamento por cliques, pedidos e último uso, nunca por abertura sozinha; RFM simples; prioridade e teto global (até 1 e-mail de marketing por 16 h, 3 a 5 por semana; compradores recentes fora de promoções); escada de ofertas.
+- `sequence <segmento>`: a régua por grupo em e-mail, com datas ancoradas nas fases de `plano.json` ou numa data alvo informada (anúncio da novidade, convite para testar, prova, entrada na lista, acesso antecipado, abertura, lembretes, último dia); a primeira mensagem a quem não é contatado há 6 meses ou mais é repermissão; a régua fica `pendente` enquanto a base legal do grupo faltar; `regua.json` e `regua.md`, com a UTM de cada link pela regra do plano.
+- `references/copy-regua.md` (um trabalho por mensagem, assunto curto, urgência só real, rodapé com quem escreve, de onde veio o contato e como sair), skill `contact-base`, README, guias, eval, `.dev/showcase.json`, `NOTICE.txt` (goose-skills `email-lifecycle`: flow-library, segments-cadence-offers, copy-craft; agency-agents `marketing-email-strategist`).
+- **Aceite:** `sequence` para um grupo parado há 200 dias recusa como primeira mensagem qualquer coisa que não seja repermissão e marca a régua inteira como `pendente` enquanto `base-legal.md` tem campo vazio; as datas de uma régua ancorada num `plano.json` fixture caem dentro das fases; `validate` e `pack` da 1.0.0.
+
+### T10.3: 1.1.0, entregabilidade, WhatsApp, públicos, voz e atendimento
+**Estado: ⬜** `npm run apps -- bump contact-base minor`.
+- `deliverability <domínio> --dkim <seletor>`: consulta DNS de SPF, DMARC e DKIM sem chave, descadastro em um clique, limiares (rejeição dura abaixo de 1%, reclamação abaixo de 0,1%, descadastro abaixo de 0,3%), lotes crescentes.
+- `references/whatsapp.md` (API oficial: opt-in, modelos aprovados com antecedência, categorias, janela de 24 h, faixas de qualidade, horário, STOP; contato um a um para a base antiga; nunca disparo de número comum) e a régua em WhatsApp.
+- `audience <segmento>`: o CSV de público personalizado da Meta com os valores já em SHA-256 (telefone com 55 e só dígitos, e-mail normalizado), só para quem tem base legal de marketing e sem descadastro, aviso de tamanho mínimo e taxa de casamento rotulada, lista de exclusão dos clientes atuais, e o passo a passo para o integrante subir.
+- `voice`: o questionário e o roteiro de conversas de `references/voz-do-cliente.md` do plano, com a síntese gravada como leitura `declared` para o `ad-creatives`; `support`: `atendimento.md` (quem responde, tempo, respostas às objeções, cobertura do pico).
+- **Aceite:** `audience` numa base fixture devolve só hashes e exclui quem não tem base legal de marketing; `deliverability` num domínio fixture sem DMARC devolve o item como `missing`; `validate` e `pack` da 1.1.0.
+
+## ÉPICO 11: fechamento 2
+
+### T11.1: catálogo e documentos
+- `npm run apps -- catalog`; linhas dos apps novos em `docs/PLANO.md`; `CLAUDE.md` com uma frase por app; `.claude/rules/apps.md` com a regra "nenhum número sem rótulo e fonte" (D23) quando ela estiver provada nos três apps.
+- **Aceite:** `npm run apps -- catalog --check` em dia; `npm run harness:check` verde.
+
+### T11.2: verificação completa e entrega
+- `npm run ci:verify` no Windows e num contêiner Linux sobre a árvore exata; os ZIPs com o mesmo SHA-256 nos dois.
+- As tags dos apps, uma a uma, com o sim do operador; os rascunhos na plataforma com o SHA igual ao do pacote; publicar e marcar a versão de entrada são cliques do operador.
+- **Aceite:** em `dist/modules/` existem `media-plan-1.0.0` e `-1.1.0`, `ads-insights-1.0.0`, `ad-creatives-1.2.0` e `-1.3.0`, `contact-base-1.0.0` e `-1.1.0`, cada um com o `.sha256`.
+
+### Ordem
+
+core 1.10.0 → `media-plan` 1.0.0 → `ads-insights` 1.0.0 (medição) → `ad-creatives` 1.2.0 → `media-plan` 1.1.0 → `ads-insights` (leitura) → `contact-base` 1.0.0 e 1.1.0 → `ad-creatives` 1.3.0 → fechamento. O `video-render` 1.0.2 entra quando a sessão dona do motor liberar.
+
+### O que estes épicos deixam de fora
+
+- Integrações de envio (API de e-mail, API do WhatsApp, CRM): o integrante envia pela ferramenta dele; o `contact-base` prepara textos, modelos, lotes e datas.
+- Escrever na conta de anúncios, subir públicos ou devolver conversões offline: o integrante faz (D14); os apps entregam o arquivo e o passo a passo.
+- Construir a página de destino: é do site do integrante; o `ad-creatives` escreve o briefing e o texto e audita a página viva.
+- Tamanho do público na Meta e volume de busca no Google: o integrante lê nas ferramentas e informa; entra como premissa `informado`.
+- Parecer jurídico: os checklists de LGPD, CDC e política de saúde são método.
+- Leitura automática agendada e executor de evals: fases P4 e P7; o export é manual e os casos de eval rodam por script.
+- Gravação com pessoa e geração de imagem: inalterado; o app entrega roteiro e plano de cena marcados `needs_recording`.
+- Receita (`recipes/`) juntando os apps: quando a importação de receitas pela plataforma existir.
 
 ## Verificação de ponta a ponta
 

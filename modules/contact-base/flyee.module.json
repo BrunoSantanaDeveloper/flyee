@@ -1,0 +1,73 @@
+{
+  "manifest_version": 1,
+  "name": "contact-base",
+  "version": "1.0.0",
+  "type": "workflow",
+  "trail": "vender",
+  "title": {
+    "pt-BR": "Base de contatos e CRM",
+    "en": "Contact base and CRM"
+  },
+  "summary": {
+    "pt-BR": "Transforma a sua base antiga de contatos numa régua que pode ser enviada: limpa e conta a base sem tirar nenhum dado do projeto, registra a base legal de cada grupo e escreve a régua de e-mail nas datas do plano, com repermissão para quem não ouve da marca há seis meses.",
+    "en": "Turns your old contact base into a sequence that can be sent: cleans and counts the base without a record leaving the project, records the legal basis of each group and writes the e-mail sequence on the plan dates, with a re-permission for anyone six months without contact."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.10.0",
+  "entry": "skills/contact-base/SKILL.md",
+  "files": [
+    "NOTICE.txt",
+    "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
+    "references/base-legal.md",
+    "references/copy-regua.md",
+    "references/interface.md",
+    "references/limiares.json",
+    "scripts/contacts.mjs",
+    "scripts/lib/csv.mjs",
+    "scripts/lib/inventory.mjs",
+    "scripts/lib/legal.mjs",
+    "scripts/lib/report.mjs",
+    "scripts/lib/segments.mjs",
+    "scripts/lib/sequence.mjs",
+    "scripts/lib/util.mjs",
+    "skills/contact-base/SKILL.md"
+  ],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/contact-base/scripts/contacts.mjs",
+      "reason": {
+        "pt-BR": "O script do app lê os exports, limpa e conta a base, registra a base legal, monta os segmentos e escreve a régua.",
+        "en": "The app's script reads the exports, cleans and counts the base, records the legal basis, builds the segments and writes the sequence."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "os exports de usuários e contatos que você puser em contatos/entrada/, e media-plan/<plano>/plano.json",
+      "reason": {
+        "pt-BR": "Os exports são a base; o plano aprovado dá as datas, a marca, a página e a regra de link da régua.",
+        "en": "The exports are the base; the approved plan gives the dates, the brand, the page and the link rule of the sequence."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./contatos/",
+      "reason": {
+        "pt-BR": "A base limpa, o inventário (só contagens), a base legal, os segmentos e a régua ficam na pasta do projeto e não saem da máquina.",
+        "en": "The clean base, the inventory (counts only), the legal basis, the segments and the sequence live in the project folder and never leave the machine."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: o inventário da base (limpeza, duplicados, telefones com DDD, grupos por uso e pagamento, só contagens no arquivo que outros apps leem; recusa colunas de paciente ou terceiro), a base legal por grupo, os segmentos com o teto de mensagens e a escada de ofertas, e a régua de e-mail por grupo ancorada nas fases do plano ou numa data alvo, com a repermissão para quem está sem contato há seis meses.",
+    "en": "First version: the base inventory (cleaning, duplicates, phones with area code, groups by use and payment, counts only in the file other apps read; refuses patient or third-party columns), the legal basis per group, the segments with the message cap and the offer ladder, and the e-mail sequence per group anchored in the plan's phases or a target date, with the re-permission for anyone six months without contact."
+  },
+  "license": "member"
+}

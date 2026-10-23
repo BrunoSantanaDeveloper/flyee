@@ -48,6 +48,13 @@ Use só um plano `aprovado`. Um `rascunho` carrega premissas `sugerido-pendente`
 | `tracking.events[]` | os eventos do funil que o plano lê | |
 | `moves[]` | o que fazer, em ordem: `what`, `when`, `why` | |
 | `could_not_check[]` | o que o plano assumiu e pede para conferir | |
+| `channels_decision.rows[]` (1.1.0) | por canal: `channel` (`meta`, `google_search`, `email`, `whatsapp`, `parceiros`, `tiktok`, `linkedin`, `youtube`), `verdict` (`run`, `test`, `later`, `no`), `lens`, `reason`, `confidence`, `flip` | trate só a Meta como decidida |
+| `structure.meta` (1.1.0) | `objective`, `optimization_event`, `campaign.daily_brl`, `ad_sets[]` (`name`, `daily_brl`, `floor_daily_brl`, `clears_floor`, `audience`, `exclusions`, `placements`), `naming`, `remarketing[]` (`stage`, `audience`, `window_days`, `message`), `lookalike`, `budget_by_phase[]` | use `budget.by_phase` |
+| `structure.google_search` (1.1.0) | `daily_brl`, `campaigns[]` (`name`, `kind` `marca` ou `nao-marca`, `when`, `keywords`, `match`, `negatives`, `bid`), `conversion`, `extensions`, `rules` | a Busca não está no plano |
+| `structure.owned[]` (1.1.0) | `channel` (`email`, `whatsapp`, `parceiros`), `what`, `dates` | |
+| `rules` (1.1.0) | `sample` (`impressions`, `link_clicks`, `results`), `allowable_cost_brl`, `learning_floor_daily_brl`, `pause_when[]`, `scale_when[]`, `swap_when[]`, `cadence`, `indicators_by_phase` | use as suas regras de bolso rotuladas |
+| `triggers[]` (1.1.0) | `id`, `risk`, `read_in`, `plan_b` | |
+| `replan` (1.1.0) | quando a versão nasceu de uma leitura semanal: `from`, `read.week_of`, `changes[]` (`kind`, `text`, `certainty`), `triggers_fired[]`, `premise_updates[]`, `moves[]`, `previous_version` | null: a versão não veio de uma leitura |
 
 O que não está no plano, está em `media-plan/<plano>/premissas.json`, com os campos tipados (`price_brl`, `billing`, `contacts`, `months_since_contact`, `pixel`, `capi`, `ga4`, `google_ads`) e a origem de cada um.
 
@@ -55,7 +62,7 @@ O que não está no plano, está em `media-plan/<plano>/premissas.json`, com os 
 
 - **Criativos para anúncios:** o briefing de uma campanha pode nascer do plano: oferta, página (de `premissas.json`, `premises.prontidao.value`), evento, verba diária da fase, público, padrão de nome e a regra de link. Cada campo que vem daqui leva a origem `plano`.
 - **Base de contatos e CRM:** as datas da régua vêm de `calendar.phases` (aquecimento e pico) e de `calendar.deadlines`; os segmentos, de `premises.base` e `premises.publico`.
-- **Medição e leitura de resultados:** a regra de link vem de `tracking.utm_rule`; o evento otimizado, de `premises.evento`; as regras de decisão, quando o plano as tiver.
+- **Medição e leitura de resultados:** a regra de link vem de `tracking.utm_rule`; o evento otimizado, de `premises.evento`; o custo permitido, de `rules.allowable_cost_brl` (ou `funnel.allowable_cpl_brl`); as regras de decisão, de `rules` e `triggers`. A leitura semanal volta ao plano: `replan <plano> --from ads-insights/semanal/<data>.json --json` cria a versão seguinte como rascunho com o que mudou e por quê; o arquivo precisa ter `interface_version` 1, `week_of` e `findings`.
 
 ## 4. Erros
 
@@ -67,4 +74,6 @@ O que não está no plano, está em `media-plan/<plano>/premissas.json`, com os 
 | `narrative_invalid` | a narrativa tem um problema; `details.problems` lista cada um |
 | `in_short_long` | a seção "Em resumo" passou de 150 palavras; encurte os achados |
 | `target_missing` | o plano não tem data alvo |
+| `structure_invalid` | a verba do conjunto da Meta fica abaixo do piso de aprendizado; `details.exits` traz as saídas, e `--accept-floor` aceita |
+| `weekly_missing`, `weekly_invalid` | o arquivo passado em `--from` não existe ou não é a leitura semanal do app de medição |
 | `usage` | opção ou comando errado |

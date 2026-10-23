@@ -8,9 +8,9 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 |---|---|---|---|---|---|
 | [Criativos para anúncios](#ad-creatives) | 1.1.1 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
 | [Medição e leitura de resultados](#ads-insights) | 1.0.0 | tool | escalar | — | — |
-| [Base de contatos e CRM](#contact-base) | 1.0.0 | workflow | vender | — | — |
+| [Base de contatos e CRM](#contact-base) | 1.1.0 | workflow | vender | — | — |
 | [Pesquisa no Instagram](#instagram-research) | 1.0.2 | tool | planejar | — | `ad-creatives` |
-| [Plano de estratégia e mídia](#media-plan) | 1.0.0 | workflow | planejar | — | — |
+| [Plano de estratégia e mídia](#media-plan) | 1.1.0 | workflow | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.2 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.1 | tool | planejar | — | `ad-creatives`, `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.0.1 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
@@ -78,15 +78,15 @@ Deixa a medição pronta antes do primeiro real e lê os resultados depois, com 
 
 ## contact-base
 
-**Base de contatos e CRM** (Contact base and CRM) · versão 1.0.0 · workflow · trilha vender · testado em `claude_code`
+**Base de contatos e CRM** (Contact base and CRM) · versão 1.1.0 · workflow · trilha vender · testado em `claude_code`
 
-> Transforma a sua base antiga de contatos numa régua que pode ser enviada: limpa e conta a base sem tirar nenhum dado do projeto, registra a base legal de cada grupo e escreve a régua de e-mail nas datas do plano, com repermissão para quem não ouve da marca há seis meses.
+> Transforma a sua base de contatos numa régua que pode ser enviada: limpa e conta a base sem tirar dado do projeto, registra a base legal de cada grupo, escreve a régua de e-mail e de WhatsApp nas datas do plano, com repermissão após seis meses, e confere a entrega do domínio.
 
 Transforma a sua base antiga de contatos numa régua que pode ser enviada, sem tirar nenhum dado do projeto. Este texto é o guia dentro do projeto; a página do app no flyee.club lê os guias em `guides/`.
 
 **Skills**
 
-- `contact-base`: Transforma a base de contatos de uma marca numa régua que pode ser enviada. Limpa e conta os exports sem tirar dado do projeto, registra a base legal de cada grupo, separa quem usa de quem parou e escreve a régua de e-mail nas datas do plano, com repermissão para quem não ouve da marca há seis meses. Use para a base antiga, uma régua, um CRM simples, a lista de espera ou o e-mail do lançamento.
+- `contact-base`: Transforma a base de contatos de uma marca numa régua que pode ser enviada: limpa e conta os exports sem tirar dado do projeto, registra a base legal de cada grupo, escreve a régua de e-mail e de WhatsApp nas datas do plano com repermissão após seis meses, confere a entrega do domínio e prepara o público da Meta em hash. Use para a base antiga, uma régua, um CRM simples ou o e-mail do lançamento.
 
 **Serve outros apps**
 
@@ -97,7 +97,8 @@ Transforma a sua base antiga de contatos numa régua que pode ser enviada, sem t
 **Permissões declaradas**
 
 - shell: node .flyee/modules/contact-base/scripts/contacts.mjs
-- fs:read: os exports de usuários e contatos que você puser em contatos/entrada/, e media-plan/<plano>/plano.json
+- fs:read: os exports de usuários e contatos que você puser em contatos/entrada/, as respostas da voz do cliente em contatos/, e media-plan/<plano>/plano.json
+- network: o DNS público do seu domínio de envio (os registros SPF, DMARC e DKIM), só leitura
 - fs:write: ./contatos/
 
 ## instagram-research
@@ -136,7 +137,7 @@ Mostra, com números de verdade, quais Reels e posts fizeram muito mais do que o
 
 ## media-plan
 
-**Plano de estratégia e mídia** (Strategy and media plan) · versão 1.0.0 · workflow · trilha planejar · testado em `claude_code`
+**Plano de estratégia e mídia** (Strategy and media plan) · versão 1.1.0 · workflow · trilha planejar · testado em `claude_code`
 
 > Monta o plano de tráfego pago da sua marca a nível de especialista: olha o que o projeto já sabe, pergunta só o que falta, já com uma sugestão, e entrega a conta do que um cliente pode custar, a oferta, o calendário por fases até a data alvo e o plano escrito para você aprovar.
 
@@ -144,7 +145,7 @@ Monta o plano de tráfego pago da sua marca a nível de especialista, antes de q
 
 **Skills**
 
-- `media-plan`: Monta o plano de tráfego pago de uma marca a nível de especialista, antes de qualquer anúncio. Olha o que o projeto já sabe, pergunta só o que falta, com uma sugestão por pergunta, e entrega quanto um cliente pode custar, o funil com cenários, a oferta, o calendário até a data alvo e o plano para aprovação. Use quando pedirem plano, estratégia, verba por fase, oferta ou por onde começar.
+- `media-plan`: Monta o plano de tráfego pago de uma marca a nível de especialista, antes de qualquer anúncio: olha o que o projeto já sabe, pergunta só o que falta, com sugestão, e entrega quanto um cliente pode custar, funil, oferta, calendário, canais, estrutura, regras e o plano para o seu sim; replaneja pela leitura semanal. Use quando pedirem plano, estratégia, verba, canais ou por onde começar.
 
 **Serve outros apps**
 
@@ -157,7 +158,7 @@ Monta o plano de tráfego pago da sua marca a nível de especialista, antes de q
 **Permissões declaradas**
 
 - shell: node .flyee/modules/media-plan/scripts/plan.mjs
-- fs:read: anuncios/*/briefing.md, capturas/*/captura.json, instagram-research/ e contatos/inventario.json, quando existem
+- fs:read: anuncios/*/briefing.md, capturas/*/captura.json, instagram-research/, contatos/inventario.json e ads-insights/semanal/*.json, quando existem
 - fs:write: ./media-plan/
 
 ## motion-carousel

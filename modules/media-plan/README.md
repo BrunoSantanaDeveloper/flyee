@@ -8,7 +8,9 @@ Você diz o que quer vender e até quando. A sua IA olha o que o projeto já sab
 
 Depois ela faz as contas: quanto um cliente pode custar pelo seu preço e pela sua margem, quantos clientes podem vir de quem já conhece a marca e quantos de quem nunca ouviu falar, quantos leads e visitas isso pede, três cenários de verba, se a verba tira um conjunto de anúncios da fase de aprendizado da Meta e quantas vezes a sua base veria o mesmo anúncio. Monta as formas de oferta a partir do seu preço, aponta a colisão entre uma promoção que está no ar e a seguinte, e lista as linhas que uma oferta vendida à distância precisa ter. Desenha o calendário de trás para frente da data alvo, com as fases, as janelas de aprendizado, o ponto de decisão, os prazos que não se discutem e os feriados nacionais no caminho.
 
-O plano sai escrito, curto em cima e completo embaixo: o que olhamos, dois ou três achados com a certeza de cada um, o que fazer primeiro, as decisões que são suas, a história, até seis movimentos, o que não vamos fazer e o que não conseguimos conferir. Ele fica em rascunho até você aprovar, e a versão aprovada fica congelada. Os outros apps do flyee leem o plano aprovado: os criativos partem da oferta e do evento dele, a régua da sua base parte das datas das fases.
+Decide os canais um a um: Meta, Busca do Google, e-mail e WhatsApp para a sua base, parceiros, TikTok, LinkedIn e YouTube, cada um como roda, testa, fica para depois ou não, com a lente que decidiu (público e intenção, economia, prontidão, tempo até sinal, evidência, horas de quem executa) e o que viraria o veredito. Escreve a estrutura em linguagem de negócio: na Meta, o objetivo honesto, um conjunto e por quê, a verba do conjunto contra o piso de aprendizado, as exclusões, o remarketing por etapa; na Busca, as campanhas de marca e de não marca, as palavras, as negativas e o lance. Grava as regras de decisão (o que é dado suficiente, quando pausar, escalar e trocar a peça, a cadência) e cinco gatilhos com plano B, nos mesmos números que o app de medição usa para ler os resultados.
+
+O plano sai escrito, curto em cima e completo embaixo: o que olhamos, dois ou três achados com a certeza de cada um, o que fazer primeiro, as decisões que são suas, a história, os canais, a estrutura, as regras, até seis movimentos, o que não vamos fazer e o que não conseguimos conferir. Ele fica em rascunho até você aprovar, e a versão aprovada fica congelada. Os outros apps do flyee leem o plano aprovado: os criativos partem da oferta e do evento dele, a régua da sua base parte das datas das fases, a medição parte das regras. Depois da primeira leitura semanal, o plano se refaz a partir dela: a versão seguinte nasce com o que mudou e por quê no topo, e você aprova de novo.
 
 ## O que você precisa
 
@@ -27,8 +29,9 @@ O plano sai escrito, curto em cima e completo embaixo: o que olhamos, dois ou tr
 | `media-plan/marca.md` | os fatos estáveis da sua marca, com fonte e data, lidos antes de qualquer pergunta |
 | `media-plan/<plano>/premissas.json` | as premissas do plano, cada uma com a origem: informada por você, encontrada no projeto ou sugerida e pendente |
 | `media-plan/<plano>/cenarios.json`, `oferta.json`, `calendario.json` | as contas |
+| `media-plan/<plano>/canais.json`, `estrutura.json`, `regras.json` | a decisão por canal, a estrutura por canal e as regras de decisão com os gatilhos |
 | `media-plan/<plano>/plano.md` e `plano.json` | o plano para você ler e o plano para os outros apps lerem |
-| `media-plan/<plano>/plano-v1.md` | a versão aprovada, congelada; as seguintes vêm numeradas |
+| `media-plan/<plano>/plano-v1.md` | a versão aprovada, congelada; as seguintes vêm numeradas, e a que nasce de uma leitura semanal começa com o que mudou e por quê |
 | `media-plan/<plano>/decisoes.md` | cada aprovação, com a data e a sua frase |
 
 ## Bom saber
@@ -38,7 +41,10 @@ O plano sai escrito, curto em cima e completo embaixo: o que olhamos, dois ou tr
 - Os feriados marcados são os nacionais. Os da sua cidade e do seu estado você acrescenta em `marca.md`.
 - O app não cria campanhas, não sobe públicos e não envia mensagens: ele prescreve, e quem executa é você, com a sua IA ao lado.
 - As linhas do código do consumidor e da proteção de dados são método, não parecer jurídico.
+- Um canal nunca entra por ser novo. Os mínimos para aprender em cada canal (verba, conversões, vídeo novo por semana) são regras de bolso marcadas com a fonte e a data; o seu histórico substitui.
+- As regras de decisão são as mesmas que o app de medição aplica. Quem lê os resultados é ele; quem refaz o plano a partir da leitura é este app.
 
 ## O que há de novo
 
+- 1.1.0: a decisão por canal com a lente, a confiança e o que viraria o veredito; a estrutura na Meta e na Busca do Google em linguagem de negócio, com a verba do conjunto conferida contra o piso de aprendizado e três saídas quando fica abaixo; as regras de decisão e os gatilhos com plano B nos números do app de medição; o replanejamento a partir da leitura semanal, com a versão nova em rascunho e o que mudou e por quê no topo; os guias de conformidade e das peças do lançamento fora dos anúncios.
 - 1.0.0: primeira versão. Olhar antes de perguntar, até quatro perguntas com sugestão, premissas rotuladas, a conta do que um cliente pode custar, o funil ao contrário com três cenários e o teto da capacidade do time, a fase de aprendizado e a frequência da base, as formas de oferta com a colisão entre promoções e as linhas do consumidor, o calendário por fases com feriados e o plano escrito como rascunho até o seu sim.

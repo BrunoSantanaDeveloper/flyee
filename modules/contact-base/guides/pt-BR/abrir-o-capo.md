@@ -31,3 +31,19 @@ Nove mensagens possíveis, ancoradas no aquecimento e no pico do plano (ou numa 
 ## O que o app não faz
 
 Não envia, não entra em ferramenta de e-mail ou de mensagem, não pede senha e não dá parecer jurídico.
+
+## A régua por WhatsApp
+
+Quatro toques em vez de nove, porque no WhatsApp cada mensagem a mais custa um bloqueio: a repermissão um a um (só a pergunta, e só quem responde sim segue), o acesso antecipado, a abertura e o último dia. Cada toque é um modelo de marketing, com até 300 caracteres, uma pergunta ou um link, a palavra SAIR, aprovado pelo provedor até dois dias antes da data (`approve_by`). O link leva `utm_source=whatsapp` e `utm_medium=message`. O aceite de WhatsApp é lido no texto aceito da base legal do grupo; sem ele, pendente.
+
+## A entrega
+
+Os registros SPF, DMARC e DKIM são lidos no DNS público, sem chave. Cada item tem um estado: ok (visto), falta, atenção (está, mas incompleto: dois SPF, DMARC sem relatórios, chave DKIM vazia) ou a conferir (depende de uma mensagem real ou de um relatório). Falta bloqueia o envio em volume. Os limiares de saúde por envio: rejeição dura abaixo de 1%, reclamação abaixo de 0,1%, descadastro abaixo de 0,3%. Uma lista parada volta em quatro lotes, dos engajados dos últimos 30 dias ao resto, dobrando enquanto os números ficam limpos.
+
+## O público em hash
+
+O e-mail é normalizado (minúsculas, sem espaços) e o telefone fica só com os dígitos, com o 55; os dois passam por SHA-256, como a Meta pede nos uploads. Entra só quem não pediu para sair, cujo grupo tem base legal de marketing e tem e-mail ou telefone. A Meta aceita a partir de 100 pessoas reconhecidas e reconhece de 40 a 60% de uma lista de consumidores (regra de bolso); abaixo de 1.000 reconhecidas o alcance e o público semelhante saem fracos, e o app diz. A lista de exclusão são os clientes atuais, no mesmo formato.
+
+## A voz do cliente
+
+Sete perguntas e um roteiro de 20 minutos, do antes ao momento do "vale a pena". As respostas entram como leitura declarada (a mesma forma das outras evidências do app de criativos): uma frase por item, com quem disse (primeiro nome ou profissão) e a data. A síntese só depois de cinco frases: uma frase só é anedota.

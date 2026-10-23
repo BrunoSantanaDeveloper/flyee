@@ -8,11 +8,15 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildCalendar } from "./lib/calendar.mjs";
+import { decideChannels } from "./lib/channels.mjs";
 import { computeEconomics } from "./lib/economics.mjs";
 import { brandTemplate, fileDay, lookProject } from "./lib/look.mjs";
 import { assessOffer } from "./lib/offer.mjs";
 import { PREMISES, premisesTemplate, questionsFor, validatePremises } from "./lib/premises.mjs";
-import { buildPlan, checkNarrative, IN_SHORT_MAX_WORDS } from "./lib/report.mjs";
+import { changesFrom, readWeekly } from "./lib/replan.mjs";
+import { budgetByPhase, buildPlan, checkNarrative, IN_SHORT_MAX_WORDS } from "./lib/report.mjs";
+import { buildRules } from "./lib/rules.mjs";
+import { buildStructure } from "./lib/structure.mjs";
 import { AppError, brDay, isoDay, parseArgs, parseDay, projectRoot, readJson, readText, slugify, toPosix, writeFileAtomic, writeJson } from "./lib/util.mjs";
 
 const SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
@@ -23,8 +27,10 @@ const INTERFACE_VERSION = 1;
 const APP = { name: "media-plan", version: readJson(join(APP_DIR, "flyee.module.json"))?.version ?? "0.0.0" };
 const REFS = readJson(join(APP_DIR, "references", "referencias.json"));
 const HOLIDAYS = readJson(join(APP_DIR, "references", "feriados.json"));
+const CHANNELS = readJson(join(APP_DIR, "references", "canais.json"));
+const READING = readJson(join(APP_DIR, "references", "regras.json"));
 
-const ARG_SPEC = { flags: ["json", "peak", "launch"], options: ["today", "target", "brand", "narrative", "by", "days"] };
+const ARG_SPEC = { flags: ["json", "peak", "launch", "accept-floor"], options: ["today", "target", "brand", "narrative", "by", "days", "hours", "from"] };
 
 const HELP = `Plano de estratégia e mídia (interface ${INTERFACE_VERSION})
 
@@ -36,10 +42,17 @@ const HELP = `Plano de estratégia e mídia (interface ${INTERFACE_VERSION})
   funnel <plano>                a conta: custo permitido, funil ao contrário, cenários, fase de aprendizado
   offer <plano>                 as formas de oferta, a colisão com a promoção de agora, as linhas do consumidor
   calendar <plano> [--today]    as fases até a data alvo, os prazos, os feriados
+  channels <plano> [--hours <horas por semana>]
+                                cada canal: roda, testa, fica para depois ou não, pela lente que decidiu
+  structure <plano> [--accept-floor]
+                                a estrutura por canal: objetivo, conjuntos e verba contra o piso, remarketing, Busca
+  rules <plano>                 as regras de decisão e os gatilhos com plano B, nos números do app de medição
   plan <plano> [--narrative <arquivo>]
                                 monta plano.json e plano.md como rascunho
   approve <plano> --by "<a frase do integrante>"
                                 aprova o rascunho quando as premissas que bloqueiam estão fechadas
+  replan <plano> --from <semanal.json>
+                                a versão seguinte do plano a partir da leitura semanal do app de medição
   status <plano> · list · help
 
 Todos aceitam --json. Os comandos partem da raiz do projeto (a pasta que contém .flyee/).`;
@@ -69,6 +82,9 @@ function planOf(slug) {
     markdown: join(dir, "plano.md"),
     decisions: join(dir, "decisoes.md"),
     narrative: join(dir, "narrativa.json"),
+    channels: join(dir, "canais.json"),
+    structure: join(dir, "estrutura.json"),
+    rules: join(dir, "regras.json"),
   };
   if (!existsSync(paths.premises)) throw new AppError("plan_missing", `O plano ${clean} não existe neste projeto.`, `Crie com ${command(`new ${clean}`)}.`);
   const data = readJson(paths.premises);
@@ -193,6 +209,30 @@ function paidDays(calendar) {
   return calendar.phases.filter((phase) => ["testes", "escala", "aquecimento", "pico"].includes(phase.id)).reduce((sum, phase) => sum + phase.days, 0) || null;
 }
 
+/** The three computations every later command rests on: the calendar, the economics, the offer. */
+function contextOf(data, values) {
+  const calendar = calendarFor(data, values);
+  const economics = computeEconomics(data, REFS, { days: paidDays(calendar), peak: Boolean(calendar?.peak) });
+  const offer = assessOffer(data, { targetDate: calendar?.target_date ?? null });
+  return { calendar, economics, offer };
+}
+
+/** What the project already proves: campaigns briefed by the creatives app, the base inventoried. */
+function evidenceOf() {
+  const adsDir = join(ROOT, "anuncios");
+  const campaigns = existsSync(adsDir) ? readdirSync(adsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && existsSync(join(adsDir, entry.name, "briefing.md"))).length : 0;
+  return { campaigns, inventory: existsSync(join(ROOT, "contatos", "inventario.json")) };
+}
+
+/** canais.json, estrutura.json and regras.json of a plan, when the commands ran. */
+function extrasOf(paths) {
+  return { channels: readJson(paths.channels), structure: readJson(paths.structure), rules: readJson(paths.rules) };
+}
+
+function extraFiles(paths) {
+  return { channels: existsSync(paths.channels) ? rel(paths.channels) : null, structure: existsSync(paths.structure) ? rel(paths.structure) : null, rules: existsSync(paths.rules) ? rel(paths.rules) : null };
+}
+
 function funnelCommand(positionals, values) {
   const { slug, paths, data } = planOf(positionals[0]);
   validatePremises(data);
@@ -218,7 +258,37 @@ function calendarCommand(positionals, values) {
   if (!target) throw new AppError("target_missing", "O plano não tem data alvo.", `Grave target_date em ${rel(paths.premises)} ou passe --target AAAA-MM-DD.`);
   const calendar = calendarFor(data, values, paths);
   writeJson(paths.calendar, { ...calendar, plan: slug, generated_at: new Date().toISOString() });
-  return { ...base("calendar"), plan: slug, file: rel(paths.calendar), ...calendar, next_step: { action: "plan", command: command(`plan ${slug}`), say: "Com as três contas feitas, monte o rascunho do plano." } };
+  return { ...base("calendar"), plan: slug, file: rel(paths.calendar), ...calendar, next_step: { action: "channels", command: command(`channels ${slug}`), say: "Com as três contas feitas, decida os canais." } };
+}
+
+function channelsCommand(positionals, values) {
+  const { slug, paths, data } = planOf(positionals[0]);
+  validatePremises(data);
+  const { calendar, economics } = contextOf(data, values);
+  const hours = values.hours === undefined ? null : Number(values.hours);
+  if (values.hours !== undefined && !(Number.isFinite(hours) && hours > 0)) throw usage(`Horas inválidas em --hours: ${values.hours}. Use um número de horas por semana.`);
+  const channels = decideChannels(data, { refs: CHANNELS, economics, calendar, evidence: evidenceOf(), hoursPerWeek: hours });
+  writeJson(paths.channels, { ...channels, plan: slug, generated_at: new Date().toISOString() });
+  return { ...base("channels"), plan: slug, file: rel(paths.channels), ...channels, next_step: { action: "structure", command: command(`structure ${slug}`), say: "Diga o veredito de cada canal com a lente que decidiu e o que o viraria, em linguagem de negócio; siga para a estrutura." } };
+}
+
+function structureCommand(positionals, values) {
+  const { slug, paths, data } = planOf(positionals[0]);
+  validatePremises(data);
+  const { calendar, economics, offer } = contextOf(data, values);
+  const channels = readJson(paths.channels) ?? decideChannels(data, { refs: CHANNELS, economics, calendar, evidence: evidenceOf() });
+  const structure = buildStructure(data, { channels, economics, calendar, plan: { budget: { by_phase: budgetByPhase({ economics, calendar }) } }, offer, acceptFloor: Boolean(values["accept-floor"]) });
+  writeJson(paths.structure, { ...structure, plan: slug, generated_at: new Date().toISOString() });
+  return { ...base("structure"), plan: slug, file: rel(paths.structure), ...structure, next_step: { action: "rules", command: command(`rules ${slug}`), say: "Explique a estrutura como negócio: o objetivo honesto, um conjunto e por quê, a verba contra o piso, o remarketing por etapa. Siga para as regras." } };
+}
+
+function rulesCommand(positionals, values) {
+  const { slug, paths, data } = planOf(positionals[0]);
+  validatePremises(data);
+  const { calendar, economics } = contextOf(data, values);
+  const result = buildRules(data, { refs: { reading: READING }, economics, calendar });
+  writeJson(paths.rules, { ...result, plan: slug, generated_at: new Date().toISOString() });
+  return { ...base("rules"), plan: slug, file: rel(paths.rules), ...result, next_step: { action: "plan", command: command(`plan ${slug}`), say: "Com os canais, a estrutura e as regras gravados, monte o rascunho do plano." } };
 }
 
 function planCommand(positionals, values) {
@@ -237,7 +307,9 @@ function planCommand(positionals, values) {
   }
   const current = readJson(paths.plan);
   const version = current?.state === "aprovado" ? (current.version ?? 1) + 1 : (current?.version ?? 1);
-  const built = buildPlan({ data, economics, offer, calendar, narrative, generatedAt: new Date().toISOString(), version, state: "rascunho", refs: REFS });
+  // A draft born from a replan keeps its "what changed" section until it is approved.
+  const replan = current?.state === "rascunho" && current.replan ? current.replan : null;
+  const built = buildPlan({ data, economics, offer, calendar, narrative, generatedAt: new Date().toISOString(), version, state: "rascunho", refs: REFS, ...extrasOf(paths), replan });
   const tooLong = built.warnings.find((warning) => warning.code === "in_short_long");
   if (tooLong) throw new AppError("in_short_long", tooLong.text, `Encurte os achados em narrativa.json até a seção caber em ${IN_SHORT_MAX_WORDS} palavras.`, { words: tooLong.words });
   writeJson(paths.scenarios, { ...economics, plan: slug, generated_at: built.plan.generated_at });
@@ -248,7 +320,7 @@ function planCommand(positionals, values) {
   const next = validity.blocking_pending.length
     ? { action: "ask", command: command(`premises ${slug}`), say: `O rascunho está em ${rel(paths.markdown)}. Faltam ${validity.blocking_pending.length} premissa(s) que bloqueiam a aprovação: ${validity.blocking_pending.join(", ")}. Pergunte numa mensagem só, grave as respostas e rode plan de novo.` }
     : { action: "approve", command: command(`approve ${slug} --by "<a frase do integrante>"`), say: `O rascunho está em ${rel(paths.markdown)}. Mostre as três linhas de say e as decisões; com o sim literal do integrante, aprove com a frase dele.` };
-  return { ...base("plan"), plan: slug, version, state: "rascunho", files: { plan: rel(paths.plan), markdown: rel(paths.markdown), scenarios: rel(paths.scenarios), offer: rel(paths.offer), calendar: calendar ? rel(paths.calendar) : null }, say: built.say, in_short_words: built.in_short_words, blocking_pending: validity.blocking_pending, pending: validity.pending, warnings: [...built.warnings, ...economics.warnings, ...offer.warnings, ...(calendar?.warnings ?? [])], next_step: next };
+  return { ...base("plan"), plan: slug, version, state: "rascunho", files: { plan: rel(paths.plan), markdown: rel(paths.markdown), scenarios: rel(paths.scenarios), offer: rel(paths.offer), calendar: calendar ? rel(paths.calendar) : null, ...extraFiles(paths) }, say: built.say, in_short_words: built.in_short_words, blocking_pending: validity.blocking_pending, pending: validity.pending, warnings: [...built.warnings, ...economics.warnings, ...offer.warnings, ...(calendar?.warnings ?? [])], next_step: next };
 }
 
 function approveCommand(positionals, values) {
@@ -281,6 +353,37 @@ function approveCommand(positionals, values) {
     files: { plan: rel(paths.plan), markdown: rel(paths.markdown), frozen: rel(versionJson), decisions: rel(paths.decisions) },
     next_step: { action: "handoff", command: null, say: "O plano aprovado é o que os outros apps leem: os criativos partem da oferta, do evento e da verba dele; a régua da base parte das datas das fases. Diga ao integrante o primeiro passo e siga nesta conversa." },
   };
+}
+
+function replanCommand(positionals, values) {
+  const { slug, paths, data } = planOf(positionals[0]);
+  if (typeof values.from !== "string" || !values.from.trim()) throw usage("Informe a leitura: replan <plano> --from <semanal.json>.", "O arquivo é ads-insights/semanal/<data>.json, que o app de medição escreve na leitura semanal.");
+  const fromPath = resolve(ROOT, values.from);
+  if (!existsSync(fromPath)) throw new AppError("weekly_missing", `${rel(fromPath)} não existe.`, "Rode a leitura semanal no app de medição antes: ela grava ads-insights/semanal/<data>.json.");
+  const weekly = readWeekly(readJson(fromPath), rel(fromPath));
+  const current = readJson(paths.plan);
+  if (!current) throw new AppError("plan_not_built", "O plano ainda não foi montado.", `Rode ${command(`plan ${slug}`)} antes: o replanejamento parte de um plano.`);
+  const { calendar, economics, offer } = contextOf(data, values);
+  const replan = { ...changesFrom(weekly, { plan: current, economics }), from: rel(fromPath), previous_version: current.version ?? 1, previous_state: current.state ?? "rascunho" };
+  const version = (current.version ?? 1) + 1;
+  const narrative = existsSync(paths.narrative) ? readJson(paths.narrative) : null;
+  const generatedAt = new Date().toISOString();
+  const built = buildPlan({ data, economics, offer, calendar, narrative, generatedAt, version, state: "rascunho", refs: REFS, ...extrasOf(paths), replan });
+  if (current.state === "aprovado") {
+    // The approved version stays frozen; a replan never rewrites it.
+    if (!existsSync(join(paths.dir, `plano-v${current.version ?? 1}.json`))) writeJson(join(paths.dir, `plano-v${current.version ?? 1}.json`), current);
+  }
+  writeJson(paths.plan, built.plan);
+  writeFileAtomic(paths.markdown, `${built.markdown}\n`);
+  writeFileAtomic(join(paths.dir, `plano-v${version}.md`), `${built.markdown}\n`);
+  const decisions = readText(paths.decisions) ?? `# Decisões do plano ${slug}\n`;
+  writeFileAtomic(paths.decisions, `${decisions.trimEnd()}\n\n- ${generatedAt.slice(0, 10)}: versão ${version} nasce como rascunho da leitura semanal de ${brDay(weekly.week_of, true)} (${rel(fromPath)}); ${replan.changes.length} mudança(s), ${replan.triggers_fired.length} gatilho(s).\n`);
+  const say = [
+    `Da leitura de ${brDay(weekly.week_of, true)}: ${replan.changes.length} mudança(s) e ${replan.triggers_fired.length} gatilho(s) disparado(s); a versão ${version} nasce como rascunho.`,
+    replan.changes[0]?.text ?? "Nada mudou.",
+    replan.triggers_fired[0]?.text ?? (replan.moves.length ? `${replan.moves.length} movimento(s) propostos pela leitura entram como decisões do integrante.` : "Nenhum gatilho disparou."),
+  ];
+  return { ...base("replan"), plan: slug, version, state: "rascunho", from: rel(fromPath), week_of: weekly.week_of, changes: replan.changes, triggers_fired: replan.triggers_fired, premise_updates: replan.premise_updates, moves: replan.moves, files: { plan: rel(paths.plan), markdown: rel(paths.markdown), version: rel(join(paths.dir, `plano-v${version}.md`)), decisions: rel(paths.decisions) }, say, next_step: { action: "approve", command: command(`approve ${slug} --by "<a frase do integrante>"`), say: `Mostre o que mudou e por quê em três linhas e as decisões; a versão ${version} é rascunho até o sim do integrante. Mover verba continua sendo decisão dele.` } };
 }
 
 function stageOf(paths, data) {
@@ -341,11 +444,15 @@ function renderText(result) {
       body = [`Fechadas: ${result.settled.length}. Pendentes: ${result.pending.length}${result.blocking_pending.length ? ` (bloqueiam: ${result.blocking_pending.join(", ")})` : ""}.`];
       break;
     case "plan":
+    case "replan":
       body = result.say;
       break;
     case "calendar":
     case "funnel":
     case "offer":
+    case "channels":
+    case "structure":
+    case "rules":
       body = [result.say];
       break;
     case "approve":
@@ -382,8 +489,16 @@ async function main(argv) {
       return offerCommand(positionals, values);
     case "calendar":
       return calendarCommand(positionals, values);
+    case "channels":
+      return channelsCommand(positionals, values);
+    case "structure":
+      return structureCommand(positionals, values);
+    case "rules":
+      return rulesCommand(positionals, values);
     case "plan":
       return planCommand(positionals, values);
+    case "replan":
+      return replanCommand(positionals, values);
     case "approve":
       return approveCommand(positionals, values);
     case "status":

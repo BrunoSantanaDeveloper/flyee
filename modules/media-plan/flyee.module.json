@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "media-plan",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "workflow",
   "trail": "planejar",
   "title": {
@@ -24,19 +24,30 @@
     "guides/en/usar.md",
     "guides/pt-BR/abrir-o-capo.md",
     "guides/pt-BR/usar.md",
+    "references/canais.json",
+    "references/conformidade.md",
+    "references/estrutura-google.md",
+    "references/estrutura-meta.md",
     "references/feriados.json",
     "references/interface.md",
+    "references/lancamento.md",
     "references/oferta.md",
     "references/pagina.md",
     "references/referencias.json",
+    "references/regras.json",
+    "references/regras.md",
     "references/situacao.md",
     "references/voz-do-cliente.md",
     "scripts/lib/calendar.mjs",
+    "scripts/lib/channels.mjs",
     "scripts/lib/economics.mjs",
     "scripts/lib/look.mjs",
     "scripts/lib/offer.mjs",
     "scripts/lib/premises.mjs",
+    "scripts/lib/replan.mjs",
     "scripts/lib/report.mjs",
+    "scripts/lib/rules.mjs",
+    "scripts/lib/structure.mjs",
     "scripts/lib/util.mjs",
     "scripts/plan.mjs",
     "skills/media-plan/SKILL.md"
@@ -53,10 +64,10 @@
     },
     {
       "kind": "fs:read",
-      "scope": "anuncios/*/briefing.md, capturas/*/captura.json, instagram-research/ e contatos/inventario.json, quando existem",
+      "scope": "anuncios/*/briefing.md, capturas/*/captura.json, instagram-research/, contatos/inventario.json e ads-insights/semanal/*.json, quando existem",
       "reason": {
-        "pt-BR": "Lê o que os outros apps do flyee já gravaram no projeto, para não perguntar o que o projeto já sabe.",
-        "en": "Reads what the other flyee apps already wrote in the project, so it never asks what the project already knows."
+        "pt-BR": "Lê o que os outros apps do flyee já gravaram no projeto, para não perguntar o que o projeto já sabe, e a leitura semanal do app de medição, para replanejar.",
+        "en": "Reads what the other flyee apps already wrote in the project, so it never asks what the project already knows, and the measurement app's weekly read, to replan."
       }
     },
     {
@@ -69,8 +80,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: olhar antes de perguntar, até quatro perguntas com sugestão, premissas rotuladas, a conta do que um cliente pode custar, o funil ao contrário com cenários, a fase de aprendizado, as formas de oferta com a colisão entre promoções, o calendário por fases com feriados e o plano escrito como rascunho até o sim.",
-    "en": "First version: look before asking, up to four questions with a suggestion each, labelled premises, what a customer may cost, the funnel worked backwards with scenarios, the learning phase, the forms of the offer with the collision between promotions, the phased calendar with holidays and the written plan as a draft until the yes."
+    "pt-BR": "O plano completo: a decisão por canal (roda, testa, fica para depois ou não, com a lente que decidiu e o que o viraria), a estrutura na Meta e na Busca do Google em linguagem de negócio (objetivo, conjuntos contra o piso de aprendizado, remarketing por etapa, campanhas de marca e de não marca), as regras de decisão e os gatilhos com plano B nos mesmos números do app de medição, e o replanejamento a partir da leitura semanal, com o que mudou e por quê no topo da versão nova.",
+    "en": "The complete plan: the decision per channel (run, test, later or no, with the lens that decided and what would flip it), the structure on Meta and Google Search in business language (objective, ad sets against the learning floor, remarketing by stage, brand and non-brand campaigns), the decision rules and the triggers with a plan B in the measurement app's numbers, and the replan from the weekly read, with what changed and why on top of the new version."
   },
   "license": "member"
 }

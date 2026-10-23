@@ -39,3 +39,19 @@ Você tem uma base de contatos (clientes, quem testou, quem só se cadastrou) e 
 - A base legal é método, não parecer jurídico.
 - Quem pediu para sair não recebe mais nada de marketing, em nenhum canal.
 - Os limiares são regras de bolso com data; o seu histórico vale mais quando existir.
+
+## Por WhatsApp
+
+A mesma régua sai por WhatsApp em quatro toques (a pergunta se ainda quer receber, um a um; o acesso antecipado; a abertura; o último dia), só para quem aceitou receber por lá. Cada mensagem é um modelo curto que o seu provedor aprova dois dias antes, pela API oficial ou um a um, nunca por disparo de um número comum. Aceitar e-mail não é aceitar WhatsApp: enquanto o texto que as pessoas aceitaram não falar de WhatsApp ou mensagem, a régua fica pendente.
+
+## Antes do primeiro envio
+
+A IA confere no DNS público se o domínio que manda os seus e-mails está autenticado (SPF, DMARC e DKIM), como o Gmail e o Outlook exigem de quem envia em volume. O que falta vem com o que criar, nas palavras para quem cuida do seu DNS; o que depende de uma mensagem real ou do relatório da sua ferramenta (o descadastro em um clique, as reclamações, as rejeições) fica a conferir com você. Uma lista parada volta em lotes: primeiro quem usou há pouco, e o lote dobra enquanto os números ficarem limpos.
+
+## O público para a Meta
+
+Para anunciar para a sua base ou excluir os seus clientes dos anúncios, a IA prepara o público personalizado só em hash: o e-mail e o telefone embaralhados como a Meta pede, só de quem pode receber marketing e não pediu para sair, e a lista de exclusão dos clientes atuais. Com menos de 100 pessoas o arquivo não sai, e o público fica na régua. Quem sobe é você, com o passo a passo ao lado; a taxa de reconhecimento que a Meta mostrar é a que vale.
+
+## A voz do cliente e o atendimento
+
+Antes de escrever anúncio ou e-mail, a IA deixa pronto o questionário de sete perguntas e o roteiro de uma conversa de 20 minutos. Você ouve cinco a oito clientes e cinco a oito pessoas que testaram e não ficaram; as frases entram como foram ditas, só com o primeiro nome ou a profissão, e viram evidência para os criativos. E o arquivo do atendimento do pico fica pronto para você preencher: quem responde, em quanto tempo, as respostas às objeções, quem cobre o fim de semana.

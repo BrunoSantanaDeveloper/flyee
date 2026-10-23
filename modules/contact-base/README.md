@@ -10,7 +10,9 @@ Depois ela registra, com você, a base legal de cada grupo: como as pessoas entr
 
 Com isso ela separa os segmentos (quem usou nos últimos 30, 90 e 180 dias, quem comprou uma ou mais vezes, os melhores clientes, quem está sem contato há seis meses) e escreve a régua de e-mail de cada grupo, ancorada nas datas do plano de mídia: a repermissão para quem não ouve da marca há seis meses, a novidade, o convite para testar, a prova, a lista, o acesso antecipado, a abertura, o lembrete e o último dia. Cada mensagem tem data, um trabalho só, um assunto curto, um chamado e um link com a regra única do plano, para a medição saber de onde veio cada clique.
 
-Quem envia é você, pela sua ferramenta de e-mail. O app prepara tudo e não entra em ferramenta nenhuma.
+A mesma régua sai por WhatsApp, em quatro toques, para quem aceitou receber por lá: cada mensagem é um modelo que o seu provedor aprova dois dias antes, pela API oficial ou um a um, nunca por disparo de um número comum. Antes do primeiro envio em volume, a IA confere no DNS público se o seu domínio está autenticado (SPF, DMARC e DKIM) e diz o que criar quando falta, com os limiares de saúde de cada envio e o plano de lotes de uma lista parada. Para a Meta, ela prepara o público personalizado só em hash, com a lista de exclusão dos seus clientes atuais. E deixa prontos o questionário da voz do cliente, cuja síntese vira evidência para os criativos, e o arquivo do atendimento do pico.
+
+Quem envia é você, pela sua ferramenta de e-mail ou pela sua conta da API do WhatsApp. O app prepara tudo e não entra em ferramenta nenhuma.
 
 ## O que você precisa
 
@@ -34,7 +36,11 @@ Quem envia é você, pela sua ferramenta de e-mail. O app prepara tudo e não en
 | `contatos/inventario.json` | só as contagens: total, duplicados, inválidos, grupos, origens |
 | `contatos/base-legal.md` | a base legal de cada grupo, nos oito campos |
 | `contatos/segmentos.json` | os segmentos, o teto de mensagens e a escada de ofertas |
-| `contatos/regua.json` e `regua.md` | a régua de cada grupo, com as datas, os assuntos e os links |
+| `contatos/regua.json` e `regua.md` | a régua de cada grupo, por e-mail e por WhatsApp, com as datas, os assuntos, os modelos e os links |
+| `contatos/envio.md` e `entregabilidade.json` | a conferência do domínio de envio, item por item, os limiares de saúde e os lotes |
+| `contatos/publicos/` | o público para a Meta só em hash, a lista de exclusão dos clientes e o passo a passo para subir |
+| `contatos/voz-do-cliente.md` e `voz-leitura.json` | o questionário, o roteiro e a leitura declarada que o app de criativos importa |
+| `contatos/atendimento.md` | quem responde no pico, em quanto tempo, e as respostas às objeções |
 
 ## Bom saber
 
@@ -43,7 +49,11 @@ Quem envia é você, pela sua ferramenta de e-mail. O app prepara tudo e não en
 - A base legal é método, não parecer jurídico. Na dúvida, quem responde é quem cuida do jurídico da sua marca.
 - Os limiares (30 e 180 dias de uso, 6 meses sem contato, 1 mensagem por 16 horas, 3 por semana) são regras de bolso marcadas com a data; o plano e os seus números valem mais.
 - Quem pediu para sair não recebe mais nada de marketing, em nenhum canal.
+- Aceitar e-mail não é aceitar WhatsApp: a régua por WhatsApp fica pendente até o texto aceito falar de WhatsApp ou mensagem.
+- A conferência do domínio só marca como ok o que viu no DNS; o que depende de uma mensagem real ou de um relatório fica a conferir com você.
+- A lista legível nunca sobe para a Meta: o arquivo do público traz só hashes, e a taxa de reconhecimento que a Meta mostra substitui a estimativa do app.
 
 ## O que há de novo
 
+- 1.1.0: a régua por WhatsApp pela API oficial, a conferência de entrega do domínio (SPF, DMARC, DKIM, limiares e lotes), o público personalizado para a Meta só em hash com a lista de exclusão dos clientes, a voz do cliente com a leitura declarada para os criativos e o atendimento do pico.
 - 1.0.0: primeira versão. O inventário da base com a limpeza e as contagens, a base legal por grupo, os segmentos com o teto de mensagens e a escada de ofertas, e a régua de e-mail por grupo ancorada no plano ou numa data alvo, com a repermissão para quem está sem contato há seis meses.

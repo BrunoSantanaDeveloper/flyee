@@ -182,7 +182,7 @@ test("funnel, offer and calendar write their files and answer with the numbers o
   assert.equal(calendar.json.decision_point.date, "2026-11-13");
   assert.deepEqual(calendar.json.holidays.map((holiday) => holiday.date), ["2026-11-02", "2026-11-15", "2026-11-20"]);
   assert.equal(JSON.parse(read(root, "calendario.json")).plan, PLAN);
-  assert.equal(calendar.json.next_step.action, "plan");
+  assert.equal(calendar.json.next_step.action, "channels");
 
   const launch = await run(root, ["calendar", PLAN, TODAY, "--launch"]);
   assert.equal(launch.json.peak, false);

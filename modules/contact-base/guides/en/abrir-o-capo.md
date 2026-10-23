@@ -31,3 +31,19 @@ Nine possible messages, anchored in the plan's warm-up and peak (or in a target 
 ## What the app does not do
 
 It does not send, does not enter an e-mail or messaging tool, asks for no password and gives no legal advice.
+
+## The WhatsApp sequence
+
+Four touches instead of nine, because on WhatsApp each extra message costs a block: the one-to-one re-permission (only the question, and only those who answer yes go on), the early access, the opening and the last day. Each touch is a marketing template, up to 300 characters, one question or one link, the word SAIR, approved by the provider up to two days before its date (`approve_by`). The link carries `utm_source=whatsapp` and `utm_medium=message`. The WhatsApp opt-in is read from the accepted text in the group's legal basis; without it, pending.
+
+## Deliverability
+
+The SPF, DMARC and DKIM records are read from public DNS, with no key. Each item has a state: ok (seen), missing, attention (present but incomplete: two SPF records, DMARC without reports, an empty DKIM key) or to confirm (it depends on a real message or a report). Missing blocks bulk sending. The health thresholds per send: hard bounces under 1%, complaints under 0.1%, unsubscribes under 0.3%. A dormant list returns in four batches, from the last 30 days' engaged to the rest, doubling while the numbers stay clean.
+
+## The hashed audience
+
+The e-mail is normalized (lower case, no spaces) and the phone keeps digits only, with the 55; both go through SHA-256, as Meta asks in uploads. Only those who did not unsubscribe, whose group has a marketing legal basis and who have an e-mail or a phone enter. Meta accepts an audience from 100 matched people and matches 40 to 60% of a consumer list (rule of thumb); under 1,000 matched the reach and the lookalike come out weak, and the app says so. The exclusion list is the current customers, in the same format.
+
+## The customer voice
+
+Seven questions and a 20-minute script, from the before to the "worth it" moment. The answers enter as a declared reading (the same shape as the creatives app's other evidence): one sentence per item, with who said it (first name or profession) and the date. The synthesis only after five sentences: one sentence is an anecdote.

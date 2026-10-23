@@ -43,3 +43,15 @@ You say what you want to sell and by when, and you get your brand's paid-traffic
 - The holidays marked are Brazil's national ones; you add your city's.
 - The lines about consumer law and data protection are method, not legal advice.
 - The app speaks Brazilian Portuguese: the questions and the plan are written in Portuguese, and amounts follow the Brazilian format (R$ 1.490,00).
+
+## Channels, structure and rules
+
+After the arithmetic, the AI decides each channel: Meta, Google Search, e-mail and WhatsApp to your base, partners, TikTok, LinkedIn and YouTube. Each comes out as run, test, later or no, with the reason in one sentence and what would flip the verdict. A channel never enters for being new, and when the hours asked exceed the hours you have, the plan says which test leaves first.
+
+For the channels that run or test, it writes the structure as business: on Meta, why the campaign optimizes for that event, why one ad set, how much it spends per day against the minimum the platform needs to learn, who stays out, the remarketing by stage; on Google Search, the campaign for your brand's name and the campaign for the problem people search, with the keywords, the negatives and the bid. When the ad set's budget sits below the minimum, the AI brings three exits and you choose.
+
+The decision rules say what counts as enough data to judge an ad, when to pause, when to scale and by how much, when to swap the piece, and what is looked at every week. Five triggers (cost, account, base, product, tracking) come with a plan B each. They are the same numbers the measurement app uses to read results, so the plan and the read never disagree.
+
+## After the first week
+
+When the measurement app writes the weekly read, ask "redo the plan with this week's read". The next version is born as a draft with "What changed and why" on top: the findings, what worked and what did not, what the read proposes as your decision, what was not measured and the goal updated by what the spreadsheet recorded. The approved version is kept. The replan does not move money and does not change the goal in silence: both are yours.

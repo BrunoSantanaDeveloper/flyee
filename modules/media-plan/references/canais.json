@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-23",
+  "note": "Os canais que o plano decide, com o mínimo para aprender em cada um, como regra de bolso rotulada. O veredito é julgamento pelas seis lentes (público e intenção, economia, prontidão, tempo até sinal, evidência, horas de quem executa); esta tabela só dá os números que o julgamento usa. Um canal não entra por ser novo, e nenhum entra por padrão: o plano decide um por um.",
+  "sources": [
+    { "what": "fase de aprendizado da Meta: cerca de 50 eventos por conjunto em 7 dias", "url": "https://www.facebook.com/business/help/112167992830700", "checked_on": "2026-10-21" },
+    { "what": "lance inteligente do Google Ads: cerca de 30 conversões em 30 dias para aprender", "url": "https://support.google.com/google-ads/answer/7065882", "checked_on": "2026-10-23" },
+    { "what": "mínimos de campanha e de grupo do TikTok Ads e ordens de grandeza de CPM do LinkedIn", "note": "ordens de grandeza de praticantes, não fonte oficial; conferir no gerenciador de cada rede", "checked_on": "2026-10-23" }
+  ],
+  "channels": {
+    "meta": { "label": "Meta (Instagram e Facebook)", "kind": "paid", "demand": "criacao", "fits": "produto visual para consumidor ou profissional, app, negócio local", "min_to_learn": { "rule": "verba diária por conjunto igual a 50 vezes o custo permitido dividido por 7", "source": "aprendizado da Meta" }, "hours_per_week": 2, "creative": "3 a 5 ângulos em vídeo 9:16 e imagem; 8 a 15 peças novas por mês" },
+    "google_search": { "label": "Busca do Google", "kind": "paid", "demand": "captura", "fits": "categoria ou problema que as pessoas procuram; intenção alta", "min_to_learn": { "daily_brl": 40, "rule": "verba diária para 10 cliques ou mais por dia nas palavras principais (CPC de R$ 2 a R$ 6 num nicho profissional, ordem de grandeza)", "conversions_per_month": 30, "source": "lance inteligente do Google" }, "hours_per_week": 1, "creative": "anúncios de texto casados com a palavra; página que responde à busca" },
+    "email": { "label": "E-mail para a base", "kind": "owned", "demand": "base", "fits": "qualquer marca com lista; todo lançamento", "min_to_learn": { "contacts": 1, "rule": "a lista que existe; sem lista, o trabalho do plano é formar uma" }, "hours_per_week": 2, "creative": "a régua: repermissão, novidade, prova, lista, acesso antecipado, abertura, lembrete, último dia" },
+    "whatsapp": { "label": "WhatsApp para a base", "kind": "owned", "demand": "base", "fits": "base que respondeu antes por mensagem; contato um a um", "min_to_learn": { "contacts": 1, "rule": "só pela API oficial com modelos aprovados, ou um a um; nunca disparo de número comum" }, "hours_per_week": 3, "creative": "mensagens curtas, uma pergunta, um link" },
+    "parceiros": { "label": "Parceiros e indicações", "kind": "owned", "demand": "indicacao", "fits": "profissões com associação, curso, fornecedor ou influenciador do nicho", "min_to_learn": { "partners": 2, "rule": "dois ou três parceiros com link rastreado; um só é indício" }, "hours_per_week": 2, "creative": "um texto pronto para o parceiro, um link rastreado por parceiro" },
+    "tiktok": { "label": "TikTok", "kind": "paid", "demand": "criacao", "fits": "consumidor até 35 anos, produto que se demonstra, app", "min_to_learn": { "daily_brl": 250, "rule": "cerca de R$ 250 por dia na campanha e R$ 100 por grupo, com vídeo nativo novo toda semana; os criativos cansam em 7 a 14 dias", "source": "ordem de grandeza de praticantes" }, "hours_per_week": 4, "creative": "vídeo nativo 9:16 em volume, estilo criador" },
+    "linkedin": { "label": "LinkedIn", "kind": "paid", "demand": "criacao", "fits": "empresa para empresa com cargo e porte definidos e ticket que pague de R$ 400 a R$ 1.200 por lead", "min_to_learn": { "monthly_brl": 15000, "rule": "CPM de R$ 150 a R$ 400; abaixo de R$ 15.000 por mês pouco se aprende", "source": "ordem de grandeza de praticantes" }, "hours_per_week": 2, "creative": "prova em imagem, documento, vídeo de quem fez" },
+    "youtube": { "label": "YouTube", "kind": "paid", "demand": "criacao", "fits": "demonstração e compra pensada; marca já provada em outro canal", "min_to_learn": { "daily_brl": 150, "rule": "vídeo de 15 a 30 segundos que segure os 5 primeiros; lido por busca da marca e pela fase do funil, não por compra direta" }, "hours_per_week": 2, "creative": "vídeo de 15 a 30 segundos com a marca nos 5 primeiros" }
+  },
+  "lenses": ["publico_intencao", "economia", "prontidao", "tempo_ate_sinal", "evidencia", "horas"],
+  "verdicts": ["run", "test", "later", "no"],
+  "rules": {
+    "one_or_two_channels": "um ou dois canais bem feitos valem mais do que cinco feitos pela metade: um plano que roda tudo não decidiu",
+    "owned_first": "a lista e os clientes atuais são o público mais barato de qualquer lançamento",
+    "novelty_is_not_a_reason": "um canal nunca entra por ser novo",
+    "judgment_run_becomes_test": "um Run só por julgamento, sem evidência da marca, vira Test",
+    "hours_cap": "quando as horas pedidas passam das horas de quem executa, o plano corta um canal em vez de supor que as horas aparecem"
+  }
+}

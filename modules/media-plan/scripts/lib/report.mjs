@@ -5,6 +5,10 @@
 
 import { brDay, brl, pct } from "./util.mjs";
 import { PREMISES, SETTLED, questionsFor } from "./premises.mjs";
+import { changesMarkdown } from "./replan.mjs";
+
+const VERDICT_WORDS = { run: "roda", test: "testa", later: "depois", no: "não" };
+const LENS_WORDS = { publico_intencao: "público e intenção", economia: "economia", prontidao: "prontidão", tempo_ate_sinal: "tempo até sinal", evidencia: "evidência", horas: "horas" };
 
 export const IN_SHORT_MAX_WORDS = 150;
 export const MOVES_MAX = 6;
@@ -96,10 +100,25 @@ function movesFrom({ calendar, economics, offer, pending }) {
 }
 
 /**
- * Assembles plano.json and plano.md. `narrative` is optional; without it the plan carries the
- * script's own sentences. Returns { plan, markdown, say, warnings }.
+ * The budget per phase: the expected scenario spread over the paid phases, the peak weighing
+ * double and the warm-up one and a half. Empty without a total or a calendar.
  */
-export function buildPlan({ data, economics, offer, calendar, narrative = null, generatedAt, version = 1, state = "rascunho", refs }) {
+export function budgetByPhase({ economics, calendar }) {
+  const phases = calendar?.phases ?? [];
+  const paidPhases = phases.filter((phase) => ["testes", "escala", "aquecimento", "pico"].includes(phase.id));
+  const total = economics?.budget?.total_brl ?? null;
+  if (total === null || !paidPhases.length) return [];
+  const weight = (phase) => (phase.id === "pico" ? 2 : phase.id === "aquecimento" ? 1.5 : 1) * phase.days;
+  const sum = paidPhases.reduce((acc, phase) => acc + weight(phase), 0);
+  return paidPhases.map((phase) => ({ phase: phase.id, start: phase.start, end: phase.end, share_pct: Math.round((weight(phase) / sum) * 1000) / 10, budget_brl: Math.round((total * weight(phase)) / sum), daily_brl: Math.round((total * weight(phase)) / sum / phase.days) }));
+}
+
+/**
+ * Assembles plano.json and plano.md. `narrative` is optional; without it the plan carries the
+ * script's own sentences. `channels`, `structure`, `rules` and `replan` enter when their
+ * commands ran. Returns { plan, markdown, say, warnings }.
+ */
+export function buildPlan({ data, economics, offer, calendar, narrative = null, generatedAt, version = 1, state = "rascunho", refs, channels = null, structure = null, rules = null, replan = null }) {
   const warnings = [];
   const premises = PREMISES.map((premise) => premiseLine(data, premise));
   const pending = premises.filter((line) => !SETTLED.has(line.source) || line.value === "em aberto").map((line) => line.key);
@@ -108,17 +127,11 @@ export function buildPlan({ data, economics, offer, calendar, narrative = null, 
   const phases = calendar?.phases ?? [];
   const expected = economics?.scenarios?.find((scenario) => scenario.id === "esperado") ?? null;
 
-  // The budget per phase: the expected scenario spread over the paid phases, with the peak doubled.
-  const paidPhases = phases.filter((phase) => ["testes", "escala", "aquecimento", "pico"].includes(phase.id));
-  const total = economics?.budget?.total_brl ?? null;
-  let budgetByPhase = [];
-  if (total !== null && paidPhases.length) {
-    const weight = (phase) => (phase.id === "pico" ? 2 : phase.id === "aquecimento" ? 1.5 : 1) * phase.days;
-    const sum = paidPhases.reduce((acc, phase) => acc + weight(phase), 0);
-    budgetByPhase = paidPhases.map((phase) => ({ phase: phase.id, start: phase.start, end: phase.end, share_pct: Math.round((weight(phase) / sum) * 1000) / 10, budget_brl: Math.round((total * weight(phase)) / sum), daily_brl: Math.round((total * weight(phase)) / sum / phase.days) }));
-  }
+  const byPhase = budgetByPhase({ economics, calendar });
 
   const dataMoves = movesFrom({ calendar, economics, offer, pending });
+  for (const warning of channels?.warnings ?? []) if (warning.code === "hours") dataMoves.push({ what: warning.text, when: "ao montar a estrutura", why: "as horas de quem executa são uma premissa, não um desejo" });
+  for (const move of replan?.moves ?? []) dataMoves.push({ what: `Decidir o movimento ${move.id} proposto pela leitura.`, when: "nesta semana", why: move.text });
   const moves = narrative?.first_move ? [{ what: narrative.first_move, when: "primeiro", why: "é o que os achados pedem antes de qualquer gasto" }, ...dataMoves] : dataMoves;
   if (moves.length > MOVES_MAX) warnings.push({ code: "moves_cut", text: `O plano tinha ${moves.length} movimentos e ficou com ${MOVES_MAX}: os outros estão nas seções.` });
 
@@ -126,6 +139,7 @@ export function buildPlan({ data, economics, offer, calendar, narrative = null, 
     ...(narrative?.could_not_check ?? []),
     ...(economics?.assumptions ?? []).map((assumption) => `${assumption.label}: ${formatAssumption(assumption)} (${assumption.source === "padrão do app" ? "padrão do app" : `regra de bolso, ${refs.checked_on}`}); troque pelo seu número.`),
     ...(offer?.checks ?? []).filter((check) => check.status === "pendente").map((check) => `Oferta, para confirmar: ${check.text}`),
+    ...(structure?.warnings ?? []).map((warning) => warning.text),
   ];
 
   const plan = {
@@ -144,7 +158,7 @@ export function buildPlan({ data, economics, offer, calendar, narrative = null, 
     questions,
     economics: economics?.economics ?? null,
     funnel: economics?.funnel ?? null,
-    budget: { ...(economics?.budget ?? {}), by_phase: budgetByPhase },
+    budget: { ...(economics?.budget ?? {}), by_phase: byPhase },
     scenarios: economics?.scenarios ?? [],
     learning_floor: economics?.learning_floor ?? null,
     frequency: economics?.frequency ?? null,
@@ -155,6 +169,11 @@ export function buildPlan({ data, economics, offer, calendar, narrative = null, 
       events: ["visita (PageView)", "lead ou cadastro (Lead ou CompleteRegistration)", "ativação (o primeiro resultado útil)", "início de pagamento (InitiateCheckout)", "compra com valor (Purchase)"],
       note: "O evento escolhido na premissa é o que a campanha otimiza; os outros são lidos. Quem confere a medição é o app de medição.",
     },
+    channels_decision: channels ? { rows: channels.rows, hours: channels.hours, warnings: channels.warnings ?? [], say: channels.say } : null,
+    structure: structure?.channels ?? null,
+    rules: rules?.rules ?? null,
+    triggers: rules?.triggers ?? [],
+    replan: replan ?? null,
     moves: moves.slice(0, MOVES_MAX),
     not_doing: narrative?.not_doing ?? [],
     could_not_check: couldNotCheck,
@@ -167,8 +186,8 @@ export function buildPlan({ data, economics, offer, calendar, narrative = null, 
     ],
   };
 
-  const markdown = renderMarkdown(plan, { narrative, economics, offer, calendar, premises });
-  const inShort = markdown.split("\n## ")[1] ?? "";
+  const markdown = renderMarkdown(plan, { narrative, economics, offer, calendar, premises, channels, structure, rules, replan });
+  const inShort = markdown.split("\n## ").find((section) => section.startsWith("Em resumo")) ?? "";
   const inShortWords = words(inShort.replace(/^Em resumo\n/, ""));
   // Only the AI's findings can push the summary over the limit; the script's own sentences are written to fit.
   if (narrative && inShortWords > IN_SHORT_MAX_WORDS) warnings.push({ code: "in_short_long", text: `A seção "Em resumo" tem ${inShortWords} palavras; o limite é ${IN_SHORT_MAX_WORDS}. Encurte os achados em narrativa.json.`, words: inShortWords });
@@ -203,7 +222,62 @@ function scriptFindings({ economics, offer }) {
   return out.slice(0, 3);
 }
 
-function renderMarkdown(plan, { narrative, economics, offer, calendar, premises }) {
+function renderChannels(lines, channels) {
+  lines.push("## Canais", "");
+  lines.push("| Canal | Veredito | Lente | Por quê | O que vira |", "|---|---|---|---|---|");
+  for (const row of channels.rows) lines.push(`| ${row.label} | ${VERDICT_WORDS[row.verdict] ?? row.verdict}${row.confidence === "evidencia" ? " (evidência)" : ""} | ${LENS_WORDS[row.lens] ?? row.lens} | ${row.reason} | ${row.flip ?? ""} |`);
+  lines.push("", `Horas por semana: os canais que rodam ou testam pedem ${channels.hours.asked} e há ${channels.hours.available}.${channels.warnings?.length ? ` ${channels.warnings.map((warning) => warning.text).join(" ")}` : ""}`);
+  if (channels.rules) lines.push("", `Regras: ${Object.values(channels.rules).join("; ")}.`);
+  lines.push("");
+}
+
+function renderStructure(lines, structure) {
+  lines.push("## Estrutura", "");
+  const meta = structure.channels?.meta;
+  if (meta) {
+    lines.push(`Meta (${VERDICT_WORDS[meta.verdict] ?? meta.verdict}): objetivo ${meta.objective}, otimizando por ${meta.optimization_event}. ${meta.event_note.charAt(0).toUpperCase()}${meta.event_note.slice(1)}.`, "");
+    lines.push(`Campanha ${meta.campaign.name}, verba no conjunto, ${brl(meta.campaign.daily_brl)} por dia.`, "");
+    for (const set of meta.ad_sets) {
+      lines.push(`- Conjunto ${set.name}: ${brl(set.daily_brl)} por dia${set.floor_daily_brl !== null && set.floor_daily_brl !== undefined ? ` contra o piso de ${brl(set.floor_daily_brl)}${set.clears_floor ? ", acima" : ", abaixo, aceito"}` : ", sem piso calculado (falta o custo por evento)"}. Público: ${set.audience}. Exclui: ${set.exclusions.join("; ")}. Posicionamentos: ${set.placements}. ${set.reason.charAt(0).toUpperCase()}${set.reason.slice(1)}. ${set.ads}.`);
+    }
+    lines.push("", `Nomes: campanha ${meta.naming.campaign}; conjunto ${meta.naming.ad_set}; anúncio: ${meta.naming.ad}.`, "");
+    lines.push("Remarketing por etapa (entra na escala, quando os públicos existirem):", "");
+    lines.push("| Etapa | Quem | Janela | Mensagem |", "|---|---|---|---|");
+    for (const stage of meta.remarketing) lines.push(`| ${stage.stage} | ${stage.audience} (${stage.source}) | ${stage.window_days} dias | ${stage.message} |`);
+    lines.push("", meta.remarketing_note.charAt(0).toUpperCase() + meta.remarketing_note.slice(1) + ".");
+    if (meta.lookalike) lines.push("", `Semelhante: ${meta.lookalike.source}. ${meta.lookalike.note.charAt(0).toUpperCase()}${meta.lookalike.note.slice(1)}.`);
+    if (meta.budget_by_phase?.length) lines.push("", `Verba da Meta por fase: ${meta.budget_by_phase.map((item) => `${item.phase} ${brl(item.daily_brl)} por dia`).join("; ")}.`);
+    lines.push("", "Regras de subida:", ...meta.launch_rules.map((rule) => `- ${rule.charAt(0).toUpperCase()}${rule.slice(1)}.`), "");
+  }
+  const search = structure.channels?.google_search;
+  if (search) {
+    lines.push(`Busca do Google (${VERDICT_WORDS[search.verdict] ?? search.verdict}): ${brl(search.daily_brl)} por dia${search.clears_minimum === false ? `, abaixo do mínimo de ${brl(search.minimum_daily_brl)}` : ""}.`, "");
+    for (const campaign of search.campaigns) lines.push(`- ${campaign.name} (${campaign.kind}): ${campaign.when}. Palavras: ${campaign.keywords.join(", ")}; correspondência ${campaign.match}. Negativas: ${campaign.negatives.join(", ")}. Lance: ${campaign.bid}. ${Math.round(campaign.budget_share * 100)}% da verba da Busca.`);
+    lines.push("", `Conversão: ${search.conversion.primary}; secundárias: ${search.conversion.secondary.join(", ")}. Extensões: ${search.extensions.join("; ")}.`, "");
+    lines.push("Regras da Busca:", ...search.rules.map((rule) => `- ${rule.charAt(0).toUpperCase()}${rule.slice(1)}.`), "");
+  }
+  if (structure.channels?.owned?.length) {
+    lines.push("Base e parceiros:", ...structure.channels.owned.map((item) => `- ${item.channel}: ${item.what}${item.dates ? ` (${item.dates})` : ""}.`), "");
+  }
+  if (!meta && !search && !structure.channels?.owned?.length) lines.push("Nenhum canal roda ou testa ainda: a estrutura espera a decisão dos canais.", "");
+}
+
+function renderRules(lines, rules) {
+  const body = rules.rules;
+  lines.push("## Regras de decisão", "");
+  lines.push(`Dado suficiente: ${body.sample.label} (regra de bolso, ${body.checked_on}; o histórico da conta substitui).${body.allowable_cost_brl ? ` Custo permitido: ${brl(body.allowable_cost_brl)} por resultado.` : ""}${body.learning_floor_daily_brl ? ` Piso de aprendizado: ${brl(body.learning_floor_daily_brl)} por dia por conjunto.` : ""}`, "");
+  lines.push("Indicadores por fase:", ...Object.entries(body.indicators_by_phase).map(([phase, items]) => `- ${phase}: ${items.join("; ")}`), "");
+  lines.push("Pausa quando:", ...body.pause_when.map((item) => `- ${item.charAt(0).toUpperCase()}${item.slice(1)}.`), "");
+  lines.push("Escala quando:", ...body.scale_when.map((item) => `- ${item.charAt(0).toUpperCase()}${item.slice(1)}.`), "");
+  lines.push("Troca a peça quando:", ...body.swap_when.map((item) => `- ${item.charAt(0).toUpperCase()}${item.slice(1)}.`), "");
+  lines.push(`${body.one_edit_per_set_per_week.charAt(0).toUpperCase()}${body.one_edit_per_set_per_week.slice(1)}.`, "");
+  lines.push(`Cadência: ${body.cadence.weekly}. Diário: ${body.cadence.daily}.${body.cadence.decision_point ? ` Ponto de decisão: ${body.cadence.decision_point}.` : ""}`, "");
+  lines.push("Gatilhos e plano B:", "", "| Risco | Onde se lê | Plano B |", "|---|---|---|");
+  for (const trigger of rules.triggers ?? []) lines.push(`| ${trigger.risk} | ${trigger.read_in} | ${trigger.plan_b} |`);
+  lines.push("");
+}
+
+function renderMarkdown(plan, { narrative, economics, offer, calendar, premises, channels = null, structure = null, rules = null, replan = null }) {
   const lines = [];
   const title = `# Plano de estratégia e mídia${plan.brand ? `: ${plan.brand}` : ""}${plan.target_date ? `, até ${brDay(plan.target_date, true)}` : ""}`;
   lines.push(title, "", `Versão ${plan.version}, ${plan.state}, gerado em ${plan.generated_at.slice(0, 10)}.`, "");
@@ -218,6 +292,9 @@ function renderMarkdown(plan, { narrative, economics, offer, calendar, premises 
   lines.push(...findings);
   if (plan.moves[0]) lines.push(`Faça isto primeiro: ${plan.moves[0].what}`);
   lines.push("");
+
+  // O que mudou e por quê, when this version was born from a weekly read.
+  if (replan) lines.push(changesMarkdown(replan, { version: plan.version, from: replan.from ?? "a leitura semanal do app de medição" }), "");
 
   // Decisões para você.
   lines.push("## Decisões para você", "");
@@ -260,6 +337,10 @@ function renderMarkdown(plan, { narrative, economics, offer, calendar, premises 
     lines.push("");
   }
   lines.push(`Medição: um padrão só de link, ${plan.tracking.utm_rule}; os eventos lidos são ${plan.tracking.events.join(", ")}. ${plan.tracking.note}`, "");
+
+  if (channels?.rows?.length) renderChannels(lines, channels);
+  if (structure) renderStructure(lines, structure);
+  if (rules?.rules) renderRules(lines, rules);
 
   // O que fazer.
   lines.push("## O que fazer", "");

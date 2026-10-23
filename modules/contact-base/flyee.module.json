@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "contact-base",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "workflow",
   "trail": "vender",
   "title": {
@@ -9,8 +9,8 @@
     "en": "Contact base and CRM"
   },
   "summary": {
-    "pt-BR": "Transforma a sua base antiga de contatos numa régua que pode ser enviada: limpa e conta a base sem tirar nenhum dado do projeto, registra a base legal de cada grupo e escreve a régua de e-mail nas datas do plano, com repermissão para quem não ouve da marca há seis meses.",
-    "en": "Turns your old contact base into a sequence that can be sent: cleans and counts the base without a record leaving the project, records the legal basis of each group and writes the e-mail sequence on the plan dates, with a re-permission for anyone six months without contact."
+    "pt-BR": "Transforma a sua base de contatos numa régua que pode ser enviada: limpa e conta a base sem tirar dado do projeto, registra a base legal de cada grupo, escreve a régua de e-mail e de WhatsApp nas datas do plano, com repermissão após seis meses, e confere a entrega do domínio.",
+    "en": "Turns your old contact base into a sequence that can be sent: cleans and counts it without a record leaving the project, records each group's legal basis, writes the e-mail and WhatsApp sequences on the plan dates, with a re-permission after six months, and checks the domain."
   },
   "compatible_ais": [
     "claude_code"
@@ -26,15 +26,20 @@
     "guides/pt-BR/usar.md",
     "references/base-legal.md",
     "references/copy-regua.md",
+    "references/entregabilidade.md",
     "references/interface.md",
     "references/limiares.json",
+    "references/whatsapp.md",
     "scripts/contacts.mjs",
+    "scripts/lib/audience.mjs",
     "scripts/lib/csv.mjs",
+    "scripts/lib/deliverability.mjs",
     "scripts/lib/inventory.mjs",
     "scripts/lib/legal.mjs",
     "scripts/lib/report.mjs",
     "scripts/lib/segments.mjs",
     "scripts/lib/sequence.mjs",
+    "scripts/lib/support.mjs",
     "scripts/lib/util.mjs",
     "skills/contact-base/SKILL.md"
   ],
@@ -50,24 +55,32 @@
     },
     {
       "kind": "fs:read",
-      "scope": "os exports de usuários e contatos que você puser em contatos/entrada/, e media-plan/<plano>/plano.json",
+      "scope": "os exports de usuários e contatos que você puser em contatos/entrada/, as respostas da voz do cliente em contatos/, e media-plan/<plano>/plano.json",
       "reason": {
-        "pt-BR": "Os exports são a base; o plano aprovado dá as datas, a marca, a página e a regra de link da régua.",
-        "en": "The exports are the base; the approved plan gives the dates, the brand, the page and the link rule of the sequence."
+        "pt-BR": "Os exports são a base; as respostas viram a leitura declarada para os criativos; o plano aprovado dá as datas, a marca, a página e a regra de link da régua.",
+        "en": "The exports are the base; the answers become the declared reading for the creatives; the approved plan gives the dates, the brand, the page and the link rule of the sequence."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "o DNS público do seu domínio de envio (os registros SPF, DMARC e DKIM), só leitura",
+      "reason": {
+        "pt-BR": "Confere se o domínio que manda os e-mails está autenticado, como o Gmail e o Outlook exigem de quem envia em volume; nada da base sai nessa consulta.",
+        "en": "Checks whether the sending domain is authenticated, as Gmail and Outlook require from bulk senders; nothing from the base leaves in that lookup."
       }
     },
     {
       "kind": "fs:write",
       "scope": "./contatos/",
       "reason": {
-        "pt-BR": "A base limpa, o inventário (só contagens), a base legal, os segmentos e a régua ficam na pasta do projeto e não saem da máquina.",
-        "en": "The clean base, the inventory (counts only), the legal basis, the segments and the sequence live in the project folder and never leave the machine."
+        "pt-BR": "A base limpa, o inventário (só contagens), a base legal, os segmentos, a régua, a conferência de entrega, os públicos em hash, a voz do cliente e o atendimento ficam na pasta do projeto e não saem da máquina.",
+        "en": "The clean base, the inventory (counts only), the legal basis, the segments, the sequence, the deliverability check, the hashed audiences, the customer voice and the support file live in the project folder and never leave the machine."
       }
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: o inventário da base (limpeza, duplicados, telefones com DDD, grupos por uso e pagamento, só contagens no arquivo que outros apps leem; recusa colunas de paciente ou terceiro), a base legal por grupo, os segmentos com o teto de mensagens e a escada de ofertas, e a régua de e-mail por grupo ancorada nas fases do plano ou numa data alvo, com a repermissão para quem está sem contato há seis meses.",
-    "en": "First version: the base inventory (cleaning, duplicates, phones with area code, groups by use and payment, counts only in the file other apps read; refuses patient or third-party columns), the legal basis per group, the segments with the message cap and the offer ladder, and the e-mail sequence per group anchored in the plan's phases or a target date, with the re-permission for anyone six months without contact."
+    "pt-BR": "A régua por WhatsApp (quatro toques pela API oficial, modelos aprovados dois dias antes, repermissão um a um, pendente sem o aceite de WhatsApp), a conferência de entrega do domínio (SPF, DMARC e DKIM no DNS público, os limiares de saúde e os lotes de uma lista parada), o público personalizado para a Meta só em hash com a lista de exclusão dos clientes, a voz do cliente (questionário, roteiro e a leitura declarada que o app de criativos importa) e o atendimento do pico.",
+    "en": "The WhatsApp sequence (four touches through the official API, templates approved two days before, one-to-one re-permission, pending without a WhatsApp opt-in), the domain deliverability check (SPF, DMARC and DKIM from public DNS, the health thresholds and the batches of a dormant list), the Meta custom audience as hashes only with the customers' exclusion list, the customer voice (questionnaire, script and the declared reading the creatives app imports) and the peak support file."
   },
   "license": "member"
 }

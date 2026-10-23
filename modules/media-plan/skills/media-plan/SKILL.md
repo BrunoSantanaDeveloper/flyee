@@ -1,6 +1,6 @@
 ---
 name: media-plan
-description: Monta o plano de tráfego pago de uma marca a nível de especialista, antes de qualquer anúncio. Olha o que o projeto já sabe, pergunta só o que falta, com uma sugestão por pergunta, e entrega quanto um cliente pode custar, o funil com cenários, a oferta, o calendário até a data alvo e o plano para aprovação. Use quando pedirem plano, estratégia, verba por fase, oferta ou por onde começar.
+description: Monta o plano de tráfego pago de uma marca a nível de especialista, antes de qualquer anúncio: olha o que o projeto já sabe, pergunta só o que falta, com sugestão, e entrega quanto um cliente pode custar, funil, oferta, calendário, canais, estrutura, regras e o plano para o seu sim; replaneja pela leitura semanal. Use quando pedirem plano, estratégia, verba, canais ou por onde começar.
 ---
 
 # Plano de estratégia e mídia
@@ -13,11 +13,12 @@ node .flyee/modules/media-plan/scripts/plan.mjs <comando> [opções] --json
 
 Só o JSON vai para o stdout; o progresso vai para o stderr. Em erro, `ok` é `false` e `error` traz `code`, `message` e `fix`. **Todo resultado traz `next_step`**: `action`, `command` (o comando exato, quando há um) e `say`. Siga o `next_step`; ao retomar um plano, comece por `status <plano> --json`.
 
-Os guias desta pasta: `../../references/situacao.md` (como ler a situação, a ordem das perguntas e a narrativa), `../../references/oferta.md` (as formas de oferta e as linhas do consumidor), `../../references/pagina.md` (o briefing da página de destino), `../../references/voz-do-cliente.md` (o questionário e as conversas), `../../references/interface.md` (o que os outros apps leem do plano).
+Os guias desta pasta: `../../references/situacao.md` (como ler a situação, a ordem das perguntas e a narrativa), `../../references/oferta.md` (as formas de oferta e as linhas do consumidor), `../../references/pagina.md` (o briefing da página de destino), `../../references/voz-do-cliente.md` (o questionário e as conversas), `../../references/estrutura-meta.md` e `../../references/estrutura-google.md` (o porquê de cada escolha da estrutura), `../../references/regras.md` (as regras de decisão), `../../references/conformidade.md` (política da Meta, consumidor e proteção de dados, como método), `../../references/lancamento.md` (as peças do lançamento fora dos anúncios), `../../references/interface.md` (o que os outros apps leem do plano).
 
 ## Regras que não se quebram
 
-- **Os números são do script.** Custo permitido, funil, cenários, fase de aprendizado, frequência, datas: tudo sai de `funnel`, `offer` e `calendar`. Você cita; nunca calcula de cabeça nem inventa um número plausível.
+- **Os números são do script.** Custo permitido, funil, cenários, fase de aprendizado, frequência, datas, verba por conjunto, limiares de pausa e escala: tudo sai de `funnel`, `offer`, `calendar`, `channels`, `structure` e `rules`. Você cita; nunca calcula de cabeça nem inventa um número plausível.
+- **Um canal nunca entra por ser novo.** O veredito de cada canal vem de `channels`, com a lente que decidiu e o que o viraria; você explica em linguagem de negócio e não acrescenta canal por conta própria.
 - **Nenhuma promessa de resultado.** Um cenário é aritmética sobre suposições rotuladas, nunca uma previsão. O script recusa uma narrativa que promete.
 - **Toda sugestão é rotulada e pendente.** O que você propõe entra em `premissas.json` com `source: sugerido-pendente` e `if_different`, e vira `confirmado` só quando o integrante disser que sim. Uma sugestão nunca inventa fato da marca (preço, margem, tamanho da base): isso você pergunta ou encontra.
 - **Olhe antes de perguntar.** O que o projeto já sabe entra como `encontrado`, com o arquivo. Pergunte só o que sobrar: até quatro perguntas, numa mensagem só, cada uma com a sua sugestão e o que muda se a resposta for outra. Rastreamento nunca é pergunta técnica.
@@ -45,10 +46,16 @@ Rode `premises <plano> --json`. `questions` traz até quatro, na ordem que decid
 2. `offer <plano> --json`: as formas de oferta como opções (`options`), a colisão com a promoção vigente (`collision`) e as linhas do consumidor para confirmar (`checks`). Mostre como opções, nunca como decisão tomada.
 3. `calendar <plano> --json`: as fases até a data alvo, as janelas de aprendizado, o ponto de decisão, os prazos que não se discutem e os feriados no caminho. Com `--launch`, a data é um lançamento e não um pico de vendas.
 
+## Passo 3b: os canais, a estrutura e as regras
+
+1. `channels <plano> --json` decide cada canal (Meta, Busca do Google, e-mail, WhatsApp, parceiros, TikTok, LinkedIn, YouTube): `rows[]` traz `verdict` (`run`, `test`, `later`, `no`), `lens` (a lente que decidiu), `reason`, `confidence` (`evidencia` ou `julgamento`), `flip` (o que viraria o veredito) e as horas por semana. Com `--hours <n>`, as horas de quem executa; sem, 6. Um canal que o integrante tirou em `premissas.json` (`channels.<canal>: false`) sai com evidência. Diga os vereditos como negócio: "a Busca entra como teste porque quem procura já quer comprar; vira Run com 30 conversões em 30 dias".
+2. `structure <plano> --json` escreve a estrutura dos canais que rodam ou testam: na Meta, o objetivo honesto, um conjunto (ou dois, quando a verba cobre dois pisos), a verba do conjunto contra o piso de aprendizado, público amplo com as exclusões, posicionamentos, o padrão de nomes, o remarketing por etapa e o semelhante; na Busca, as campanhas de marca e de não marca, as palavras, as negativas, o lance e a conversão. Em `structure_invalid` a verba do conjunto fica abaixo do piso: leve ao integrante as três saídas de `details.exits` (um evento mais cedo no funil, a verba até o piso, ou aceitar com `--accept-floor`, sabendo que a semana 1 só compara criativos) e rode de novo com a escolha dele. O porquê de cada escolha está em `estrutura-meta.md` e `estrutura-google.md`.
+3. `rules <plano> --json` grava as regras de decisão: o que é dado suficiente (1.000 impressões e 30 cliques por anúncio para gancho e CTR; 30 resultados para custo), os indicadores por fase, quando pausar, escalar e trocar a peça, uma mudança por conjunto por semana, a cadência semanal e o pulso por exceção, e cinco gatilhos com plano B. Os números são os do app de medição, para o plano e a leitura nunca discordarem.
+
 ## Passo 4: a narrativa e o rascunho
 
 1. Escreva `media-plan/<plano>/narrativa.json` como `situacao.md` mostra: até três achados com a certeza (`confirmado`, `provavel`, `primeira-leitura`), a história em um parágrafo, o primeiro passo, o que não vamos fazer, o que não conseguimos conferir e as decisões para o integrante. Cite os números do script; não invente.
-2. `plan <plano> --json` monta `plano.json` e `plano.md` como rascunho. Em `narrative_invalid`, corrija cada item de `details.problems`; em `in_short_long`, encurte os achados até a seção "Em resumo" caber em 150 palavras.
+2. `plan <plano> --json` monta `plano.json` e `plano.md` como rascunho, com as seções Canais, Estrutura e Regras de decisão quando os comandos do passo 3b rodaram. Em `narrative_invalid`, corrija cada item de `details.problems`; em `in_short_long`, encurte os achados até a seção "Em resumo" caber em 150 palavras.
 3. Na conversa: as três linhas de `say`, as decisões pendentes e uma frase dizendo onde está o plano. Nada de colar o documento.
 
 ## Passo 5: as decisões e o sim
@@ -57,7 +64,11 @@ Quando `blocking_pending` estiver vazio, pergunte ao integrante se aprova o plan
 
 ## Passo 6: o que vem depois
 
-O plano aprovado é o que os outros apps leem (`../../references/interface.md`): os criativos partem da oferta, do evento e da verba da fase; a régua da base parte das datas das fases; a medição parte da regra de link. Diga ao integrante o primeiro passo de `moves` e siga nesta conversa com o app que o passo pede. Ao terminar, registre o uso com `npx --yes flyee@latest track tool.executed --module media-plan`.
+O plano aprovado é o que os outros apps leem (`../../references/interface.md`): os criativos partem da oferta, do evento e da verba da fase; a régua da base parte das datas das fases; a medição parte da regra de link e das regras de decisão. Diga ao integrante o primeiro passo de `moves` e siga nesta conversa com o app que o passo pede. As peças do lançamento fora dos anúncios (a demonstração ao vivo, a gravação para o remarketing, o atendimento no pico) estão em `lancamento.md`; a conferência de política, consumidor e proteção de dados, em `conformidade.md`. Ao terminar, registre o uso com `npx --yes flyee@latest track tool.executed --module media-plan`.
+
+## Passo 7: replanejar pela leitura semanal
+
+Quando o app de medição escrever a leitura semanal (`ads-insights/semanal/<data>.json`), rode `replan <plano> --from ads-insights/semanal/<data>.json --json`. A versão seguinte nasce como rascunho com a seção "O que mudou e por quê" no topo: os achados com a certeza, os movimentos julgados, as propostas da leitura como decisões do integrante, as lacunas, os gatilhos disparados (razão de reivindicação fora de 1,0 a 1,5, meta sem compra) e a premissa da meta atualizada pela planilha de origem. A versão aprovada fica congelada; o replanejamento nunca move verba nem muda a meta em silêncio. Na conversa, as três linhas de `say` e as decisões; com o sim literal, `approve`.
 
 ## Problemas comuns
 
@@ -68,4 +79,6 @@ O plano aprovado é o que os outros apps leem (`../../references/interface.md`):
 | `narrative_invalid` | `details.problems` lista cada problema da narrativa |
 | `in_short_long` | a seção "Em resumo" passou de 150 palavras: encurte os achados |
 | `target_missing` | grave `target_date` em `premissas.json` ou passe `--target` |
+| `structure_invalid` | a verba do conjunto fica abaixo do piso: `details.exits` traz as três saídas; o integrante escolhe |
+| `weekly_missing`, `weekly_invalid` | o arquivo da leitura semanal não existe ou não é o do app de medição: rode a leitura semanal lá antes |
 | `plan_exists`, `plan_missing` | o nome já existe, ou não existe: `list` mostra os planos |

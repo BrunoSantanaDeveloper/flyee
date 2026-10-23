@@ -40,3 +40,19 @@ You have a contact base (customers, people who tried, people who only signed up)
 - Whoever asked to leave receives no more marketing, on any channel.
 - The thresholds are dated rules of thumb; your own history counts more once it exists.
 - The app speaks Brazilian Portuguese: the documents and the messages are written in Portuguese.
+
+## By WhatsApp
+
+The same sequence goes out by WhatsApp in four touches (the question whether they still want to hear from you, one to one; the early access; the opening; the last day), only to those who agreed to receive it there. Each message is a short template your provider approves two days before, through the official API or one to one, never a blast from an ordinary number. Agreeing to e-mail is not agreeing to WhatsApp: while the text people accepted does not mention WhatsApp or messages, the sequence stays pending.
+
+## Before the first send
+
+The AI checks in public DNS whether the domain that sends your e-mails is authenticated (SPF, DMARC and DKIM), as Gmail and Outlook require from bulk senders. What is missing comes with what to create, in words for whoever manages your DNS; what depends on a real message or on your tool's report (one-click unsubscribe, complaints, bounces) stays for you to confirm. A dormant list comes back in batches: first those who used the product recently, and the batch doubles while the numbers stay clean.
+
+## The Meta audience
+
+To advertise to your base or exclude your customers from the ads, the AI prepares the custom audience as hashes only: e-mail and phone scrambled as Meta asks, only for those who may receive marketing and did not ask to leave, plus the exclusion list of current customers. Under 100 people the file is not written, and that audience stays in the sequence. You upload it, with the steps beside it; the match rate Meta shows is the one that counts.
+
+## The customer voice and the support
+
+Before writing an ad or an e-mail, the AI prepares the seven-question questionnaire and the script of a 20-minute conversation. You listen to five to eight customers and five to eight people who tried and left; their sentences enter as said, with a first name or profession only, and become evidence for the creatives. And the peak support file is ready for you to fill: who answers, how fast, the answers to the objections, who covers the weekend.

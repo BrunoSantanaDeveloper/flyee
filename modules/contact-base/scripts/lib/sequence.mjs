@@ -7,6 +7,10 @@ import { addDays, AppError, brDay, daysBetween, parseDay, weekday } from "./util
 
 export const DEFAULT_UTM_RULE = "utm_source=<canal>&utm_medium=<meio>&utm_campaign=<plano>&utm_content=<nome do anúncio ou do envio>&utm_term=<público ou palavra>";
 const SUBJECT_MAX = 45;
+export const CHANNELS = ["email", "whatsapp"];
+/** The WhatsApp sequence is shorter: four touches, each a template the member's provider approves two days before. */
+const WHATSAPP_STEPS = ["repermissao", "acesso-antecipado", "abertura", "ultimo-dia"];
+const WHATSAPP = { max_chars: 300, quiet_hours: "das 9 às 20 horas, nunca no domingo", exit_word: "SAIR", approval_days: 2, label: "pela API oficial com modelos aprovados, ou um a um para quem já respondeu por mensagem; nunca disparo de número comum" };
 
 const fold = (text) => String(text ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 const slug = (text) => fold(text).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -42,10 +46,10 @@ function subjectFor(step, { brand, deadline, group }) {
   return subject.length > SUBJECT_MAX ? subject.slice(0, SUBJECT_MAX - 1).trim() : subject;
 }
 
-/** The link of one message under the single rule: email as the channel, the step as the content, the group as the term. */
-export function linkFor({ page, rule, campaign, step, group }) {
+/** The link of one message under the single rule: the channel as the source, the step as the content, the group as the term. */
+export function linkFor({ page, rule, campaign, step, group, channel = "email" }) {
   const fields = String(rule ?? DEFAULT_UTM_RULE).split("&").map((part) => part.split("=")[0].trim()).filter(Boolean);
-  const values = { utm_source: "email", utm_medium: "email", utm_campaign: slug(campaign || "base"), utm_content: step, utm_term: slug(group) };
+  const values = { utm_source: channel, utm_medium: channel === "whatsapp" ? "message" : "email", utm_campaign: slug(campaign || "base"), utm_content: step, utm_term: slug(group) };
   const query = fields.map((field) => `${field}=${encodeURIComponent(values[field] ?? "")}`).join("&");
   if (!page) return { query, url: null };
   try {
@@ -62,7 +66,9 @@ export function linkFor({ page, rule, campaign, step, group }) {
  * (or null); `counts` the inventory's group counts; `first` an optional step the AI asked to
  * start with, refused when the group is stale and the step is not the re-permission.
  */
-export function buildSequence(group, { anchors, legal = null, counts = null, thresholds, plan = null, brand = null, page = null, utmRule = DEFAULT_UTM_RULE, campaign = null, today, first = null }) {
+export function buildSequence(group, { anchors, legal = null, counts = null, thresholds, plan = null, brand = null, page = null, utmRule = DEFAULT_UTM_RULE, campaign = null, today, first = null, channel = "email" }) {
+  if (!CHANNELS.includes(channel)) throw new AppError("usage", `Canal desconhecido: ${channel}.`, `Os canais são ${CHANNELS.join(", ")}.`);
+  const whatsapp = channel === "whatsapp";
   const stale = Boolean(counts && counts.stale > 0);
   const allStale = Boolean(counts && counts.marketable > 0 && counts.stale === counts.marketable);
   if (first && stale && first !== "repermissao") {
@@ -74,6 +80,7 @@ export function buildSequence(group, { anchors, legal = null, counts = null, thr
   for (const step of thresholds.sequence.steps) {
     if (step.groups && !step.groups.includes(group)) continue;
     if (step.only_when_stale && !stale) continue;
+    if (whatsapp && !WHATSAPP_STEPS.includes(step.id)) continue;
     const anchor = anchors[step.anchor];
     let date;
     if (step.offset === "middle") date = addDays(anchor.start, Math.floor(daysBetween(anchor.start, anchor.end) / 2));
@@ -83,7 +90,7 @@ export function buildSequence(group, { anchors, legal = null, counts = null, thr
       warnings.push({ code: "past_date", step: step.id, text: `"${step.label}" caía em ${brDay(date)}, que já passou: entra hoje, e a régua encurta.` });
       date = today;
     }
-    const link = linkFor({ page, rule: utmRule, campaign: campaign ?? anchors.plan ?? "base", step: step.id, group });
+    const link = linkFor({ page, rule: utmRule, campaign: campaign ?? anchors.plan ?? "base", step: step.id, group, channel });
     steps.push({
       id: step.id,
       label: step.label,
@@ -97,6 +104,7 @@ export function buildSequence(group, { anchors, legal = null, counts = null, thr
       body: "[a escrever]",
       link: link.url ?? `[página]?${link.query}`,
       utm_content: step.id,
+      ...(whatsapp ? { template_category: "marketing", approve_by: addDays(date, -WHATSAPP.approval_days), max_chars: WHATSAPP.max_chars } : {}),
     });
   }
   // Re-permission has a second touch and a wait: nobody else writes to the stale slice before it answers.
@@ -104,8 +112,12 @@ export function buildSequence(group, { anchors, legal = null, counts = null, thr
   if (re) {
     const second = { ...re, id: "repermissao-2", label: "Repermissão, segunda vez", date: addDays(re.date, thresholds.repermission.keep_link_days), subject: "Última vez que escrevemos sem resposta", job: `a segunda e última tentativa; quem não clicar em ${thresholds.repermission.keep_link_days} dias sai da régua e fica só na lista de exclusão`, utm_content: "repermissao-2" };
     second.weekday = weekday(second.date);
-    second.link = linkFor({ page, rule: utmRule, campaign: campaign ?? anchors.plan ?? "base", step: "repermissao-2", group }).url ?? second.link.replace("utm_content=repermissao", "utm_content=repermissao-2");
-    steps.splice(1, 0, second);
+    second.link = linkFor({ page, rule: utmRule, campaign: campaign ?? anchors.plan ?? "base", step: "repermissao-2", group, channel }).url ?? second.link.replace("utm_content=repermissao", "utm_content=repermissao-2");
+    if (whatsapp) {
+      // On WhatsApp the re-permission is one message, one to one, and the answer is the permission.
+      re.job = "perguntar, um a um, se a pessoa quer receber a oferta por aqui; só quem responder sim entra nas mensagens seguintes";
+      re.audience = `só quem deu o número e está sem contato há 6 meses ou mais (${counts?.stale ?? 0}), um a um`;
+    } else steps.splice(1, 0, second);
   }
   // The cap: never two marketing messages on the same day; shift the later one.
   steps.sort((a, b) => a.date.localeCompare(b.date) || 0);
@@ -138,8 +150,9 @@ export function buildSequence(group, { anchors, legal = null, counts = null, thr
   }
   const legalStatus = legal?.status ?? "pendente";
   const marketingAllowed = legal?.marketing_allowed ?? false;
-  const state = legalStatus === "completo" && marketingAllowed ? "pronta" : "pendente";
-  const pendingWhy = legalStatus !== "completo" ? `a base legal do grupo ${group} tem campos vazios em base-legal.md` : !marketingAllowed ? `a base legal do grupo ${group} é execução de contrato: só o transacional pode ir` : null;
+  const optIn = !whatsapp || /whatsapp|mensagem|telefone|celular|sms/i.test(String(legal?.fields?.texto_aceito ?? ""));
+  const state = legalStatus === "completo" && marketingAllowed && optIn ? "pronta" : "pendente";
+  const pendingWhy = legalStatus !== "completo" ? `a base legal do grupo ${group} tem campos vazios em base-legal.md` : !marketingAllowed ? `a base legal do grupo ${group} é execução de contrato: só o transacional pode ir` : !optIn ? `o texto aceito do grupo ${group} em base-legal.md não fala de WhatsApp ou mensagem: aceitar e-mail não é aceitar WhatsApp` : null;
   return {
     version: 1,
     group,
@@ -149,16 +162,26 @@ export function buildSequence(group, { anchors, legal = null, counts = null, thr
     anchors,
     counts: counts ?? null,
     stale,
-    channel: "email",
+    channel,
     utm_rule: utmRule,
     steps,
-    rules: {
-      first_message_when_stale: "repermissão: quem não recebe nada há 6 meses ou mais recebe antes a pergunta se ainda quer receber; nada de promoção antes do sim",
-      cap: `até 1 mensagem de marketing por ${thresholds.cadence.min_hours_between_marketing} horas e ${thresholds.cadence.max_per_week} por semana só na semana de pico; ${thresholds.cadence.comfortable_per_week} nas outras`,
-      footer: "toda mensagem diz quem escreve, de onde veio o contato e como sair com um clique",
-      recent_buyers: `quem comprou nos últimos ${thresholds.cadence.recent_buyer_quiet_days} dias fica fora das promoções`,
-    },
+    rules: whatsapp
+      ? {
+          api_only: WHATSAPP.label,
+          opt_in: "só recebe quem deu o número e aceitou receber por WhatsApp, com a data e o texto do aceite; aceitar e-mail não é aceitar WhatsApp",
+          first_message_when_stale: "repermissão um a um: a pergunta, e só quem responder sim entra no resto",
+          templates: `cada mensagem é um modelo de marketing aprovado pelo provedor até ${WHATSAPP.approval_days} dias antes da data; até ${WHATSAPP.max_chars} caracteres, uma pergunta ou um link`,
+          quiet_hours: WHATSAPP.quiet_hours,
+          exit: `toda mensagem diz como sair ("responda ${WHATSAPP.exit_word}"), e quem sair não recebe mais nada por nenhum canal`,
+          cap: "no WhatsApp, uma mensagem de marketing por semana por pessoa, e duas só na semana do pico; quem não respondeu a duas seguidas sai da régua",
+        }
+      : {
+          first_message_when_stale: "repermissão: quem não recebe nada há 6 meses ou mais recebe antes a pergunta se ainda quer receber; nada de promoção antes do sim",
+          cap: `até 1 mensagem de marketing por ${thresholds.cadence.min_hours_between_marketing} horas e ${thresholds.cadence.max_per_week} por semana só na semana de pico; ${thresholds.cadence.comfortable_per_week} nas outras`,
+          footer: "toda mensagem diz quem escreve, de onde veio o contato e como sair com um clique",
+          recent_buyers: `quem comprou nos últimos ${thresholds.cadence.recent_buyer_quiet_days} dias fica fora das promoções`,
+        },
     warnings,
-    say: `${steps.length} mensagem(ns) para ${group}, de ${brDay(steps[0]?.date ?? today)} a ${brDay(steps[steps.length - 1]?.date ?? today)}, ancoradas ${anchors.source === "plano" ? `no plano ${anchors.plan}` : `na data alvo ${brDay(anchors.target_date)}`}${stale ? `; ${counts.stale} pessoa(s) começam pela repermissão` : ""}. Estado: ${state}${pendingWhy ? ` (${pendingWhy})` : ""}.`,
+    say: `${steps.length} mensagem(ns) ${whatsapp ? "de WhatsApp " : ""}para ${group}, de ${brDay(steps[0]?.date ?? today)} a ${brDay(steps[steps.length - 1]?.date ?? today)}, ancoradas ${anchors.source === "plano" ? `no plano ${anchors.plan}` : `na data alvo ${brDay(anchors.target_date)}`}${stale ? `; ${counts.stale} pessoa(s) começam pela repermissão` : ""}. Estado: ${state}${pendingWhy ? ` (${pendingWhy})` : ""}.`,
   };
 }

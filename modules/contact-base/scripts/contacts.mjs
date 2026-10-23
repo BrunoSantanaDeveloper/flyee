@@ -7,11 +7,14 @@ import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { audienceCsv, buildAudience, uploadSteps } from "./lib/audience.mjs";
+import { checkDomain } from "./lib/deliverability.mjs";
 import { buildInventory, cleanHeader, cleanLines, GROUPS, readClean, readExport } from "./lib/inventory.mjs";
 import { GROUP_LABELS, legalQuestions, legalTemplate, parseLegal } from "./lib/legal.mjs";
-import { inventorySay, renderSequences } from "./lib/report.mjs";
+import { inventorySay, renderAudience, renderDeliverability, renderSequences } from "./lib/report.mjs";
 import { segmentBase } from "./lib/segments.mjs";
-import { anchorsFor, buildSequence, DEFAULT_UTM_RULE } from "./lib/sequence.mjs";
+import { anchorsFor, buildSequence, CHANNELS, DEFAULT_UTM_RULE } from "./lib/sequence.mjs";
+import { supportTemplate, voiceReading, voiceTemplate } from "./lib/support.mjs";
 import { AppError, isoDay, parseArgs, parseDay, projectRoot, readJson, readText, slugify, toPosix, writeFileAtomic, writeJson } from "./lib/util.mjs";
 
 const SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
@@ -30,9 +33,15 @@ const PATHS = {
   segments: join(DIR, "segmentos.json"),
   sequences: join(DIR, "regua.json"),
   sequencesMd: join(DIR, "regua.md"),
+  deliverability: join(DIR, "entregabilidade.json"),
+  deliverabilityMd: join(DIR, "envio.md"),
+  audiences: join(DIR, "publicos"),
+  voice: join(DIR, "voz-do-cliente.md"),
+  voiceReading: join(DIR, "voz-leitura.json"),
+  support: join(DIR, "atendimento.md"),
 };
 
-const ARG_SPEC = { flags: ["json"], options: ["today", "target", "first", "campaign", "group", "plan"] };
+const ARG_SPEC = { flags: ["json"], options: ["today", "target", "first", "campaign", "group", "plan", "channel", "dkim", "quotes"] };
 
 const HELP = `Base de contatos e CRM (interface ${INTERFACE_VERSION})
 
@@ -40,8 +49,13 @@ const HELP = `Base de contatos e CRM (interface ${INTERFACE_VERSION})
   inventory <csv…>                       lê os exports de usuários e contatos, limpa, agrupa e conta (só contagens em inventario.json)
   legal [--group <grupo>]                cria ou confere base-legal.md: a base legal de cada grupo
   segments                               os segmentos da base limpa, o teto de mensagens e a escada de ofertas
-  sequence <grupo> [--target AAAA-MM-DD] [--first <mensagem>] [--campaign <nome>]
-                                         a régua do grupo, ancorada no plano ou na data alvo
+  sequence <grupo> [--target AAAA-MM-DD] [--first <mensagem>] [--campaign <nome>] [--channel email|whatsapp]
+                                         a régua do grupo, ancorada no plano ou na data alvo; por WhatsApp, quatro toques pela API oficial
+  deliverability <dominio> [--dkim <seletor>]
+                                         SPF, DMARC e DKIM do domínio de envio no DNS público, os limiares de saúde e os lotes
+  audience <grupo|segmento>              o público personalizado para a Meta, só em hash, e a lista de exclusão dos clientes atuais
+  voice [--quotes <arquivo.json>]        o questionário e o roteiro da voz do cliente; com as respostas, a leitura declarada para os criativos
+  support                                o atendimento do pico: quem responde, em quanto tempo, as respostas às objeções
   status · help
 
 Grupos: ${GROUPS.join(", ")}. Todos aceitam --json. Os comandos partem da raiz do projeto (a pasta que contém .flyee/).`;
@@ -209,9 +223,11 @@ function sequenceCommand(positionals, values) {
   const anchors = anchorsFor({ plan, target: values.target ?? null, today });
   const premises = plan?.data?.premises ?? {};
   const page = /https?:\/\/[^\s);,]+/i.exec(premises.prontidao?.value ?? "")?.[0] ?? plan?.data?.page_url ?? null;
-  const sequence = buildSequence(group, { anchors, legal: parsed[group], counts: inventory.groups[group], thresholds: THRESHOLDS, plan: plan?.data ?? null, brand: plan?.data?.brand ?? null, page, utmRule: plan?.data?.tracking?.utm_rule ?? DEFAULT_UTM_RULE, campaign: values.campaign ?? plan?.slug ?? null, today, first: values.first ?? null });
+  const channel = values.channel ?? "email";
+  if (!CHANNELS.includes(channel)) throw usage(`Canal desconhecido: ${channel}.`, `Os canais são ${CHANNELS.join(", ")}.`);
+  const sequence = buildSequence(group, { anchors, legal: parsed[group], counts: inventory.groups[group], thresholds: THRESHOLDS, plan: plan?.data ?? null, brand: plan?.data?.brand ?? null, page, utmRule: plan?.data?.tracking?.utm_rule ?? DEFAULT_UTM_RULE, campaign: values.campaign ?? plan?.slug ?? null, today, first: values.first ?? null, channel });
   const store = readJson(PATHS.sequences) ?? { version: 1, groups: {} };
-  store.groups[group] = sequence;
+  store.groups[channel === "whatsapp" ? `${group}@whatsapp` : group] = sequence;
   store.updated_at = today;
   writeJson(PATHS.sequences, store);
   writeFileAtomic(PATHS.sequencesMd, renderSequences(store, { brand: plan?.data?.brand ?? null }));
@@ -224,9 +240,116 @@ function sequenceCommand(positionals, values) {
     questions,
     next_step:
       sequence.state === "pendente"
-        ? { action: "ask", command: command("legal"), say: `A régua de ${group} está escrita em ${rel(PATHS.sequencesMd)}, mas pendente: ${sequence.pending_why}. Pergunte ao integrante numa mensagem só o que falta, grave em base-legal.md e rode sequence de novo.` }
-        : { action: "write", command: null, say: `A régua de ${group} está pronta em ${rel(PATHS.sequencesMd)}: ${sequence.steps.length} mensagens. Escreva o corpo de cada uma com o guia de texto da régua, revise com a skill texto-natural e entregue ao integrante; quem envia é ele, pela ferramenta dele.` },
+        ? { action: "ask", command: command("legal"), say: `A régua de ${group}${channel === "whatsapp" ? " por WhatsApp" : ""} está escrita em ${rel(PATHS.sequencesMd)}, mas pendente: ${sequence.pending_why}. Pergunte ao integrante numa mensagem só o que falta, grave em base-legal.md e rode sequence de novo.` }
+        : channel === "whatsapp"
+          ? { action: "write", command: null, say: `A régua de ${group} por WhatsApp está pronta em ${rel(PATHS.sequencesMd)}: ${sequence.steps.length} mensagens, cada uma um modelo que o provedor aprova até 2 dias antes. Escreva cada modelo com o guia de WhatsApp (até 300 caracteres, uma pergunta ou um link, a palavra SAIR), revise com a skill texto-natural e entregue; quem envia é o integrante, pela conta da API oficial ou um a um.` }
+          : { action: "write", command: null, say: `A régua de ${group} está pronta em ${rel(PATHS.sequencesMd)}: ${sequence.steps.length} mensagens. Escreva o corpo de cada uma com o guia de texto da régua, revise com a skill texto-natural e entregue ao integrante; quem envia é ele, pela ferramenta dele.` },
   };
+}
+
+async function deliverabilityCommand(positionals, values, { resolver } = {}) {
+  ensureDir();
+  const today = todayOf(values);
+  const domain = positionals[0];
+  if (!domain || !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(String(domain).replace(/^https?:\/\//, "").replace(/\/.*$/, ""))) throw usage("Informe o domínio de envio: deliverability <dominio> [--dkim <seletor>].", "O domínio é o que vem depois do @ no remetente dos e-mails da marca.");
+  const result = await checkDomain(domain, { dkimSelector: values.dkim ?? null, ...(resolver ? { resolver } : {}) });
+  writeJson(PATHS.deliverability, { version: 1, checked_on: today, ...result });
+  writeFileAtomic(PATHS.deliverabilityMd, renderDeliverability(result, { today }));
+  const unknownDns = result.items.filter((item) => ["spf", "dmarc", "dkim"].includes(item.id) && item.status === "unknown" && /consultar/.test(item.text));
+  return {
+    ...base("deliverability"),
+    files: { json: rel(PATHS.deliverability), markdown: rel(PATHS.deliverabilityMd) },
+    ...result,
+    say: [result.say, ...result.items.filter((item) => item.status === "missing" || item.status === "attention").map((item) => `${item.id.toUpperCase()}: ${item.text}`)].slice(0, 3),
+    next_step: result.overall === "bloqueado"
+      ? { action: "fix_dns", command: null, say: `${result.say} Diga ao integrante o que criar no DNS, com as palavras de cada fix; depois rode deliverability de novo.` }
+      : unknownDns.length
+        ? { action: "retry", command: command(`deliverability ${result.domain}${values.dkim ? ` --dkim ${values.dkim}` : ""}`), say: "O DNS não respondeu agora: rode de novo em alguns minutos." }
+        : { action: "confirm", command: null, say: `${result.say} Peça ao integrante uma mensagem de teste e o relatório do último envio para fechar os itens a conferir; o plano de lotes está em ${rel(PATHS.deliverabilityMd)}.` },
+  };
+}
+
+function audienceCommand(positionals, values) {
+  ensureDir();
+  const today = todayOf(values);
+  const target = positionals[0];
+  if (!target) throw usage("Informe o grupo ou o segmento: audience <grupo|segmento>.", "Os grupos são clientes, ex-clientes, testaram e nunca-ativaram; os segmentos estão em contatos/segmentos.json.");
+  const inventory = loadInventory();
+  const text = readText(PATHS.clean);
+  if (text === null) throw new AppError("inventory_missing", "A base limpa não existe.", `Rode ${command("inventory <export.csv>")} de novo.`);
+  const clean = readClean(text);
+  const { parsed } = loadLegal({ inventory, today, create: true });
+  const plan = findPlan(values.plan ?? null);
+  const { summary, members } = segmentBase(clean, { today, thresholds: THRESHOLDS, plan: plan?.data ?? null });
+  if (!members[target]) throw new AppError("segment_unknown", `O segmento ${target} não existe.`, `Os segmentos são ${Object.keys(members).join(", ")}.`);
+  const ids = new Set(members[target]);
+  const people = clean.filter((contact) => ids.has(contact.id));
+  const customers = clean.filter((contact) => contact.group === "clientes" && !contact.unsubscribed);
+  const audience = buildAudience(people, { legal: parsed, customers, today });
+  const name = slugify(target);
+  mkdirSync(PATHS.audiences, { recursive: true });
+  const file = join(PATHS.audiences, `${name}.csv`);
+  const exclusionFile = join(PATHS.audiences, "exclusao-clientes.csv");
+  const written = { csv: null, exclusion: null, markdown: rel(join(PATHS.audiences, `${name}.md`)), json: rel(join(PATHS.audiences, `${name}.json`)) };
+  if (audience.rows.length >= audience.minimums.upload) {
+    writeFileAtomic(file, audienceCsv(audience.rows));
+    written.csv = rel(file);
+  }
+  if (audience.exclusion.length) {
+    writeFileAtomic(exclusionFile, audienceCsv(audience.exclusion));
+    written.exclusion = rel(exclusionFile);
+  }
+  const steps = uploadSteps({ name: `${plan?.data?.brand ?? "base"}: ${target}`, file: written.csv ?? `${name}.csv (não gerado: público pequeno)`, exclusionFile: written.exclusion });
+  writeJson(join(PATHS.audiences, `${name}.json`), { version: 1, segment: target, generated_at: today, counts: audience.counts, estimate: audience.estimate, minimums: audience.minimums, warnings: audience.warnings, files: written, segments_summary: { people: summary.people } });
+  writeFileAtomic(join(PATHS.audiences, `${name}.md`), renderAudience(audience, { segment: target, steps }));
+  return {
+    ...base("audience"),
+    segment: target,
+    files: written,
+    counts: audience.counts,
+    estimate: audience.estimate,
+    minimums: audience.minimums,
+    warnings: audience.warnings,
+    say: audience.say,
+    next_step: written.csv
+      ? { action: "upload", command: null, say: `${audience.say} O passo a passo para subir no Gerenciador está em ${written.markdown}; quem sobe é o integrante. A lista sobe de novo toda semana.` }
+      : { action: "owned", command: null, say: `${audience.warnings[0]?.text ?? audience.say} Este público fica na régua por e-mail e mensagem; sem arquivo para a Meta.` },
+  };
+}
+
+function voiceCommand(values) {
+  ensureDir();
+  const today = todayOf(values);
+  const plan = findPlan(values.plan ?? null);
+  const brand = plan?.data?.brand ?? null;
+  const product = plan?.data?.premises?.produto_oferta?.value?.split(/[.,;:]/)[0]?.trim() || null;
+  let created = false;
+  if (!existsSync(PATHS.voice)) {
+    writeFileAtomic(PATHS.voice, voiceTemplate({ brand, product, today }));
+    created = true;
+  }
+  if (!values.quotes) {
+    return { ...base("voice"), file: rel(PATHS.voice), created, reading: null, next_step: { action: "interview", command: command("voice --quotes contatos/voz-respostas.json"), say: `${created ? `Criei ${rel(PATHS.voice)} com o questionário de sete perguntas e o roteiro de 20 minutos. ` : ""}Peça ao integrante cinco a oito conversas ou respostas; grave cada frase como foi dita, com quem disse (primeiro nome ou profissão) e a data, em contatos/voz-respostas.json como [{ "who", "text", "where" }], e rode voice --quotes para gerar a leitura declarada que o app de criativos importa.` } };
+  }
+  const quotesPath = insideProject(values.quotes);
+  const quotes = readJson(quotesPath);
+  if (!Array.isArray(quotes)) throw new AppError("quotes_invalid", `${rel(quotesPath)} precisa ser uma lista de { who, text, where }.`, "Uma linha por frase, como foi dita; who é o primeiro nome ou a profissão, nunca o e-mail.");
+  const reading = voiceReading(quotes, { today });
+  if (reading.items.length < 5) throw new AppError("quotes_few", `${reading.items.length} frase(s): a síntese pede ao menos 5.`, "Ouça mais clientes antes de sintetizar; uma frase só é anedota.", { items: reading.items.length });
+  writeJson(PATHS.voiceReading, reading);
+  return { ...base("voice"), file: rel(PATHS.voice), created, reading: { file: rel(PATHS.voiceReading), items: reading.items.length, kind: reading.kind }, next_step: { action: "synthesize", command: null, say: `${reading.items.length} frases gravadas como leitura declarada em ${rel(PATHS.voiceReading)}. Escreva a síntese em ${rel(PATHS.voice)} (a dor nas palavras deles, a objeção mais repetida, o momento do vale a pena, a frase que vira gancho, o preço na cabeça deles) e importe a leitura no app de criativos como evidência declarada.` } };
+}
+
+function supportCommand(values) {
+  ensureDir();
+  const today = todayOf(values);
+  const plan = findPlan(values.plan ?? null);
+  const phases = plan?.data?.calendar?.phases ?? [];
+  const peak = phases.find((phase) => phase.id === "pico") ?? null;
+  const holidays = (plan?.data?.calendar?.holidays ?? []).filter((holiday) => !peak || (holiday.date >= peak.start && holiday.date <= peak.end));
+  const created = !existsSync(PATHS.support);
+  if (created) writeFileAtomic(PATHS.support, supportTemplate({ brand: plan?.data?.brand ?? null, peak: peak ? { start: peak.start, end: peak.end } : null, holidays, today }));
+  return { ...base("support"), file: rel(PATHS.support), created, peak: peak ? { start: peak.start, end: peak.end } : null, holidays_in_peak: holidays.length, next_step: { action: "fill", command: null, say: `${created ? `Criei ${rel(PATHS.support)}. ` : `${rel(PATHS.support)} já existe. `}Pergunte ao integrante numa mensagem só quem responde no pico${peak ? ` (${peak.start} a ${peak.end})` : ""}, por qual canal e quem cobre o fim de semana; preencha as respostas às objeções nas palavras do público e deixe o arquivo pronto antes do primeiro anúncio.` } };
 }
 
 function statusCommand(values) {
@@ -252,7 +375,15 @@ function renderText(result) {
       break;
     case "segments":
     case "sequence":
+    case "audience":
       body = [result.say];
+      break;
+    case "deliverability":
+      body = result.say;
+      break;
+    case "voice":
+    case "support":
+      body = [`${result.file}${result.created ? " criado" : ""}.`];
       break;
     default:
       return JSON.stringify(result, null, 2);
@@ -275,6 +406,14 @@ async function main(argv) {
       return segmentsCommand(values);
     case "sequence":
       return sequenceCommand(positionals, values);
+    case "deliverability":
+      return deliverabilityCommand(positionals, values);
+    case "audience":
+      return audienceCommand(positionals, values);
+    case "voice":
+      return voiceCommand(values);
+    case "support":
+      return supportCommand(values);
     case "status":
       return statusCommand(values);
     default:

@@ -42,3 +42,15 @@ Você diz o que quer vender e até quando, e recebe o plano de tráfego pago da 
 - Ele não cria campanhas, não sobe públicos e não envia mensagens. Prescreve; você executa, com a sua IA ao lado.
 - Os feriados marcados são os nacionais; os da sua cidade você acrescenta.
 - As linhas do código do consumidor e da proteção de dados são método, não parecer jurídico.
+
+## Canais, estrutura e regras
+
+Depois das contas, a IA decide cada canal: Meta, Busca do Google, e-mail e WhatsApp para a sua base, parceiros, TikTok, LinkedIn e YouTube. Cada um sai como roda, testa, fica para depois ou não, com o motivo em uma frase e o que faria o veredito mudar. Um canal nunca entra por ser novo, e quando as horas pedidas passam das horas que você tem, o plano diz qual teste sai primeiro.
+
+Para os canais que rodam ou testam, ela escreve a estrutura como negócio: na Meta, por que a campanha otimiza por aquele acontecimento, por que um conjunto só, quanto ele gasta por dia contra o mínimo para a plataforma aprender, quem fica de fora, o remarketing por etapa; na Busca do Google, a campanha do nome da sua marca e a campanha do problema que as pessoas procuram, com as palavras, as negativas e o lance. Quando a verba do conjunto fica abaixo do mínimo, a IA traz três saídas e você escolhe.
+
+As regras de decisão dizem o que é dado suficiente para julgar um anúncio, quando pausar, quando escalar e quanto, quando trocar a peça, e o que se olha toda semana. Cinco gatilhos (custo, conta, base, produto, rastreamento) vêm com um plano B cada. São os mesmos números que o app de medição usa para ler os resultados, para o plano e a leitura nunca discordarem.
+
+## Depois da primeira semana
+
+Quando o app de medição fizer a leitura semanal, peça "refaça o plano com a leitura desta semana". A versão seguinte nasce em rascunho com "O que mudou e por quê" no topo: os achados, o que funcionou e o que não funcionou, o que a leitura propõe como decisão sua, o que não foi medido e a meta atualizada pelo que a planilha registrou. A versão aprovada fica guardada. O replanejamento não move verba e não muda a meta em silêncio: as duas coisas são suas.

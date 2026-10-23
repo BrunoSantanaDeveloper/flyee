@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-23",
+  "source": "as mesmas regras de bolso do app de medição (decisão D28 do plano de anúncios), para o plano e a leitura nunca discordarem; o histórico da conta substitui",
+  "sample": {
+    "impressions": 1000,
+    "link_clicks": 30,
+    "results": 30,
+    "label": "gancho e CTR legíveis com ao menos 1.000 impressões e 30 cliques no link por anúncio; custo por resultado legível com 30 resultados ou mais; abaixo disso, indício"
+  },
+  "cut": { "zero_results_spend_multiple": 3, "cost_multiple": 2, "spend_multiple": 3, "min_results": 10 },
+  "scale": { "cost_multiple_max": 1.0, "min_results": 30, "step_pct": [20, 30] },
+  "hold": { "cost_multiple_max": 1.5, "near_threshold": [0.8, 1.3] },
+  "fatigue": { "ctr_drop_fraction": 0.35, "frequency_prospecting": 3, "frequency_retargeting": 6 },
+  "moves": { "legible_days": 14, "maturity_days": 3, "one_edit_per_set_per_week": true }
+}

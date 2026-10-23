@@ -11,7 +11,7 @@ Nos anúncios de Stories e Reels, a interface da Meta cobre 14% de cima, 35% de 
 - Nenhuma cena fica parada: as palavras de cada texto entram uma a uma, o trecho em destaque ganha um sublinhado que corre depois delas, a tela do produto desce, os campos do cartão se digitam e o botão é tocado antes do fim. A conferência avisa quando a tela fica 1,5 s sem mudar; se avisar, ponha um item a mais na cena ou divida um texto em duas linhas.
 - Entre uma cena e outra, a anterior sai cruzando o corte, sem quadro vazio.
 
-**O vídeo 4:5 e as imagens.** A mesma página se recompõe em 4:5 para o vídeo do feed: as cenas, os tempos e a trilha são os mesmos, e cada item se reposiciona na zona do formato. A tabela das redes do Motor ainda não tem a zona de anúncio do feed, então o vídeo 4:5 e as imagens usam a zona do feed do Instagram: no 4:5 de 1080 por 1350, 120 px em cima, 200 embaixo e 72 de cada lado; no 1:1, 80, 120 e 60. A entrega diz isso ao integrante.
+**O vídeo 4:5 e as imagens.** A mesma página se recompõe em 4:5 para o vídeo do feed: as cenas, os tempos e a trilha são os mesmos, e cada item se reposiciona na zona do formato. A zona vem da tabela das redes do Motor de vídeo: a de anúncio do feed da Meta (`ads_meta_feed`, no 4:5 de 1080 por 1350, 135 px em cima e embaixo e 108 de cada lado; no 1:1, 108 em todos os lados), um respiro de design, porque no feed a interface não cobre a peça. Com um Motor antigo, sem essa zona, o app usa a zona do feed do Instagram e a entrega diz isso ao integrante, pedindo a atualização.
 
 ## 2. O arquivo
 

@@ -7,23 +7,29 @@
 // to stdout with --json; progress goes to stderr; every failure has a stable code; every result
 // carries `next_step` with what comes next.
 
-import { readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { actorInput, adsToItems, collectionSources, looksLikeAdList } from "./lib/adlibrary.mjs";
 import { apifyAccess, apifyApi, canCollect, chargeCeiling, estimateUsd, keySetup, runActor } from "./lib/apify.mjs";
 import { brl, learningBudget } from "./lib/budget.mjs";
-import { ADS_DIR, addJournal, briefingTemplate, campaignSlug, checkBriefing, hostOf, layout, parseMoney, readJournal, readState, requireCampaign, writeState } from "./lib/campaign.mjs";
+import { ADS_DIR, addJournal, BRIEF_FIELDS, briefingTemplate, campaignSlug, checkBriefing, hostOf, layout, parseMoney, readJournal, readState, requireCampaign, writeState } from "./lib/campaign.mjs";
 import { approvalContent, checkConcepts, CONFIDENCE_LABELS, confidenceChanges, ENABLED_PLACEMENTS, PLACEMENTS, TEMPLATES } from "./lib/concepts.mjs";
 import { checkCopy } from "./lib/copy.mjs";
 import { CAPTURE_ERRORS, engineArgs, findVideoRender, INSTALL_VIDEO_RENDER, INSTALL_VIDEO_RENDER_FIX, requireVideoRender, runEngine } from "./lib/engine.mjs";
 import { adCardsToItems, applyTags, declaredToItems, mergeItems, readEvidence, readingKind, summarize } from "./lib/evidence.mjs";
 import { copyFile, dirsIn, ensureDir, filesIn, hashJson, isFile, removeDir, sha256File } from "./lib/files.mjs";
 import { campaignLinks, linksMarkdown } from "./lib/links.mjs";
+import { checkMatrix, matrixFromConcepts, matrixMarkdown } from "./lib/matrix.mjs";
+import { auditPage, pageBriefMarkdown } from "./lib/page.mjs";
 import { commentsToItems, instagramPostsToItems, partnerApps, partnerKind } from "./lib/partners.mjs";
+import { applyPlanToBriefing, briefFromPlan, findPlan } from "./lib/plan.mjs";
+import { checkSearch, searchMarkdown } from "./lib/search.mjs";
 import { beatGrid, checkPiece, checkPoster, draftPiece, eventsOf, FONT_FILE, fontWeight, IMAGE_FILE, imageSize, imageTarget, pageHtml, paletteFrom, posterOf, screenTexts } from "./lib/pieces.mjs";
 import { conceptsMarkdown, evidenceMarkdown, launchMarkdown, textsMarkdown } from "./lib/report.mjs";
+import { proposeNextRound, reportToOwnResults, roundMarkdown } from "./lib/round.mjs";
+import { sequenceMarkdown, targetSequence } from "./lib/sequence.mjs";
 import { AppError, isoDay, parseArgs, progress, projectRoot, readJson, slugify, toPosix, writeFileAtomic, writeJson } from "./lib/util.mjs";
 
 const SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
@@ -36,13 +42,14 @@ const SCRIPT_COMMAND = `node ${toPosix(ROOT, join(SCRIPTS_DIR, "ads.mjs"))}`;
 const LABELS = readJson(join(APP_DIR, "references", "etiquetas.json"), { dimensions: {} });
 const META = readJson(join(APP_DIR, "references", "meta-anuncios.json"), {});
 const SOURCES = readJson(join(APP_DIR, "references", "fontes.json"), {});
+const GOOGLE = readJson(join(APP_DIR, "references", "google-busca.json"), {});
 const RUNTIME_FILES = ["ad.js", "ad.css"];
 const FPS = 30;
 /** How long a paid collection stays fresh, in hours: the same search the next day is paid again. */
 const FRESH_COLLECTION_HOURS = 24;
 const ARG_SPEC = {
   flags: ["json", "force", "refresh", "confirm-cost"],
-  options: ["cost", "daily", "event", "note", "kind", "url", "template", "apify-url"],
+  options: ["cost", "daily", "event", "note", "kind", "url", "template", "apify-url", "report"],
 };
 
 const rel = (path) => toPosix(ROOT, path);
@@ -240,7 +247,7 @@ function stageOf(ctx) {
   if (!ctx.state.copy?.passed) return step("textos", "Falta a conferência dos textos dos anúncios.", `copy ${ctx.slug}`);
   if (!ctx.state.delivered) return step("entrega", "Tudo conferido: falta montar a entrega.", `deliver ${ctx.slug}`);
   if ((ctx.state.round ?? 0) < (ctx.state.delivered.round ?? 1)) return step("diario", "Falta registrar a rodada no diário.", `journal ${ctx.slug}`);
-  return step("pronta", "Rodada entregue e registrada. A próxima começa quando houver resultado da campanha.", null);
+  return step("pronta", "Rodada entregue e registrada. Com a leitura do app de medição, round next lê os resultados e propõe a rodada seguinte.", null);
 }
 
 function statusCommand(positionals) {
@@ -266,17 +273,38 @@ function statusCommand(positionals) {
 
 const PUBLIC_FIELDS = ["marca", "produto", "oferta", "preco", "pagina", "site", "botao", "evento", "verba_diaria", "custo_por_evento", "publico", "le_nome", "padrao", "angulos_site", "termos", "regras", "prova", "concorrentes", "palavras_busca", "perfis", "pais", "parametros_url"];
 
+/**
+ * What the approved plan answers of the briefing: the empty lines of briefing.md take the plan's
+ * values, each remembered in the state as `plano`, so the AI never asks or invents them.
+ */
+function fillFromPlan(ctx) {
+  const plan = findPlan(ROOT);
+  if (!plan) return { plan: null, filled: [] };
+  const fromPlan = briefFromPlan(plan, { today: isoDay() });
+  const applied = applyPlanToBriefing(readFileSync(ctx.paths.briefing, "utf8"), fromPlan.fields);
+  if (applied.filled.length) {
+    writeFileAtomic(ctx.paths.briefing, applied.text);
+    ctx.state.brief_sources = { ...(ctx.state.brief_sources ?? {}), ...Object.fromEntries(applied.filled.map((key) => [key, "plano"])) };
+    ctx.state.plan = fromPlan.plan;
+    writeState(ctx.paths, ctx.state);
+  }
+  return { plan: fromPlan.plan, filled: applied.filled };
+}
+
 function briefCommand(positionals) {
   const ctx = campaignOf(positionals[0]);
+  const fromPlan = fillFromPlan(ctx);
   const checked = briefOf(ctx);
   const brief = checked.brief;
   const fields = Object.fromEntries(PUBLIC_FIELDS.filter((key) => brief[key] !== undefined && brief[key] !== null && !(Array.isArray(brief[key]) && !brief[key].length)).map((key) => [key, brief[key]]));
+  const sources = Object.fromEntries(BRIEF_FIELDS.filter((field) => brief[field.key] !== undefined && brief[field.key] !== null && !(Array.isArray(brief[field.key]) && !brief[field.key].length)).map((field) => [field.key, ctx.state.brief_sources?.[field.key] ?? "integrante"]));
+  const fromPlanKeys = Object.keys(sources).filter((key) => sources[key] === "plano");
   const budget = brief.verba_diaria > 0 ? learningBudget({ daily: brief.verba_diaria, cost: brief.custo_por_evento, event: brief.evento ?? null }) : null;
   const capture = ctx.state.capture ?? null;
   const site = brief.site ?? brief.pagina ?? null;
   let next;
   if (!checked.complete) {
-    next = { action: "ask", command: null, say: "Pergunte ao integrante, numa mensagem só, o que falta (questions). Grave as respostas no briefing.md, sem inventar oferta, preço ou número, e rode brief de novo." };
+    next = { action: "ask", command: null, say: fromPlan.plan ? `${fromPlanKeys.length} campo(s) vieram do plano ${fromPlan.plan.plan}. Pergunte ao integrante, numa mensagem só, o que falta (questions). Grave as respostas no briefing.md, sem inventar oferta, preço ou número, e rode brief de novo.` : "Pergunte ao integrante, numa mensagem só, o que falta (questions). Grave as respostas no briefing.md, sem inventar oferta, preço ou número; oferta, preço e verba sem plano são trabalho do app de plano. Rode brief de novo." };
   } else if (site && !capture) {
     next = { action: "capture", command: command(`capture ${ctx.slug}`), say: "Copie a marca do site (logo, cores e telas) antes das peças." };
   } else {
@@ -291,6 +319,10 @@ function briefCommand(positionals) {
     questions: checked.missing.map((entry) => entry.question),
     problems: checked.problems,
     fields,
+    sources,
+    plan: fromPlan.plan ?? ctx.state.plan ?? null,
+    filled_from_plan: fromPlanKeys,
+    filled_now: fromPlan.filled,
     budget: budget ? { viable: budget.viable, max_cost_per_event: budget.max_cost_per_event, floor_per_set: budget.floor_per_set, say: budget.say } : null,
     capture: capture ? { site: capture.site, dir: capture.dir, failed: capture.failed ?? null } : null,
     next_step: next,
@@ -781,6 +813,7 @@ async function pieceCommand(positionals, values) {
   if (values.template !== undefined && !TEMPLATES.includes(values.template)) throw usage(`--template aceita: ${TEMPLATES.join(", ")}.`);
   const engine = requireVideoRender(ROOT);
   const zones = await adZones(engine);
+  ctx.state.zones_source = zones.source;
   const dir = join(ctx.paths.pieces, key);
   ensureDir(dir);
   const pecaPath = join(dir, "peca.json");
@@ -1092,7 +1125,8 @@ async function finalPlacement(ctx, key, concept, id, { engine, paths, piece, aud
     const rendered = await engineCall(engine, engineArgs.render({ page: rel(paths.page), out: rel(silent), format: placement.format, fps: FPS, sub: 2 }));
     for (const warning of rendered.warnings ?? []) warnings.push(`Página ${placement.format}: ${warning}`);
     await engineCall(engine, engineArgs.mix({ video: rel(silent), out: rel(video), music: audio.music, sfx: audio.sfx, fadeOut: 0.4 }));
-    const accepted = await engineCall(engine, engineArgs.accept({ page: rel(paths.page), format: placement.format, beats: rel(paths.grid), video: rel(video), networks: ["feed"] }));
+    const feedZone = ctx.state.zones_source === "ads_meta_feed" ? "ads_meta_feed" : "feed";
+    const accepted = await engineCall(engine, engineArgs.accept({ page: rel(paths.page), format: placement.format, beats: rel(paths.grid), video: rel(video), networks: [feedZone] }));
     let media = null;
     try {
       media = await engineCall(engine, engineArgs.probe({ file: rel(video) }));
@@ -1103,7 +1137,7 @@ async function finalPlacement(ctx, key, concept, id, { engine, paths, piece, aud
     if (media && !(media.width === width && media.height === height)) summary.failed.push({ name: "video_size", summary: `O vídeo tem ${media.width}×${media.height}; o esperado é ${width}×${height}.`, fix: null });
     if (media && !media.has_audio) summary.failed.push({ name: "has_audio", summary: "O vídeo saiu sem som.", fix: null });
     const passed = summary.passed && summary.failed.length === 0;
-    writeJson(report, { app: APP, command: "final", placement: id, generated_at: nowIso(), campaign: ctx.slug, concept: key, file: rel(video), zone: "feed", zone_note: "Conferido na zona do feed do Instagram: a tabela de redes do Motor de vídeo não tem a zona de anúncio do feed.", passed, failed: summary.failed, media, accept: accepted });
+    writeJson(report, { app: APP, command: "final", placement: id, generated_at: nowIso(), campaign: ctx.slug, concept: key, file: rel(video), zone: feedZone, zone_note: feedZone === "ads_meta_feed" ? "Conferido na zona de anúncio do feed da Meta, da tabela de redes do Motor de vídeo." : "Conferido na zona do feed do Instagram: o Motor de vídeo instalado ainda não tem a zona de anúncio do feed; atualize-o para a conferência certa.", passed, failed: summary.failed, media, accept: accepted });
     return { placement: id, format: placement.format, kind: "video", file: rel(video), passed, failed: summary.failed.map((item) => item.name), report: rel(report) };
   }
   progress(`Final: a imagem ${placement.format}`);
@@ -1147,6 +1181,102 @@ function pieceTexts(dir) {
     }
     return texts;
   }
+}
+
+// ---------------------------------------------------------------- the matrix, the page and the Search
+
+function matrixCommand(positionals) {
+  const ctx = campaignOf(positionals[0]);
+  let data = null;
+  let fromConcepts = false;
+  if (isFile(ctx.paths.matrix)) {
+    data = readJson(ctx.paths.matrix, null);
+    if (!data) throw new AppError("matrix_invalid", `${rel(ctx.paths.matrix)} não é um JSON válido.`, "Confira vírgulas e aspas e rode matrix de novo.");
+  } else {
+    const brief = briefOf(ctx).brief;
+    const evidence = readEvidence(ctx.paths.evidence, ctx.slug);
+    const { concepts } = loadConcepts(ctx, { brief, evidence });
+    data = matrixFromConcepts(concepts, LABELS);
+    fromConcepts = true;
+  }
+  const checked = checkMatrix(data, { labels: LABELS });
+  if (fromConcepts) writeJson(ctx.paths.matrix, data);
+  writeFileAtomic(ctx.paths.matrixMd, matrixMarkdown(checked, { campaign: ctx.slug }));
+  ctx.state.matrix = { at: nowIso(), from_concepts: fromConcepts, ...checked.counts };
+  writeState(ctx.paths, ctx.state);
+  const recordings = checked.pieces.filter((piece) => piece.needs_recording);
+  return {
+    ...base("matrix"),
+    campaign: ctx.slug,
+    from_concepts: fromConcepts,
+    files: { matrix: rel(ctx.paths.matrix), markdown: rel(ctx.paths.matrixMd) },
+    angles: checked.angles,
+    pieces: checked.pieces,
+    counts: checked.counts,
+    warnings: checked.warnings,
+    next_step: {
+      action: fromConcepts ? "concepts" : "pieces",
+      command: null,
+      say: fromConcepts
+        ? `A matriz saiu dos ${checked.counts.angles} conceitos: ${checked.counts.pieces} peças. Para uma leva maior, escreva matriz.json como o guia mostra e rode matrix de novo.`
+        : `${checked.counts.angles} ângulos, ${checked.counts.pieces} peças${recordings.length ? `, ${recordings.length} a gravar pelo integrante` : ""}. Cada ângulo sem conceito pede um conceito em conceitos.json; o resto segue por piece, preview e final.`,
+    },
+  };
+}
+
+function pageCommand(positionals) {
+  const [sub, name] = positionals;
+  if (!["brief", "audit"].includes(sub)) throw usage("Use page brief <campanha> ou page audit <campanha>.");
+  const ctx = campaignOf(name);
+  const brief = briefOf(ctx).brief;
+  const plan = findPlan(ROOT);
+  let concepts = [];
+  if (isFile(ctx.paths.concepts)) {
+    try {
+      concepts = loadConcepts(ctx, { brief, evidence: readEvidence(ctx.paths.evidence, ctx.slug) }).concepts;
+    } catch {
+      concepts = [];
+    }
+  }
+  if (sub === "brief") {
+    const planPagePath = plan ? join(dirname(plan.file), "pagina.md") : null;
+    const planPage = planPagePath && isFile(planPagePath) ? rel(planPagePath) : null;
+    const markdown = pageBriefMarkdown({ campaign: ctx.slug, brief, concepts, plan: plan?.data ?? null, planPage, generatedAt: nowIso() });
+    writeFileAtomic(ctx.paths.pageBrief, markdown);
+    const open = (markdown.match(/\[a decidir\]/g) ?? []).length;
+    return { ...base("page"), sub, campaign: ctx.slug, file: rel(ctx.paths.pageBrief), plan: plan ? { plan: plan.slug, state: plan.data.state } : null, concepts: concepts.map((concept) => concept.key), open_decisions: open, next_step: { action: "handoff", command: command(`page audit ${ctx.slug}`), say: `O briefing da página está em ${rel(ctx.paths.pageBrief)}${open ? `, com ${open} ponto(s) [a decidir] para perguntar ao integrante numa mensagem só` : ""}. Quando a página estiver no ar, capture o site e confira.` } };
+  }
+  const capture = findCapture(ctx, brief);
+  if (!capture) throw fail("capture_missing", "Não há captura do site para conferir a página.", `Rode ${command(`capture ${ctx.slug}`)} e depois ${command(`page audit ${ctx.slug}`)}.`);
+  const audit = auditPage({ capture: capture.data, brief, concepts, plan: plan?.data ?? null });
+  writeJson(ctx.paths.pageAudit, { app: APP, campaign: ctx.slug, checked_at: nowIso(), capture: rel(join(capture.dir, "captura.json")), ...audit });
+  return { ...base("page"), sub, campaign: ctx.slug, file: rel(ctx.paths.pageAudit), ...audit, next_step: { action: audit.counts.atencao ? "fix" : "ok", command: null, say: audit.say } };
+}
+
+function searchCommand(positionals) {
+  const ctx = campaignOf(positionals[0]);
+  const brief = briefOf(ctx).brief;
+  if (!isFile(ctx.paths.search)) throw new AppError("search_missing", `Ainda não há anúncios da Busca em ${rel(ctx.paths.search)}.`, `Escreva busca.json no formato de references/busca.md e rode ${command(`search ${ctx.slug}`)}.`);
+  const data = readJson(ctx.paths.search, null);
+  if (!data) throw new AppError("search_invalid", `${rel(ctx.paths.search)} não é um JSON válido.`, "Confira vírgulas e aspas e rode search de novo.");
+  const checked = checkSearch(data, { limits: GOOGLE, terms: brief.termos ?? [], numberSourced: /n[úu]mero/i.test(brief.prova ?? "") });
+  const at = nowIso();
+  writeJson(ctx.paths.searchChecked, { app: APP, campaign: ctx.slug, checked_at: at, ...checked });
+  writeFileAtomic(ctx.paths.searchMd, searchMarkdown(checked, { campaign: ctx.slug }));
+  ctx.state.search = { at, passed: checked.passed, counts: checked.counts };
+  writeState(ctx.paths, ctx.state);
+  return {
+    ...base("search"),
+    campaign: ctx.slug,
+    passed: checked.passed,
+    files: { checked: rel(ctx.paths.searchChecked), markdown: rel(ctx.paths.searchMd) },
+    counts: checked.counts,
+    problems: checked.problems,
+    warnings: checked.warnings,
+    next_step: checked.passed
+      ? { action: "handoff", command: null, say: `Anúncios da Busca conferidos: ${rel(ctx.paths.searchMd)} traz o que o integrante cola no Google Ads. Mostre os avisos, se houver; quem cria a campanha é ele.` }
+      : { action: "fix", command: command(`search ${ctx.slug}`), say: `${checked.problems.length} problema(s): corrija cada item de problems em busca.json e rode search de novo.` },
+  };
 }
 
 function copyHash(ctx, concepts, terms) {
@@ -1235,7 +1365,7 @@ async function deliverCommand(positionals) {
   if (budget?.viable === false) pending.push("Escolher uma das saídas da conta da verba: com a verba e o custo de hoje, o conjunto não sai da fase de aprendizado.");
   if (budget && budget.viable === null) pending.push(`Confirmar o custo por evento: para sair do aprendizado, cada evento precisa custar até ${brl(budget.max_cost_per_event)}.`);
   for (const concept of concepts.filter((item) => item.proof.type === "numero")) pending.push(`Confirmar que o número da prova de ${concept.key} (${concept.proof.source}) continua valendo no dia de publicar.`);
-  writeFileAtomic(ctx.paths.launch, launchMarkdown(concepts, { campaign: ctx.slug, brief, budget, pending, generatedAt }));
+  writeFileAtomic(ctx.paths.launch, launchMarkdown(concepts, { campaign: ctx.slug, brief, budget, pending, generatedAt, zonesSource: ctx.state.zones_source ?? null }));
   const copyReport = readJson(ctx.paths.copy, null);
   writeJson(ctx.paths.report, {
     app: APP,
@@ -1310,6 +1440,96 @@ function journalCommand(positionals, values) {
   };
 }
 
+// ---------------------------------------------------------------- the next round and the sequence of the target date
+
+/** The newest report.json the measurement app wrote in this project, or null. */
+function newestReport() {
+  const dir = join(ROOT, "ads-insights", "leituras");
+  if (!existsSync(dir)) return null;
+  const files = readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join(dir, entry.name, "report.json"))
+    .filter((file) => isFile(file));
+  if (!files.length) return null;
+  files.sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
+  return files[0];
+}
+
+function roundCommand(positionals, values) {
+  const [sub, name] = positionals;
+  if (sub !== "next") throw usage("Use: round next <campanha> [--report <report.json>].");
+  const ctx = campaignOf(name);
+  const brief = briefOf(ctx).brief;
+  const evidence = readEvidence(ctx.paths.evidence, ctx.slug);
+  const { concepts } = loadConcepts(ctx, { brief, evidence });
+  const file = values.report ? projectInput(ctx, values.report) : newestReport();
+  if (!file) throw new AppError("report_missing", "Não há leitura do app de medição neste projeto.", "Importe o export da campanha no app de medição e julgue (report); ou passe --report <arquivo> com o report.json de uma leitura.");
+  const report = readInput(file);
+  let reading;
+  try {
+    reading = reportToOwnResults(report, { concepts });
+  } catch (error) {
+    if (error.code === "report_invalid") throw new AppError("report_invalid", `${rel(file)}: ${error.message}`, "Passe o report.json que o app de medição gravou em ads-insights/leituras/<leitura>/.");
+    throw error;
+  }
+  if (!reading.items.length) throw new AppError("report_unmatched", `Nenhuma linha de ${rel(file)} casou com os anúncios desta campanha.`, "Os nomes dos anúncios no export precisam ser os de entrega/nomes.json; quando o site não lê o nome, ligue cada linha no app de medição (link --names) e julgue de novo.");
+  const options = { file: rel(file), root: ROOT, campaignDir: ctx.paths.dir, labels: LABELS, today: isoDay() };
+  const merged = mergeItems(evidence, declaredToItems(reading, options));
+  const summary = saveEvidence(ctx, evidence);
+  const resultIds = Object.fromEntries(reading.items.map((item) => [item.ad_name, `res-${slugify(item.id, 36)}`]));
+  const current = ctx.state.delivered?.round ?? (ctx.state.round || 1);
+  const proposal = proposeNextRound(report, { concepts, brief, round: current, resultIds });
+  const generatedAt = nowIso();
+  writeJson(ctx.paths.round, { ...proposal, campaign: ctx.slug, report: rel(file), generated_at: generatedAt });
+  writeFileAtomic(ctx.paths.roundMd, roundMarkdown(proposal, { campaign: ctx.slug, report: rel(file) }));
+  addJournal(ctx.paths, ctx.slug, {
+    type: "results",
+    round: current,
+    reading: report.reading,
+    period: report.period ?? null,
+    report: rel(file),
+    rows: report.rows.filter((row) => resultIds[row.name]).map((row) => ({ name: row.name, concept: row.concept ?? null, verdict: row.verdict, certainty: row.certainty, where_it_fails: row.where_it_fails ?? null, result_id: resultIds[row.name] })),
+  });
+  ctx.state.next_round = { round: proposal.round, reading: report.reading, at: generatedAt };
+  writeState(ctx.paths, ctx.state);
+  return {
+    ...base("round"),
+    campaign: ctx.slug,
+    report: rel(file),
+    added: merged.added,
+    replaced: merged.replaced,
+    result_ids: resultIds,
+    ...proposal,
+    counts: summary.counts,
+    files: { round: rel(ctx.paths.round), markdown: rel(ctx.paths.roundMd), evidence: rel(ctx.paths.evidenceMd), journal: rel(ctx.paths.journal) },
+    next_step: { action: "write_concepts", command: command(`concepts ${ctx.slug}`), say: `${proposal.say} Escreva os conceitos da rodada ${proposal.round} em conceitos.json: os mantidos citam o id do resultado próprio (res-…) como evidência, os iterados mudam só o que where_it_fails aponta, os cortados não voltam iguais, e os nomes terminam em -v${proposal.round}. Depois rode concepts e peça o sim.` },
+  };
+}
+
+function sequenceCommand(positionals) {
+  const ctx = campaignOf(positionals[0]);
+  const brief = briefOf(ctx).brief;
+  const plan = findPlan(ROOT);
+  if (!plan) throw new AppError("plan_missing", "Não há plano neste projeto para datar a sequência da data alvo.", "Monte e aprove o plano no app de plano: as fases de aquecimento e pico datam as quatro peças.");
+  let sequence;
+  try {
+    sequence = targetSequence({ plan: plan.data, brief, limits: META, today: isoDay() });
+  } catch (error) {
+    if (error.code === "plan_incomplete") throw new AppError("plan_incomplete", error.message, "Rode calendar e plan no app de plano: as fases de aquecimento e pico datam a sequência.");
+    throw error;
+  }
+  writeJson(ctx.paths.sequence, { ...sequence, campaign: ctx.slug, generated_at: nowIso() });
+  writeFileAtomic(ctx.paths.sequenceMd, sequenceMarkdown(sequence, { campaign: ctx.slug }));
+  return {
+    ...base("sequence"),
+    campaign: ctx.slug,
+    plan_slug: plan.slug,
+    ...sequence,
+    files: { json: rel(ctx.paths.sequence), markdown: rel(ctx.paths.sequenceMd) },
+    next_step: { action: "pieces", command: null, say: `${sequence.say} Cada peça nasce de um conceito com o modelo lista ou produto-em-uso e o texto de sequencia.md; a subida é programada dois dias antes da data, e quem cria os anúncios no Gerenciador é o integrante.` },
+  };
+}
+
 // ---------------------------------------------------------------- help, output, main
 
 const HELP = `Criativos para anúncios: a campanha de tráfego pago na Meta, da pesquisa à entrega conferida.
@@ -1334,8 +1554,14 @@ Comandos
   approve <campanha> preview <conceito>   Registra o sim do integrante à prévia.
   final <campanha> <conceito>    O vídeo final conferido na zona segura dos anúncios.
   copy <campanha>                Confere os textos dos anúncios e os textos na tela.
+  matrix <campanha>              A matriz da primeira leva: ângulos cruzados com formatos (matriz.json, ou os conceitos).
+  page brief <campanha>          Escreve o briefing da página de destino a partir do plano e dos conceitos.
+  page audit <campanha>          Confere a página viva pela captura do site.
+  search <campanha>              Confere os anúncios de texto da Busca do Google (busca.json).
   deliver <campanha>             Monta a entrega: arquivos com os nomes, textos, lançamento e relatório.
   journal <campanha>             Registra a rodada no diário.
+  round next <campanha>          Lê o report.json do app de medição: os resultados próprios entram na evidência e a rodada seguinte é proposta.
+  sequence <campanha>            As quatro peças datadas da data alvo (lista, oferta no ar, contagem regressiva, último dia), pelo plano.
   status <campanha>              Onde a campanha está e o próximo comando.
   list                           As campanhas deste projeto.
   help                           Esta ajuda.
@@ -1351,6 +1577,7 @@ Opções
   --confirm-cost                 (collect) Confirma uma coleta acima do limite de custo, depois do sim do integrante.
   --kind round|launched|note     (journal) O tipo do registro.
   --note "<texto>"               (journal) O texto do registro.
+  --report <arquivo>             (round) O report.json de uma leitura, no lugar do mais recente em ads-insights/leituras/.
   --json                         Saída em JSON, para a IA.`;
 
 function humanText(result) {
@@ -1424,6 +1651,10 @@ function humanText(result) {
     case "deliver":
       body = [`Entrega em ${result.dir}: ${result.files.length} arquivo(s). Textos: ${result.texts} · lançamento: ${result.launch}`, ...result.pending.map((item) => `  Pendente: ${item}`)];
       break;
+    case "round":
+    case "sequence":
+      body = [result.say];
+      break;
     case "journal":
       body = [`Diário: ${result.file} (${result.entries} registro(s)). Registrado: ${result.entry.type}.`];
       break;
@@ -1474,10 +1705,20 @@ async function main(argv) {
       return finalCommand(positionals);
     case "copy":
       return copyCommand(positionals);
+    case "matrix":
+      return matrixCommand(positionals);
+    case "page":
+      return pageCommand(positionals);
+    case "search":
+      return searchCommand(positionals);
     case "deliver":
       return deliverCommand(positionals);
     case "journal":
       return journalCommand(positionals, values);
+    case "round":
+      return roundCommand(positionals, values);
+    case "sequence":
+      return sequenceCommand(positionals);
     case "status":
       return statusCommand(positionals);
     case "list":

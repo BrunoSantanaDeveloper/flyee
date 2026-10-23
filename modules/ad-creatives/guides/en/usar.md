@@ -34,3 +34,20 @@ Shorter requests work too, such as "I want ads for my shop": the AI asks for the
 - The videos are animated: text, product screens and sound. If the market advertises with someone talking to the camera, the AI says so and leaves the script for you to record.
 - You create the campaign in Ads Manager. The app never enters your ad account.
 - Each ad gets a name that ties the result back to the piece. If your site changes the page according to the ad name, say so in the brief: the app follows the site's pattern.
+
+## With the approved plan
+
+If the project has the plan from the planning app, the AI starts from it: the offer, the price, the page, the event, the phase budget, the audience, the dates and the link rule enter the briefing with no question, and it says what came from there. It lays out the first wave as a matrix, 3 to 4 different ideas across several formats, instead of variations of one idea; writes the landing page briefing and audits the live page before you turn the campaign on; and, when the plan includes Google Search, delivers the text ads checked, ready to paste into Google Ads.
+
+- "Build the matrix of the first wave."
+- "The offer page is ready. Check it before I turn the campaign on."
+- "Write the Google Search ads."
+
+## After the first read
+
+When the measurement app judges your ads, the AI reads each result and proposes the next round: what scaled stays and gains two variations of the same opening, what needs to change changes only where it failed (the first three seconds, the middle or the page), and what was cut never comes back the same. Your own ads' results become the strongest evidence of the new wave, and the names end in v2, v3, so the next read knows which round each piece belongs to.
+
+For the target date, it prepares the four pieces the plan dates: the list opening, the offer live, the countdown and the last day, with the price, the deadline and the rules written, each to be scheduled two days before.
+
+- "The campaign read is out. What stays, what changes, what goes?"
+- "Prepare the Black Friday pieces, with the offer and the deadline."

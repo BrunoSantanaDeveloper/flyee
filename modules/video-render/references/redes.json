@@ -246,6 +246,28 @@
         "Os posicionamentos de Stories cortam em 60 segundos; os de Reels aceitam mais, mas um anúncio de até 15 segundos é o que a Meta recomenda. A tabela usa 60 segundos por cautela."
       ]
     },
+    "ads_meta_feed": {
+      "label": "Anúncios Meta (feed do Instagram e do Facebook)",
+      "aliases": ["meta-ads-feed", "ads-meta-feed", "anuncios-meta-feed", "facebook-ads-feed", "instagram-ads-feed"],
+      "formats": ["4:5", "1:1"],
+      "recommended_format": "4:5",
+      "min_duration_s": 1,
+      "max_duration_s": 60,
+      "recommended_duration_s": 15,
+      "safe_zone": {
+        "4:5": { "top": 135, "bottom": 135, "left": 108, "right": 108 },
+        "1:1": { "top": 108, "bottom": 108, "left": 108, "right": 108 }
+      },
+      "captions": { "burn_in": true, "max_chars_per_line": 34, "lines": 2, "note": "O feed toca sem som até o toque: o texto na tela conta a história sozinho." },
+      "loudness": { "lufs": -14, "true_peak_dbtp": -1 },
+      "max_file_mb": 4096,
+      "checked_on": "2026-10-23",
+      "notes": [
+        "O Guia de Anúncios da Meta, conferido em 2026-10-23, dá os tamanhos do feed (1080 por 1350 no 4:5 e 1080 por 1080 no 1:1) e os limites de texto, mas não publica recuos de interface para o feed: no feed a interface não cobre a peça. Os recuos aqui são o respiro de design que os guias de layout usam, 10% em cima e embaixo e 10% de cada lado, para o texto do anúncio não encostar na borda nem brigar com o texto principal que aparece junto da peça.",
+        "A prévia do Gerenciador de Anúncios mostra a zona segura por posicionamento e é a conferência final antes de publicar.",
+        "Um anúncio de até 15 segundos é o que a Meta recomenda; o feed aceita mais, e a tabela usa 60 segundos por cautela, como nos anúncios de Reels e Stories."
+      ]
+    },
     "ads_tiktok": {
       "label": "Anúncios TikTok",
       "aliases": ["tiktok-ads", "ads-tiktok", "anuncios-tiktok"],

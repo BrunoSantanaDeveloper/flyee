@@ -1,0 +1,147 @@
+{
+  "interface_version": 1,
+  "app": "ads-insights",
+  "reading": "meta-testes",
+  "source": "meta",
+  "level": "ad",
+  "period": {
+    "start": "2026-10-02",
+    "end": "2026-10-15"
+  },
+  "event": "Lead",
+  "allowable_brl": 40,
+  "allowable_source": "contrato de medição",
+  "generated_at": "2026-10-16T09:00:00.000Z",
+  "counts": {
+    "escalar": 1,
+    "manter": 0,
+    "iterar": 1,
+    "cortar": 1,
+    "negativar": 0,
+    "dado_insuficiente": 1
+  },
+  "rows": [
+    {
+      "name": "memoria-reels-lembra-v1",
+      "concept": "memoria",
+      "angle": "memoria",
+      "adset": "lotus-bf26-frio-amplo",
+      "verdict": "escalar",
+      "certainty": "confirmado",
+      "where_it_fails": null,
+      "reasons": [
+        "36 resultados a R$ 14,44 cada, dentro do permitido de R$ 40, com 26.000 impressões e 390 cliques no link."
+      ],
+      "readings": null,
+      "metrics": {
+        "spend": 520,
+        "impressions": 26000,
+        "hook_rate": 0.3,
+        "link_ctr_pct": 1.5,
+        "visits": 320,
+        "results": 36,
+        "cost_per_result_brl": 14.44
+      },
+      "legible": {
+        "hook_ctr": true,
+        "cost": true,
+        "visits": true
+      },
+      "spend_multiple": 13,
+      "cost_multiple": 0.36,
+      "legible_when": []
+    },
+    {
+      "name": "confianca-reels-branco-v1",
+      "concept": "confianca",
+      "angle": "confianca",
+      "adset": "lotus-bf26-frio-amplo",
+      "verdict": "iterar",
+      "certainty": "provavel",
+      "where_it_fails": "gancho",
+      "reasons": [
+        "12% passam dos 3 segundos contra 30% do melhor anúncio; o CTR do link de 0,6% e 9 resultados a R$ 48,90."
+      ],
+      "readings": null,
+      "metrics": {
+        "spend": 440,
+        "impressions": 24000,
+        "hook_rate": 0.12,
+        "link_ctr_pct": 0.6,
+        "visits": 130,
+        "results": 9,
+        "cost_per_result_brl": 48.9
+      },
+      "legible": {
+        "hook_ctr": true,
+        "cost": false,
+        "visits": true
+      },
+      "spend_multiple": 11,
+      "cost_multiple": 1.22,
+      "legible_when": [
+        "30 resultados para o custo"
+      ]
+    },
+    {
+      "name": "mtc-reels-pulso-v1",
+      "concept": "mtc",
+      "angle": "mtc",
+      "adset": "lotus-bf26-frio-amplo",
+      "verdict": "cortar",
+      "certainty": "provavel",
+      "where_it_fails": "anuncio",
+      "reasons": [
+        "Zero resultados depois de R$ 140 gastos, 3,5 vezes o custo permitido."
+      ],
+      "readings": null,
+      "metrics": {
+        "spend": 140,
+        "impressions": 9000,
+        "hook_rate": 0.18,
+        "link_ctr_pct": 0.9,
+        "visits": 70,
+        "results": 0,
+        "cost_per_result_brl": null
+      },
+      "legible": {
+        "hook_ctr": true,
+        "cost": false,
+        "visits": true
+      },
+      "spend_multiple": 3.5,
+      "cost_multiple": null,
+      "legible_when": []
+    },
+    {
+      "name": "outro-anuncio-sem-conceito",
+      "adset": "lotus-bf26-frio-amplo",
+      "verdict": "dado_insuficiente",
+      "certainty": "primeira-leitura",
+      "where_it_fails": null,
+      "reasons": [
+        "Menos de 1.000 impressões."
+      ],
+      "readings": null,
+      "metrics": {
+        "spend": 20,
+        "impressions": 600,
+        "hook_rate": null,
+        "link_ctr_pct": null,
+        "visits": 4,
+        "results": 0,
+        "cost_per_result_brl": null
+      },
+      "legible": {
+        "hook_ctr": false,
+        "cost": false,
+        "visits": false
+      },
+      "spend_multiple": 0.5,
+      "cost_multiple": null,
+      "legible_when": [
+        "1.000 impressões e 30 cliques"
+      ]
+    }
+  ]
+}

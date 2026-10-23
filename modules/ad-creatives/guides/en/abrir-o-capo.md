@@ -89,3 +89,21 @@ Before paying, the vertical videos can go out as test Reels, which Instagram sho
 ## Privacy
 
 Screenshots, readings and pieces stay in your project. The app connects only to your brand's site, to copy the logo, colours and screens, and to Apify, when you saved the key. The key stays on your computer, outside every project, and never goes through the conversation. No customer or patient data goes into the pieces: recreated screens use made up data.
+
+## The plan, the matrix, the page and Search
+
+The briefing reads the project's approved plan and fills what the plan answers, keeping the origin of each field: in the answer, each field says whether it came from the plan or from you. What the plan does not know stays a question, and nothing is invented.
+
+The first wave's matrix has 3 to 4 angles, each with three dimensions (barrier or motivator, hook family, visual style), crossed with formats, 8 to 12 pieces. Two angles that differ in one dimension only are the same idea tested twice, and the results read would not tell them apart: the app refuses them. Testimonial and founder formats come out as a script and a scene plan, for you to record with whoever agreed to appear.
+
+The landing page has its briefing (the first sentence per angle, what to show, the objections, the lines the law asks for, what the page does inside) and its audit through the site capture: the position of the first call against the screen height, the words the headline shares with the ad, prices and deadline against the plan, the legal lines in the captured text. What the capture did not bring comes out as unchecked, never as failed.
+
+The Google Search text ads follow Google's limits (up to 15 headlines of 30 characters, 4 descriptions of 90, paths of 15, the extensions) and the same promise, personal-attribute and forbidden-term checks as the Meta ads. The result is the list as you paste it into Google Ads; you create the campaign.
+
+Feed pieces (the 4:5 video and the images) are checked in Meta's feed ad zone when the video engine has it; with an older engine, in the Instagram feed zone, and the delivery says so.
+
+## The next round and the target-date sequence
+
+The measurement app's report enters as a declared reading of own results: each row that matches an ad of the campaign becomes an item with the verdict (scale, keep, iterate, cut, insufficient data), the certainty and the metrics as text, and the result's id is what the next concept's card cites. The round proposal applies three rules: what scaled asks for variations of the same hook, what got iterate changes only the part the read pointed at, and a cut concept never comes back the same (the angle leaves, or returns with another barrier, another hook and another proof). The round's names end in the next version, so the read ties each piece to its round.
+
+The target-date sequence reads the plan's phases: the list opens two days before the warm-up, the offer on the first day of the peak, the countdown in the middle and the last day at the end, with the plan's offer price, the deadline with its hour and the consumer-code lines. Each text goes through the same checks as the ads (promise, personal attribute, forbidden terms, character limits), the vertical is checked in the ads zone and the feed in the feed ad zone, and each piece is scheduled two days before to pass review.

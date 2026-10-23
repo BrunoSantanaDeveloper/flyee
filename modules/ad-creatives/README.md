@@ -6,7 +6,10 @@ Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook
 
 Na primeira campanha ainda não existe dado próprio de anúncio. O que existe é o que o mercado já paga: um anúncio que um concorrente mantém no ar há meses é um anúncio que funciona para ele. O app parte daí.
 
-- **O briefing.** A sua IA pergunta só o que falta: a oferta, a página de destino, o evento que a campanha vai otimizar, a verba por dia, o público e o que não pode ser dito. Nada é inventado: sem o dado, o campo fica em branco.
+- **O briefing.** Com o plano aprovado do app de plano no projeto, a oferta, o preço, a página, o evento, a verba da fase, o público, as datas e a regra de link já entram preenchidos, e a sua IA diz o que veio de lá. Ela pergunta só o que falta: os concorrentes, se o site lê o nome do anúncio, o que não pode ser dito. Nada é inventado: sem o dado, o campo fica em branco.
+- **A matriz da primeira leva.** Em vez de variações de uma ideia, de 3 a 4 ângulos cruzados com formatos (vídeo 9:16, vídeo 4:5, imagem, carrossel, depoimento, fundador), 8 a 12 peças. Dois ângulos parecidos demais são recusados; as peças com gente de verdade saem como roteiro para você gravar.
+- **A página de destino.** Uma skill própria escreve o briefing da página (a continuidade com o anúncio, as objeções, as linhas que a lei pede, o que a página faz por dentro) e confere a página viva pela captura do site: o chamado na primeira tela, as palavras em comum com o anúncio, o preço e o prazo contra o plano, as linhas legais.
+- **A Busca do Google.** Quando o plano tem a Busca, os anúncios de texto (títulos, descrições, caminhos, extensões) passam pelos limites do Google e pelos mesmos verificadores de promessa e termos proibidos, e saem prontos para colar no Google Ads.
 - **A conta da verba antes de tudo.** A Meta precisa de cerca de 50 eventos em 7 dias para um conjunto sair da fase de aprendizado. Com a sua verba e o seu evento, o app mostra se a campanha chega lá e, se não chega, as três saídas, para você escolher antes de produzir qualquer peça.
 - **A pesquisa.** Com a chave do Apify, o app colhe sozinho os anúncios ativos dos concorrentes na Biblioteca de Anúncios da Meta. Sem ela, ele monta os links já filtrados e um roteiro curto do que fotografar; você abre os links no navegador e salva as capturas, e a sua IA lê cada uma. Nos dois casos, o app calcula há quanto tempo cada anúncio está no ar, quantas versões ele tem e o que se repete entre os concorrentes.
 - **Mais evidência, com os outros apps.** A Pesquisa no Instagram mede o seu perfil e o dos concorrentes, as Pesquisas no Instagram e no YouTube trazem o que o seu público escreve nos comentários, e a Análise de vídeo destrincha, segundo a segundo, o anúncio que um concorrente mantém há mais tempo.
@@ -62,14 +65,20 @@ Tudo fica em `anuncios/` dentro do seu projeto, uma pasta por campanha:
 | `anuncios/<campanha>/pesquisa/` | os links da Biblioteca, as suas capturas, as leituras delas e o que o Apify colheu |
 | `anuncios/<campanha>/evidencias.md` | o resumo do que o mercado mostra, com a origem e a data de cada dado |
 | `anuncios/<campanha>/conceitos.md` | as fichas dos três conceitos |
+| `anuncios/<campanha>/matriz.md` | a matriz da primeira leva: ângulos cruzados com formatos |
+| `anuncios/<campanha>/pagina-briefing.md` e `pagina-conferida.json` | o briefing da página de destino e a conferência da página viva |
+| `anuncios/<campanha>/busca.md` | os anúncios de texto da Busca do Google, conferidos |
 | `anuncios/<campanha>/pecas/<conceito>/` | as páginas, a prévia e as peças finais de cada conceito |
 | `anuncios/<campanha>/entrega/` | os vídeos e as imagens com o nome de cada anúncio, a capa, os textos e os nomes |
 | `anuncios/<campanha>/lancamento.md` | a estrutura, a conta da verba, o que conferir antes de ligar e o que não mexer |
-| `anuncios/<campanha>/diario.json` | a rodada, as hipóteses e as aprovações, para a próxima rodada |
+| `anuncios/<campanha>/diario.json` | a rodada, as hipóteses, as aprovações e os resultados lidos, para a próxima rodada |
+| `anuncios/<campanha>/rodada.md` | a proposta da rodada seguinte, a partir da leitura do app de medição |
+| `anuncios/<campanha>/sequencia.md` | as quatro peças da data alvo, datadas pelo plano, com a oferta, o prazo e as regras |
 | `capturas/` | as telas copiadas do site da marca |
 
 ## O que há de novo
 
+- 1.2.0: o briefing lê o plano aprovado e diz o que veio dele; a matriz da primeira leva (3 a 4 ângulos, 8 a 12 peças); a skill da página de destino, com o briefing e a conferência pela captura do site; os anúncios de texto da Busca do Google conferidos; o guia da política da Meta; as peças de feed conferidas na zona de anúncio do feed quando o Motor de vídeo a tem; a rodada seguinte a partir da leitura do app de medição, com os resultados próprios na evidência e os nomes terminando em v2; a sequência da data alvo com as quatro peças datadas pelo plano.
 - 1.1.1: numa sessão do Claude Code na nuvem, a coleta usa a chave do Apify guardada como segredo de rede do ambiente, que a sessão usa sem ver, e o app explica esse caminho quando a chave falta.
 - 1.1.0: o vídeo 4:5 e a imagem 4:5 ou 1:1 para o feed; a coleta pelo Apify, com a chave opcional; a evidência da Pesquisa no Instagram, da Pesquisa no YouTube e da Análise de vídeo; o guia de Reels de teste.
 - 1.0.0: primeira versão. Pesquisa guiada dos concorrentes, três conceitos com ficha, um vídeo vertical por conceito, a conferência dos textos, a conta da verba e o diário.

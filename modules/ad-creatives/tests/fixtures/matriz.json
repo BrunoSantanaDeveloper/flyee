@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "angles": [
+    { "key": "memoria", "driver": "barreira", "hook_family": "pergunta", "visual": "frase-que-some", "promise": "Lembrar o que ela contou, do começo ao fim da consulta.", "concept": "memoria" },
+    { "key": "confianca", "driver": "barreira", "hook_family": "contraste", "visual": "interface", "promise": "O que a paciente não disse fica em branco.", "concept": "confianca" },
+    { "key": "tempo", "driver": "motivador", "hook_family": "numero", "visual": "tela-do-produto", "promise": "A anamnese pronta antes de a paciente sair da sala." },
+    { "key": "presenca", "driver": "motivador", "hook_family": "cena", "visual": "pessoa-falando", "promise": "Olhar para quem você atende, e não para a tela." }
+  ],
+  "pieces": [
+    { "angle": "memoria", "format": "reels", "hook": "Ela contou no começo da consulta. No fim, você ainda lembrava?", "concept": "memoria" },
+    { "angle": "memoria", "format": "video-4-5", "hook": "Ela contou no começo da consulta. No fim, você ainda lembrava?", "concept": "memoria" },
+    { "angle": "memoria", "format": "imagem", "hook": "O que ela contou fica.", "concept": "memoria" },
+    { "angle": "confianca", "format": "reels", "hook": "A IA preencheu a anamnese. O que a paciente não disse ficou em branco.", "concept": "confianca" },
+    { "angle": "confianca", "format": "imagem", "hook": "Em branco é melhor do que inventado.", "concept": "confianca" },
+    { "angle": "tempo", "format": "reels", "hook": "Quantos minutos da sua noite vão em prontuário?" },
+    { "angle": "tempo", "format": "carrossel", "hook": "Três coisas que o prontuário faz enquanto você atende." },
+    { "angle": "presenca", "format": "reels", "hook": "Oito da noite. Ela já foi. Você ainda está digitando." },
+    { "angle": "presenca", "format": "video-4-5", "hook": "Oito da noite. Ela já foi. Você ainda está digitando." },
+    { "angle": "presenca", "format": "fundador", "hook": "Por que eu fiz o prontuário guardar a fala, e não o resumo." }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "video-render",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "tool",
   "trail": "divulgar",
   "title": {
@@ -136,8 +136,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Quando outro app precisa do Motor de vídeo e ele ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.",
-    "en": "When another app needs the Video engine and it is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
+    "pt-BR": "A tabela das redes ganha a zona de anúncio do feed da Meta (ads_meta_feed), com os recuos de 4:5 e 1:1 e a nota do que o Guia de Anúncios publica e do que é respiro de design; os apps que conferem peças de feed para anúncios passam a usar essa zona.",
+    "en": "The networks table gains the Meta feed ad zone (ads_meta_feed), with the 4:5 and 1:1 insets and the note on what the Ads Guide publishes and what is design margin; apps that check feed pieces for ads now use that zone."
   },
   "license": "member"
 }

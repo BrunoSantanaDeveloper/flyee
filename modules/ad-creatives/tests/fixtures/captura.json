@@ -1,0 +1,23 @@
+{
+  "format_version": 1,
+  "url": "https://www.prontuariolotus.com.br/assinar",
+  "final_url": "https://www.prontuariolotus.com.br/assinar",
+  "site": "prontuariolotus.com.br",
+  "captured_at": "2026-10-29T13:00:00.000Z",
+  "http_status": 200,
+  "viewports": { "desktop": { "width": 1440, "height": 900, "scale": 1, "full_height": 5400 }, "mobile": { "width": 390, "height": 844, "scale": 3, "full_height": 7200 } },
+  "layout": { "mobile": { "full_height": 7200, "viewport_height": 844, "headings": [{ "tag": "h1", "text": "O prontuário que lembra o que ela contou", "y": 310, "height": 96, "fraction": 0.043 }] } },
+  "brand": {
+    "name": "Prontuário Lótus",
+    "headline": "O prontuário que lembra o que ela contou",
+    "cta": [{ "text": "Assinar", "href": "https://www.prontuariolotus.com.br/assinar#planos", "background": "#1F6F78", "color": "#FFFFFF" }],
+    "prices": [{ "text": "R$ 2.388", "value": 2388, "currency": "BRL", "product": "Plano anual", "context": "de R$ 2.388 por R$ 1.990 por ano" }, { "text": "R$ 1.990", "value": 1990, "currency": "BRL", "product": "Plano anual", "context": "de R$ 2.388 por R$ 1.990 por ano" }]
+  },
+  "cookie_banner": { "desktop": { "clicked": true, "text": "Aceitar cookies" }, "mobile": null },
+  "raw": {
+    "headings": { "h1": ["O prontuário que lembra o que ela contou"], "h2": ["Como funciona", "Planos", "Perguntas frequentes"], "largest": "O prontuário que lembra o que ela contou", "largest_size": 48, "body_size": 16 },
+    "cta": [{ "text": "Assinar", "href": "https://www.prontuariolotus.com.br/assinar#planos", "tag": "a", "x": 620, "y": 560, "w": 200, "h": 56 }, { "text": "Ver planos", "href": "https://www.prontuariolotus.com.br/assinar#planos", "tag": "a", "x": 620, "y": 1900, "w": 200, "h": 56 }],
+    "prices": [{ "text": "R$ 2.388", "context": "de R$ 2.388 por R$ 1.990 por ano", "product": "Plano anual" }, { "text": "R$ 1.990", "context": "de R$ 2.388 por R$ 1.990 por ano", "product": "Plano anual" }],
+    "text_excerpt": "O prontuário que lembra o que ela contou. Para acupunturistas que atendem o dia inteiro. Assinar. Como funciona: a conversa vira anamnese, com o trecho de onde veio cada campo. Planos: anual de R$ 2.388 por R$ 1.990 por ano, parcelado, com a migração dos dados incluída, oferta válida até 27/11 às 23h59. Você tem 7 dias de arrependimento com devolução do valor. Perguntas frequentes. Política de privacidade. Usamos cookies para medir o site."
+  }
+}

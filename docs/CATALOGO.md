@@ -6,21 +6,21 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
-| [Criativos para anúncios](#ad-creatives) | 1.1.1 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
+| [Criativos para anúncios](#ad-creatives) | 1.2.0 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
 | [Medição e leitura de resultados](#ads-insights) | 1.0.0 | tool | escalar | — | — |
 | [Base de contatos e CRM](#contact-base) | 1.1.0 | workflow | vender | — | — |
 | [Pesquisa no Instagram](#instagram-research) | 1.0.2 | tool | planejar | — | `ad-creatives` |
 | [Plano de estratégia e mídia](#media-plan) | 1.1.0 | workflow | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.2 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.1 | tool | planejar | — | `ad-creatives`, `youtube-script` |
-| [Motor de vídeo](#video-render) | 1.0.1 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
+| [Motor de vídeo](#video-render) | 1.0.2 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
 | [Estúdio de vídeo](#video-studio) | 1.1.1 | workflow | divulgar | `video-render` | — |
 | [Pesquisa no YouTube](#youtube-research) | 1.0.2 | tool | planejar | — | `ad-creatives`, `youtube-script` |
 | [Roteiro para YouTube](#youtube-script) | 1.1.1 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
 
 ## ad-creatives
 
-**Criativos para anúncios** (Ad creatives) · versão 1.1.1 · workflow · trilha divulgar · testado em `claude_code`
+**Criativos para anúncios** (Ad creatives) · versão 1.2.0 · workflow · trilha divulgar · testado em `claude_code`
 
 > Prepara os criativos da sua campanha de tráfego pago na Meta (Instagram e Facebook): pesquisa os anúncios dos concorrentes, propõe três conceitos com a evidência de cada um e entrega os vídeos e as imagens conferidos, os textos dos anúncios e a conta da verba.
 
@@ -29,10 +29,15 @@ Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook
 **Skills**
 
 - `ad-creatives`: Prepara os criativos de uma campanha de tráfego pago na Meta (Instagram e Facebook): pesquisa os anúncios dos concorrentes, propõe três conceitos com a evidência de cada um, produz os vídeos e as imagens conferidos e entrega textos, nomes e a conta da verba. Use quando pedirem criativos, anúncios ou a primeira campanha paga. Para um vídeo animado avulso, use o Estúdio de vídeo.
+- `ad-landing-page`: Escreve o briefing da página de destino de uma campanha paga, a partir do plano e do que os anúncios prometem, e confere a página viva pela captura do site (o chamado na primeira tela, as palavras em comum com o anúncio, preço e prazo contra o plano, as linhas legais). Use quando pedirem a página do anúncio, a continuidade entre anúncio e página, ou a conferência da página antes de ligar.
 
 **Chaves externas**
 
 - `APIFY_TOKEN` (Token da API do Apify), opcional
+
+**Serve outros apps**
+
+- Guia: `modules/ad-creatives/references/interface.md`
 
 **Usa** `instagram-research`, `video-analysis`, `video-render`, `youtube-research` · **Usado por** —
 
@@ -44,6 +49,7 @@ Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook
 - shell: ffmpeg, ffprobe
 - shell: o navegador já instalado (Microsoft Edge, Google Chrome ou Chromium), aberto sem janela para fotografar a página
 - fs:read: a pasta da campanha em anuncios/<campanha>/, com os arquivos que você puser em materiais/ e as capturas de tela em pesquisa/capturas/
+- fs:read: media-plan/<plano>/plano.json e pagina.md, capturas/<site>/captura.json e ads-insights/leituras/<leitura>/report.json
 - fs:write: ./anuncios/ e ./capturas/
 - network: o site da marca que você indicar
 - network: api.apify.com
@@ -232,7 +238,7 @@ Assiste a vídeos por você, com imagem e som, e entrega uma descrição com tem
 
 ## video-render
 
-**Motor de vídeo** (Video engine) · versão 1.0.1 · tool · trilha divulgar · testado em `claude_code`
+**Motor de vídeo** (Video engine) · versão 1.0.2 · tool · trilha divulgar · testado em `claude_code`
 
 > Transforma uma página animada em vídeo pronto para as redes, com trilha original e efeitos na batida, prévia, a marca do seu site e conferência antes de publicar: capa, texto, área segura, volume e, por rede, formato e duração. É o motor que outros apps usam para renderizar.
 

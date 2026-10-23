@@ -77,5 +77,6 @@ Um arquivo com o mesmo nome de um que o Motor grava é substituído; a IA escolh
 
 ## O que há de novo
 
+- 1.0.2: a tabela das redes ganha a zona de anúncio do feed da Meta (4:5 e 1:1), com a nota do que a Meta publica e do que é respiro de design; os anúncios de feed de outros apps passam a ser conferidos nela.
 - 1.0.1: quando outro app precisa do Motor de vídeo e ele ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.
 - 1.0.0: primeira versão. Render em .mp4, .mov e .webm (com camada transparente) nos formatos 9:16, 4:5, 3:4, 1:1, 16:9 e sob medida; prévia, quadros e folhas de contato; trilha com arco e trilha em loop feitas em código, com a grade de batidas; efeitos na batida; batidas de qualquer música; mixagem no volume das redes; captura da marca a partir do site; conferência de capa, área segura, texto, cortes, loop, piscadas, tempo parado e volume, e de formato e duração em 12 destinos; uso por outros apps.

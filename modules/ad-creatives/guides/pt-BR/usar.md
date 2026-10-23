@@ -39,3 +39,20 @@ Funciona também com pedidos mais curtos, como "quero fazer anúncios para a min
 - "Troque o gancho do segundo conceito e refaça a prévia."
 - "Refaça a conta da verba com R$ 100 por dia."
 - "Montei a campanha. Pode registrar no diário que a estrutura coube?"
+
+## Com o plano aprovado
+
+Se o projeto tem o plano do app de plano, a IA começa por ele: a oferta, o preço, a página, o evento, a verba da fase, o público, as datas e a regra de link entram no briefing sem pergunta, e ela diz o que veio de lá. Ela monta a primeira leva como uma matriz, de 3 a 4 ideias diferentes em vários formatos, em vez de variações de uma ideia só; escreve o briefing da página de destino e confere a página viva antes de você ligar a campanha; e, quando o plano tem a Busca do Google, entrega os anúncios de texto conferidos para colar no Google Ads.
+
+- "Monta a matriz da primeira leva."
+- "A página da oferta está pronta. Confere antes de eu ligar."
+- "Escreve os anúncios da Busca do Google."
+
+## Depois da primeira leitura
+
+Quando o app de medição julgar os seus anúncios, a IA lê o resultado de cada um e propõe a rodada seguinte: o que escalou fica e ganha duas variações do mesmo começo, o que precisa mudar muda só onde falhou (os três primeiros segundos, o miolo ou a página), e o que foi cortado não volta igual. O resultado dos seus próprios anúncios vira a evidência mais forte da nova leva, e os nomes terminam em v2, v3, para a leitura seguinte saber de que rodada cada peça é.
+
+Para a data alvo, ela deixa prontas as quatro peças que o plano data: a abertura para a lista, a oferta no ar, a contagem regressiva e o último dia, com o preço, o prazo e as regras escritos, cada uma para subir programada dois dias antes.
+
+- "Saiu a leitura da campanha. O que fica, o que muda e o que sai?"
+- "Prepara as peças da Black Friday, com a oferta e o prazo."

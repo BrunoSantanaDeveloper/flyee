@@ -185,7 +185,7 @@ export function textsMarkdown(concepts, { campaign, brief, files }) {
 
 // ---------------------------------------------------------------- lancamento.md
 
-export function launchMarkdown(concepts, { campaign, brief, budget, pending = [], generatedAt }) {
+export function launchMarkdown(concepts, { campaign, brief, budget, pending = [], generatedAt, zonesSource = null }) {
   const names = concepts.map((concept) => `\`${concept.ad_name}\``).join(", ");
   const lines = [`# Notas de lançamento: ${campaign}`, ""];
   lines.push(`Escritas em ${day(generatedAt)}. O app não cria a campanha nem mexe na conta de anúncios: quem monta é você. Nada aqui é previsão de resultado.`, "");
@@ -195,7 +195,7 @@ export function launchMarkdown(concepts, { campaign, brief, budget, pending = []
   if (feed) {
     lines.push("- Em cada anúncio, o vídeo vertical vai para Stories e Reels, e o vídeo 4:5 ou a imagem vai para o feed, pela opção de personalizar a peça por posicionamento do Gerenciador.");
     lines.push("- Se o Gerenciador não deixar misturar as peças no mesmo anúncio, use só o vídeo vertical e confira na prévia do Gerenciador como ele aparece no feed.");
-    lines.push("- O vídeo 4:5 e as imagens foram conferidos na zona do feed do Instagram. A tabela de redes do Motor de vídeo ainda não tem a zona de anúncio do feed: confira a prévia do Gerenciador antes de publicar.");
+    lines.push(zonesSource === "ads_meta_feed" ? "- O vídeo 4:5 e as imagens foram conferidos na zona de anúncio do feed da Meta. A prévia do Gerenciador é a conferência final antes de publicar." : "- O vídeo 4:5 e as imagens foram conferidos na zona do feed do Instagram, porque o Motor de vídeo instalado ainda não tem a zona de anúncio do feed: atualize-o e confira a prévia do Gerenciador antes de publicar.");
   } else lines.push("- Em cada anúncio, o vídeo vertical vai para Stories e Reels.");
   lines.push("- Um conjunto só, e não um por conceito: com a verba dividida, nenhum conjunto aprende.", "");
   lines.push("## A conta da verba", "");

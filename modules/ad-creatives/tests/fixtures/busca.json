@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "campaigns": [
+    {
+      "name": "LOTUS-BF26-marca",
+      "kind": "marca",
+      "negatives": [],
+      "ad_groups": [
+        {
+          "name": "marca",
+          "keywords": [{ "text": "prontuário lótus", "match": "exata" }, { "text": "prontuario lotus acupuntura", "match": "frase" }],
+          "ads": [
+            {
+              "headlines": [{ "text": "Prontuário Lótus", "pin": 1 }, "Prontuário para acupuntura", "A anamnese que se escreve", "Anual pelo preço de 10 meses", "Migração dos dados incluída", "Teste sem cartão", "Dados guardados no Brasil", "Comece hoje", "Oferta até 27 de novembro", "Feito para o consultório"],
+              "descriptions": ["O prontuário que escreve a anamnese enquanto você atende. Anual por 10 meses até 27/11.", "Prontuário, agenda e lembretes num lugar só. Migração dos seus dados incluída."],
+              "path1": "acupuntura",
+              "path2": "oferta",
+              "final_url": "https://www.prontuariolotus.com.br/assinar?utm_source=google&utm_medium=cpc&utm_campaign=black-friday-2026&utm_content=marca&utm_term=prontuario-lotus"
+            }
+          ]
+        }
+      ],
+      "extensions": {
+        "sitelinks": [{ "text": "Preços", "url": "https://www.prontuariolotus.com.br/precos", "description1": "Mensal ou anual", "description2": "Sem fidelidade" }, { "text": "Como funciona", "url": "https://www.prontuariolotus.com.br/como-funciona" }],
+        "callouts": ["Teste sem cartão", "Dados no Brasil", "Suporte por WhatsApp"],
+        "snippet": { "header": "Destaques", "values": ["Prontuário", "Agenda", "Lembretes"] }
+      }
+    },
+    {
+      "name": "LOTUS-BF26-nao-marca",
+      "kind": "nao-marca",
+      "negatives": ["prontuário lótus", "grátis", "curso", "o que é"],
+      "ad_groups": [
+        {
+          "name": "prontuario-acupuntura",
+          "keywords": [{ "text": "prontuário para acupuntura", "match": "frase" }, { "text": "prontuario eletronico acupunturista", "match": "ampla" }],
+          "ads": [
+            {
+              "headlines": ["Prontuário para acupuntura", "A anamnese que se escreve", "Olhe para quem você atende", "Anual pelo preço de 10 meses", "Migração dos dados incluída", "Teste sem cartão", "Dados guardados no Brasil", "Feito para o consultório", "Oferta até 27 de novembro", "Comece hoje"],
+              "descriptions": ["Digitar durante a consulta tira a sua atenção. O prontuário escreve a anamnese por você.", "Prontuário, agenda e lembretes num lugar só. Teste sem cartão.", "Anual pelo preço de 10 meses até 27/11, com a migração dos dados incluída."],
+              "path1": "acupuntura",
+              "path2": "prontuario",
+              "final_url": "https://www.prontuariolotus.com.br/assinar?utm_source=google&utm_medium=cpc&utm_campaign=black-friday-2026&utm_content=nao-marca&utm_term=prontuario-acupuntura"
+            }
+          ]
+        }
+      ],
+      "extensions": { "sitelinks": [], "callouts": ["Teste sem cartão", "Dados no Brasil"] }
+    }
+  ]
+}

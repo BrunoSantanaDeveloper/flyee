@@ -89,3 +89,21 @@ Antes de pagar, os vídeos verticais podem sair como Reels de teste, que o Insta
 ## Privacidade
 
 As capturas, as leituras e as peças ficam no seu projeto. O app se conecta só ao site da sua marca, para copiar o logo, as cores e as telas, e ao Apify, quando você salvou a chave. A chave fica no seu computador, fora de todo projeto, e nunca passa pela conversa. Nenhum dado de cliente ou paciente entra nas peças: as telas recriadas usam dados fictícios.
+
+## O plano, a matriz, a página e a Busca
+
+O briefing lê o plano aprovado do projeto e preenche o que o plano responde, guardando a origem de cada campo: na resposta, cada campo diz se veio do plano ou de você. O que o plano não sabe continua sendo pergunta, e nada é inventado.
+
+A matriz da primeira leva tem de 3 a 4 ângulos, cada um com três dimensões (barreira ou motivador, família de gancho, estilo visual), cruzados com formatos, 8 a 12 peças. Dois ângulos que diferem numa dimensão só são a mesma ideia testada duas vezes, e a leitura de resultados não separaria um do outro: o app recusa. Os formatos de depoimento e de fundador saem como roteiro e plano de cena, para você gravar com quem autorizou aparecer.
+
+A página de destino tem o seu briefing (a primeira frase por ângulo, o que mostrar, as objeções, as linhas da lei, o que a página faz por dentro) e a sua conferência pela captura do site: a posição do primeiro chamado contra a altura da tela, as palavras do título em comum com o anúncio, os preços e o prazo contra o plano, as linhas legais no texto capturado. O que a captura não trouxe sai como não conferido, nunca como reprovado.
+
+Os anúncios de texto da Busca do Google seguem os limites do Google (até 15 títulos de 30 caracteres, 4 descrições de 90, caminhos de 15, as extensões) e os mesmos verificadores de promessa, atributo pessoal e termos proibidos dos anúncios da Meta. O resultado é a lista como você cola no Google Ads; quem cria a campanha é você.
+
+As peças de feed (o vídeo 4:5 e as imagens) são conferidas na zona de anúncio do feed da Meta quando o Motor de vídeo a tem; com um Motor antigo, na zona do feed do Instagram, e a entrega diz isso.
+
+## A rodada seguinte e a sequência da data alvo
+
+O relatório do app de medição entra como leitura declarada de resultados próprios: cada linha que casa com um anúncio da campanha vira um item com o veredito (escalar, manter, iterar, cortar, dado insuficiente), a certeza e as métricas como texto, e o id do resultado é o que a ficha do conceito seguinte cita. A proposta da rodada aplica três regras: o que escalou pede variações do mesmo gancho, o que recebeu iterar muda só a parte que a leitura apontou, e um conceito cortado não volta igual (o ângulo sai, ou volta com outra barreira, outro gancho e outra prova). Os nomes da rodada terminam na versão seguinte, para a leitura ligar cada peça à sua rodada.
+
+A sequência da data alvo lê as fases do plano: a lista abre dois dias antes do aquecimento, a oferta no primeiro dia do pico, a contagem regressiva no meio e o último dia no fim, com o preço da oferta do plano, o prazo com hora e as linhas do código do consumidor. Cada texto passa pelas mesmas conferências dos anúncios (promessa, atributo pessoal, termos proibidos, limites de caracteres), o vertical é conferido na zona dos anúncios e o feed na zona de anúncio do feed, e cada peça sobe programada dois dias antes para passar pela revisão.

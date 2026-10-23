@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "ad-creatives",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -18,19 +18,25 @@
   "min_core": ">=1.3.0",
   "entry": "skills/ad-creatives/SKILL.md",
   "files": [
+    "NOTICE.txt",
     "README.md",
     "guides/en/abrir-o-capo.md",
     "guides/en/usar.md",
     "guides/pt-BR/abrir-o-capo.md",
     "guides/pt-BR/usar.md",
     "references/analise-anuncio.md",
+    "references/busca.md",
     "references/conceitos.md",
     "references/etiquetas.json",
     "references/fontes.json",
+    "references/google-busca.json",
+    "references/interface.md",
     "references/lancamento.md",
+    "references/matriz.md",
     "references/meta-anuncios.json",
     "references/pagina-anuncio.md",
     "references/pesquisa-manual.md",
+    "references/politica-meta.md",
     "references/reels-de-teste.md",
     "runtime/ad.css",
     "runtime/ad.js",
@@ -45,11 +51,18 @@
     "scripts/lib/evidence.mjs",
     "scripts/lib/files.mjs",
     "scripts/lib/links.mjs",
+    "scripts/lib/matrix.mjs",
+    "scripts/lib/page.mjs",
     "scripts/lib/partners.mjs",
     "scripts/lib/pieces.mjs",
+    "scripts/lib/plan.mjs",
     "scripts/lib/report.mjs",
+    "scripts/lib/round.mjs",
+    "scripts/lib/search.mjs",
+    "scripts/lib/sequence.mjs",
     "scripts/lib/util.mjs",
-    "skills/ad-creatives/SKILL.md"
+    "skills/ad-creatives/SKILL.md",
+    "skills/ad-landing-page/SKILL.md"
   ],
   "external_credentials": [
     {
@@ -113,6 +126,14 @@
       }
     },
     {
+      "kind": "fs:read",
+      "scope": "media-plan/<plano>/plano.json e pagina.md, capturas/<site>/captura.json e ads-insights/leituras/<leitura>/report.json",
+      "reason": {
+        "pt-BR": "O plano aprovado preenche o briefing, dá o custo permitido, a regra de link e as datas da sequência; a captura do site confere a página de destino; a leitura do app de medição traz os resultados próprios para a rodada seguinte.",
+        "en": "The approved plan fills the briefing and gives the allowable cost, the link rule and the sequence dates; the site capture audits the landing page; the measurement app's reading brings the own results for the next round."
+      }
+    },
+    {
       "kind": "fs:write",
       "scope": "./anuncios/ e ./capturas/",
       "reason": {
@@ -162,8 +183,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Numa sessão do Claude Code na nuvem, a coleta usa a chave do Apify guardada como segredo de rede do ambiente, que a sessão usa sem ver, e o pedido da chave explica esse caminho, já que a página da chave não abre ali.",
-    "en": "In a Claude Code cloud session, the collection uses the Apify key kept as a network secret of the environment, which the session uses without seeing it, and the key request explains that path, since the key page does not open there."
+    "pt-BR": "O briefing lê o plano aprovado (oferta, preço, página, evento, verba da fase, público, datas, regra de link, custo permitido), marcando a origem de cada campo; a matriz de criativos (3 a 4 ângulos cruzados com formatos, 8 a 12 peças); a skill da página de destino (briefing e conferência pela captura do site); os anúncios de texto da Busca do Google conferidos; o guia da política da Meta; as peças de feed conferidas na zona de anúncio do feed quando o Motor de vídeo a tem; a rodada seguinte a partir da leitura do app de medição (os resultados próprios entram na evidência, um conceito cortado não volta igual, os nomes terminam em -v2); a sequência da data alvo com as quatro peças datadas pelo plano.",
+    "en": "The briefing reads the approved plan (offer, price, page, event, phase budget, audience, dates, link rule, allowable cost), marking the origin of each field; the creative matrix (3 to 4 angles crossed with formats, 8 to 12 pieces); the landing page skill (briefing and audit through the site capture); Google Search text ads checked; the Meta policy guide; feed pieces checked in the feed ad zone when the video engine has it; the next round from the measurement app's reading (own results enter the evidence, a cut concept never comes back the same, names end in -v2); the target-date sequence with four pieces dated by the plan."
   },
   "license": "member"
 }

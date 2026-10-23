@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-23",
+  "note": "Os limites dos anúncios de texto da Busca do Google (anúncios responsivos de pesquisa) e das extensões, como a ajuda do Google Ads os publica. O app recusa o que passa do limite e avisa o que só reduz a entrega. Os valores mudam com o tempo: o primeiro anúncio real de um integrante confere esta lista.",
+  "sources": [
+    { "what": "Sobre os anúncios responsivos de pesquisa: até 15 títulos de 30 caracteres e 4 descrições de 90; ao menos 3 títulos e 2 descrições; fixação por posição", "url": "https://support.google.com/google-ads/answer/7684791", "checked_on": "2026-10-23" },
+    { "what": "Sitelinks: texto de até 25 caracteres e duas descrições de até 35; frases de destaque de até 25; snippets estruturados com valores de até 25", "url": "https://support.google.com/google-ads/answer/2375416", "checked_on": "2026-10-23" }
+  ],
+  "headline": { "max_chars": 30, "min_count": 3, "max_count": 15, "recommended_count": 10 },
+  "description": { "max_chars": 90, "min_count": 2, "max_count": 4 },
+  "path": { "max_chars": 15, "count": 2 },
+  "pins": { "positions": [1, 2, 3], "note": "Fixar um título numa posição tira dele as outras; fixe só o que a regra pede (a marca na 1, o preço com data)." },
+  "sitelink": { "text_max_chars": 25, "description_max_chars": 35, "min_count": 2, "max_count": 6 },
+  "callout": { "max_chars": 25, "min_count": 2, "max_count": 10 },
+  "snippet": { "header_values": ["Serviços", "Tipos", "Destaques", "Cursos", "Marcas", "Modelos", "Estilos", "Bairros", "Comodidades", "Programas", "Seguros", "Destinos", "Graus", "Programas de estudo"], "value_max_chars": 25, "min_values": 3, "max_values": 10 },
+  "style": {
+    "no_exclamation_in_headline": true,
+    "max_caps_words_fraction": 0.3,
+    "note": "O Google recusa pontos de exclamação no título e símbolos repetidos; palavras inteiras em maiúsculas além de siglas reduzem a aprovação."
+  },
+  "match_types": ["ampla", "frase", "exata"],
+  "structure": {
+    "note": "Uma campanha para a marca (as palavras com o nome dela, correspondência exata) e uma para o não marca (o problema, a categoria, a profissão); as negativas da campanha de não marca incluem o nome da marca, e as da marca não incluem nada do produto. O lance inteligente aprende com cerca de 30 conversões em 30 dias; com menos, o lance por clique máximo é o começo.",
+    "source": "método, não regra da plataforma"
+  }
+}

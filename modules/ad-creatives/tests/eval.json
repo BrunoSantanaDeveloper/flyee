@@ -263,6 +263,77 @@
         }
       ],
       "rubric": "check devolve apify_key falso e apify_setup sem comando. A IA não roda key set --browser: passa ao integrante, em frases simples, o apify_setup.how, com o segredo de rede para api.apify.com, e segue pela pesquisa guiada enquanto isso. Não pede a chave na conversa."
+    },
+    {
+      "name": "briefing a partir do plano aprovado",
+      "setup": "Projeto com media-plan/black-friday-2026/plano.json aprovado (oferta anual, evento Lead, verba da fase, público, datas, regra de link, custo permitido).",
+      "prompt": "Faz os criativos da campanha de Black Friday.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "anuncios/*/briefing.md"
+        }
+      ],
+      "rubric": "A IA roda new e brief; o briefing sai preenchido com os campos do plano e a resposta diz quais vieram dele (sources plano). Ela pergunta numa mensagem só o que o plano não responde (concorrentes, se o site lê o nome, termos proibidos) e não pergunta de novo oferta, preço, verba ou evento. Sem plano, ela encaminha oferta, preço e verba ao app de plano em vez de inventar."
+    },
+    {
+      "name": "matriz com peças de menos",
+      "setup": "Campanha com matriz.json de 4 ângulos e 7 peças.",
+      "prompt": "Confere a matriz da primeira leva.",
+      "assertions": [],
+      "rubric": "matrix devolve matrix_invalid com o caminho pieces; a IA explica que a primeira leva tem de 8 a 12 peças, propõe os formatos que faltam (vídeo 4:5, imagem, carrossel) por ângulo e rode de novo. Peças de depoimento ou fundador saem marcadas para o integrante gravar; nada de pessoa gerada."
+    },
+    {
+      "name": "página de destino conferida",
+      "setup": "Campanha com a captura do site em capturas/<site>/captura.json e o plano aprovado.",
+      "prompt": "A página da oferta está pronta. Confere antes de eu ligar a campanha.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "anuncios/*/pagina-conferida.json"
+        }
+      ],
+      "rubric": "A IA roda page audit e diz ao integrante só o que pede atenção e o que não deu para conferir pela captura (a UTM preservada até o cadastro, por exemplo), com a palavra do say. Nunca chama de reprovado o que a captura não trouxe. Se não há captura, roda capture antes."
+    },
+    {
+      "name": "anúncio da Busca com título longo",
+      "setup": "Campanha com busca.json em que um título tem 31 caracteres e uma descrição promete dobrar as vendas.",
+      "prompt": "Confere os anúncios do Google antes de eu subir.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "anuncios/*/busca-conferida.json"
+        }
+      ],
+      "rubric": "search devolve problems com too_long e a promessa de resultado; a IA reescreve os dois em busca.json, sem acrescentar fato nem número, e roda search de novo até passed. Entrega busca.md como o integrante vai colar no Google Ads e lembra que quem cria a campanha é ele."
+    },
+    {
+      "name": "rodada seguinte a partir da leitura",
+      "setup": "Campanha entregue (rodada 1) e a leitura meta-testes do app de medição em ads-insights/leituras/meta-testes/report.json (fixture report.json): memoria escalar, confianca iterar no gancho, mtc cortar.",
+      "prompt": "Saiu a leitura da campanha. O que fica, o que muda e o que sai?",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "anuncios/*/rodada.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "anuncios/*/evidencias.json"
+        }
+      ],
+      "rubric": "round next adiciona três resultados próprios (res-…) à evidência, registra results no diário e propõe a rodada 2: memoria se mantém com duas variações do gancho, confianca troca só os 3 primeiros segundos, mtc sai e não volta igual, um conceito novo entra. A IA diz isso em três linhas, escreve os conceitos da rodada 2 citando os ids res-… e com os nomes em -v2, e pede o sim antes das peças. Nenhum número vem de cabeça; a linha sem conceito do relatório é ignorada."
+    },
+    {
+      "name": "sequência da data alvo",
+      "setup": "Plano aprovado com aquecimento de 20/11 a 26/11, pico de 27/11 a 30/11 e a oferta anual pelo preço de 10 meses.",
+      "prompt": "Prepara as peças da Black Friday, com a oferta e o prazo.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "anuncios/*/sequencia.md"
+        }
+      ],
+      "rubric": "sequence devolve quatro peças datadas pelo plano (18/11 abertura para a lista, 27/11 oferta no ar, 28/11 contagem regressiva, 30/11 último dia), cada uma com o preço do plano, o prazo com hora, as linhas do consumidor e o texto aprovado na conferência; o 9:16 em ads_meta e o 4:5 e o 1:1 em ads_meta_feed; cada uma programada dois dias antes. A IA não inventa preço nem data e diz que quem cria os anúncios é o integrante."
     }
   ]
 }

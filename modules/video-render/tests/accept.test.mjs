@@ -433,7 +433,7 @@ test("makeCheck, summarize, scoreOf, checkLine, fixLine and the constants", () =
 test("redes.json loads, names every required network and is internally consistent", () => {
   assert.equal(TABLE.format_version, 1);
   assert.match(TABLE.checked_on, /^\d{4}-\d{2}-\d{2}$/);
-  const required = ["reels", "stories", "feed", "tiktok", "shorts", "youtube", "linkedin", "x", "whatsapp_status", "kwai", "ads_meta", "ads_tiktok"];
+  const required = ["reels", "stories", "feed", "tiktok", "shorts", "youtube", "linkedin", "x", "whatsapp_status", "kwai", "ads_meta", "ads_meta_feed", "ads_tiktok"];
   for (const id of required) assert.ok(TABLE.networks[id], `falta a rede ${id}`);
   for (const [name, size] of Object.entries({ "9:16": [1080, 1920], "4:5": [1080, 1350], "3:4": [1080, 1440], "1:1": [1080, 1080], "16:9": [1920, 1080] })) {
     assert.deepEqual([TABLE.formats[name].width, TABLE.formats[name].height], size, name);

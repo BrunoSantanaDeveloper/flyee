@@ -33,6 +33,17 @@ export function layout(root, slug) {
     report: join(dir, "relatorio.json"),
     journal: join(dir, "diario.json"),
     state: join(dir, "estado.json"),
+    matrix: join(dir, "matriz.json"),
+    matrixMd: join(dir, "matriz.md"),
+    pageBrief: join(dir, "pagina-briefing.md"),
+    pageAudit: join(dir, "pagina-conferida.json"),
+    search: join(dir, "busca.json"),
+    searchChecked: join(dir, "busca-conferida.json"),
+    searchMd: join(dir, "busca.md"),
+    round: join(dir, "rodada.json"),
+    roundMd: join(dir, "rodada.md"),
+    sequence: join(dir, "sequencia.json"),
+    sequenceMd: join(dir, "sequencia.md"),
   };
 }
 
@@ -97,6 +108,7 @@ export const BRIEF_FIELDS = [
   { key: "verba", labels: ["verba diaria", "verba", "orcamento diario"], required: true, ask: "Qual é a verba por dia, em reais?" },
   { key: "custo_evento", labels: ["custo por evento", "custo por resultado"], required: false, ask: "Quanto você aceita pagar por evento, ou quanto ele custou em campanhas anteriores? Se não souber, faço a conta ao contrário." },
   { key: "publico", labels: ["publico"], required: true, ask: "Para quem é o anúncio (quem compra, em que momento, com que dor)?" },
+  { key: "datas", labels: ["datas", "datas da campanha", "calendario", "fases"], required: false, ask: "Quais são as datas da campanha (quando começa a testar, quando é o pico)?" },
   { key: "nome_lido", labels: ["o site le o nome do anuncio", "site le o nome do anuncio", "o site le o nome"], required: true, ask: "O seu site escolhe algo pelo nome do anúncio que chega no link (utm_content)? Se sim, qual é o padrão do nome?" },
   { key: "padrao_nome", labels: ["padrao do nome", "nome dos anuncios", "padrao do nome do anuncio"], required: false, ask: "Qual é o padrão do nome do anúncio que o site lê (por exemplo <ângulo>-<formato>-<gancho>-v<n>)?" },
   { key: "angulos_site", labels: ["angulos que o site le", "angulos do site", "angulos"], required: false, ask: "Quais ângulos o site reconhece no nome do anúncio?" },
@@ -143,6 +155,7 @@ Preencha com o integrante. O app lê cada linha "Campo: valor"; o texto entre pa
 - Verba diária (em reais):
 - Custo por evento (quanto o integrante aceita pagar, ou quanto custou antes; pode ficar em branco):
 - Público (quem compra, em que momento, com que dor):
+- Datas (as fases da campanha, do plano quando houver):
 - País (padrão: Brasil):
 
 ## Nome dos anúncios

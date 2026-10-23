@@ -1,0 +1,51 @@
+{
+  "interface_version": 1,
+  "app": "media-plan",
+  "plan": "black-friday-2026",
+  "brand": "Prontuário Lótus",
+  "version": 1,
+  "state": "aprovado",
+  "generated_at": "2026-10-23T12:00:00.000Z",
+  "approved_at": "2026-10-24T12:00:00.000Z",
+  "today": "2026-10-23",
+  "target_date": "2026-11-27",
+  "premises": {
+    "produto_oferta": { "value": "Prontuário Lótus, o prontuário inteligente para acupunturistas, no plano anual. Oferta do pico: anual pelo preço de 10 meses, parcelado, com a migração dos dados incluída.", "source": "confirmado" },
+    "publico": { "value": "Acupunturistas que digitam a anamnese durante a consulta e perdem a fala da pessoa", "source": "informado", "known_people": true, "reach": 480 },
+    "meta_data": { "value": "30 assinaturas novas até 30 de novembro de 2026.", "source": "informado", "goal_count": 30, "goal_unit": "assinaturas" },
+    "verba": { "value": "R$ 4.000 no total até o fim de novembro.", "source": "confirmado", "total_brl": 4000 },
+    "preco_planos": { "value": "Anual a R$ 1.990; margem perto de 80%.", "source": "informado", "price_brl": 1990, "billing": "anual", "margin_pct": 80 },
+    "prontidao": { "value": "A página de venda está no ar em https://www.prontuariolotus.com.br/assinar; a da lista de espera ainda não.", "source": "informado" },
+    "evento": { "value": "Lead: a entrada na lista de espera da oferta, numa página própria.", "source": "confirmado", "event": "Lead" }
+  },
+  "economics": { "price_brl": 1990, "billing": "anual", "allowable_cac_brl": 1592, "margin_pct": 80 },
+  "funnel": { "allowable_cpl_brl": 238.8, "goal": 30, "goal_unit": "assinaturas" },
+  "budget": {
+    "total_brl": 4000,
+    "daily_brl": 125,
+    "by_phase": [
+      { "phase": "testes", "start": "2026-10-30", "end": "2026-11-12", "budget_brl": 1418, "daily_brl": 101 },
+      { "phase": "escala", "start": "2026-11-13", "end": "2026-11-19", "budget_brl": 709, "daily_brl": 101 },
+      { "phase": "aquecimento", "start": "2026-11-20", "end": "2026-11-26", "budget_brl": 1063, "daily_brl": 152 },
+      { "phase": "pico", "start": "2026-11-27", "end": "2026-11-30", "budget_brl": 810, "daily_brl": 203 }
+    ]
+  },
+  "calendar": {
+    "phases": [
+      { "id": "preparacao", "start": "2026-10-23", "end": "2026-10-29", "days": 7 },
+      { "id": "testes", "start": "2026-10-30", "end": "2026-11-12", "days": 14 },
+      { "id": "escala", "start": "2026-11-13", "end": "2026-11-19", "days": 7 },
+      { "id": "aquecimento", "start": "2026-11-20", "end": "2026-11-26", "days": 7 },
+      { "id": "pico", "start": "2026-11-27", "end": "2026-11-30", "days": 4 },
+      { "id": "depois", "start": "2026-12-01", "end": "2026-12-14", "days": 14 }
+    ],
+    "decision_point": { "date": "2026-11-13" }
+  },
+  "offer": {
+    "options": [{ "id": "anual-10-meses", "label": "Anual pelo preço de 10 meses, parcelado", "price_brl": 1658.33 }],
+    "collision": null,
+    "checks": [{ "id": "prazo_escrito", "status": "pendente" }]
+  },
+  "channels": { "meta": true, "google_search": true, "owned": true, "partners": null },
+  "tracking": { "utm_rule": "utm_source=<canal>&utm_medium=<meio>&utm_campaign=<plano>&utm_content=<nome do anúncio ou do envio>&utm_term=<público ou palavra>" }
+}

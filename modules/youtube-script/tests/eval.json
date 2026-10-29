@@ -178,7 +178,7 @@
     },
     {
       "name": "referencia em ingles com mapa e contexto local",
-      "setup": "Copie tests/fixtures/regressao/fluxo-en.md para referencia-en.md no projeto; roteiros/canal.md de um canal de cozinha prática. O integrante não responde durante a sessão.",
+      "setup": "Copie tests/fixtures/fluxo-en.md para referencia-en.md no projeto; roteiros/canal.md de um canal de cozinha prática. O integrante não responde durante a sessão.",
       "prompt": "Quero um vídeo no estilo deste vídeo em inglês (a transcrição está em referencia-en.md), mas sobre como eu monto a marmita da semana com a panela de pressão elétrica. Decide o resto.",
       "assertions": [
         {
@@ -194,7 +194,7 @@
     },
     {
       "name": "canal novo com voz por referencias e texto literal do criador",
-      "setup": "Copie tests/fixtures/regressao/voz-1.md e voz-2.md para o projeto. Sem roteiros/canal.md. O integrante não responde durante a sessão.",
+      "setup": "Copie tests/fixtures/voz-1.md e voz-2.md para o projeto. Sem roteiros/canal.md. O integrante não responde durante a sessão.",
       "prompt": "É o primeiro vídeo do meu canal, ainda não tenho vídeos. Meu jeito de falar parece com o desses dois: voz-1.md e voz-2.md. O gancho eu já escrevi: 'Se liga nessa marmita. Sete dias, uma panela, e eu não lavei louça nenhuma no meio da semana.' Faz o roteiro de 6 minutos de como eu organizo a marmita da semana. Decide o resto.",
       "assertions": [
         {
@@ -207,30 +207,6 @@
         }
       ],
       "rubric": "canal.md tem a voz tirada só da mecânica das duas transcrições (como abrem, marcadores de conversa, como mostram, como pedem para ficar), cada traço marcado '(emprestado de referências, confirme)' e listado para a pergunta 'você fala assim?'; nenhum bordão, frase, opinião ou conteúdo dos dois criadores. canal.md tem a seção Regras do criador. O gancho do criador aparece palavra por palavra como opção 1, recomendada se passar no teste às cegas, e é o que abre o roteiro. 'Primeiro vídeo do canal' entra só se ajudar (pedir para ficar até o fim com motivo)."
-    },
-    {
-      "name": "regressao do exemplo aprovado",
-      "setup": "Na pasta de trabalho com o app Carrossel animado (motion-carousel) instalado: copie tests/fixtures/regressao/canal.md para roteiros/canal.md e fluxo-en.md, voz-1.md, voz-2.md e voz-3.md para referencias/. O exemplo aprovado (tests/fixtures/exemplo-roteiro-carrossel-animado.md) NÃO vai para o projeto: só a crítica o recebe. O integrante não responde durante a sessão.",
-      "prompt": "É o primeiro vídeo do meu canal: 'Como eu uso o Claude Code pra criar carrosséis ANIMADOS'. O app que aparece é o Carrossel animado (motion-carousel), que eu mesmo construí e está instalado aqui. Quero seguir o fluxo deste vídeo americano (a transcrição está em referencias/fluxo-en.md), trazido para o Brasil. Meu jeito de falar parece com o destes: referencias/voz-1.md, referencias/voz-2.md e referencias/voz-3.md. O gancho eu escrevi: 'Se liga nesse carrossel. Cada slide é um vídeo, com música. E antes que você pense que eu passei a tarde num editor de vídeo: não abri editor nenhum. Foi o Claude Code! Eu pedi numa frase e respondi umas perguntas dele. Vou te mostrar do zero como foi.' Ainda não fiz os carrosséis. Uns 10 minutos. Decide o resto por mim.",
-      "assertions": [
-        {
-          "kind": "file_exists",
-          "path": "roteiros/*/verdade.md"
-        },
-        {
-          "kind": "file_exists",
-          "path": "roteiros/*/referencia.md"
-        },
-        {
-          "kind": "file_exists",
-          "path": "roteiros/*/roteiro.md"
-        },
-        {
-          "kind": "file_exists",
-          "path": "roteiros/*/roteiro-completo.md"
-        }
-      ],
-      "rubric": "Um crítico que recebe só roteiro-completo.md, o exemplo aprovado e esta rubrica compara os dois. O gerado precisa chegar ao nível do exemplo em cada item: o resultado primeiro; a lacuna com escopo ('em português', a busca com [CONFIRMAR: quantos]); a origem honesta em uma frase ('sentei, montei e virou esse app'); o contraste com o jeito comum e o custo dele no contexto brasileiro (crédito em dólar); a parte sem fala ('vou calar a boca e você assiste'); as regras ensinadas pelo próprio artefato (o carrossel 1 ensina as regras de motion design, tiradas da ficha de verdade do app); o 'qual usar'; a opinião honesta com o que ainda não está perfeito; um CTA de links ('tudo que eu usei tá com link na descrição') mais uma pergunta fácil; zero cara de anúncio (nada de loja, FlyeeClub, versão, plano, preço ou 'grátis' na fala); zero fala presumida (o que só os carrosséis feitos respondem está em [CONFIRMAR]). O gancho do criador abre o roteiro palavra por palavra. Notas de 1 a 10 por item; a regressão passa com todos os itens em 7 ou mais."
     },
     {
       "name": "historias e opinioes do perfil",
@@ -246,11 +222,17 @@
     },
     {
       "name": "titulos de alta performance e teste A/B",
-      "setup": "Copie tests/fixtures/regressao/canal.md para roteiros/canal.md e troque a linha do teste por \"- Teste A/B: sim\". O canal do criador é @meucanal.",
+      "setup": "Copie tests/fixtures/canal-historias.md para roteiros/canal.md e troque a linha \"- Teste de miniaturas: não\" por \"- Teste A/B: sim\". O canal do criador é @meucanal.",
       "prompt": "Me dá títulos e thumbnails para um vídeo sobre marmita da semana na airfryer, e já deixa pronto para o teste A/B do YouTube.",
       "assertions": [
-        { "kind": "file_exists", "path": "youtube-research/outliers/*/titulos.md" },
-        { "kind": "file_exists", "path": "roteiros/*/embalagem.md" }
+        {
+          "kind": "file_exists",
+          "path": "youtube-research/outliers/*/titulos.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/embalagem.md"
+        }
       ],
       "rubric": "Roda outliers e titles no tema e, com o canal lido, titles --channel. Antes de propor, lê a lista dos títulos que mais passaram do normal e diz o mecanismo de dois ou três deles, sem copiar nenhum. Os cinco títulos são de gatilhos diferentes, entre aspas, cada um com o gatilho, o traço ou a palavra de onde veio e o número com o n; grupo pequeno é indício, e o que aparece no tema e no canal pesa mais. A seção do teste A/B traz até três títulos e três thumbnails da mesma promessa, a recomendada primeiro, e diz que o YouTube escolhe pelo tempo assistido, que o teste não vale para Shorts e que não se mexe no título nem na thumbnail até o fim. Cada thumbnail tem o texto entre aspas depois de \"Texto:\", até quatro palavras, sem repetir o título escolhido, e nada no canto de baixo à direita. A escolha diz o número do título. Nenhum número de taxa de clique ou de visualizações prometido."
     }

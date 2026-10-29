@@ -50,9 +50,10 @@ test("titles of embalagem.md are read between quotes under ## Títulos", () => {
 });
 
 test("the approved example trips no rule except its own pending marks", () => {
-  const read = (name) => readFileSync(new URL(`./fixtures/regressao/${name}`, import.meta.url), "utf8");
-  const script = parseScript(read("exemplo-roteiro.md"));
-  const { never_say } = creatorRules(read("canal.md"));
+  // A script the operator approved: a rule that flags it flags good writing.
+  const script = parseScript(readFileSync(new URL("./fixtures/exemplo-aprovado-roteiro.md", import.meta.url), "utf8"));
+  // The "Nunca dizer" of that video's channel.
+  const never_say = ["Canva", "loja", "FlyeeClub", "versão de entrada", "grátis"];
   const issues = lint(script, timing(script, 200), { banned: never_say, own: true }).issues;
   const unexpected = issues.filter((issue) => issue.rule !== "placeholder");
   assert.deepEqual(unexpected.map((issue) => `${issue.rule}: ${issue.excerpt}`), []);

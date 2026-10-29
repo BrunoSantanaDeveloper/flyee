@@ -63,7 +63,7 @@ Português e inglês, seguindo o idioma da sua conta.
 
 ## Mudanças
 
-- 1.2.4: ao tirar um app que outros apps do projeto usam, a sua IA fica sabendo quais são e pergunta antes, porque sem ele esses apps pedem para instalar de novo. Um app que nenhum outro usa sai como antes, sem pergunta.
+- 1.2.5: ao tirar um app que outros apps do projeto usam, a sua IA fica sabendo quais são e pergunta antes, porque sem ele esses apps pedem para instalar de novo. Um app que nenhum outro usa sai como antes, sem pergunta.
 - 1.2.3: quando você pede um plano, um relatório ou a leitura de uma campanha, a sua IA resume na conversa e grava o documento completo no arquivo do app; as perguntas vêm numa mensagem só, cada uma com a sugestão dela.
 - 1.2.2: um computador que você desconectou no painel volta a se conectar com um login novo. Antes, a aprovação no navegador dava certo e a conexão falhava com "este computador foi desconectado", sem saída. A página depois da aprovação agora diz que a aprovação chegou, e a conversa confirma a conexão.
 - 1.2.1: numa sessão na nuvem, uma chave guardada como segredo de rede do ambiente não aparece mais como faltando, e a sua IA não a pede de novo: quem confere é o app.

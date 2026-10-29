@@ -69,7 +69,7 @@ See `docs/PLANO.md`. P0 (repository and harness), P1 (module tools) and P2 (the 
   - the checklist lists what to answer when publishing: audience, "Uso de IA", paid promotion and the A/B test, checked on YouTube's pt-BR help.
 - `instagram-research` 1.1.0 keeps whole captions, measures caption traits (`captions`) and downloads a collected Reel before its signed link expires (`video`), for `video-analysis`.
 - Every external program an app runs has a time limit and ends with `tool_timeout`: `video-render` 1.0.3, `video-analysis` 1.0.2, `motion-carousel` 1.1.3, `youtube-research` 1.1.0.
-- CLI 1.2.4 asks before `remove` takes an app that other installed apps use (`has_dependents`).
+- CLI 1.2.5 asks before `remove` takes an app that other installed apps use (`has_dependents`). The tag `cli-v1.2.4` was refused by npm without publishing anything: the repository had just become public, and npm then signs provenance and demands `repository.url` in `packages/cli/package.json`.
 - `validate` refuses a shipped reference to a package file that does not exist.
 
 The results of the member's own channel (a YouTube Studio export) and the real thumbnail image are specified, with their open decisions, in `docs/PLANO-YOUTUBE.md`.

@@ -1,9 +1,14 @@
 {
   "name": "flyee",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "A CLI do flyee.club: instala e mantém atualizados os apps do clube na IA que você já usa (Claude Code, Codex, Gemini CLI, Cursor e outras).",
   "keywords": ["flyee", "claude-code", "codex", "gemini-cli", "cursor", "agent-skills", "ai-apps"],
   "homepage": "https://flyee.club",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BrunoSantanaDeveloper/flyee.git",
+    "directory": "packages/cli"
+  },
   "license": "MIT",
   "author": "flyee.club",
   "type": "module",

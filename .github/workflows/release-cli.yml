@@ -7,9 +7,10 @@ name: Release CLI
 # https://docs.npmjs.com/trusted-publishers), configured on npmjs.com for the
 # package `flyee` with this repository and the workflow file `release-cli.yml`.
 # That needs `id-token: write` and npm 11.5.1 or newer at publish time (Node 22
-# ships npm 10, which fails with a misleading 404). The repository is private,
-# so npm generates no provenance and `--provenance` would be refused. No cache
-# in a release build.
+# ships npm 10, which fails with a misleading 404). The repository has been
+# public since 2026-10-29, so npm signs a provenance statement by itself and
+# refuses the package (E422) unless `repository.url` in packages/cli/package.json
+# names this repository. No cache in a release build.
 
 on:
   push:

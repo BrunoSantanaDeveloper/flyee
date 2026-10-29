@@ -52,6 +52,26 @@ export function profileB() {
   return [reel("BBBBB1", 300), reel("BBBBB2", 200), reel("BBBBB3", 900)].map((post) => ({ ...post, ownerUsername: "perfil.b", ownerFullName: "Perfil B" }));
 }
 
+/**
+ * perfil.legendas: 11 Reels with whole captions (line breaks, hashtags, calls to action), one of
+ * them a paid partnership and one with no caption at all. Normal: 110 plays.
+ */
+export function profileCaptions() {
+  return [
+    reel("CCCCC1", 1200, { caption: "Qual erro você comete no pão?\n\nMe conta nos comentários.\n\n#pao #receita #paocaseiro" }),
+    reel("CCCCC2", 950, { caption: "3 erros que deixam o pão solado\n1. Sovar pouco\n2. Fermento velho\n3. Forno frio\n\nSalva esse post pra não esquecer." }),
+    reel("CCCCC3", 100, { caption: "Pão de todo dia #pao com manteiga" }),
+    reel("CCCCC4", 120, { caption: "Eu testei a receita da minha avó" }),
+    reel("CCCCC5", 110, { caption: "A receita completa está no link da bio." }),
+    reel("CCCCC6", 90, { caption: "Pão de queijo" }),
+    reel("CCCCC7", 800, { caption: "5 pães para o café?\nComenta EU que eu te mando a lista no direct." }),
+    reel("CCCCC8", 100, { caption: "Compartilhe com quem ama pão." }),
+    reel("CCCCC9", 95, { caption: "" }),
+    reel("CCCCD1", 105, { caption: undefined }),
+    reel("CCCCD2", 3000, { paidPartnership: true, caption: "Parceria com a marca. Link na bio." }),
+  ].map((post) => ({ ...post, ownerUsername: "perfil.legendas", ownerFullName: "Perfil Legendas" }));
+}
+
 export const COMMENTS = [
   { text: "Isso serve para quem atende sozinha?", likesCount: 4, ownerUsername: "alguem", timestamp: at(1), repliesCount: 0 },
   { text: "Quanto custa?", likesCount: 9, ownerUsername: "outra.pessoa", timestamp: at(2), repliesCount: 1 },

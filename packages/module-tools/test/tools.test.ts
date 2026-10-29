@@ -196,6 +196,9 @@ describe("relations between apps", () => {
       join(tool, "references", "interface.md"),
       "# Interface\n\nVersão da interface: **2**.\n\n```\nnode .flyee/modules/video-tool/scripts/run.mjs check --json\nnode .flyee/modules/video-tool/scripts/run.mjs analyze <x> --json\n```\n",
     );
+    // The script the guide runs ships with the tool: a guide that names a missing file is refused.
+    mkdirSync(join(tool, "scripts"), { recursive: true });
+    writeFileSync(join(tool, "scripts", "run.mjs"), 'console.log("ok");\n');
     writeFilesToManifest(tool);
     const consumer = makeApp("editor");
     const skill = join(consumer, "skills", "editor", "SKILL.md");
@@ -240,6 +243,67 @@ describe("relations between apps", () => {
     assert.equal(writeCatalog({ ...options, check: true }).stale.length, 2);
     assert.equal(writeCatalog(options).written.length, 2);
     assert.equal(writeCatalog({ ...options, check: true }).stale.length, 0);
+  });
+});
+
+describe("references to package files", () => {
+  /** Appends lines to an app's skill and regenerates `files`; returns the 1-based line of each, in order. */
+  function appendToSkill(dir: string, slug: string, lines: string[]): number[] {
+    const skill = join(dir, "skills", slug, "SKILL.md");
+    const before = readFileSync(skill, "utf8").replace(/\n*$/, "\n");
+    writeFileSync(skill, `${before}${lines.join("\n")}\n`);
+    writeFilesToManifest(dir);
+    const start = before.split("\n").length;
+    return lines.map((_, index) => start + index);
+  }
+
+  /** A tool app with a script and the guide for the apps that call it. */
+  function tool(slug: string): string {
+    const dir = makeApp(slug, { type: "tool" });
+    mkdirSync(join(dir, "scripts"), { recursive: true });
+    mkdirSync(join(dir, "references"), { recursive: true });
+    writeFileSync(join(dir, "scripts", "mix.mjs"), 'console.log("ok");\n');
+    writeFileSync(join(dir, "references", "interface.md"), `# Interface\n\n\`node .flyee/modules/${slug}/scripts/mix.mjs mix --json\`\n`);
+    writeFilesToManifest(dir);
+    return dir;
+  }
+
+  it("accepts references that ship, and skips placeholders, addresses and the member's project", () => {
+    const engine = tool("som-tool");
+    const app = makeApp("som-app");
+    mkdirSync(join(app, "references"), { recursive: true });
+    mkdirSync(join(app, "scripts"), { recursive: true });
+    // Outside a skill's folder a relative path is the member's project, as beside a slide page.
+    writeFileSync(join(app, "references", "guia.md"), "# Guia\n\nA página carrega `../assets/fundo.jpg`, da pasta do integrante.\n");
+    writeFileSync(join(app, "scripts", "run.mjs"), 'console.log("ok");\n');
+    appendToSkill(app, "som-app", [
+      "Leia ../../references/guia.md e ../../references/ e rode `node ../../scripts/run.mjs` ou `node .flyee/modules/som-app/scripts/run.mjs`.",
+      "Para mixar, siga `.flyee/modules/som-tool/references/interface.md` e rode `node .flyee/modules/som-tool/scripts/mix.mjs mix --json`.",
+      "O foco fica em `../../references/foco/<foco>.md`, e o resultado em `som-app/saidas/<id>/mix.json`, no projeto.",
+      "Exemplos: https://example.com/.flyee/modules/som-tool/nada.md, .flyee/modules/<app>/references/interface.md e .flyee/modules/som-tool/${arquivo}.",
+      "Fora do pacote: ../../../AGENTS.md.",
+    ]);
+    const [engineReport, appReport] = validateAll([engine, app]);
+    assert.deepEqual(engineReport.errors, []);
+    assert.deepEqual(appReport.errors, []);
+  });
+
+  it("refuses a path relative to a skill's folder that names a file the package does not ship", () => {
+    const app = makeApp("som-relativo");
+    const [line] = appendToSkill(app, "som-relativo", ["Leia ../../references/sumiu.md antes de escrever."]);
+    assert.deepEqual(validateModule(app).errors, [
+      `skills/som-relativo/SKILL.md:${line}: "../../references/sumiu.md" points to references/sumiu.md, which the package does not ship`,
+    ]);
+  });
+
+  it("refuses an installed path of another app that names a file it does not ship", () => {
+    const engine = tool("eco-tool");
+    const app = makeApp("eco-app");
+    const [line] = appendToSkill(app, "eco-app", ["Rode `node .flyee/modules/eco-tool/scripts/antigo.mjs mix --json`."]);
+    const report = validateAll([engine, app])[1];
+    assert.deepEqual(report.errors, [
+      `skills/eco-app/SKILL.md:${line}: ".flyee/modules/eco-tool/scripts/antigo.mjs" points to scripts/antigo.mjs, which the package of eco-tool does not ship`,
+    ]);
   });
 });
 

@@ -76,6 +76,7 @@ description: Encontra Reels que performaram acima do normal do próprio perfil e
 - `name` igual à pasta, minúsculas e hífens simples, até 64 caracteres.
 - `description` diz o que a skill faz e quando usar, até 1024 caracteres e de preferência abaixo de 400, porque entra no contexto de toda sessão da IA.
 - O corpo tem a regra que não se quebra, os passos e as referências. Caminhos relativos (`references/`, `scripts/`) resolvem a partir da pasta da skill dentro do pacote, nunca a partir da ponte que a CLI cria.
+- O `validate` confere que existe no pacote cada arquivo citado por um caminho que sobe da pasta da skill (`../../references/x.md`, `../../scripts/x.mjs`) ou pelo caminho instalado de um app (`.flyee/modules/<slug>/scripts/x.mjs`, em qualquer texto do pacote e no manifesto), e acusa o que falta com o arquivo e a linha. Caminho com `<`, `>`, `…`, `*`, `{`, `}` ou `$`, endereço da web e caminho do projeto do integrante ficam de fora.
 - Uma skill por tarefa clara. Descrições que se sobrepõem fazem a IA escolher errado: o `validate` acusa nomes repetidos entre apps.
 - A skill nunca fala de material interno nem aponta para links que o servidor não deu.
 

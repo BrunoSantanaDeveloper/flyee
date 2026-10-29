@@ -30,13 +30,28 @@ Tire **padrões, não vídeos**. Um padrão é o que se repete em **dois ou mais
 
 Um padrão de um vídeo só é uma aposta, e você diz isso. Muito vídeo com multiplicador baixo para todo mundo é tema saturado.
 
-**Os títulos, com número.** Depois da pesquisa, meça os traços de título dela:
+**Os títulos de alta performance, com número.** Depois da pesquisa, analise os títulos dela:
 
 ```
 node .flyee/modules/youtube-research/scripts/research.mjs titles <id da pesquisa> --tools "nomes de ferramentas, produtos ou marcas do tema" --exclude <ids fora do tema> --json
 ```
 
-O `titulos.md` diz, para cada traço (número, nome da ferramenta, parênteses, começar com "Como", pergunta, primeira pessoa, "sem X", resultado concreto, caixa alta), a mediana do multiplicador com e sem ele e o tamanho de cada grupo, além do tamanho mediano dos títulos dos outliers. A `embalagem.md` cita esses números ao propor os títulos. Confira `suggested_tools` antes de passar `--tools`: são nomes que parecem ferramentas, não uma certeza. Os vídeos que você descartou como fora do tema vão em `--exclude` (os `id` de `outliers.json`): sem isso, uma música ou um nicho vizinho com multiplicador enorme decide o traço.
+O `titulos.md` traz quatro coisas, e a `embalagem.md` usa as quatro ao propor os títulos:
+
+- **a lista** dos títulos que mais passaram do normal e dos que ficaram abaixo, cada um com os traços que tem. Leia primeiro: é o mecanismo dos que subiram (o gatilho, a promessa, a palavra do público), que você adapta ao canal, nunca copia;
+- **os gatilhos** medidos: resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista e comparação, os mesmos da tabela da embalagem;
+- **a forma**: número, ferramenta, parênteses, "Como", pergunta, primeira pessoa, "sem X", caixa alta, "você", superlativo, ano, duas partes, emoji, e o tamanho mediano dos títulos dos outliers;
+- **as palavras** que se repetem nos títulos acima e abaixo do normal, sem as das buscas.
+
+Cada linha traz a mediana do multiplicador com e sem o traço e o tamanho de cada grupo. Confira `suggested_tools` antes de passar `--tools`: são nomes que parecem ferramentas, não uma certeza. Os vídeos que você descartou como fora do tema vão em `--exclude` (os `id` de `outliers.json`): sem isso, uma música ou um nicho vizinho com multiplicador enorme decide o traço. Se o `titulos.json` vier sem `top_titles` e sem `terms`, a Pesquisa no YouTube instalada é anterior à 1.1.0: atualize com `npx --yes flyee@latest update youtube-research --yes --json` e rode de novo.
+
+**Os títulos do canal dele.** Quando o canal do criador já foi lido com `channel` (para a voz e o ritmo, em `perfil-de-voz.md`), analise também os títulos dele:
+
+```
+node .flyee/modules/youtube-research/scripts/research.mjs titles --channel <@canal do criador> --json
+```
+
+A mesma análise, contra o normal do próprio canal: mostra o que o público dele já respondeu. Com uns 30 vídeos quase todo grupo é pequeno. Um gatilho ou uma palavra forte no tema **e** no canal pesa mais do que um forte num só; um forte no tema e fraco no canal é uma aposta, e você diz isso.
 
 ## 2. Por que funcionou
 
@@ -183,9 +198,11 @@ Feita em <data> com as buscas: … · <N> vídeos analisados, <N> canais medidos
 Apostas (em um só): …
 Saturado: …
 
-## Títulos: os traços medidos
-| Traço | Com | Sem | n |
+## Títulos de alta performance
+Os que mais subiram e o mecanismo de cada um: <de titulos.md, os 5 a 8 do topo, com o multiplicador>
+| Gatilho, traço ou palavra | Com | Sem | n |
 <de titulos.md; o tamanho mediano dos títulos dos outliers>
+No canal dele: <de titles --channel, quando houver; o que coincide com o tema>
 
 ## Como os melhores fazem
 <por vídeo: abertura, blocos, onde paga, o que prendeu>
@@ -205,7 +222,7 @@ Dúvidas: … · Objeções: … · Pedidos: … · Palavras dele para a dor: "�
 
 ## Como a pesquisa entra no resto
 
-- **Embalagem:** os títulos usam os mecanismos que funcionaram (nomeie qual), os traços medidos (com o número) e as palavras do público.
+- **Embalagem:** os títulos usam os mecanismos que funcionaram (nomeie qual), os gatilhos e traços medidos (com o número), as palavras que se repetem nos que subiram e o que já funciona no canal dele.
 - **Gancho:** a dúvida mais repetida dos comentários é candidata a primeira frase.
 - **Estrutura:** a lacuna é a ideia central; a objeção mais comum é respondida antes do pedido final.
 - **Revisão:** o critério de fatos confere a tabela "Fatos".

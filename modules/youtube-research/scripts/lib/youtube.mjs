@@ -127,7 +127,7 @@ export function classifyYtdlpError(stderr) {
 }
 
 async function runJson(ytdlp, args) {
-  const { code, stdout, stderr } = await run(ytdlp.file, args);
+  const { code, stdout, stderr } = await run(ytdlp.file, args, { label: "yt-dlp" });
   if (code !== 0 && !stdout.length) throw classifyYtdlpError(stderr);
   try {
     return JSON.parse(stdout.toString("utf8"));
@@ -341,7 +341,7 @@ export async function downloadCaptions(ytdlp, info, track) {
       "-o", join(dir, "video.%(ext)s").replace(/\\/g, "/"),
     ];
     // yt-dlp may end with code 0 and only a warning when the caption request fails: the file decides.
-    const { stderr } = await run(ytdlp.file, args);
+    const { stderr } = await run(ytdlp.file, args, { label: "yt-dlp" });
     const file = readdirSync(dir).find((name) => name.startsWith(`video.${track.key}.`) && /\.(json3|srt|vtt)$/i.test(name));
     if (!file) throw captionDownloadError(stderr);
     return readCaptions(join(dir, file));

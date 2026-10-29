@@ -103,6 +103,7 @@ Tudo fica em `carrosseis/<nome>/` dentro do seu projeto, uma pasta por carrossel
 
 ## O que há de novo
 
+- 1.1.3: um ffmpeg travado ao tratar uma imagem não deixa mais a sua IA esperando sem fim: passado um tempo limite folgado, ele é encerrado e a sua IA recebe o erro com o que fazer.
 - 1.1.2: quando o Motor de vídeo ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.
 - 1.1.1: antes do render, a sua IA revisa o texto dos slides para ele não soar como texto de IA, mantendo o tom que você pediu; a sugestão de legenda passa pela mesma revisão. A conferência mostra cada item com um nome em português.
 - 1.1.0: slides com fotos. Um fundo que ocupa o quadro, um objeto ou uma pessoa recortada por cima e paralaxe em 2.5D, com o texto sobre um degradê. As imagens vêm, nesta ordem, da sua própria IA, do Codex com a sua conta do ChatGPT, da chave opcional do Gemini ou das suas fotos; o recorte do fundo é automático. Novo modelo de slide com foto e um exemplo completo com fotos.

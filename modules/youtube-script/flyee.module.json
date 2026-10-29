@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "youtube-script",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -84,8 +84,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Quando a pesquisa ou a leitura de um vídeo precisa de outro app que ainda não está no projeto, a sua IA diz numa frase qual vai instalar e instala na hora, sem pedir confirmação.",
-    "en": "When the research or the reading of a video needs another app that is not in the project yet, your AI says in one sentence which one it will install and installs it right away, without asking for confirmation."
+    "pt-BR": "Os títulos partem dos de alta performance do tema e do seu canal, com o gatilho e as palavras medidos. O teste A/B do YouTube, que agora compara títulos também, ganha as variantes de título, e a thumbnail ganha o canto da duração, o tamanho e o arquivo certos. A conferência avisa quando a fala não paga um número ou um nome do título escolhido e quando o texto da thumbnail passa de quatro palavras ou repete o título, e bloqueia a descrição acima de 5.000 bytes ou com sinais que o YouTube recusa. O checklist lembra o que responder ao publicar: público, uso de IA, promoção paga e teste A/B.",
+    "en": "Titles start from the high-performing ones of the topic and of your channel, with the trigger and the words measured. YouTube's A/B test, which now compares titles too, gets title variants, and the thumbnail gets the duration corner, the right size and the right file. The check warns when the speech does not pay a number or a name of the chosen title and when the thumbnail text goes past four words or repeats the title, and blocks a description over 5,000 bytes or with characters YouTube refuses. The checklist lists what to answer when publishing: audience, AI use, paid promotion and the A/B test."
   },
   "license": "member"
 }

@@ -142,6 +142,7 @@ Em erro, `ok` é `false`, a saída termina com código 1 (2 para uso errado) e v
 | `file_not_found`, `file_too_large`, `unreadable_video`, `no_video_track` | confira o arquivo com o integrante |
 | `in_progress` | outro comando está analisando o mesmo vídeo; espere e repita |
 | `ffmpeg_failed`, `download_failed`, `offline`, `unexpected` | repasse `message` e `fix` |
+| `tool_timeout` | o ffmpeg, o ffprobe ou o yt-dlp travou e o app o encerrou ao passar do tempo limite, que é folgado e cresce com a duração do vídeo (o download tem o mais longo; `message` diz qual programa e quanto tempo): tente de novo uma vez; se travar de novo, reduza o trabalho com um trecho mais curto (`--start` e `--end`), menos frames (`--max-frames`) ou, no download, `--quality 480` |
 | `usage` | uma opção errada: corrija o comando |
 
 ## 7. O que não muda

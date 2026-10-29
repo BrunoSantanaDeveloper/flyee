@@ -82,5 +82,6 @@ Tudo funciona no modo local: descrição, os três focos, perguntas, frames extr
 
 ## O que há de novo
 
+- 1.0.2: um ffmpeg, ffprobe ou yt-dlp travado não deixa mais a sua IA esperando sem fim. Cada um tem um tempo limite folgado, que cresce com a duração do vídeo; passado esse tempo, o programa é encerrado e a sua IA recebe o erro com o que fazer. Uma legenda que trava fica de fora e a análise segue.
 - 1.0.1: quando outro app precisa da Análise de vídeo e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.
 - 1.0.0: primeira versão. Modo local e modo Gemini, focos geral, edição e conteúdo, perguntas sobre o vídeo, frames extras sob demanda e uso por outros apps.

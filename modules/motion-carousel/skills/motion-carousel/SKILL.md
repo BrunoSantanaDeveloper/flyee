@@ -157,5 +157,6 @@ Mostre ao integrante: `open <nome> --json` abre a prévia no navegador dele, um 
 | `no_image_provider`, `no_gemini_key`, `offline`, `unreadable_image` e os que começam com `codex_` ou `gemini_` | erros do comando `images`: siga `images.md`, seção 8. Sem quem gere imagens, volte ao Passo 2 e ofereça as três saídas; nunca peça a chave na conversa |
 | `unreadable_media`, `no_audio_stream`, `audio_too_short`, `silent_audio`, `no_beats` | a música do integrante não abre ou não tem batida que se meça: confira o arquivo com ele, ou use a trilha gerada |
 | `ffmpeg_failed`, `browser_failed`, `browser_exited`, `browser_protocol`, `video_render_failed`, `unexpected` | tente de novo uma vez; se repetir, repasse `message` e `fix` ao integrante |
+| `tool_timeout` | o ffmpeg travou num render ou ao tratar uma imagem e foi encerrado ao passar do tempo limite: tente de novo uma vez; se travar de novo, siga `fix` (no comando `images`, também `images.md`, seção 8) |
 
 Os demais códigos do Motor estão em `.flyee/modules/video-render/references/interface.md`; em todos, `message` e `fix` dizem o que fazer.

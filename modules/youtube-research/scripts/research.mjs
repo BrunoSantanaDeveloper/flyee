@@ -11,7 +11,7 @@ import { speechStats } from "./lib/captions.mjs";
 import { baseLanguage, titleLanguage } from "./lib/language.mjs";
 import { channelMarkdown, commentsMarkdown, outliersCsv, outliersMarkdown, transcriptMarkdown } from "./lib/report.mjs";
 import { chooseBase, median, MIN_CHANNEL_SAMPLE, pickForDetails, rank, RANKS, sampleMedians, scoreVideo } from "./lib/score.mjs";
-import { suggestTools, titlesMarkdown, traitTable } from "./lib/titles.mjs";
+import { rankedTitles, suggestTools, termTable, titlesMarkdown, traitTable } from "./lib/titles.mjs";
 import { findYtdlp, installHints } from "./lib/tools.mjs";
 import {
   AppError,
@@ -56,7 +56,7 @@ const FORMATS = ["long", "short", "any"];
 const FRESH = { baseline: 7 * 24, video: 24, comments: 7 * 24 };
 const ARG_SPEC = {
   flags: ["json", "refresh", "any-language"],
-  options: ["window", "sort", "format", "per-query", "max-channels", "details", "min-views", "lang", "rank", "name", "tab", "limit", "max", "dir", "tools", "min-n", "base", "exclude"],
+  options: ["window", "sort", "format", "per-query", "max-channels", "details", "min-views", "lang", "rank", "name", "tab", "limit", "max", "dir", "tools", "min-n", "base", "exclude", "channel", "top"],
 };
 
 const rel = (path) => toPosix(ROOT, path);
@@ -546,7 +546,7 @@ async function checkCommand(values) {
 
 /** An outliers research by its id (the folder name) or by the path of its outliers.json. */
 function resolveOutliers(input, dirOption) {
-  if (!input) throw usage("Informe a pesquisa: titles <id da pesquisa de outliers>.", "O id é o nome da pasta em youtube-research/outliers/ (o campo id que o outliers devolveu).");
+  if (!input) throw usage("Informe a pesquisa: titles <id da pesquisa de outliers>, ou titles --channel <canal já lido>.", "O id é o nome da pasta em youtube-research/outliers/ (o campo id que o outliers devolveu).");
   const candidates = [join(researchDir(dirOption), "outliers", input, "outliers.json"), resolve(ROOT, input), join(resolve(ROOT, input), "outliers.json")];
   const file = candidates.find((path) => existsSync(path) && path.endsWith(".json"));
   const data = file ? readJson(file) : null;
@@ -554,32 +554,65 @@ function resolveOutliers(input, dirOption) {
   return { file, data };
 }
 
+/** A channel already read by `channel`: its folder name, its @, or the path of its channel.json. */
+function resolveChannelRead(input, dirOption) {
+  const text = String(input ?? "").trim();
+  if (!text) throw usage("Informe o canal: titles --channel <@canal ou a pasta que o channel devolveu>.");
+  const base = researchDir(dirOption);
+  const candidates = [
+    join(base, "channels", text, "channel.json"),
+    join(base, "channels", slugify(text, 60), "channel.json"),
+    resolve(ROOT, text),
+    join(resolve(ROOT, text), "channel.json"),
+  ];
+  const file = candidates.find((path) => existsSync(path) && path.endsWith(".json"));
+  const data = file ? readJson(file) : null;
+  if (!Array.isArray(data?.items)) throw new AppError("not_found", `Não encontrei a leitura do canal "${text}".`, "Rode channel com o canal antes e passe o @ dele ou a pasta que ele devolveu.");
+  return { file, data };
+}
+
 function titlesCommand(positionals, values) {
-  const { file, data } = resolveOutliers(positionals[0], values.dir);
+  const fromChannel = values.channel !== undefined;
+  if (fromChannel && positionals.length) throw usage("Use a pesquisa ou --channel, não os dois.", "titles <id da pesquisa> mede o tema; titles --channel <canal> mede os vídeos de um canal já lido.");
+  const { file, data } = fromChannel ? resolveChannelRead(values.channel, values.dir) : resolveOutliers(positionals[0], values.dir);
   const minN = intOption(values, "min-n", 5, 2, 50);
+  const top = intOption(values, "top", 15, 5, 50);
   const base = choiceOption(values, "base", "any", ["any", "channel"]);
   const tools = String(values.tools ?? "").split(",").map((tool) => tool.trim()).filter(Boolean);
+  // A channel's own uploads are all measured against its median; they get that base, so every option reads them alike.
+  const all = fromChannel
+    ? data.items.map((item) => ({ ...item, channel: data.channel?.name ?? null, base: { kind: "channel", value: data.median_views ?? null } }))
+    : data.items;
   // Off-topic videos (another meaning of the search words, a neighbouring niche) skew every trait.
   const exclude = new Set(String(values.exclude ?? "").split(",").map((id) => id.trim()).filter(Boolean));
-  const items = data.items.filter((item) => !exclude.has(item.id));
-  const excluded = data.items.filter((item) => exclude.has(item.id)).map((item) => ({ id: item.id, title: item.title ?? null }));
-  const unknown = [...exclude].filter((id) => !data.items.some((item) => item.id === id));
+  const items = all.filter((item) => !exclude.has(item.id));
+  const excluded = all.filter((item) => exclude.has(item.id)).map((item) => ({ id: item.id, title: item.title ?? null }));
+  const unknown = [...exclude].filter((id) => !all.some((item) => item.id === id));
+  const queries = fromChannel ? [] : data.queries ?? [];
   const table = traitTable(items, { tools, minN, base });
+  const ranked = rankedTitles(items, { tools, base, top });
+  const terms = termTable(items, { base, minN, queries });
   const suggested = suggestTools(items.map((item) => item.title ?? ""));
   const dir = dirname(file);
   const result = {
     ok: true,
     command: "titles",
     interface_version: INTERFACE_VERSION,
-    id: data.params?.name ?? positionals[0],
-    queries: data.queries ?? [],
+    source: fromChannel ? "channel" : "outliers",
+    id: fromChannel ? null : data.params?.name ?? positionals[0],
+    channel: fromChannel ? data.channel ?? null : null,
+    read_at: fromChannel ? data.created_at ?? null : null,
+    queries,
     ...table,
+    ...ranked,
+    terms,
     suggested_tools: suggested,
     excluded,
     files: { json: rel(join(dir, "titulos.json")), md: rel(join(dir, "titulos.md")) },
     warnings: [
       ...(table.sample.measured < 30 ? [`Só ${table.sample.measured} títulos com multiplicador: trate tudo como indício.`] : []),
-      ...(unknown.length ? [`Não achei na pesquisa: ${unknown.join(", ")}. Use os ids de outliers.json.`] : []),
+      ...(fromChannel ? ["As views da aba do canal vêm arredondadas pelo YouTube: o multiplicador de cada vídeo é aproximado."] : []),
+      ...(unknown.length ? [`Não achei ${fromChannel ? "no canal" : "na pesquisa"}: ${unknown.join(", ")}. Use os ids de ${fromChannel ? "channel.json" : "outliers.json"}.`] : []),
     ],
   };
   writeJson(join(dir, "titulos.json"), result);
@@ -617,7 +650,8 @@ Comandos
   video <vídeo>…                 Os dados públicos de um ou mais vídeos: data, views, curtidas, capítulos, trechos mais revistos.
   transcript <vídeo>…            A fala com tempos, pela legenda do YouTube, sem baixar o vídeo; palavras por minuto.
   comments <vídeo>…              Os comentários mais relevantes (ou os mais novos), sem respostas e sem nomes.
-  titles <pesquisa>              Os traços de título (número, ferramenta, parênteses, "Como", primeira pessoa…) contra o multiplicador.
+  titles <pesquisa>              Os títulos de alta performance: os que mais passaram do normal, os gatilhos, a forma e as palavras, contra o multiplicador.
+  titles --channel <canal>       O mesmo nos vídeos de um canal já lido por channel: o que funciona naquele canal.
   list                           O que já foi pesquisado neste projeto.
   help                           Esta ajuda.
 
@@ -639,6 +673,7 @@ Outras opções
   --max N --sort top|new         (comments) Quantos comentários, de 10 a 500 (padrão: 100, top).
   --tools "A,B" --min-n N --base any|channel   (titles) Nomes de ferramentas ou marcas do tema; tamanho mínimo de grupo (padrão: 5); só a base do canal.
   --exclude id,id                (titles) Os vídeos fora do tema, que saem da conta.
+  --top N                        (titles) Quantos títulos acima do normal listar, de 5 a 50 (padrão: 15).
   --refresh                      Busca de novo em vez de reaproveitar o que já foi lido.
   --dir <pasta>                  Outra pasta para a pesquisa (padrão: ${RESEARCH_DIR}).
   --json                         Saída em JSON, para a IA e para outros apps.`;
@@ -683,6 +718,7 @@ function humanText(result) {
     case "titles":
       return [
         `${result.sample.measured} títulos com multiplicador. Relatório: ${result.files.md}`,
+        ...(result.top_titles ?? []).slice(0, 5).map((item, i) => `${i + 1}. ${times(item.multiplier)}${item.title}`),
         ...result.traits.map((row) => (row.skipped ? `- ${row.label}: ${row.note}` : `- ${row.label}: ${times(row.with.median)}com (n=${row.with.n}) contra ${times(row.without.median)}sem (n=${row.without.n})${row.small_n ? " · grupo pequeno" : ""}`)),
         ...warnings,
       ].join("\n");

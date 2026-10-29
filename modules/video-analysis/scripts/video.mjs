@@ -32,6 +32,7 @@ import {
   displayPath,
   fileTime,
   formatTime,
+  mediaLimit,
   parseArgs,
   parseTime,
   progress,
@@ -378,7 +379,8 @@ async function shrinkForUpload(ctx, file) {
   const scale = probed.width >= probed.height ? "scale=-2:'min(720,ih)'" : "scale='min(720,iw)':-2";
   const base = ["-hide_banner", "-loglevel", "error", "-nostdin", "-i", file, "-map", `0:v:${probed.video_index}`, "-map", "0:a:0?", "-vf", scale];
   for (const codec of [["-c:v", "libx264", "-preset", "veryfast", "-crf", "28"], ["-c:v", "mpeg4", "-q:v", "6"]]) {
-    const { code } = await run(tools.ffmpeg.path, [...base, ...codec, "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", "-y", target]);
+    // the whole video is encoded again: the limit grows with its duration
+    const { code } = await run(tools.ffmpeg.path, [...base, ...codec, "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", "-y", target], { timeoutMs: mediaLimit(probed.duration_s) });
     if (code === 0 && existsSync(target)) {
       ctx.cleanup.push(target);
       return target;

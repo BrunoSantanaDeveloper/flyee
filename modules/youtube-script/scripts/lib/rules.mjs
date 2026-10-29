@@ -147,6 +147,139 @@ export function packagingTitles(text) {
   return { titles, unquoted };
 }
 
+/**
+ * Thumbnails of embalagem.md: the lines under "## Thumbnails" that start with
+ * a letter ("A. Imagem: … · Texto: "…""), with the on-image text between
+ * quotes after "Texto:". A thumbnail without text has `text: null`.
+ */
+export function packagingThumbnails(text) {
+  const items = [];
+  let inside = false;
+  for (const raw of String(text ?? "").split(/\r?\n/)) {
+    const line = raw.trim();
+    if (/^#{1,6}\s/.test(line)) {
+      inside = /^#{1,6}\s+thumbnails?\b/i.test(line);
+      continue;
+    }
+    const m = /^(?:[-*]\s+)?\**([A-E])[.):,]\**\s+(.*)$/.exec(line);
+    if (!inside || !m) continue;
+    const quoted = /texto\s*:\s*\**\s*["“]([^"“”]+)["”]/i.exec(m[2]);
+    items.push({ letter: m[1], text: quoted ? quoted[1].trim() : null });
+  }
+  return items;
+}
+
+/**
+ * The title chosen under "## Escolha" of embalagem.md: "Título 2 com a
+ * thumbnail A", or one of the titles written out between quotes. Other quoted
+ * words there are the reasons ("usa o traço \"sem X\""), never the title.
+ */
+export function packagingChoice(text, titles = []) {
+  const section = /^#{1,6}\s+escolha\b[^\n]*\n([\s\S]*?)(?=^#{1,6}\s|$(?![\s\S]))/im.exec(String(text ?? ""))?.[1] ?? "";
+  const number = /t[íi]tulo\s+(\d+)/i.exec(section)?.[1];
+  if (number && titles[Number(number) - 1]) return titles[Number(number) - 1];
+  const same = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  for (const m of section.matchAll(/["“]([^"“”]+)["”]/g)) {
+    const title = titles.find((candidate) => same(candidate, m[1]));
+    if (title) return title;
+  }
+  return null;
+}
+
+const NUMBER_WORDS = { 1: "um|uma", 2: "dois|duas", 3: "tr[êe]s", 4: "quatro", 5: "cinco", 6: "seis", 7: "sete", 8: "oito", 9: "nove", 10: "dez", 20: "vinte", 30: "trinta", 40: "quarenta", 50: "cinquenta", 60: "sessenta", 90: "noventa", 100: "cem" };
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * What a title names that the speech has to say: its numbers (in digits or
+ * words), its words in capitals ("IA", "CLT") and its proper names, a
+ * capitalized word that does not open the title or a sentence. A title in
+ * Title Case has no telling capitals, so only its numbers and acronyms count.
+ */
+export function titlePromises(title) {
+  const text = String(title ?? "");
+  const terms = [];
+  const seen = new Set();
+  const add = (term, pattern) => {
+    if (seen.has(term.toLowerCase())) return;
+    seen.add(term.toLowerCase());
+    terms.push({ term, pattern });
+  };
+  for (const m of text.matchAll(/\d+(?:[.,]\d+)?/g)) {
+    // A year ("de 2026") promises freshness, not something the speech has to say.
+    if (/^(19|20)\d\d$/.test(m[0])) continue;
+    const words = NUMBER_WORDS[Number(m[0].replace(",", "."))];
+    add(m[0], new RegExp(`(?<![\\p{L}\\d])(?:${escapeRegex(m[0]).replace(/[.,]/g, "[.,]")}${words ? `|${words}` : ""})(?![\\p{L}\\d])`, "iu"));
+  }
+  // "US$" is money, not an acronym. An acronym ("IA", "MEI") is said as it is; a word
+  // in capitals for emphasis ("ANIMADOS") counts by its stem, so "animado" pays it.
+  for (const m of text.matchAll(/(?<!\p{L})\p{Lu}{2,}(?![\p{L}$])/gu)) {
+    const letters = [...m[0]];
+    const stem = letters.length >= 5 ? `${escapeRegex(letters.slice(0, -2).join(""))}\\p{L}*` : letters.length === 4 ? `${escapeRegex(m[0])}\\p{L}{0,2}` : escapeRegex(m[0]);
+    add(m[0], new RegExp(`(?<!\\p{L})${stem}(?!\\p{L})`, "iu"));
+  }
+  const words = text.split(/\s+/).filter(Boolean);
+  const capitalized = words.filter((word) => /^[^\p{L}]*\p{Lu}\p{Ll}/u.test(word)).length;
+  if (capitalized <= words.length / 2) {
+    words.forEach((word, index) => {
+      const clean = word.replace(/^[^\p{L}\d]+|[^\p{L}\d]+$/gu, "");
+      if (index === 0 || /[.:?!|]$/.test(words[index - 1])) return;
+      if (!/^\p{Lu}\p{Ll}/u.test(clean) || [...clean].length < 3) return;
+      add(clean, new RegExp(`(?<![\\p{L}\\d])${escapeRegex(clean)}(?:e?s)?(?![\\p{L}\\d])`, "iu"));
+    });
+  }
+  return terms;
+}
+
+/**
+ * The title's promise in the speech: each number, acronym and name of the
+ * chosen title, said before the last third of the script (where embalagem.md
+ * says the video pays). Returns what is missing there, and whether it comes later.
+ */
+export function titleCoverage(script, title) {
+  const terms = titlePromises(title);
+  if (!terms.length) return [];
+  const words = script.sections.flatMap((section) => section.paragraphs.map((paragraph) => paragraph.text)).join(" ").split(/\s+/).filter(Boolean);
+  const early = words.slice(0, Math.ceil((words.length * 2) / 3)).join(" ");
+  const all = words.join(" ");
+  return terms.filter((item) => !item.pattern.test(early)).map((item) => ({ term: item.term, later: item.pattern.test(all) }));
+}
+
+const THUMB_STOPWORDS = new Set(["como", "para", "pra", "sobre", "mais", "você", "voce", "isso", "esse", "essa", "este", "esta", "quando", "porque", "depois", "antes", "então", "entao", "também", "tambem", "muito", "cada", "todo", "toda", "mesmo", "aqui", "agora", "with", "your", "this", "that", "from"]);
+const plain = (text) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+function contentWords(text) {
+  return String(text ?? "")
+    .split(/[^\p{L}\d]+/u)
+    .filter((word) => /\d/.test(word) || [...word].length >= 4)
+    .map(plain)
+    .filter((word) => !THUMB_STOPWORDS.has(word));
+}
+
+/**
+ * The on-image text of each thumbnail: at most four words, and words of its
+ * own. The thumbnail says what the title does not: two words of the chosen
+ * title on the image, or a text made only of title words, is a warning; one
+ * shared word is a note.
+ */
+export function thumbnailIssues(thumbnails, chosen) {
+  const issues = [];
+  const titleWords = new Set(chosen ? contentWords(chosen) : []);
+  for (const thumb of thumbnails) {
+    if (!thumb.text) continue;
+    const count = thumb.text.split(/\s+/).filter((word) => /[\p{L}\d]/u.test(word)).length;
+    if (count > 4) {
+      issues.push({ rule: "thumbnail_text_long", severity: "warn", excerpt: thumb.text, message: `O texto da thumbnail ${thumb.letter} tem ${count} palavras: no tamanho de um celular, mais de quatro não se lê.`, fix: "Corte o texto para até quatro palavras em embalagem.md, ou deixe a imagem falar sem texto." });
+    }
+    const own = [...new Set(contentWords(thumb.text))];
+    const repeated = own.filter((word) => titleWords.has(word));
+    if (repeated.length) {
+      const severity = repeated.length >= 2 || repeated.length === own.length ? "warn" : "info";
+      issues.push({ rule: "thumbnail_repeats_title", severity, excerpt: thumb.text, message: `O texto da thumbnail ${thumb.letter} repete o título escolhido (${repeated.join(", ")}).`, fix: "A thumbnail diz o que o título não diz: troque a palavra, ou mostre a situação sem texto." });
+    }
+  }
+  return issues;
+}
+
 const CTA_ASK = /\b(inscrev\w*|deix[ae] (o |seu )?like|sininho|coment[ae]\w*|link na descri[çc][ãa]o|compartilh\w*|baix[ae]\w*|clique|acesse|entre no|me siga|segue)/gi;
 
 const LONG_SENTENCE = 30;

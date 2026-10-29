@@ -516,6 +516,7 @@ Em erro, `ok` é `false` e vem `error` com `code`, `message` e `fix`. Mostre `me
 | `alpha_needs_mov` | transparência num `.mp4`: use `--out` `.mov` ou `.webm` |
 | `output_format` | extensão de vídeo desconhecida: use `.mp4`, `.mov` ou `.webm` |
 | `ffmpeg_failed` | o ffmpeg não codificou, não juntou ou não mediu: `fix` traz as últimas linhas dele; tente de novo uma vez e, se repetir, repasse |
+| `tool_timeout` | o ffmpeg ou o ffprobe travou e o Motor o encerrou ao passar do tempo limite, que é folgado e cresce com a duração do vídeo (`message` diz qual programa e quanto tempo): tente de novo uma vez; se travar de novo, divida o trabalho, com um vídeo ou trecho mais curto ou menos quadros por vez |
 | `exists` | `scaffold` numa pasta que já tem `pagina.html`: use outra pasta, ou `--force` só com o sim do integrante |
 | `cues_invalid` | a lista de deixas do `sfx` está errada: `message` diz qual deixa e qual campo |
 | `audio_too_short`, `silent_audio`, `no_beats` | o `beats` não achou andamento (menos de um segundo de som, silêncio, fala sem ritmo): use um trecho mais longo de música, ou passe `--bpm` |

@@ -74,13 +74,30 @@ O app lê os comentários principais, sem as respostas: por padrão os 100 mais 
 
 ### Os títulos
 
-Sobre uma pesquisa já feita, o app mede nove traços de título contra o multiplicador: ter número; ter nome de ferramenta ou marca, quando os nomes do tema são informados; parênteses ou colchetes; começar com "Como"; ser uma pergunta; primeira pessoa ("testei", "meu"); "sem X"; resultado concreto (dinheiro, tempo ou número com unidade); e uma palavra de 4 letras ou mais em caixa alta, num título que não está todo em maiúsculas.
+Sobre uma pesquisa já feita, o app analisa os títulos de alta performance em quatro partes.
 
-Para cada traço, ele compara a mediana do multiplicador dos títulos que têm o traço com a dos que não têm, e mostra quantos títulos há em cada grupo. Um grupo com menos de 5 títulos aparece como indício. Ele mede também o tamanho: a mediana de caracteres na amostra e nos outliers, e o multiplicador em quatro faixas (até 40, 41 a 60, 61 a 80 e acima de 80 caracteres).
+1. **A lista.** Os títulos que mais passaram do normal do próprio canal, do maior para o menor, e os que ficaram abaixo do normal, cada um com os traços que tem. É por ela que a leitura começa: mostra o mecanismo que as tabelas resumem.
+2. **Os gatilhos.** Oito formas de puxar o clique, contadas pelas palavras que as marcam:
+   - resultado: dinheiro, tempo, número com unidade;
+   - curiosidade: "isso", "esse", "o segredo", "por que", "o X que";
+   - busca direta: "como", "passo a passo", "tutorial", "iniciantes";
+   - contrário: "pare de", "não faça", "mito", "ninguém conta";
+   - custo ou erro: "erro", "evite", "perdendo", "jogando fora";
+   - experimento: "testei", "por 30 dias", "desafio";
+   - lista: "5 dicas", "top 10";
+   - comparação: "vs", "X x Y", "melhor que", "qual escolher".
+
+   Um título de curiosidade sem nenhuma dessas palavras fica fora da conta, então o número é um piso.
+3. **A forma.** Ter número; nome de ferramenta ou marca, quando os nomes do tema são informados; parênteses ou colchetes; começar com "Como"; ser uma pergunta; primeira pessoa; "sem X"; uma palavra em caixa alta; falar com "você"; superlativo; um ano; duas partes separadas por dois pontos, barra ou traço; emoji. E o tamanho: a mediana de caracteres na amostra e nos outliers, e o multiplicador em quatro faixas (até 40, 41 a 60, 61 a 80 e acima de 80 caracteres).
+4. **As palavras.** As palavras e os pares de palavras que aparecem em pelo menos 5 títulos, sem as palavras das buscas, que estão em todos. Qualquer número conta como N, então "7 dias" e "30 dias" somam juntos.
+
+Para cada traço e cada palavra, o app compara a mediana do multiplicador dos títulos que têm o traço com a dos que não têm, e mostra quantos títulos há em cada grupo. Um grupo com menos de 5 títulos aparece como indício.
+
+A mesma análise vale para o seu canal: depois de ler os seus últimos envios, o app mede os seus títulos contra o seu próprio normal. Mostra o que o seu público já respondeu. Com uns 30 vídeos, quase todo grupo é pequeno, e as views da aba do canal vêm arredondadas pelo YouTube.
 
 O app sugere nomes que parecem ferramentas ou marcas nos títulos, para você e a IA confirmarem antes de usar, e deixa tirar da conta os vídeos fora do tema. A busca pega palavras com outro sentido e nichos vizinhos, e eles distorcem os traços.
 
-O resultado mostra o que anda junto com os títulos que foram bem nesta amostra. Ele não prova causa, e outro tema ou outro período dão outros números.
+O resultado mostra o que anda junto com os títulos que foram bem nesta amostra. Ele não prova causa, e outro tema ou outro período dão outros números. Com tantos traços e palavras medidos de uma vez, algum parece forte por acaso: vale mais o que aparece no tema e no seu canal ao mesmo tempo.
 
 ## Os arquivos por dentro
 
@@ -92,8 +109,9 @@ Tudo fica na pasta `youtube-research/` do seu projeto.
 | `outliers/<pesquisa>/outliers.csv` | todos os vídeos, com ponto e vírgula entre as colunas e vírgula decimal, para abrir direto numa planilha em português |
 | `outliers/<pesquisa>/outliers.json` | tudo: as buscas, as opções usadas, a amostra, as ressalvas e cada vídeo com todas as métricas |
 | `outliers/<pesquisa>/raw.json` | a coleta das buscas antes dos filtros |
-| `outliers/<pesquisa>/titulos.md` e `titulos.json` | a medição de títulos; cada nova medição grava por cima da anterior |
+| `outliers/<pesquisa>/titulos.md` e `titulos.json` | a análise dos títulos do tema; cada nova análise grava por cima da anterior |
 | `channels/<canal>/channel.md` e `channel.json` | o normal de um canal e os últimos envios, com multiplicador e faixa |
+| `channels/<canal>/titulos.md` e `titulos.json` | a análise dos títulos do canal, contra o normal dele |
 | `videos/<id>/video.json` | os dados públicos de um vídeo |
 | `videos/<id>/transcript.md` e `transcript.json` | a fala em blocos com tempo, para ler, e os trechos com início e fim, para outros apps |
 | `videos/<id>/comments.md` e `comments.json` | os comentários numerados, com as curtidas |
@@ -121,6 +139,8 @@ O app reaproveita o que já leu: o normal de um canal por 7 dias, os dados de um
 | mais comentários | "Traga os 300 comentários mais relevantes deste vídeo." ou "Quero os mais novos." |
 | títulos | "Meça os títulos considerando Airfryer, Mondial e Philco como marcas e sem os vídeos fora do tema." |
 | títulos mais rigorosos | "Use só os vídeos medidos pelo próprio canal e trate como indício todo grupo com menos de 10 títulos." |
+| os títulos do seu canal | "Analise os títulos do meu canal @meucanal: quais passaram do meu normal e o que eles têm em comum?" |
+| uma lista maior | "Liste os 30 títulos que mais passaram do normal." |
 | vários vídeos | "Pegue a fala destes 5 vídeos." Cabem até 20 por pedido. |
 | o histórico | "O que eu já pesquisei neste projeto?" |
 

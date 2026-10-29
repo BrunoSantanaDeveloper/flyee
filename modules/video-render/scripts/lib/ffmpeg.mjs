@@ -4,7 +4,7 @@
 import { spawn } from "node:child_process";
 import { extname } from "node:path";
 
-import { AppError, run } from "./util.mjs";
+import { AppError, killTree, LIMITS, mediaLimit, run, toolTimeout } from "./util.mjs";
 
 /** Reproducible files: no timestamps or encoder banners in the output. */
 const BITEXACT = ["-map_metadata", "-1", "-fflags", "+bitexact", "-flags:v", "+bitexact", "-flags:a", "+bitexact"];
@@ -53,15 +53,32 @@ export function startEncoder(ffmpegPath, { out, fps, sub = 1, frameFormat = "png
     failed = failed ?? error;
   });
   const done = new Promise((resolve) => child.on("close", (code) => resolve({ code, stderr })));
+  // ffmpeg takes each frame in well under a second and closes the file seconds after the last
+  // one: ten minutes waiting on it is a hang, and the encoder is ended with what it started
+  const bounded = (promise) =>
+    new Promise((resolve, reject) => {
+      const timer = setTimeout(() => killTree(child).then(() => reject(toolTimeout(ffmpegPath, LIMITS.media))), LIMITS.media);
+      promise.then(
+        (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (error) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      );
+    });
   return {
     codec: codec.name,
     async write(frame) {
       if (failed) throw new AppError("ffmpeg_failed", "O ffmpeg parou de aceitar quadros.", stderr || String(failed.message));
-      if (!child.stdin.write(frame)) await new Promise((resolve) => child.stdin.once("drain", resolve));
+      // a full pipe waits until ffmpeg takes the frame; an ffmpeg that has left ends the wait too
+      if (!child.stdin.write(frame)) await bounded(Promise.race([new Promise((resolve) => child.stdin.once("drain", resolve)), done]));
     },
     async end() {
       child.stdin.end();
-      const result = await done;
+      const result = await bounded(done);
       if (result.code !== 0) throw new AppError("ffmpeg_failed", "O ffmpeg não conseguiu codificar o vídeo.", result.stderr.trim().split("\n").slice(-3).join(" "));
       return result;
     },
@@ -75,15 +92,16 @@ export function startEncoder(ffmpegPath, { out, fps, sub = 1, frameFormat = "png
   };
 }
 
-async function ffmpeg(ffmpegPath, args, what) {
-  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-y", ...args]);
+/** One ffmpeg call that writes a file; `timeoutMs` is the limit its caller sized for the work. */
+async function ffmpeg(ffmpegPath, args, what, timeoutMs) {
+  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-y", ...args], { timeoutMs });
   if (result.code !== 0) throw new AppError("ffmpeg_failed", `O ffmpeg falhou ao ${what}.`, result.stderr.trim().split("\n").slice(-3).join(" "));
   return result;
 }
 
 /** Duration, size, frame rate, audio and rotation of a media file. */
 export async function probe(ffprobePath, file) {
-  const result = await run(ffprobePath, ["-v", "error", "-print_format", "json", "-show_format", "-show_streams", file]);
+  const result = await run(ffprobePath, ["-v", "error", "-print_format", "json", "-show_format", "-show_streams", file], { timeoutMs: LIMITS.probe });
   if (result.code !== 0) throw new AppError("unreadable_media", `Não consegui ler ${file}.`, result.stderr.trim().split("\n").slice(-2).join(" "));
   const data = JSON.parse(result.stdout.toString("utf8") || "{}");
   const video = (data.streams ?? []).find((stream) => stream.codec_type === "video") ?? null;
@@ -116,20 +134,20 @@ export async function probe(ffprobePath, file) {
 export async function concatSegments(ffmpegPath, segments, out, listFile) {
   const { writeFileSync } = await import("node:fs");
   writeFileSync(listFile, segments.map((segment) => `file '${segment.replace(/\\/g, "/").replace(/'/g, "'\\''")}'`).join("\n"));
-  await ffmpeg(ffmpegPath, ["-f", "concat", "-safe", "0", "-i", listFile, "-c", "copy", ...BITEXACT, out], "juntar os trechos");
+  await ffmpeg(ffmpegPath, ["-f", "concat", "-safe", "0", "-i", listFile, "-c", "copy", ...BITEXACT, out], "juntar os trechos", LIMITS.copy);
 }
 
 /** Video plus an audio track; the video is copied, the audio becomes AAC (or Opus for .webm). */
 export async function muxAudio(ffmpegPath, video, audio, out, { shortest = true } = {}) {
   const webm = extname(out).toLowerCase() === ".webm";
   const audioArgs = webm ? ["-c:a", "libopus", "-b:a", "160k"] : ["-c:a", "aac", "-b:a", "192k", "-ar", "48000"];
-  await ffmpeg(ffmpegPath, ["-i", video, "-i", audio, "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", ...audioArgs, ...(shortest ? ["-shortest"] : []), ...BITEXACT, out], "juntar o áudio ao vídeo");
+  await ffmpeg(ffmpegPath, ["-i", video, "-i", audio, "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", ...audioArgs, ...(shortest ? ["-shortest"] : []), ...BITEXACT, out], "juntar o áudio ao vídeo", LIMITS.copy);
 }
 
 /** One frame as PNG at a time. */
 export async function extractFrame(ffmpegPath, video, time, out, { width = null } = {}) {
   const vf = width ? ["-vf", `scale=${width}:-2`] : [];
-  await ffmpeg(ffmpegPath, ["-ss", String(time), "-i", video, "-frames:v", "1", ...vf, out], "extrair o quadro");
+  await ffmpeg(ffmpegPath, ["-ss", String(time), "-i", video, "-frames:v", "1", ...vf, out], "extrair o quadro", LIMITS.media);
 }
 
 /**
@@ -145,14 +163,14 @@ export async function contactSheet(ffmpegPath, video, out, { fps = 2, cols = 6, 
     filters.push(`drawtext=fontfile='${fontFile}':text='%{pts\\:hms}':x=6:y=6:fontsize=${Math.max(14, Math.round(tileWidth / 14))}:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=4`);
   }
   filters.push(`tile=${cols}x${rows}:padding=4:margin=4:color=0x141413`);
-  await ffmpeg(ffmpegPath, [...(start ? ["-ss", String(start)] : []), "-i", video, "-vf", filters.join(","), "-frames:v", "1", out], "montar a folha de contato");
+  await ffmpeg(ffmpegPath, [...(start ? ["-ss", String(start)] : []), "-i", video, "-vf", filters.join(","), "-frames:v", "1", out], "montar a folha de contato", mediaLimit(duration));
   return { cols, rows, fps, tile_width: tileWidth };
 }
 
 /** Consecutive frames around one instant, to catch pops and overlaps. */
 export async function frameStrip(ffmpegPath, video, out, { at, count = 12, tileWidth = 320, fps }) {
   const before = Math.max(0, at - (count / 2) / fps);
-  await ffmpeg(ffmpegPath, ["-ss", String(before), "-i", video, "-vf", `scale=${tileWidth}:-2,tile=${count}x1:padding=2:margin=2:color=0x141413`, "-frames:v", "1", out], "montar a tira de quadros");
+  await ffmpeg(ffmpegPath, ["-ss", String(before), "-i", video, "-vf", `scale=${tileWidth}:-2,tile=${count}x1:padding=2:margin=2:color=0x141413`, "-frames:v", "1", out], "montar a tira de quadros", LIMITS.media);
   return { start: before, count };
 }
 
@@ -160,20 +178,20 @@ export async function frameStrip(ffmpegPath, video, out, { at, count = 12, tileW
 export async function phoneSheet(ffmpegPath, video, out, { width = 360, fps = 1, cols = 5, duration = null }) {
   const total = duration ? Math.max(1, Math.ceil(duration * fps)) : 15;
   const rows = Math.max(1, Math.ceil(total / cols));
-  await ffmpeg(ffmpegPath, ["-i", video, "-vf", `fps=${fps},scale=${width}:-2,tile=${cols}x${rows}:padding=6:margin=6:color=0x141413`, "-frames:v", "1", out], "montar o teste de celular");
+  await ffmpeg(ffmpegPath, ["-i", video, "-vf", `fps=${fps},scale=${width}:-2,tile=${cols}x${rows}:padding=6:margin=6:color=0x141413`, "-frames:v", "1", out], "montar o teste de celular", mediaLimit(duration));
   return { cols, rows };
 }
 
 /** Tiles a numbered image sequence (img-0001.png…) into one sheet. */
 export async function tileImages(ffmpegPath, pattern, out, { cols, count, tileWidth = 270 }) {
   const rows = Math.max(1, Math.ceil(count / cols));
-  await ffmpeg(ffmpegPath, ["-framerate", "1", "-i", pattern, "-vf", `scale=${tileWidth}:-2,tile=${cols}x${rows}:padding=4:margin=4:color=0x141413`, "-frames:v", "1", out], "montar a folha");
+  await ffmpeg(ffmpegPath, ["-framerate", "1", "-i", pattern, "-vf", `scale=${tileWidth}:-2,tile=${cols}x${rows}:padding=4:margin=4:color=0x141413`, "-frames:v", "1", out], "montar a folha", LIMITS.media);
   return { cols, rows };
 }
 
 /** Integrated loudness, true peak and range (EBU R128) of a file's audio. */
 export async function measureLoudness(ffmpegPath, file) {
-  const result = await run(ffmpegPath, ["-hide_banner", "-nostats", "-i", file, "-map", "0:a:0", "-af", "loudnorm=I=-14:TP=-1:LRA=11:print_format=json", "-f", "null", "-"]);
+  const result = await run(ffmpegPath, ["-hide_banner", "-nostats", "-i", file, "-map", "0:a:0", "-af", "loudnorm=I=-14:TP=-1:LRA=11:print_format=json", "-f", "null", "-"], { timeoutMs: LIMITS.sound });
   const text = result.stderr;
   const start = text.lastIndexOf("{");
   const end = text.lastIndexOf("}");
@@ -235,7 +253,9 @@ export async function mixAudio(ffmpegPath, { video = null, out, music = null, mu
   // dynamic single pass would pump the music), then a limiter keeps the true peak under
   // the target with a margin for the lossy encoder's overshoot.
   const measureArgs = [...inputs, "-filter_complex", `${chains.join(";")};[mixed]loudnorm=I=${lufs}:TP=${truePeak}:LRA=11:print_format=json[outa]`, "-map", "[outa]", "-f", "null", "-"];
-  const measured = await run(ffmpegPath, ["-hide_banner", "-nostats", "-y", ...measureArgs]);
+  // both passes go over the whole mix: the limit grows with its duration (the default when it is unknown)
+  const timeoutMs = mediaLimit(duration);
+  const measured = await run(ffmpegPath, ["-hide_banner", "-nostats", "-y", ...measureArgs], { timeoutMs });
   const text = measured.stderr;
   const open = text.lastIndexOf("{");
   const close = text.lastIndexOf("}");
@@ -259,22 +279,25 @@ export async function mixAudio(ffmpegPath, { video = null, out, music = null, mu
     ...BITEXACT,
     out,
   ];
-  await ffmpeg(ffmpegPath, args, "mixar o áudio");
+  await ffmpeg(ffmpegPath, args, "mixar o áudio", timeoutMs);
   return { measured: { integrated_lufs: silent ? null : Number(stats.input_i), true_peak_dbtp: silent ? null : Number(stats.input_tp), range_lu: silent ? null : Number(stats.input_lra) }, silent };
 }
 
 /** Decodes a file's audio to mono float samples at `rate` Hz (for beat detection). */
 export async function decodeAudio(ffmpegPath, file, { rate = 22050 } = {}) {
-  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-i", file, "-map", "0:a:0", "-ac", "1", "-ar", String(rate), "-f", "f32le", "-"]);
+  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-i", file, "-map", "0:a:0", "-ac", "1", "-ar", String(rate), "-f", "f32le", "-"], { timeoutMs: LIMITS.sound });
   if (result.code !== 0) throw new AppError("unreadable_media", `Não consegui ler o áudio de ${file}.`, result.stderr.trim().split("\n").slice(-2).join(" "));
   const bytes = result.stdout;
   return { rate, samples: new Float32Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.length / 4)) };
 }
 
-/** Average luminance (0-255) and frame difference of every frame, for flash and dead-time checks. */
-export async function frameStats(ffmpegPath, video, { fps = null } = {}) {
+/**
+ * Average luminance (0-255) and frame difference of every frame, for flash and dead-time checks.
+ * It decodes the whole video: the caller passes `timeoutMs` from its duration (mediaLimit).
+ */
+export async function frameStats(ffmpegPath, video, { fps = null, timeoutMs } = {}) {
   const vf = `${fps ? `fps=${fps},` : ""}signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-,metadata=print:key=lavfi.signalstats.YDIF:file=-`;
-  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-i", video, "-an", "-vf", vf, "-f", "null", "-"]);
+  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-i", video, "-an", "-vf", vf, "-f", "null", "-"], { timeoutMs });
   if (result.code !== 0) throw new AppError("ffmpeg_failed", "Não consegui medir os quadros.", result.stderr.trim().split("\n").slice(-2).join(" "));
   return parseFrameStats(result.stdout.toString("utf8"));
 }
@@ -304,9 +327,9 @@ export function parseFrameStats(text) {
   return [...byFrame.values()].sort((a, b) => a.n - b.n);
 }
 
-/** Scene cuts detected by ffmpeg's scene score, in seconds. */
-export async function detectCuts(ffmpegPath, video, { threshold = 0.3 } = {}) {
-  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-i", video, "-an", "-vf", `select='gt(scene\\,${threshold})',metadata=print:key=lavfi.scene_score:file=-`, "-fps_mode", "passthrough", "-f", "null", "-"]);
+/** Scene cuts detected by ffmpeg's scene score, in seconds. Decodes the whole video: `timeoutMs` as in frameStats. */
+export async function detectCuts(ffmpegPath, video, { threshold = 0.3, timeoutMs } = {}) {
+  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-i", video, "-an", "-vf", `select='gt(scene\\,${threshold})',metadata=print:key=lavfi.scene_score:file=-`, "-fps_mode", "passthrough", "-f", "null", "-"], { timeoutMs });
   if (result.code !== 0) throw new AppError("ffmpeg_failed", "Não consegui detectar os cortes.", result.stderr.trim().split("\n").slice(-2).join(" "));
   const cuts = [];
   for (const line of result.stdout.toString("utf8").split(/\r?\n/)) {

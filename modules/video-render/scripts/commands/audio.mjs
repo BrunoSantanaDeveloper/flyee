@@ -11,7 +11,7 @@ import { decodeAudio, measureLoudness, mixAudio, probe } from "../lib/ffmpeg.mjs
 import { STYLE_DESCRIPTIONS, STYLE_NAMES as LOOP_STYLES, synthesizeMusic as synthesizeLoop } from "../lib/audio/styles.mjs";
 import { SFX_ALIASES, SFX_TYPE_NAMES, synthesizeSfx as synthesizeEvents } from "../lib/audio/synth.mjs";
 import { checkTools } from "../lib/tools.mjs";
-import { AppError, parseList, parseNumber, parseTime, readJson, removeDir, requireJson, resolveInput, round, run, tempDir, usage, writeJson } from "../lib/util.mjs";
+import { AppError, LIMITS, parseList, parseNumber, parseTime, readJson, removeDir, requireJson, resolveInput, round, run, tempDir, usage, writeJson } from "../lib/util.mjs";
 
 export const argSpec = {
   flags: ["loop"],
@@ -79,7 +79,8 @@ async function finalizeMix(ffmpegPath, { video = null, audio, out, gainDb = 0 })
     ...([".mp4", ".m4v", ".mov", ".m4a"].includes(ext) ? ["-movflags", "+faststart"] : []),
     out,
   ];
-  const result = await run(ffmpegPath, args);
+  // the picture is copied and only the sound is encoded, as in muxAudio
+  const result = await run(ffmpegPath, args, { timeoutMs: LIMITS.copy });
   if (result.code !== 0) throw new AppError("ffmpeg_failed", "O ffmpeg falhou ao gravar o mix final.", result.stderr.trim().split("\n").slice(-3).join(" "));
 }
 

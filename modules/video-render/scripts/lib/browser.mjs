@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { findBrowser, installHints } from "./tools.mjs";
-import { AppError, removeDir, run, sleep, tempDir, WINDOWS } from "./util.mjs";
+import { AppError, LIMITS, removeDir, run, sleep, tempDir, WINDOWS } from "./util.mjs";
 
 const DEFAULT_TIMEOUT = 20000;
 const PROFILE_PREFIX = "flyee-browser-";
@@ -93,7 +93,7 @@ export async function killProcessTree(pid) {
   if (WINDOWS) {
     const taskkill = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe");
     try {
-      await run(taskkill, ["/PID", String(pid), "/T", "/F"]);
+      await run(taskkill, ["/PID", String(pid), "/T", "/F"], { timeoutMs: LIMITS.probe });
     } catch {
       // already gone, or taskkill unavailable: the caller still kills the main process
     }

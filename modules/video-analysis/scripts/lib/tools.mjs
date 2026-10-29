@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 
-import { run } from "./util.mjs";
+import { LIMITS, run } from "./util.mjs";
 
 const WINDOWS = process.platform === "win32";
 const MAC = process.platform === "darwin";
@@ -59,7 +59,7 @@ export function findExecutable(name) {
 
 async function firstLine(file, args) {
   try {
-    const { code, stdout } = await run(file, args);
+    const { code, stdout } = await run(file, args, { timeoutMs: LIMITS.probe });
     if (code !== 0) return null;
     return stdout.toString("utf8").split(/\r?\n/)[0].trim() || null;
   } catch {
@@ -142,7 +142,7 @@ export async function gridFont(tools) {
   if (tools.font !== undefined) return tools.font;
   let drawtext = false;
   try {
-    const { stdout } = await run(tools.ffmpeg.path, ["-hide_banner", "-filters"]);
+    const { stdout } = await run(tools.ffmpeg.path, ["-hide_banner", "-filters"], { timeoutMs: LIMITS.probe });
     drawtext = /\sdrawtext\s/.test(stdout.toString("utf8"));
   } catch {
     drawtext = false;

@@ -4,7 +4,7 @@ YouTube research shows which videos on a topic did far better than their own cha
 
 A video with 1 million views on a channel that always gets 1 million tells you little. A video with 80 thousand views on a channel that usually gets 8 thousand tells you a lot: the topic, the angle or the title pulled in an audience that would not have come on its own. Those are outliers. The app finds them, and your AI explains why they took off, what they have in common, what is already saturated and what nobody has covered well.
 
-The app can also bring you a video's speech (from its captions, without downloading the video), the most relevant comments, the normal of any channel, yours included, and the title traits that go along with the videos that did well. Everything comes from public YouTube pages, with no key and no login.
+The app can also bring you a video's speech (from its captions, without downloading the video), the most relevant comments, the normal of any channel, yours included, and the analysis of high-performing titles: those that went furthest above the normal, and the triggers and words that go along with the videos that did well, on the topic or only on your channel. Everything comes from public YouTube pages, with no key and no login.
 
 You can ask your AI for a search directly. The YouTube script app also uses this one behind the scenes, to research the topic before proposing a video idea, measure titles and read the speech of reference videos.
 
@@ -16,6 +16,7 @@ You can ask your AI for a search directly. The YouTube script app also uses this
 - "Get the speech of this video and show me how it hooks people at the start", followed by the video's address.
 - "What does the audience ask in the comments of the biggest outliers from that search?"
 - "What kind of title works on this topic? Show me with numbers."
+- "Which titles on my channel beat my normal, and what do they have in common?"
 
 A topic, a channel or a video address is enough. If something is missing, your AI will ask.
 
@@ -25,7 +26,7 @@ A topic, a channel or a video address is enough. If something is missing, your A
 2. **Your request.** The AI checks the topic, the audience, the format (long videos or Shorts) and the time window: the last month for something trending, the last year (the default) for an evergreen topic. If something is missing, it asks once, with all its questions together.
 3. **The search.** The AI turns the topic into 3 to 6 searches (the technical term, the everyday term, the audience's pain point, the question they would type), and the app measures the normal of every channel it finds. It takes one to ten minutes, depending on the searches and channels, and the AI lets you know first.
 4. **The reading.** The chat gets a reading, not a table: the 5 to 8 videos that matter most, with views, multiplier and the likely reason each one took off; the patterns that show up in two or more outliers; what is saturated; the gaps; the caveats about the sample. First, the AI drops anything off topic and tells you how many videos it removed.
-5. **Going deeper, if you want.** The speech and comments of the biggest outliers, a channel's normal, the title measurement.
+5. **Going deeper, if you want.** The speech and comments of the biggest outliers, a channel's normal, the title analysis of the topic and of your channel.
 
 No key, no YouTube account, no page to approve.
 
@@ -37,8 +38,9 @@ Everything goes into the `youtube-research/` folder in your project. Each search
 |---|---|
 | `outliers/<search>/outliers.md` | the report: ranking with band, multiplier, views, views per day, engagement and flags, plus the caveats |
 | `outliers/<search>/outliers.csv` | the spreadsheet with every video |
-| `outliers/<search>/titulos.md` | the title traits against the multiplier, when you ask for them |
+| `outliers/<search>/titulos.md` | the high-performing titles of the topic, when you ask for them |
 | `channels/<channel>/channel.md` | a channel's normal and its latest uploads |
+| `channels/<channel>/titulos.md` | the channel's titles that beat its normal, when you ask for them |
 | `videos/<video id>/transcript.md` | the speech, with the time of each passage |
 | `videos/<video id>/comments.md` | the most relevant comments, without the authors' names |
 
@@ -84,7 +86,7 @@ The report is sorted by an index that also weighs engagement and the video's age
 - Views on a channel's page are rounded by YouTube ("6.4K"). That is enough to work out the normal.
 - The language filter recognizes English, Portuguese and Spanish from the title. A video in another language can still slip through; ask to leave it out of the reading.
 - The speech comes from the captions. Without captions there is no transcript here, and the AI offers three options: you paste the transcript into a file, the Video analysis app listens to the audio, or you move on without that video.
-- The title measurement shows what goes along with the titles that did well in this sample, not the cause.
+- The title analysis shows what goes along with the titles that did well in this sample, not the cause. The titles on the list show the mechanism; copying one of them is the most common mistake.
 - Sometimes YouTube refuses automated requests for a while. The AI updates yt-dlp, waits a few minutes and tries again with fewer searches.
 - The report files are in Portuguese; the AI explains them in English.
 - The app doesn't download videos and doesn't publish anything.

@@ -167,6 +167,7 @@ Peça assim: "Você tem fotos suas para este carrossel? Me passe os arquivos, e 
 | `gemini_unavailable`, `offline` | instabilidade ou sem internet: tente de novo em alguns minutos |
 | `tools_missing` | falta o ffmpeg: rode você mesmo o comando de `fix`, com tempo limite longo, e repita |
 | `unreadable_image`, `ffmpeg_failed` | a imagem gerada não abriu ou não pôde ser gravada: repita com `--refresh` |
+| `tool_timeout` | o ffmpeg ou o ffprobe travou ao tratar a imagem e foi encerrado ao passar do tempo limite: repita uma vez com `--refresh`; se travar de novo, peça uma imagem menor ou use outra |
 | `carousel_not_found` | o carrossel não existe: crie-o com `new` antes de pedir as imagens |
 | `file_not_found` | a imagem de referência não existe no caminho dado |
 | `usage` | uma opção errada (a saída fora de `assets/`, um recorte em `.jpg`, uma proporção desconhecida): corrija o comando, `fix` diz como |

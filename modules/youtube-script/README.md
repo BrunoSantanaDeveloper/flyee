@@ -8,13 +8,13 @@ Pedir um roteiro inteiro para uma IA costuma dar um texto genérico, que soa com
 
 1. **O perfil do seu canal**, uma vez só: para quem você fala, o que promete e como você fala. A voz sai dos seus textos, dos seus vídeos ou, num canal novo, do jeito de falar de criadores que você indicar, sempre com a pergunta "você fala assim?". As suas regras ("nunca diga isso", "nunca faça aquilo") valem para todo vídeo, e as suas histórias e opiniões (como você começou, o que você defende, o que te incomoda no jeito comum) entram nos roteiros no lugar de qualquer coisa inventada.
 2. **A ficha de verdade** de tudo que aparece no vídeo: o que a ferramenta ou o produto faz de verdade, os limites, o que custa e o que fica fora da fala. Nenhuma frase passa disso.
-3. **O que já funciona no tema, com dados**: os vídeos que fizeram muito mais do que o normal do próprio canal, os traços de título medidos (número, nome da ferramenta, "Como", primeira pessoa…), como os melhores abrem e o que o público pergunta.
+3. **O que já funciona no tema, com dados**: os vídeos que fizeram muito mais do que o normal do próprio canal, os títulos de alta performance (os que mais subiram, com o gatilho, a forma e as palavras de cada um, no tema e no seu canal), como os melhores abrem e o que o público pergunta.
 4. **Um vídeo de referência**, até de outro país: o mapa batida a batida do que ele faz, trazido para o seu público (a moeda, os programas, as buscas) e sem o que não vale aqui.
-5. **Título e thumbnail primeiro**: cinco títulos, cada um dizendo de que dado veio, e thumbnails prontas para o teste de miniaturas.
+5. **Título e thumbnail primeiro**: cinco títulos, cada um dizendo de que dado veio, e as variantes de título e thumbnail prontas para o teste A/B do YouTube.
 6. **Gancho e estrutura**: o seu texto como gancho quando você escreve um, blocos com nome de resultado, a melhor parte guardada para o fim e um esqueleto para vídeos de "como eu uso X para Y".
 7. **Primeiro acontece, depois se escreve**: num vídeo que mostra fazer ou testar algo, você recebe antes o roteiro de gravação, e a fala vem em cima do que aconteceu. O que só o resultado responde fica marcado para preencher.
-8. **Conferência e crítica**: um verificador acha aberturas que espantam o público, frases longas demais, cara de texto de IA, números sem fonte, "ninguém faz isso" sem a busca, frase de anúncio e as palavras que você nunca diz. Depois, uma crítica com olhos novos dá notas e aponta o que é obrigatório mudar.
-9. **Pronto para gravar**: o checklist do que fazer, preencher e conferir, o documento completo para ler e compartilhar, o teleprompter, o roteiro em Word e a descrição com "tudo que eu usei" e os capítulos.
+8. **Conferência e crítica**: um verificador acha aberturas que espantam o público, frases longas demais, cara de texto de IA, números sem fonte, "ninguém faz isso" sem a busca, frase de anúncio, as palavras que você nunca diz, um título cuja promessa a fala não paga e uma descrição que o YouTube recusaria. Depois, uma crítica com olhos novos dá notas e aponta o que é obrigatório mudar.
+9. **Pronto para gravar**: o checklist do que fazer, preencher, conferir e responder ao publicar, o documento completo para ler e compartilhar, o teleprompter, o roteiro em Word e a descrição com "tudo que eu usei" e os capítulos.
 
 Se algo que aparece no vídeo é seu, o roteiro fica sem cara de anúncio: uma frase de transparência, nada de plano ou preço na fala, e o link na descrição.
 
@@ -47,7 +47,7 @@ Outros pedidos:
 | `roteiros/<vídeo>/verdade.md` | a ficha de verdade do que aparece no vídeo |
 | `roteiros/<vídeo>/pesquisa.md` | os dados do tema, os títulos medidos, a lacuna e os fatos com fonte |
 | `roteiros/<vídeo>/referencia.md` | o mapa do vídeo de referência, adaptado ao seu público |
-| `roteiros/<vídeo>/embalagem.md` | os títulos, as thumbnails para o teste e a promessa |
+| `roteiros/<vídeo>/embalagem.md` | os títulos, as thumbnails, as variantes do teste A/B e a promessa |
 | `roteiros/<vídeo>/estrutura.md` | os ganchos, os blocos com tempo e os pontos de retenção |
 | `roteiros/<vídeo>/gravacao.md` | num tutorial, o mapa da sua gravação de tela |
 | `roteiros/<vídeo>/roteiro.md` e `roteiro.docx` | o roteiro |
@@ -68,6 +68,7 @@ A pesquisa e a leitura de vídeos ficam nas pastas dos apps parceiros (`youtube-
 
 ## O que há de novo
 
+- 1.2.0: os títulos partem dos de alta performance do tema e do seu canal, com o gatilho e as palavras medidos; o teste A/B do YouTube, que agora compara títulos também, ganha as variantes de título; as regras da thumbnail ganham o canto da duração, o tamanho e o arquivo certos; a conferência avisa quando a fala não paga um número ou um nome do título escolhido e quando o texto da thumbnail passa de quatro palavras ou repete o título, e bloqueia a descrição acima do limite do YouTube; o checklist lembra o que responder ao publicar (público, uso de IA, promoção paga, teste A/B).
 - 1.1.1: quando a pesquisa ou a leitura de um vídeo precisa de outro app que ainda não está no projeto, a sua IA diz numa frase qual vai instalar e instala na hora, sem pedir confirmação.
 - 1.1.0: pesquisa com dados antes do roteiro e títulos medidos contra o normal de cada canal; o mapa batida a batida de um vídeo de referência, até de outro país, adaptado ao seu público; a voz tirada dos seus vídeos ou de criadores que você indicar; pautas para "o que eu gravo?"; narração em cima da gravação de tela; o documento completo e o roteiro em Word.
 - 1.0.0: primeira versão. Perfil do canal com a sua voz, as suas histórias e opiniões e as suas regras; ficha de verdade do que aparece no vídeo; vídeo do que é seu sem cara de anúncio; primeiro acontece, depois se escreve; título e thumbnail antes do roteiro, com variantes para o teste de miniaturas; ganchos de famílias diferentes, com o seu texto em primeiro lugar; esqueleto para "como eu uso X para Y"; escrita bloco a bloco; conferência automática e crítica com nota mínima; checklist, teleprompter e descrição com capítulos.

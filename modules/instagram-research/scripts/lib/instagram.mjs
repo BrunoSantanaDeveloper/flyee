@@ -68,6 +68,39 @@ export function ageDays(postedAt, collectedAt) {
   return Math.max(0, Math.floor((collected - posted) / dayMs));
 }
 
+/**
+ * A caption as its author wrote it: every line, the hashtags and the call to action at the end.
+ * Only the line ends are made the same and the edges trimmed; null when there is no caption text.
+ */
+export function fullCaption(text) {
+  return typeof text === "string" ? text.replace(/\r\n?/g, "\n").trim() : null;
+}
+
+/**
+ * When a signed Instagram media link stops working, as an ISO time: its `oe` parameter is a Unix
+ * time in hexadecimal, and the link's signature covers it, so it cannot be pushed forward. Null
+ * when the link carries no readable expiry; the time is then unknown, never guessed.
+ */
+export function linkExpiry(link) {
+  if (typeof link !== "string" || !link) return null;
+  let oe;
+  try {
+    oe = new URL(link).searchParams.get("oe");
+  } catch {
+    return null;
+  }
+  if (!oe || !/^[0-9a-f]{6,10}$/i.test(oe)) return null;
+  const seconds = Number.parseInt(oe, 16);
+  // A plausible moment, from 2020 to 2100; anything else is not an expiry.
+  if (!(seconds > 1577836800 && seconds < 4102444800)) return null;
+  return new Date(seconds * 1000).toISOString();
+}
+
+/** The short code of a raw item of the collector, from its own field or its address. */
+export function itemShortcode(item) {
+  return item?.shortCode ?? (POST_PATH.exec(item?.url ?? "") ?? [])[1] ?? null;
+}
+
 /** The failure an actor reported instead of posts ({ error: "not_found" }), or null. */
 export function actorFailure(items) {
   const failed = items.find((item) => item && typeof item.error === "string");
@@ -79,6 +112,8 @@ export function actorFailure(items) {
  * One post collected by apify/instagram-post-scraper, in the app's shape. Reels are measured by
  * plays (videoPlayCount: Instagram plus Facebook when crossposted); static posts and carousels by
  * interactions. likesCount of -1 means the author hid the likes: the count is unknown, not zero.
+ * The caption stays whole; the Reels' video link stays in raw.json, and the post carries only the
+ * time that link stops working.
  */
 export function normalizePost(raw, { collectedAt }) {
   const isVideo = raw.type === "Video";
@@ -86,7 +121,7 @@ export function normalizePost(raw, { collectedAt }) {
   const likes = typeof raw.likesCount === "number" && raw.likesCount >= 0 ? raw.likesCount : null;
   const comments = typeof raw.commentsCount === "number" && raw.commentsCount >= 0 ? raw.commentsCount : null;
   const plays = isVideo ? (typeof raw.videoPlayCount === "number" ? raw.videoPlayCount : typeof raw.videoViewCount === "number" ? raw.videoViewCount : null) : null;
-  const shortcode = raw.shortCode ?? (POST_PATH.exec(raw.url ?? "") ?? [])[1] ?? null;
+  const shortcode = itemShortcode(raw);
   return {
     id: shortcode,
     url: shortcode ? `https://www.instagram.com/p/${shortcode}/` : raw.url ?? null,
@@ -100,8 +135,9 @@ export function normalizePost(raw, { collectedAt }) {
     duration_s: typeof raw.videoDuration === "number" ? Math.round(raw.videoDuration * 10) / 10 : null,
     posted_at: raw.timestamp ?? null,
     age_days: ageDays(raw.timestamp, collectedAt),
-    caption: typeof raw.caption === "string" ? raw.caption.replace(/\s+/g, " ").trim().slice(0, 300) : null,
+    caption: fullCaption(raw.caption),
     ad: Boolean(raw.paidPartnership || raw.isSponsored),
+    video_expires_at: isVideo ? linkExpiry(raw.videoUrl) : null,
   };
 }
 

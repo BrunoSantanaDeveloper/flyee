@@ -28,7 +28,17 @@ const decimal = (value, digits = 2) => (known(value) ? value.toFixed(digits).rep
 const times = (value) => (known(value) ? `${decimal(value)}×` : "");
 const percent = (value) => (known(value) ? `${(value * 100).toFixed(1).replace(".", ",")}%` : "");
 const flags = (list) => (list ?? []).map((flag) => FLAG_LABELS[flag] ?? flag).join(", ");
-const cell = (text) => String(text ?? "").replace(/\|/g, "/").replace(/\]/g, ")").replace(/\[/g, "(");
+const cell = (text) => String(text ?? "").replace(/\s*\n\s*/g, " ").replace(/\|/g, "/").replace(/\]/g, ")").replace(/\[/g, "(");
+
+/**
+ * The start of a caption for one table cell: one line, at most `max` characters, cut whole
+ * (an emoji is never split in half). The full caption stays in the .json and the .csv.
+ */
+export function excerpt(text, max) {
+  const flat = String(text ?? "").replace(/\s+/g, " ").trim();
+  const chars = [...flat];
+  return chars.length > max ? `${chars.slice(0, max - 1).join("").trimEnd()}…` : flat;
+}
 
 function normalLine(label, baseline, unit) {
   if (!baseline || baseline.status === "none") return `- ${label}: sem normal (${baseline?.n ?? 0} posts com o número; são precisos ao menos 3).`;
@@ -37,7 +47,7 @@ function normalLine(label, baseline, unit) {
 }
 
 function postRow(item, index, measure) {
-  const what = item.caption ? cell(item.caption.slice(0, 70)) : "(sem legenda)";
+  const what = item.caption ? cell(excerpt(item.caption, 70)) : "(sem legenda)";
   const link = item.url ? `[${what}](${item.url})` : what;
   return `| ${index + 1} | ${BAND_LABELS[item.band] ?? ""} | ${times(item.multiplier)} | ${compact(item.metric)} | ${measure(item)} | ${item.posted_at ? item.posted_at.slice(0, 10) : ""} | ${link} | ${flags(item.flags)} |`;
 }
@@ -126,7 +136,7 @@ export function outliersMarkdown(result, { top = 25 } = {}) {
     "",
     "| # | Faixa | Multiplicador | Plays | Perfil | Duração | Post | Avisos |",
     "|---|---|---|---|---|---|---|---|",
-    ...result.reels.slice(0, top).map((item, i) => `| ${i + 1} | ${BAND_LABELS[item.band] ?? ""} | ${times(item.multiplier)} | ${compact(item.metric)} | @${item.profile} | ${known(item.duration_s) ? `${Math.round(item.duration_s)} s` : ""} | ${item.url ? `[${cell((item.caption ?? "post").slice(0, 60))}](${item.url})` : cell(item.caption ?? "")} | ${flags(item.flags)} |`),
+    ...result.reels.slice(0, top).map((item, i) => `| ${i + 1} | ${BAND_LABELS[item.band] ?? ""} | ${times(item.multiplier)} | ${compact(item.metric)} | @${item.profile} | ${known(item.duration_s) ? `${Math.round(item.duration_s)} s` : ""} | ${item.url ? `[${cell(excerpt(item.caption, 60) || "post")}](${item.url})` : cell(excerpt(item.caption, 60))} | ${flags(item.flags)} |`),
     "",
   ];
   lines.push(...durationLines(result.durations), ...warningLines(result.warnings), ...readingNotes());

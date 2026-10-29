@@ -29,7 +29,58 @@ const MIME_BY_EXTENSION = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": 
 // Running programs
 // ---------------------------------------------------------------------------
 
-/** Runs a program without a shell; resolves with the exit code and the output, never rejects on a non-zero exit. */
+// ffprobe reads an image's header in a second: two minutes is only reached by a hang
+const PROBE_LIMIT_MS = 2 * 60 * 1000;
+// ffmpeg converts, cuts out or measures one image in seconds: ten minutes is only reached by a hang
+const IMAGE_LIMIT_MS = 10 * 60 * 1000;
+
+/**
+ * Ends a program that passed its limit. On Windows taskkill ends it with every process it
+ * started; elsewhere it is ended alone, which is all of it for ffmpeg and ffprobe.
+ */
+function killTree(child) {
+  const alone = () => {
+    try {
+      child.kill("SIGKILL");
+    } catch {
+      // already gone
+    }
+  };
+  if (!WINDOWS) {
+    alone();
+    return;
+  }
+  try {
+    const taskkill = spawn(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe"), ["/PID", String(child.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" });
+    taskkill.once("error", alone);
+    taskkill.once("exit", (code) => {
+      if (code !== 0) alone();
+    });
+  } catch {
+    alone();
+  }
+}
+
+/** The error of a program that passed its limit: which one and for how long, and what the AI does next. */
+export function toolTimeout(file, timeoutMs) {
+  const name = basename(String(file)).replace(/\.(exe|com|cmd|bat)$/i, "");
+  const seconds = timeoutMs / 1000;
+  const limit = seconds < 120 ? `${String(Math.round(seconds * 10) / 10).replace(".", ",")} s` : `${Math.round(seconds / 60)} min`;
+  return new AppError("tool_timeout", `O ${name} não terminou em ${limit} e foi interrompido.`, "Tente de novo uma vez. Se travar de novo, use uma imagem menor ou outra imagem.");
+}
+
+/** ffmpeg or ffprobe on one image: past `timeoutMs` the program is ended and the call fails with tool_timeout. */
+export async function runTool(file, args, timeoutMs) {
+  const result = await run(file, args, { timeoutMs });
+  if (result.timedOut) throw toolTimeout(file, timeoutMs);
+  return result;
+}
+
+/**
+ * Runs a program without a shell; resolves with the exit code and the output, never rejects on a
+ * non-zero exit. Past `timeoutMs` the program is ended (with what it started, on Windows) and the
+ * result comes back with `timedOut`.
+ */
 export function run(file, args, { cwd, env, timeoutMs = 0, input } = {}) {
   return new Promise((resolve, reject) => {
     let child;
@@ -44,11 +95,7 @@ export function run(file, args, { cwd, env, timeoutMs = 0, input } = {}) {
     let timedOut = false;
     const timer = timeoutMs > 0 ? setTimeout(() => {
       timedOut = true;
-      try {
-        child.kill();
-      } catch {
-        // already gone
-      }
+      killTree(child);
     }, timeoutMs) : null;
     child.stdout.on("data", (chunk) => out.push(chunk));
     child.stderr.setEncoding("utf8");
@@ -392,7 +439,7 @@ export async function generateWithGemini({ key, prompt, aspect, model = GEMINI_I
 // ---------------------------------------------------------------------------
 
 export async function probeImage(ffprobe, file) {
-  const result = await run(ffprobe, ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,pix_fmt", "-of", "json", file]);
+  const result = await runTool(ffprobe, ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,pix_fmt", "-of", "json", file], PROBE_LIMIT_MS);
   if (result.code !== 0) throw new AppError("unreadable_image", `Não consegui ler a imagem ${basename(file)}.`, result.stderr.trim().split(/\r?\n/).slice(-2).join(" "));
   const stream = JSON.parse(result.stdout.toString("utf8") || "{}").streams?.[0] ?? {};
   return { width: stream.width ?? null, height: stream.height ?? null, has_alpha: /yuva|rgba|argb|bgra|gbrap|ya8|pal8/.test(stream.pix_fmt ?? "") };
@@ -400,7 +447,7 @@ export async function probeImage(ffprobe, file) {
 
 /** Mean of the alpha plane (0–255) through ffmpeg; 255 when the image has no alpha. */
 export async function alphaMean(ffmpeg, file) {
-  const result = await run(ffmpeg, ["-hide_banner", "-i", file, "-vf", "format=rgba,alphaextract,signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-", "-frames:v", "1", "-f", "null", "-"]);
+  const result = await runTool(ffmpeg, ["-hide_banner", "-i", file, "-vf", "format=rgba,alphaextract,signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-", "-frames:v", "1", "-f", "null", "-"], IMAGE_LIMIT_MS);
   // ffmpeg prints small numbers in scientific notation: an almost empty cut-out is 3.2e-05, not 3.2
   const match = /YAVG=([\d.]+(?:e[-+]?\d+)?)/i.exec(`${result.stdout.toString("utf8")}\n${result.stderr}`);
   return match ? Number(match[1]) : null;
@@ -421,7 +468,7 @@ const encoderArgs = (out) => {
 /** Writes `out` from `input`: converts the format and, with `key`, removes the flat background first. */
 export async function writeImage({ ffmpeg, input, out, key = null }) {
   ensureDir(dirname(out));
-  const attempt = async (filter) => run(ffmpeg, ["-hide_banner", "-loglevel", "error", "-y", "-i", input, ...(filter ? ["-vf", filter] : []), "-frames:v", "1", ...encoderArgs(out), out]);
+  const attempt = async (filter) => runTool(ffmpeg, ["-hide_banner", "-loglevel", "error", "-y", "-i", input, ...(filter ? ["-vf", filter] : []), "-frames:v", "1", ...encoderArgs(out), out], IMAGE_LIMIT_MS);
   const warnings = [];
   let result = await attempt(key ? keyFilter(key) : null);
   if (result.code !== 0 && key) {

@@ -9,14 +9,14 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | [Criativos para anúncios](#ad-creatives) | 1.2.0 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
 | [Medição e leitura de resultados](#ads-insights) | 1.0.0 | tool | escalar | — | — |
 | [Base de contatos e CRM](#contact-base) | 1.1.0 | workflow | vender | — | — |
-| [Pesquisa no Instagram](#instagram-research) | 1.0.2 | tool | planejar | — | `ad-creatives` |
+| [Pesquisa no Instagram](#instagram-research) | 1.1.0 | tool | planejar | `video-analysis` | `ad-creatives` |
 | [Plano de estratégia e mídia](#media-plan) | 1.1.0 | workflow | planejar | — | — |
-| [Carrossel animado](#motion-carousel) | 1.1.2 | skill | divulgar | `video-render` | — |
-| [Análise de vídeo](#video-analysis) | 1.0.1 | tool | planejar | — | `ad-creatives`, `youtube-script` |
-| [Motor de vídeo](#video-render) | 1.0.2 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
+| [Carrossel animado](#motion-carousel) | 1.1.3 | skill | divulgar | `video-render` | — |
+| [Análise de vídeo](#video-analysis) | 1.0.2 | tool | planejar | — | `ad-creatives`, `instagram-research`, `youtube-script` |
+| [Motor de vídeo](#video-render) | 1.0.3 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
 | [Estúdio de vídeo](#video-studio) | 1.1.1 | workflow | divulgar | `video-render` | — |
-| [Pesquisa no YouTube](#youtube-research) | 1.0.2 | tool | planejar | — | `ad-creatives`, `youtube-script` |
-| [Roteiro para YouTube](#youtube-script) | 1.1.1 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
+| [Pesquisa no YouTube](#youtube-research) | 1.1.0 | tool | planejar | — | `ad-creatives`, `youtube-script` |
+| [Roteiro para YouTube](#youtube-script) | 1.2.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
 
 ## ad-creatives
 
@@ -109,15 +109,15 @@ Transforma a sua base antiga de contatos numa régua que pode ser enviada, sem t
 
 ## instagram-research
 
-**Pesquisa no Instagram** (Instagram research) · versão 1.0.2 · tool · trilha planejar · testado em `claude_code`
+**Pesquisa no Instagram** (Instagram research) · versão 1.1.0 · tool · trilha planejar · testado em `claude_code`
 
-> Mostra quais Reels e posts fizeram muito mais do que o normal do próprio perfil, e quanto, no seu perfil e nos concorrentes. Sem chave, lê capturas de tela; com a chave do Apify, colhe sozinho e traz os comentários do público.
+> Mostra quais Reels e posts fizeram muito mais do que o normal do próprio perfil, e quanto, no seu perfil e nos concorrentes, e o que as legendas deles têm em comum. Sem chave, lê capturas de tela; com a chave do Apify, colhe sozinho e traz os comentários do público.
 
 Mostra, com números de verdade, quais Reels e posts fizeram muito mais do que o normal do próprio perfil, no seu perfil e nos perfis do seu nicho. Assim você decide o que publicar ou anunciar pelo que já funcionou com o público.
 
 **Skills**
 
-- `instagram-research`: Pesquisa o Instagram. Mede os Reels e posts de perfis contra o normal de cada perfil e acha os que passaram muito dele (outliers), e lê os comentários de um post. Com a chave do Apify a coleta é automática; sem ela, lê capturas de tela. Use quando pedirem "o que funciona no Instagram", "analisar um perfil", "posts que bombaram" ou "o que os concorrentes postam".
+- `instagram-research`: Mede Reels e posts do Instagram contra o normal de cada perfil, acha os outliers e o que as legendas deles têm em comum, lê os comentários de um post e baixa o vídeo de um Reels para a análise de vídeo. Com a chave do Apify colhe sozinho; sem ela, lê capturas de tela. Use quando pedirem "o que funciona no Instagram", "analisar um perfil", "posts que bombaram" ou "o que os concorrentes postam".
 
 **Chaves externas**
 
@@ -127,14 +127,16 @@ Mostra, com números de verdade, quais Reels e posts fizeram muito mais do que o
 
 - Guia: `modules/instagram-research/references/interface.md`, interface v1
 - Entrada: `node .flyee/modules/instagram-research/scripts/research.mjs <comando> --json`
-- Comandos nos exemplos: `check`, `comments`, `import`, `outliers`, `profile`
+- Comandos nos exemplos: `captions`, `check`, `comments`, `import`, `outliers`, `profile`, `video`
 
-**Usa** — · **Usado por** `ad-creatives`
+**Usa** `video-analysis` · **Usado por** `ad-creatives`
 
 **Permissões declaradas**
 
 - shell: node .flyee/modules/instagram-research/scripts/research.mjs
+- shell: node .flyee/modules/video-analysis/scripts/video.mjs, quando instalado
 - network: api.apify.com
+- network: cdninstagram.com, fbcdn.net
 - fs:read: as capturas de tela e os arquivos de posts que você indicar
 - fs:read: ~/.flyee/keys.json (só a chave APIFY_TOKEN)
 - fs:write: ./instagram-research/
@@ -169,7 +171,7 @@ Monta o plano de tráfego pago da sua marca a nível de especialista, antes de q
 
 ## motion-carousel
 
-**Carrossel animado** (Motion carousel) · versão 1.1.2 · skill · trilha divulgar · testado em `claude_code`
+**Carrossel animado** (Motion carousel) · versão 1.1.3 · skill · trilha divulgar · testado em `claude_code`
 
 > Cria carrosséis para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida, a partir de um tema; entrega os MP4 prontos para postar e uma prévia de como fica no feed.
 
@@ -202,7 +204,7 @@ Transforma um tema em um carrossel para o Instagram em que cada slide é um víd
 
 ## video-analysis
 
-**Análise de vídeo** (Video analysis) · versão 1.0.1 · tool · trilha planejar · testado em `claude_code`
+**Análise de vídeo** (Video analysis) · versão 1.0.2 · tool · trilha planejar · testado em `claude_code`
 
 > Assiste a vídeos do YouTube ou do seu computador, com imagem e som, e entrega uma descrição com tempos do que aparece na tela, do que é dito e de como foi editado.
 
@@ -222,7 +224,7 @@ Assiste a vídeos por você, com imagem e som, e entrega uma descrição com tem
 - Entrada: `node .flyee/modules/video-analysis/scripts/video.mjs <comando> --json`
 - Comandos nos exemplos: `analyze`, `check`, `prepare`
 
-**Usa** — · **Usado por** `ad-creatives`, `youtube-script`
+**Usa** — · **Usado por** `ad-creatives`, `instagram-research`, `youtube-script`
 
 **Permissões declaradas**
 
@@ -238,7 +240,7 @@ Assiste a vídeos por você, com imagem e som, e entrega uma descrição com tem
 
 ## video-render
 
-**Motor de vídeo** (Video engine) · versão 1.0.2 · tool · trilha divulgar · testado em `claude_code`
+**Motor de vídeo** (Video engine) · versão 1.0.3 · tool · trilha divulgar · testado em `claude_code`
 
 > Transforma uma página animada em vídeo pronto para as redes, com trilha original e efeitos na batida, prévia, a marca do seu site e conferência antes de publicar: capa, texto, área segura, volume e, por rede, formato e duração. É o motor que outros apps usam para renderizar.
 
@@ -295,7 +297,7 @@ Transforma um pedido em um vídeo animado para Reels, TikTok e Shorts. Você diz
 
 ## youtube-research
 
-**Pesquisa no YouTube** (YouTube research) · versão 1.0.2 · tool · trilha planejar · testado em `claude_code`
+**Pesquisa no YouTube** (YouTube research) · versão 1.1.0 · tool · trilha planejar · testado em `claude_code`
 
 > Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público e o normal de qualquer canal, sem chave.
 
@@ -303,7 +305,7 @@ Mostra, com números de verdade, quais vídeos de um tema fizeram muito mais do 
 
 **Skills**
 
-- `youtube-research`: Pesquisa o YouTube sem chave. Acha os vídeos de um tema que fizeram muito acima do normal do próprio canal (outliers) e mede o quanto. Lê o normal de um canal, a fala de um vídeo e os comentários. Use quando pedirem "o que está funcionando no YouTube sobre X", "buscar outliers", "validar pauta", "analisar um canal", "transcrição de um vídeo" ou "o que o público pergunta".
+- `youtube-research`: Pesquisa o YouTube sem chave. Acha os vídeos de um tema que fizeram muito acima do normal do próprio canal (outliers), mede o quanto e analisa os títulos de alta performance. Lê o normal de um canal, a fala de um vídeo e os comentários. Use quando pedirem "o que está funcionando no YouTube sobre X", "validar pauta", "que título funciona", "analisar um canal" ou "o que o público pergunta".
 
 **Serve outros apps**
 
@@ -322,7 +324,7 @@ Mostra, com números de verdade, quais vídeos de um tema fizeram muito mais do 
 
 ## youtube-script
 
-**Roteiro para YouTube** (YouTube script) · versão 1.1.1 · workflow · trilha divulgar · testado em `claude_code`
+**Roteiro para YouTube** (YouTube script) · versão 1.2.0 · workflow · trilha divulgar · testado em `claude_code`
 
 > Escreve com você roteiros para o YouTube que prendem do começo ao fim, a partir do que já funciona no seu tema: título e thumbnail medidos, o fluxo de um vídeo de referência, o texto na sua voz e revisão antes de gravar.
 

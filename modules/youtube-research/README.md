@@ -8,6 +8,8 @@ Um vídeo com 1 milhão de views num canal que sempre faz 1 milhão não ensina 
 
 A sua IA lê o resultado e entrega a leitura: os vídeos que importam e por que subiram, os padrões que se repetem, o que está saturado e as lacunas que ninguém cobriu. Você também pode pedir a fala de um vídeo (pela legenda, sem baixar nada), os comentários mais relevantes, com as dúvidas e objeções do público, e o normal de qualquer canal, inclusive o seu.
 
+Para títulos, o app analisa os de alta performance: lista os que mais passaram do normal e os que ficaram abaixo, cada um com o que tem (o gatilho, a forma, as palavras), e mede cada traço e cada palavra que se repete contra o normal de cada canal. Pode fazer o mesmo só com os vídeos do seu canal, para ver o que o seu público já respondeu.
+
 Tudo é público e lido sem chave e sem login. O relatório fica numa pasta do seu projeto, com uma planilha que abre no Excel e no Google Planilhas.
 
 ## O que você precisa
@@ -27,6 +29,7 @@ Outros pedidos:
 - "Pegue a transcrição deste vídeo e me mostre como ele abre: <endereço>"
 - "O que o público pergunta nos comentários destes vídeos?"
 - "Que tipo de título funciona nesse tema? Me mostre com números."
+- "Quais títulos do meu canal foram melhor que o meu normal, e o que eles têm em comum?"
 
 ## O que ele grava
 
@@ -35,8 +38,8 @@ Outros pedidos:
 | `youtube-research/outliers/<pesquisa>/outliers.md` | o relatório: o ranking, as faixas e as ressalvas |
 | `youtube-research/outliers/<pesquisa>/outliers.csv` | a planilha com todos os vídeos e métricas |
 | `youtube-research/outliers/<pesquisa>/outliers.json` e `raw.json` | os dados completos e a coleta bruta |
-| `youtube-research/outliers/<pesquisa>/titulos.md` | os traços de título medidos contra o normal de cada canal |
-| `youtube-research/channels/<canal>/` | os últimos envios de um canal, com o normal dele |
+| `youtube-research/outliers/<pesquisa>/titulos.md` | os títulos de alta performance do tema: a lista, os gatilhos, a forma e as palavras, medidos contra o normal de cada canal |
+| `youtube-research/channels/<canal>/` | os últimos envios de um canal, com o normal dele, e a análise dos títulos do canal quando você pede |
 | `youtube-research/videos/<id>/` | os dados, a transcrição e os comentários de cada vídeo |
 
 O que já foi lido é reaproveitado: os canais por uma semana, os dados de vídeo por um dia e as transcrições para sempre. Assim, uma nova pesquisa no mesmo tema sai bem mais rápido.
@@ -49,6 +52,7 @@ O que já foi lido é reaproveitado: os canais por uma semana, os dados de víde
 
 ## O que há de novo
 
+- 1.1.0: a análise dos títulos de alta performance. Além dos traços, lista os títulos que mais passaram do normal e os que ficaram abaixo, cada um com os traços que tem; mede os gatilhos de título (resultado, curiosidade, busca direta, contrário, erro, experimento, lista, comparação), a forma ("você", ano, superlativo, duas partes, emoji) e as palavras que se repetem; e faz a mesma análise nos vídeos de um canal, contra o normal dele. Uma leitura do YouTube que trava passa a ser interrompida em 10 minutos, com um aviso, em vez de deixar a sua IA esperando.
 - 1.0.2: quando outro app precisa da Pesquisa no YouTube e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.
 - 1.0.1: quando o YouTube recusa ou limita a entrega da legenda, a sua IA fica sabendo e tenta de novo depois, em vez de concluir que o vídeo não tem legenda.
 - 1.0.0: primeira versão. Outliers de um tema medidos contra o normal de cada canal, com faixas, avisos, relatório e planilha. Também os traços de título que andam junto com os vídeos que foram bem, o normal de um canal, a fala de vídeos com o ritmo em palavras por minuto, os comentários mais relevantes e uma interface para outros apps.

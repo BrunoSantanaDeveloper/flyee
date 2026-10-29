@@ -60,6 +60,13 @@ const MESSAGES = {
     "recipe.installed": "Receita {slug}: {count} apps instalados. Workflow em .flyee/recipes/{slug}/workflow.md",
     "remove.done": "{slug} removido deste projeto.",
     "remove.missing": "{slug} não está instalado neste projeto.",
+    "remove.used_by_one": "O app {title} é usado por {apps}. Sem ele, esse app vai pedir para instalar de novo.",
+    "remove.used_by_many": "O app {title} é usado por {apps}. Sem ele, esses apps vão pedir para instalar de novo.",
+    "remove.confirm": "Remover mesmo assim?",
+    "remove.has_dependents": "{used_by} Nada foi removido. A confirmação vem pela flag --yes: com o sim do integrante, rode de novo com `{yes}`.",
+    "remove.cancelled": "Nada foi removido.",
+    "remove.done_used_by_one": "O app {title} era usado por {apps}, que vai pedir para instalar de novo quando precisar dele.",
+    "remove.done_used_by_many": "O app {title} era usado por {apps}, que vão pedir para instalar de novo quando precisarem dele.",
     "update.nothing": "Nenhum app instalado neste projeto.",
     "update.up_to_date": "Tudo em dia. {count} apps na versão disponível para a sua conta.",
     "update.updated": "{slug}: {from} → {to}",
@@ -256,6 +263,13 @@ const MESSAGES = {
     "recipe.installed": "Recipe {slug}: {count} apps installed. Workflow at .flyee/recipes/{slug}/workflow.md",
     "remove.done": "{slug} removed from this project.",
     "remove.missing": "{slug} is not installed in this project.",
+    "remove.used_by_one": "The app {title} is used by {apps}. Without it, that app will ask to install it again.",
+    "remove.used_by_many": "The app {title} is used by {apps}. Without it, those apps will ask to install it again.",
+    "remove.confirm": "Remove it anyway?",
+    "remove.has_dependents": "{used_by} Nothing was removed. Confirm with the --yes flag: once the member says yes, run it again with `{yes}`.",
+    "remove.cancelled": "Nothing was removed.",
+    "remove.done_used_by_one": "The app {title} was used by {apps}, which will ask to install it again when it needs it.",
+    "remove.done_used_by_many": "The app {title} was used by {apps}, which will ask to install it again when they need it.",
     "update.nothing": "No app installed in this project.",
     "update.up_to_date": "All up to date. {count} apps at the version available to your account.",
     "update.updated": "{slug}: {from} → {to}",
@@ -418,6 +432,12 @@ export function t(ctx: Pick<Context, "locale">, key: MessageKey, params: Record<
   const table = MESSAGES[ctx.locale === "en" ? "en" : "pt-BR"] as Record<string, string>;
   const template = table[key] ?? (MESSAGES["pt-BR"] as Record<string, string>)[key] ?? key;
   return template.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name] ?? ""));
+}
+
+/** Items as a sentence lists them: "a", "a e b", "a, b e c" (and, in English). */
+export function listed(ctx: Pick<Context, "locale">, items: string[]): string {
+  const and = ctx.locale === "en" ? "and" : "e";
+  return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} ${and} ${items[items.length - 1]}`;
 }
 
 export function localeOf(value: unknown): Locale {

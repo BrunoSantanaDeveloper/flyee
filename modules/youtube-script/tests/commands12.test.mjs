@@ -125,8 +125,10 @@ test("the recording plan: the items to do first, or every checkbox when there is
 
 test("a thin channel profile says what it lacks", () => {
   const thin = "# Canal\n\n- Nicho e tema: cozinha prática\n- Para quem: …\n- Ritmo de fala: 180 palavras por minuto (estimado)\n\n## Voz\n- você\n";
-  assert.deepEqual(profileGaps(thin), ["para quem", "promessa do canal", "prova e autoridade", "na primeira pessoa", "teste de miniaturas", "voz", "histórias e opiniões", "regras do criador"]);
-  assert.ok(profileGaps("- Teste de miniaturas: sim/não (o do YouTube)\n").includes("teste de miniaturas"), "the unanswered template line is a gap");
+  assert.deepEqual(profileGaps(thin), ["para quem", "promessa do canal", "prova e autoridade", "na primeira pessoa", "teste A/B", "voz", "histórias e opiniões", "regras do criador"]);
+  assert.ok(profileGaps("- Teste A/B: sim/não (o do YouTube)\n").includes("teste A/B"), "the unanswered template line is a gap");
+  assert.ok(profileGaps("- Teste de miniaturas: sim/não (o do YouTube)\n").includes("teste A/B"), "a profile written before 1.2.0 keeps its old line name");
+  assert.ok(!profileGaps("- Teste de miniaturas: sim\n").includes("teste A/B"));
   assert.ok(profileGaps("## Histórias e opiniões\n\n### Como eu comecei\n- … (a história)\n\n## Regras do criador\n").includes("histórias e opiniões"), "the empty template is a gap");
   const full = "# Canal\n\n- Nicho e tema: cozinha\n- Para quem: quem trabalha fora\n- Promessa do canal: comer bem gastando pouco\n- Prova e autoridade: 5 anos de marmita\n- Na primeira pessoa: cansada\n- Teste de miniaturas: sim\n\n## Voz\n- fala com você\n- frases curtas\n- ri de si mesmo\n\n## Histórias e opiniões\n\n### O que eu defendo\n- marmita boa é a que você aguenta comer na quinta\n\n## Regras do criador\n\n### Nunca dizer\n";
   assert.deepEqual(profileGaps(full), []);

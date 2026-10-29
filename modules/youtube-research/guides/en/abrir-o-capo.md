@@ -74,13 +74,30 @@ The app reads top-level comments, without replies: by default the 100 most relev
 
 ### Titles
 
-On a search already done, the app measures nine title traits against the multiplier: having a number; a tool or brand name, when the topic's names are given; parentheses or brackets; starting with "How" (or "Como" in Portuguese); being a question; first person ("I tested", "my"); "without X"; a concrete result (money, time or a number with a unit); and one word of 4 or more letters in capitals, in a title that is not all caps.
+On a search already done, the app analyzes the high-performing titles in four parts.
 
-For each trait, it compares the median multiplier of the titles that have it with that of the titles that don't, and shows how many titles are in each group. A group with fewer than 5 titles is marked as a hint. It also measures length: the median number of characters in the sample and among the outliers, and the multiplier in four ranges (up to 40, 41 to 60, 61 to 80 and over 80 characters).
+1. **The list.** The titles that went furthest above their own channel's normal, from the highest down, and those that stayed below the normal, each with the traits it carries. The reading starts here: it shows the mechanism the tables sum up.
+2. **The triggers.** Eight ways of pulling the click, counted by the words that mark them:
+   - result: money, time, a number with a unit;
+   - curiosity: "this", "the secret", "why", "the X that";
+   - direct search: "how to", "step by step", "tutorial", "beginners";
+   - contrarian: "stop", "don't", "myth", "nobody tells";
+   - cost or mistake: "mistake", "avoid", "losing", "wasting";
+   - experiment: "I tried", "for 30 days", "challenge";
+   - list: "5 tips", "top 10";
+   - comparison: "vs", "X x Y", "better than", "which one".
+
+   A curiosity title with none of these words is not counted, so the number is a floor.
+3. **The form.** Having a number; a tool or brand name, when the topic's names are given; parentheses or brackets; starting with "How" (or "Como" in Portuguese); being a question; first person; "without X"; one word in capitals; talking to "you"; a superlative; a year; two parts split by a colon, a bar or a dash; an emoji. And length: the median number of characters in the sample and among the outliers, and the multiplier in four ranges (up to 40, 41 to 60, 61 to 80 and over 80 characters).
+4. **The words.** The words and word pairs found in at least 5 titles, leaving out the search words, which are in all of them. Any number counts as N, so "7 days" and "30 days" add up together.
+
+For each trait and each word, the app compares the median multiplier of the titles that have it with that of the titles that don't, and shows how many titles are in each group. A group with fewer than 5 titles is marked as a hint.
+
+The same analysis works on your channel: after reading your latest uploads, the app measures your titles against your own normal. It shows what your audience has already responded to. With about 30 videos, almost every group is small, and the views on the channel's tab come rounded by YouTube.
 
 The app suggests names in the titles that look like tools or brands, for you and the AI to confirm before using them, and lets you leave off-topic videos out of the count. Search picks up words with other meanings and neighboring niches, and they skew the traits.
 
-The result shows what goes along with the titles that did well in this sample. It does not prove cause, and another topic or time window gives other numbers.
+The result shows what goes along with the titles that did well in this sample. It does not prove cause, and another topic or time window gives other numbers. With so many traits and words measured at once, one of them looks strong by chance: what shows up both on the topic and on your channel is worth more.
 
 ## The files inside
 
@@ -92,8 +109,9 @@ Everything goes into the `youtube-research/` folder in your project. The Markdow
 | `outliers/<search>/outliers.csv` | every video, in the Brazilian spreadsheet format (semicolons between columns, commas for decimals) |
 | `outliers/<search>/outliers.json` | everything: the searches, the options used, the sample, the caveats and every video with all its metrics |
 | `outliers/<search>/raw.json` | the search results before the filters |
-| `outliers/<search>/titulos.md` and `titulos.json` | the title measurement; each new measurement overwrites the previous one |
+| `outliers/<search>/titulos.md` and `titulos.json` | the title analysis of the topic; each new analysis overwrites the previous one |
 | `channels/<channel>/channel.md` and `channel.json` | a channel's normal and its latest uploads, with multiplier and band |
+| `channels/<channel>/titulos.md` and `titulos.json` | the title analysis of the channel, against its own normal |
 | `videos/<id>/video.json` | a video's public data |
 | `videos/<id>/transcript.md` and `transcript.json` | the speech in timed blocks, for reading, and the passages with start and end times, for other apps |
 | `videos/<id>/comments.md` and `comments.json` | the comments, numbered, with their likes |
@@ -121,6 +139,8 @@ The app reuses what it has already read: a channel's normal for 7 days, a video'
 | the comments | "Bring the 300 most relevant comments on this video." or "I want the newest ones." |
 | titles | "Measure the titles counting Ninja, Cosori and Philips as brands, without the off-topic videos." |
 | stricter titles | "Use only the videos measured against their own channel, and treat any group with fewer than 10 titles as a hint." |
+| your channel's titles | "Analyze the titles of my channel @mychannel: which ones beat my normal and what do they have in common?" |
+| a longer list | "List the 30 titles that went furthest above the normal." |
 | several videos | "Get the speech of these 5 videos." Up to 20 fit in one request. |
 | the history | "What have I already researched in this project?" |
 

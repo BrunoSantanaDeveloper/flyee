@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { AppError, fileTime, mapLimit, removeDir, run } from "./util.mjs";
+import { AppError, fileTime, LIMITS, mapLimit, mediaLimit, removeDir, run } from "./util.mjs";
 
 const SIGNATURE_WIDTH = 32;
 const SIGNATURE_HEIGHT = 18;
@@ -22,7 +22,7 @@ const round = (value) => Math.round(value * 1000) / 1000;
 
 /** Duration, display size (already accounting for rotated phone video), fps and audio. */
 export async function probe(ffprobe, video) {
-  const { code, stdout, stderr } = await run(ffprobe, ["-v", "error", "-print_format", "json", "-show_format", "-show_streams", video]);
+  const { code, stdout, stderr } = await run(ffprobe, ["-v", "error", "-print_format", "json", "-show_format", "-show_streams", video], { timeoutMs: LIMITS.probe });
   if (code !== 0) throw new AppError("unreadable_video", "O ffprobe não conseguiu ler o vídeo.", errorTail(stderr));
   const data = JSON.parse(stdout.toString("utf8"));
   const streams = data.streams ?? [];
@@ -71,6 +71,8 @@ export async function measureSignals({ ffmpeg, video, videoIndex = 0, hasAudio =
   let silenceStart = null;
   const chunks = [];
   const { code, stderr } = await run(ffmpeg, args, {
+    // one pass decodes the whole window: the limit grows with its length (the default for a whole file of unknown length)
+    timeoutMs: mediaLimit(duration),
     onStdout: (chunk) => chunks.push(chunk),
     onStderrLine: (line) => {
       const cut = /Parsed_showinfo.*\bpts_time:\s*([\d.]+)/.exec(line);
@@ -211,7 +213,7 @@ export async function extractFrames({ ffmpeg, video, videoIndex = 0, frames, dir
         "-hide_banner", "-loglevel", "error", "-nostdin",
         "-ss", time.toFixed(3), "-i", video,
         "-map", `0:v:${videoIndex}`, "-frames:v", "1", "-vf", scale, "-q:v", "3", "-y", target,
-      ]);
+      ], { timeoutMs: LIMITS.media });
       if (code === 0 && existsSync(target)) {
         frame.path = target;
         return;
@@ -276,7 +278,12 @@ async function buildGrid({ ffmpeg, group, target, layout, font }) {
     parts.push(`${Array.from({ length: total }, (_, i) => `[t${i}]`).join("")}xstack=inputs=${total}:layout=${positions}[out]`);
   }
   args.push("-filter_complex", parts.join(";"), "-map", total > 1 ? "[out]" : "[t0]", "-frames:v", "1", "-q:v", "3", "-y", target);
-  const { code, stderr } = await run(ffmpeg, args);
+  // the labels need drawtext, which can hang while it reads the system's fonts: a labeled grid
+  // that passes the limit counts as failed, and buildGrids makes it again without labels
+  const { code, stderr } = await run(ffmpeg, args, { timeoutMs: LIMITS.media }).catch((error) => {
+    if (font && error?.code === "tool_timeout") return { code: null, stderr: error.message };
+    throw error;
+  });
   return { ok: code === 0 && existsSync(target), error: errorTail(stderr) };
 }
 

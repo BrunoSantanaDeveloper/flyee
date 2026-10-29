@@ -49,7 +49,8 @@ export function findExecutable(name) {
 
 async function firstLine(file, args) {
   try {
-    const { code, stdout } = await run(file, args);
+    // A version answer takes a second; a minute means the program is stuck.
+    const { code, stdout } = await run(file, args, { timeoutMs: 60_000 });
     if (code !== 0) return null;
     return stdout.toString("utf8").split(/\r?\n/)[0].trim() || null;
   } catch {

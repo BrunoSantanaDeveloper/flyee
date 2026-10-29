@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "video-analysis",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "tool",
   "trail": "planejar",
   "title": {
@@ -127,8 +127,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Quando outro app precisa da Análise de vídeo e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.",
-    "en": "When another app needs Video analysis and it is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
+    "pt-BR": "Um ffmpeg, ffprobe ou yt-dlp travado não deixa mais a sua IA esperando sem fim. Cada um tem agora um tempo limite folgado, que cresce com a duração do vídeo (o download tem o mais longo); passado esse tempo, o programa é encerrado com tudo o que abriu e a sua IA recebe o erro com o que fazer. Uma legenda que trava fica de fora e a análise segue, e uma grade de frames que trava ao escrever os rótulos sai sem eles.",
+    "en": "A stuck ffmpeg, ffprobe or yt-dlp no longer leaves your AI waiting forever. Each now has a generous time limit that grows with the video's length (the download has the longest); past it, the program is stopped along with everything it opened, and your AI gets the error with what to do next. Captions that hang are left out and the analysis goes on, and a frame grid that hangs while writing its labels comes out without them."
   },
   "license": "member"
 }

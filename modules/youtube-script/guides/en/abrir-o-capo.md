@@ -8,7 +8,7 @@ Version 1.1.0 is built for Brazilian Portuguese: the files keep Portuguese names
 
 ### 1. Your channel profile and your rules
 
-`canal.md` is read before every script. It holds your audience and what they already know, the channel's promise, your formats, your proof, your speaking pace, how you refer to yourself (Portuguese marks gender in words like "cansado" and "cansada") and whether your channel uses YouTube's thumbnail test.
+`canal.md` is read before every script. It holds your audience and what they already know, the channel's promise, your formats, your proof, your speaking pace, how you refer to yourself (Portuguese marks gender in words like "cansado" and "cansada") and whether your channel uses YouTube's A/B test.
 
 Your voice is captured with examples, not adjectives: how you address viewers, vocabulary, rhythm, verbal tics, humor, how you open and close, three reference lines from your own material and three lines you would never say. The preferred source is something you wrote, then the speech from 5 to 8 of your videos. For a new channel, it borrows the mechanics of 2 to 4 creators you name, never their content, and flags each borrowed trait ("emprestado de referências, confirme") until you confirm it. Speaking pace is never borrowed: it stays at 180 words per minute until measured from your own videos.
 
@@ -24,7 +24,7 @@ When the video shows a tool, a product or a service, the AI reads its sources (o
 
 With YouTube research, the AI turns your topic into 3 to 6 searches and finds the outliers: videos that did far better than their own channel's normal. A pattern is something repeated in two or more of them; something seen in only one is a bet, and many videos below normal for everyone means a saturated topic.
 
-Then it measures title traits: a number, a tool name, parentheses, starting with "Como" (how), a question, first person, "sem X" (without X), a concrete result, a word in capitals. For each trait you get the median multiplier with and without it and the size of each group. The number shows what went along with the result, never the cause, and a small group is only a hint.
+Then it analyzes the high-performing titles: the list of those that went furthest above the normal and of those that stayed below, with the traits of each; the triggers (result, curiosity, direct search, contrarian, cost or mistake, experiment, list, comparison); the form (a number, a tool name, parentheses, starting with "Como" (how), a question, first person, "sem X" (without X), a word in capitals, "você" (you), a year); and the words that keep coming back. With your channel read, it does the same on your videos, against your own normal. For each trait and each word you get the median multiplier with and without it and the size of each group. The number shows what went along with the result, never the cause, and a small group is only a hint.
 
 It also reads the speech of 2 or 3 outliers (the opening, the blocks, where they pay off the promise, the most replayed moments) and up to 100 comments per video, sorted into doubts, objections and requests in viewers' own words. A question that keeps coming up and that no top video answered well is the best central idea available. Every fact gets a source and a date: three independent sources that agree let the script state it, two become "according to…", one becomes a caveat or gets cut, and none becomes a mark. Without the app, this stage is skipped and the brief notes that the topic is a bet.
 
@@ -34,7 +34,7 @@ A video that worked, even from another country, shows a flow that already held a
 
 ### 5. Title and thumbnail
 
-Packaging comes first because without the click, the best script is never seen. You get five titles from different triggers (result, curiosity, direct search, contrarian, cost or mistake, experiment, list), each with the measured trait behind it when there's data, and two or three thumbnail ideas with one subject and four words at most. With the thumbnail test, they become three variants of the same promise, each changing one element, always with real frames from the video. Each title and thumbnail pair goes through the click test, and the stage ends with the promise in one sentence and the block where the video pays it off, before the last third.
+Packaging comes first because without the click, the best script is never seen. Titles start from the high-performing ones: the AI reads the list of those that went furthest above the normal on the topic and, once your channel has been read, on your channel, and adapts their mechanism to your way of speaking, copying none. You get five titles from different triggers (result, curiosity, direct search, contrarian, cost or mistake, experiment, list, comparison), each with the measured trigger, trait or word behind it when there's data. The two or three thumbnail ideas have one subject, four words at most and nothing in the bottom right corner, where YouTube shows the length. YouTube's A/B test now compares titles, thumbnails or both and picks by watch time: with it, you get up to three titles and three thumbnails with the same promise, each variant changing one element, always with real frames from the video. Each title and thumbnail pair goes through the click test, and the stage ends with the promise in one sentence and the block where the video pays it off, before the last third. The check reads the chosen title and warns if, by then, the speech hasn't said a number, an acronym or a name it promises.
 
 ### 6. Hooks and structure
 
@@ -67,7 +67,7 @@ Everything lives in `roteiros/`: the profile and the topic ideas at the top, and
 | `roteiro.md` | the spoken text, block by block, with the marks | you and the AI |
 | `revisao.md` | the check summary, the scores and the rounds | the AI |
 | `descricao.md` | the description, estimated chapters and pinned comment | the AI; you fill in the links |
-| `checklist.md` | what to film first, every open mark, what to check before publishing | generated by the app |
+| `checklist.md` | what to film first, every open mark, and what to check and answer when publishing (the thumbnail, the audience, AI use, paid promotion, the A/B test) | generated by the app |
 | `roteiro-completo.md` and `roteiro.docx` | everything in one file, and the script in Word with marks in gray | generated by the app |
 | `teleprompter.txt` | spoken words only, one sentence per line | generated once no marks are left |
 

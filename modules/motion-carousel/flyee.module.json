@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "motion-carousel",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "type": "skill",
   "trail": "divulgar",
   "title": {
@@ -168,8 +168,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Quando o Motor de vídeo ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.",
-    "en": "When the Video engine is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
+    "pt-BR": "Um ffmpeg travado ao tratar uma imagem não deixa mais a sua IA esperando sem fim: passado um tempo limite folgado, ele é encerrado e a sua IA recebe o erro com o que fazer.",
+    "en": "A stuck ffmpeg while treating an image no longer leaves your AI waiting forever: past a generous time limit it is stopped, and your AI gets the error with what to do next."
   },
   "license": "member"
 }

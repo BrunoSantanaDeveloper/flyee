@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "instagram-research",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "type": "tool",
   "trail": "planejar",
   "title": {
@@ -9,8 +9,8 @@
     "en": "Instagram research"
   },
   "summary": {
-    "pt-BR": "Mostra quais Reels e posts fizeram muito mais do que o normal do próprio perfil, e quanto, no seu perfil e nos concorrentes. Sem chave, lê capturas de tela; com a chave do Apify, colhe sozinho e traz os comentários do público.",
-    "en": "Shows which Reels and posts did far better than their own profile's normal, and by how much, on your profile and your competitors'. With no key it reads screenshots; with an Apify key it collects on its own and brings the audience's comments."
+    "pt-BR": "Mostra quais Reels e posts fizeram muito mais do que o normal do próprio perfil, e quanto, no seu perfil e nos concorrentes, e o que as legendas deles têm em comum. Sem chave, lê capturas de tela; com a chave do Apify, colhe sozinho e traz os comentários do público.",
+    "en": "Shows which Reels and posts did far better than their own profile's normal, and by how much, on your profile and your competitors', and what their captions share. With no key it reads screenshots; with an Apify key it collects on its own and brings the audience's comments."
   },
   "compatible_ais": [
     "claude_code"
@@ -27,11 +27,13 @@
     "references/interface.md",
     "references/metodologia.md",
     "scripts/lib/apify.mjs",
+    "scripts/lib/captions.mjs",
     "scripts/lib/instagram.mjs",
     "scripts/lib/reading.mjs",
     "scripts/lib/report.mjs",
     "scripts/lib/score.mjs",
     "scripts/lib/util.mjs",
+    "scripts/lib/video.mjs",
     "scripts/research.mjs",
     "skills/instagram-research/SKILL.md"
   ],
@@ -57,11 +59,27 @@
       }
     },
     {
+      "kind": "shell",
+      "scope": "node .flyee/modules/video-analysis/scripts/video.mjs, quando instalado",
+      "reason": {
+        "pt-BR": "Quando você pede para assistir a um Reels, a sua IA passa o vídeo baixado ao app Análise de vídeo, que descreve o que aparece, o que é dito e como foi editado.",
+        "en": "When you ask to watch a Reel, your AI hands the downloaded video to the Video analysis app, which describes what appears, what is said and how it was edited."
+      }
+    },
+    {
       "kind": "network",
       "scope": "api.apify.com",
       "reason": {
         "pt-BR": "Só com a chave do Apify, ou com o segredo de rede do ambiente numa sessão na nuvem: roda a coleta dos posts e dos comentários públicos, sempre com limite de itens e de gasto, e lê o resultado.",
         "en": "Only with the Apify key, or with the environment's network secret in a cloud session: runs the collection of public posts and comments, always with an item and spending limit, and reads the result."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "cdninstagram.com, fbcdn.net",
+      "reason": {
+        "pt-BR": "Só quando você pede para assistir a um Reels colhido pelo Apify: baixa o vídeo dele dos servidores de mídia do Instagram, pelo link que a coleta trouxe, sem a sua conta e com limite de tamanho.",
+        "en": "Only when you ask to watch a Reel collected through Apify: downloads its video from Instagram's media servers, through the link the collection brought, without your account and with a size limit."
       }
     },
     {
@@ -84,8 +102,8 @@
       "kind": "fs:write",
       "scope": "./instagram-research/",
       "reason": {
-        "pt-BR": "Grava os relatórios, as planilhas, as leituras das capturas e os comentários, e guarda cada coleta por 24 horas para não pagar duas vezes.",
-        "en": "Writes the reports, spreadsheets, screenshot readings and comments, and keeps each collection for 24 hours so you do not pay twice."
+        "pt-BR": "Grava os relatórios, as planilhas, as leituras das capturas, os comentários, os traços das legendas e os vídeos dos Reels que você escolher, e guarda cada coleta por 24 horas para não pagar duas vezes.",
+        "en": "Writes the reports, spreadsheets, screenshot readings, comments, caption traits and the videos of the Reels you pick, and keeps each collection for 24 hours so you do not pay twice."
       }
     },
     {
@@ -106,8 +124,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Numa sessão do Claude Code na nuvem, o app usa a chave do Apify guardada como segredo de rede do ambiente, que a sessão usa sem ver, e o pedido da chave explica esse caminho, já que a página da chave não abre ali.",
-    "en": "In a Claude Code cloud session, the app uses the Apify key kept as a network secret of the environment, which the session uses without seeing it, and the key request explains that path, since the key page does not open there."
+    "pt-BR": "A legenda de cada post chega inteira, com as quebras de linha, as hashtags e o pedido ao público, e não mais cortada em 300 caracteres. Novo pedido: o que as legendas dos posts que passaram do normal têm em comum (pergunta, lista, hashtags no fim ou no meio, pedido para comentar, salvar, compartilhar, ir à bio ou chamar no direct, número na primeira linha, primeira pessoa e tamanho), com a mediana de cada grupo e quantos posts há nele. E, com a coleta automática, a sua IA baixa o vídeo dos Reels que você escolher antes que o link da coleta vença, para o app Análise de vídeo assistir.",
+    "en": "Each post's caption now arrives whole, with its line breaks, hashtags and call to action, instead of cut at 300 characters. New request: what the captions of the posts that beat their normal have in common (a question, a list, hashtags at the end or inline, a request to comment, save, share, go to the bio or send a DM, a number in the first line, first person and length), with each group's median and how many posts it holds. And with automatic collection, your AI downloads the video of the Reels you pick before the collection's link expires, for the Video analysis app to watch."
   },
   "license": "member"
 }

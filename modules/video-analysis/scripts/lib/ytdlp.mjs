@@ -5,7 +5,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import { installHints } from "./tools.mjs";
-import { AppError, readJson, run } from "./util.mjs";
+import { AppError, LIMITS, readJson, run } from "./util.mjs";
 
 const roundTo = (value, digits = 3) => Math.round(value * 10 ** digits) / 10 ** digits;
 
@@ -80,7 +80,7 @@ export async function fetchMetadata({ ytdlp, url, dir, cookies }) {
     "--skip-download", "--write-info-json", "--no-playlist", "--flat-playlist", "--ignore-no-formats-error",
     "-o", template(dir), url,
   ];
-  const { code, stderr } = await run(ytdlp.file, args);
+  const { code, stderr } = await run(ytdlp.file, args, { timeoutMs: LIMITS.metadata });
   const infoPath = join(dir, "video.info.json");
   if (code !== 0 || !existsSync(infoPath)) throw classifyYtdlpError(stderr);
   const info = readJson(infoPath);
@@ -184,7 +184,11 @@ export async function downloadCaptions({ ytdlp, infoPath, dir, track, cookies })
     "--sub-langs", `^${escapeRegex(track.key)}$`, "--sub-format", "json3/srt/vtt/best",
     "-o", template(dir),
   ];
-  const { code } = await run(ytdlp.file, args);
+  // a caption download that hangs is a failure like any other: the analysis goes on without it
+  const { code } = await run(ytdlp.file, args, { timeoutMs: LIMITS.metadata }).catch((error) => {
+    if (error?.code === "tool_timeout") return { code: null };
+    throw error;
+  });
   if (code !== 0) return null;
   const file = readdirSync(dir).find((name) => name.startsWith(`video.${track.key}.`) && /\.(json3|srt|vtt)$/i.test(name));
   return file ? join(dir, file) : null;
@@ -197,7 +201,7 @@ export async function downloadVideo({ ytdlp, infoPath, dir, quality = 720, ffmpe
     : [`b[height<=${quality}]`, "b"].join("/"); // without ffmpeg, only files that need no merging
   const args = [...commonArgs(ytdlp, cookies), "--load-info-json", infoPath, "-f", format, "-o", template(dir)];
   if (ffmpeg) args.push("--merge-output-format", "mp4", "--ffmpeg-location", dirname(ffmpeg));
-  const { code, stderr } = await run(ytdlp.file, args);
+  const { code, stderr } = await run(ytdlp.file, args, { timeoutMs: LIMITS.download });
   if (code !== 0) throw classifyYtdlpError(stderr);
   const file = readdirSync(dir).find((name) => /^video\.(mp4|mkv|webm|mov)$/i.test(name));
   if (!file) throw new AppError("download_failed", "O download terminou, mas o arquivo de vídeo não apareceu.", errorLine(stderr));

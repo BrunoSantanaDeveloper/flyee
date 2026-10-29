@@ -45,7 +45,7 @@ import { detectCuts, frameStats, measureLoudness, probe } from "../lib/ffmpeg.mj
 import { defaultNetworks, listNetworks, loadNetworks, resolveNetworks } from "../lib/networks.mjs";
 import { FORMATS, inspectPage, parseFormat } from "../lib/renderer.mjs";
 import { checkTools, installHints } from "../lib/tools.mjs";
-import { AppError, fileUrl, parseList, parseNumber, removeDir, requireJson, resolveInput, round, run, tempDir, usage, writeJson } from "../lib/util.mjs";
+import { AppError, fileUrl, LIMITS, mediaLimit, parseList, parseNumber, removeDir, requireJson, resolveInput, round, run, tempDir, usage, writeJson } from "../lib/util.mjs";
 
 export const argSpec = {
   flags: ["loop"],
@@ -118,7 +118,7 @@ function describeSafe(safe, labels) {
 
 /** SSIM between two PNG files through ffmpeg; its summary goes to stderr at the info level. */
 async function ssimBetween(ffmpegPath, first, last) {
-  const result = await run(ffmpegPath, ["-hide_banner", "-nostats", "-i", first, "-i", last, "-lavfi", "ssim", "-f", "null", "-"]);
+  const result = await run(ffmpegPath, ["-hide_banner", "-nostats", "-i", first, "-i", last, "-lavfi", "ssim", "-f", "null", "-"], { timeoutMs: LIMITS.media });
   return { ssim: result.code === 0 ? parseSsim(result.stderr) : null, stderr: result.stderr };
 }
 
@@ -128,9 +128,9 @@ async function ssimBetween(ffmpegPath, first, last) {
  * the mean change of a block, and its brightest pixel (0-255) is the frame's value. Returns
  * [{ time, value }] (none for the first frame), or null when ffmpeg could not measure it.
  */
-async function localChange(ffmpegPath, video, { fps = null } = {}) {
+async function localChange(ffmpegPath, video, { fps = null, timeoutMs } = {}) {
   const vf = `${fps ? `fps=${fps},` : ""}tblend=all_mode=difference,scale=${DEFAULTS.localWidth}:-2:flags=area,signalstats,metadata=print:key=lavfi.signalstats.YMAX:file=-`;
-  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-i", video, "-an", "-vf", vf, "-f", "null", "-"]);
+  const result = await run(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-i", video, "-an", "-vf", vf, "-f", "null", "-"], { timeoutMs });
   return result.code === 0 ? parseLocalChange(result.stdout.toString("utf8")) : null;
 }
 
@@ -148,9 +148,10 @@ async function loopSsim(ffmpegPath, { frames = null, video = null }) {
       writeFileSync(last, frames.last);
     } else {
       const quiet = ["-hide_banner", "-loglevel", "error", "-y"];
-      const head = await run(ffmpegPath, [...quiet, "-i", video, "-map", "0:v:0", "-frames:v", "1", first]);
+      // one frame each: seconds of work, so the least limit of a call over media
+      const head = await run(ffmpegPath, [...quiet, "-i", video, "-map", "0:v:0", "-frames:v", "1", first], { timeoutMs: LIMITS.media });
       // the last three seconds are decoded and each frame overwrites the file: what stays is the last one
-      const tail = await run(ffmpegPath, [...quiet, "-sseof", "-3", "-i", video, "-map", "0:v:0", "-update", "1", last]);
+      const tail = await run(ffmpegPath, [...quiet, "-sseof", "-3", "-i", video, "-map", "0:v:0", "-update", "1", last], { timeoutMs: LIMITS.media });
       if (head.code !== 0 || tail.code !== 0) return { ssim: null, stderr: `${head.stderr}${tail.stderr}` };
     }
     return await ssimBetween(ffmpegPath, first, last);
@@ -473,7 +474,7 @@ export const commands = {
       let cutsSource = page ? "page" : null;
       if (!page && media && beats) {
         ctx.progress("Procurando os cortes no vídeo");
-        cuts = (await detectCuts(tools.ffmpeg.path, call.video)).map((t) => round(t, 3));
+        cuts = (await detectCuts(tools.ffmpeg.path, call.video, { timeoutMs: mediaLimit(media.duration) })).map((t) => round(t, 3));
         cutsSource = "video";
       }
       const detected = cutsSource === "video";
@@ -589,8 +590,10 @@ export const commands = {
       if (media) {
         ctx.progress(`Medindo os quadros de ${ctx.rel(call.video)}`);
         const rate = media.fps > DEFAULTS.statsFps ? { fps: DEFAULTS.statsFps } : {};
-        frames = await frameStats(tools.ffmpeg.path, call.video, rate);
-        const local = call.stillBy === "regions" ? await localChange(tools.ffmpeg.path, call.video, rate) : null;
+        // each pass decodes the whole video: its limit grows with the duration
+        const pass = { ...rate, timeoutMs: mediaLimit(media.duration) };
+        frames = await frameStats(tools.ffmpeg.path, call.video, pass);
+        const local = call.stillBy === "regions" ? await localChange(tools.ffmpeg.path, call.video, pass) : null;
         if (local?.length) frames = mergeLocalChange(frames, local);
         else if (call.stillBy === "regions" && frames.length > 1) warnings.push("Não consegui medir a mudança por região do quadro: o tempo parado usou só a mudança média, que não vê um texto sendo digitado nem um zoom lento.");
       }

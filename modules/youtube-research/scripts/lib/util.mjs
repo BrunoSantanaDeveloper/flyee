@@ -131,11 +131,17 @@ export function writeJson(path, data) {
   writeFileAtomic(path, `${JSON.stringify(data, null, 2)}\n`);
 }
 
+// One yt-dlp call (a search, a channel tab, a video's data, a caption) answers in
+// seconds to a couple of minutes; ten minutes means it hung, not that it is slow.
+export const RUN_TIMEOUT_MS = 10 * 60 * 1000;
+
 /**
  * Runs a program without a shell, so arguments arrive intact (URLs with & included).
- * Returns the exit code, stdout as a Buffer and the tail of stderr.
+ * Returns the exit code, stdout as a Buffer and the tail of stderr. Past
+ * `timeoutMs` the program and everything it started are ended, and the call
+ * fails with `tool_timeout` instead of waiting forever.
  */
-export function run(file, args, { cwd, env, stderrLimit = 256 * 1024 } = {}) {
+export function run(file, args, { cwd, env, stderrLimit = 256 * 1024, timeoutMs = RUN_TIMEOUT_MS, label } = {}) {
   return new Promise((resolvePromise, reject) => {
     let child;
     try {
@@ -146,14 +152,47 @@ export function run(file, args, { cwd, env, stderrLimit = 256 * 1024 } = {}) {
     }
     const stdout = [];
     let tail = "";
+    let timedOut = false;
+    const timer = timeoutMs > 0
+      ? setTimeout(() => {
+          timedOut = true;
+          killTree(child);
+        }, timeoutMs)
+      : null;
     child.stdout.on("data", (chunk) => stdout.push(chunk));
     child.stderr.setEncoding("utf8");
     child.stderr.on("data", (chunk) => {
       tail = (tail + chunk).slice(-stderrLimit);
     });
-    child.on("error", reject);
-    child.on("close", (code) => resolvePromise({ code, stdout: Buffer.concat(stdout), stderr: tail }));
+    child.on("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      if (!timedOut) {
+        resolvePromise({ code, stdout: Buffer.concat(stdout), stderr: tail });
+        return;
+      }
+      const name = label ?? basename(file).replace(/\.exe$/i, "");
+      reject(new AppError("tool_timeout", `O ${name} passou de ${duration(timeoutMs)} sem terminar e foi interrompido.`, "Tente de novo uma vez. Se repetir, rode com menos buscas, canais ou vídeos, ou espere alguns minutos."));
+    });
   });
+}
+
+const duration = (ms) => (ms >= 60_000 ? `${Math.round(ms / 60_000)} minuto${ms >= 120_000 ? "s" : ""}` : `${Math.max(1, Math.round(ms / 1000))} segundo${ms >= 2000 ? "s" : ""}`);
+
+/**
+ * Ends a program and what it started. On Windows yt-dlp.exe is a launcher with
+ * a child process of its own, so only `taskkill /T` takes both.
+ */
+function killTree(child) {
+  try {
+    if (process.platform === "win32") spawn("taskkill", ["/PID", String(child.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" }).on("error", () => child.kill());
+    else child.kill("SIGKILL");
+  } catch {
+    // already gone
+  }
 }
 
 /** Runs `fn` over the items with at most `limit` at a time, keeping the result order. */

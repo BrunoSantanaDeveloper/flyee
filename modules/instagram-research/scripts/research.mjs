@@ -4,15 +4,17 @@
 // The full interface is in references/interface.md.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { apifyAccess, apifyApi, canCollect, chargeCeiling, estimateUsd, keySetup, runActor } from "./lib/apify.mjs";
-import { actorFailure, normalizeComment, normalizePost, parsePost, parseProfile } from "./lib/instagram.mjs";
+import { captionsMarkdown, captionTable } from "./lib/captions.mjs";
+import { actorFailure, itemShortcode, normalizeComment, normalizePost, parsePost, parseProfile } from "./lib/instagram.mjs";
 import { apifyFileToPosts, readingToPosts } from "./lib/reading.mjs";
-import { commentsMarkdown, outliersMarkdown, postsCsv, profileMarkdown } from "./lib/report.mjs";
+import { commentsMarkdown, outliersMarkdown, postsCsv, profileMarkdown, SOURCE_LABELS } from "./lib/report.mjs";
 import { durationBuckets, measureProfile, rank, RANKS } from "./lib/score.mjs";
-import { AppError, ageHours, choiceOption, intOption, isoDay, parseArgs, projectRoot, readJson, slugify, toPosix, writeFileAtomic, writeJson } from "./lib/util.mjs";
+import { AppError, ageHours, choiceOption, intOption, isoDay, mapLimit, parseArgs, projectRoot, readJson, slugify, toPosix, writeFileAtomic, writeJson } from "./lib/util.mjs";
+import { DEFAULT_MAX_MB, downloadVideo, MAX_MB, MAX_VIDEOS } from "./lib/video.mjs";
 
 const SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
 const APP_DIR = resolve(SCRIPTS_DIR, "..");
@@ -28,8 +30,9 @@ const FRESH = { profile: 24, comments: 7 * 24 };
 const SOURCE_CHOICES = ["auto", "apify", "reading"];
 const ARG_SPEC = {
   flags: ["json", "refresh", "confirm-cost"],
-  options: ["posts", "name", "rank", "max", "source", "apify-url"],
+  options: ["posts", "name", "rank", "max", "source", "apify-url", "min-n", "exclude", "max-mb"],
 };
+const MB = 1024 * 1024;
 
 const rel = (path) => toPosix(ROOT, path);
 const usage = (message, fix = "Rode o comando `help` para ver as opções.") => new AppError("usage", message, fix);
@@ -349,6 +352,192 @@ async function commentsCommand(positionals, values) {
   return { ...result, cached: false };
 }
 
+// ---------------------------------------------------------------- captions
+
+/** Whether a version string is below [major, minor, patch]; false when it cannot be read. */
+function olderThan(version, [major, minor, patch]) {
+  const match = /^(\d+)\.(\d+)\.(\d+)/.exec(String(version ?? ""));
+  if (!match) return false;
+  const [a, b, c] = match.slice(1).map(Number);
+  return a !== major ? a < major : b !== minor ? b < minor : c < patch;
+}
+
+/**
+ * A research by the id of an outliers search, a profile (@perfil) or the path of its .json, always
+ * inside instagram-research/: the trait files are written next to it.
+ */
+function researchFile(input) {
+  const raw = String(input ?? "").trim();
+  const inside = (path) => {
+    const from = relative(RESEARCH_DIR, path);
+    return Boolean(from) && !from.startsWith("..") && !isAbsolute(from);
+  };
+  const candidates = [];
+  if (!raw.startsWith("@")) {
+    const path = resolve(ROOT, raw);
+    candidates.push(join(RESEARCH_DIR, "outliers", raw, "outliers.json"), path, join(path, "outliers.json"), join(path, "profile.json"));
+  }
+  try {
+    candidates.push(join(profileDir(parseProfile(raw)), "profile.json"));
+  } catch {
+    // Not a profile: the outliers search was the only way to read it.
+  }
+  for (const file of candidates) {
+    if (!file.endsWith(".json") || !inside(file) || !existsSync(file)) continue;
+    const data = readJson(file);
+    if (data && ["outliers", "profile"].includes(data.command) && Array.isArray(data.reels)) return { file, data, scope: data.command };
+  }
+  throw new AppError("not_found", `Não encontrei a pesquisa "${raw}".`, "Rode outliers ou profile antes, e passe o id que o outliers devolveu ou o @ do perfil.");
+}
+
+function captionsCommand(positionals, values) {
+  if (positionals.length !== 1) throw usage("Informe uma pesquisa: captions <id da pesquisa de outliers> ou captions <@perfil>.", "O id é o nome da pasta em instagram-research/outliers/, o campo id que o outliers devolveu.");
+  const { file, data, scope } = researchFile(positionals[0]);
+  const minN = intOption(values, "min-n", 5, 2, 50);
+  // Off-topic posts skew every trait; paid partnerships bought part of their reach.
+  const asked = new Set(String(values.exclude ?? "").split(",").map((id) => id.trim()).filter(Boolean));
+  const excluded = [];
+  const keep = (post) => {
+    const reason = asked.has(post.id) ? "asked" : post.ad || (post.flags ?? []).includes("ad") ? "paid_partnership" : null;
+    if (reason) excluded.push({ id: post.id, profile: post.profile ?? null, kind: post.kind ?? null, reason });
+    return !reason;
+  };
+  const reels = captionTable((data.reels ?? []).filter(keep), { minN });
+  const statics = captionTable((data.static ?? []).filter(keep), { minN });
+  const known = new Set([...(data.reels ?? []), ...(data.static ?? [])].map((post) => post.id));
+  const unknown = [...asked].filter((id) => !known.has(id));
+  const warnings = [];
+  if (olderThan(data.app?.version, [1, 1, 0])) {
+    warnings.push(`Esta pesquisa foi feita pela versão ${data.app.version} do app, que guardava só os primeiros 300 caracteres de cada legenda, sem as quebras de linha: o fim da legenda, onde costumam ficar as hashtags e os pedidos, e as listas ficaram de fora. Rode a pesquisa de novo com os mesmos perfis para medir as legendas inteiras; uma coleta de menos de 24 horas é reaproveitada, sem custo novo.`);
+  }
+  for (const [label, table] of [["Reels", reels], ["posts estáticos", statics]]) {
+    const { measured, no_caption: noCaption } = table.sample;
+    if (measured > 0 && measured < 30) warnings.push(`Só ${measured} legendas de ${label} com multiplicador: trate tudo como indício.`);
+    if (measured === 0 && noCaption > 0) warnings.push(`Nenhum dos ${label} com multiplicador tem a legenda: a leitura de capturas só traz a legenda quando ela é copiada inteira. Os traços pedem a coleta pelo Apify, ou posts abertos um a um com a legenda copiada.`);
+  }
+  if (unknown.length) warnings.push(`Não achei na pesquisa: ${unknown.join(", ")}. Use os id dos posts do .json da pesquisa.`);
+  const dir = dirname(file);
+  const result = {
+    ok: true,
+    command: "captions",
+    interface_version: INTERFACE_VERSION,
+    app: APP,
+    id: data.id ?? positionals[0],
+    scope,
+    profiles: scope === "outliers" ? (data.profiles ?? []).map((profile) => profile.id) : [data.id],
+    created_at: new Date().toISOString(),
+    research: { made_at: data.created_at ?? data.source?.collected_at ?? null, app_version: data.app?.version ?? null },
+    min_n: minN,
+    reels,
+    static: statics,
+    excluded,
+    files: { json: rel(join(dir, "legendas.json")), md: rel(join(dir, "legendas.md")) },
+    warnings,
+  };
+  writeJson(join(dir, "legendas.json"), result);
+  writeFileAtomic(join(dir, "legendas.md"), captionsMarkdown(result));
+  return result;
+}
+
+// ---------------------------------------------------------------- video
+
+/**
+ * Where the video link of a post is: the collection kept in raw.json, or the collector's file the
+ * member imported. Returns the raw item with the origin of the link, or the post as known from a
+ * reading (no link), or null.
+ */
+function videoSource(shortcode) {
+  const base = join(RESEARCH_DIR, "profiles");
+  const users = existsSync(base) ? readdirSync(base, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name) : [];
+  for (const user of users) {
+    const path = join(base, user, "raw.json");
+    const raw = readJson(path);
+    const item = (raw?.items ?? []).find((entry) => itemShortcode(entry) === shortcode);
+    if (item) return { item, profile: user, source: { type: "apify", actor: raw.actor ?? null, run_id: raw.run_id ?? null, collected_at: raw.collected_at ?? null, ref: rel(path) } };
+  }
+  for (const user of users) {
+    const data = readJson(join(base, user, "profile.json"));
+    const post = [...(data?.reels ?? []), ...(data?.static ?? [])].find((entry) => entry.id === shortcode);
+    if (!post) continue;
+    if (data.source?.type === "export" && data.source.ref) {
+      const items = readJson(resolve(ROOT, data.source.ref));
+      const item = Array.isArray(items) ? items.find((entry) => itemShortcode(entry) === shortcode) : null;
+      if (item) return { item, profile: user, source: { type: "export", collected_at: data.source.collected_at ?? null, ref: data.source.ref } };
+    }
+    return { post, profile: user, source: data.source ?? null };
+  }
+  return null;
+}
+
+/** Keeps the downloaded videos out of the project's git: they are big, and the link can bring them back. */
+function keepVideosOutOfGit() {
+  const path = join(RESEARCH_DIR, "posts", ".gitignore");
+  if (!existsSync(path)) writeFileAtomic(path, "# Pesquisa no Instagram: os vídeos baixados ficam fora do git.\n*/video.mp4\n*/*.tmp\n");
+}
+
+async function videoOne(shortcode, values, maxBytes) {
+  const dir = postDir(shortcode);
+  const target = join(dir, "video.mp4");
+  const meta = join(dir, "video.json");
+  const saved = readJson(meta);
+  if (saved && existsSync(target) && !values.refresh) return { ok: true, cached: true, ...saved };
+  const found = videoSource(shortcode);
+  const notVideo = () => new AppError("not_a_video", `O post ${shortcode} é uma foto ou um carrossel, sem vídeo para baixar.`, "Escolha um Reels do ranking de Reels.");
+  if (!found) {
+    throw new AppError("no_video_link", `O post ${shortcode} não está nas coletas deste projeto.`, "Colha o perfil antes com profile, com a chave do Apify, que traz o link do vídeo; ou peça o arquivo do vídeo ao integrante.");
+  }
+  if (!found.item) {
+    if (found.post.kind !== "reel") throw notVideo();
+    const from = SOURCE_LABELS[found.source?.type] ?? "leitura feita à mão";
+    throw new AppError("no_video_link", `O Reels ${shortcode} veio de uma fonte sem o vídeo (${from}).`, "Peça o arquivo do vídeo ao integrante e passe o arquivo à Análise de vídeo; ou, com a chave do Apify, colha o perfil com profile.");
+  }
+  if (found.item.type !== "Video") throw notVideo();
+  if (typeof found.item.videoUrl !== "string" || !found.item.videoUrl) {
+    throw new AppError("no_video_link", `A coleta não trouxe o link do vídeo do Reels ${shortcode}.`, "Colha o perfil de novo com profile <@perfil> --refresh, que é uma coleta paga; ou peça o arquivo do vídeo ao integrante.");
+  }
+  const { bytes, expires_at: expiresAt } = await downloadVideo({ link: found.item.videoUrl, target, maxBytes });
+  const record = {
+    format_version: 1,
+    id: shortcode,
+    url: `https://www.instagram.com/p/${shortcode}/`,
+    profile: found.profile,
+    duration_s: typeof found.item.videoDuration === "number" ? Math.round(found.item.videoDuration * 10) / 10 : null,
+    bytes,
+    source: found.source,
+    link_expires_at: expiresAt,
+    downloaded_at: new Date().toISOString(),
+    files: { video: rel(target), json: rel(meta) },
+  };
+  writeJson(meta, record);
+  keepVideosOutOfGit();
+  return { ok: true, cached: false, ...record };
+}
+
+async function videoCommand(positionals, values) {
+  if (!positionals.length) throw usage(`Informe os Reels: video <post> [<post>…], de 1 a ${MAX_VIDEOS}.`, "Passe o código ou o endereço de cada Reels: os maiores outliers ou os que o integrante escolheu.");
+  if (positionals.length > MAX_VIDEOS) throw usage(`No máximo ${MAX_VIDEOS} vídeos por vez.`, "Escolha os Reels que vale assistir: os maiores outliers ou os que o integrante pedir.");
+  const maxMb = intOption(values, "max-mb", DEFAULT_MAX_MB, 1, MAX_MB);
+  // The same Reels twice is one download: two at once would write the same file.
+  const posts = new Map();
+  for (const input of positionals) {
+    try {
+      const { shortcode } = parsePost(input);
+      if (!posts.has(shortcode)) posts.set(shortcode, { id: shortcode });
+    } catch (error) {
+      posts.set(`input:${input}`, { id: input, error });
+    }
+  }
+  const items = await mapLimit([...posts.values()], 2, async (post) => {
+    try {
+      if (post.error) throw post.error;
+      return await videoOne(post.id, values, maxMb * MB);
+    } catch (error) {
+      return { ok: false, id: post.id, error: errorOf(error) };
+    }
+  });
+  return { ok: true, command: "video", interface_version: INTERFACE_VERSION, app: APP, max_mb: maxMb, items };
+}
+
 // ---------------------------------------------------------------- check and list
 
 async function checkCommand(values = {}) {
@@ -370,16 +559,19 @@ async function checkCommand(values = {}) {
 }
 
 function listCommand() {
-  const folder = (...parts) => (existsSync(join(RESEARCH_DIR, ...parts)) ? readdirSync(join(RESEARCH_DIR, ...parts)) : []);
+  const folder = (...parts) => {
+    const path = join(RESEARCH_DIR, ...parts);
+    return existsSync(path) ? readdirSync(path, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name) : [];
+  };
   const profiles = folder("profiles").map((id) => {
     const data = readJson(join(RESEARCH_DIR, "profiles", id, "profile.json"));
     return { id, source: data?.source?.type ?? null, collected_at: data?.source?.collected_at ?? null, reels_normal: data?.baseline?.reels?.value ?? null, md: data ? rel(join(RESEARCH_DIR, "profiles", id, "profile.md")) : null };
   });
   const outliers = folder("outliers").map((id) => {
     const data = readJson(join(RESEARCH_DIR, "outliers", id, "outliers.json"));
-    return { id, profiles: (data?.profiles ?? []).map((profile) => profile.id), created_at: data?.created_at ?? null, md: rel(join(RESEARCH_DIR, "outliers", id, "outliers.md")) };
+    return { id, profiles: (data?.profiles ?? []).map((profile) => profile.id), created_at: data?.created_at ?? null, md: rel(join(RESEARCH_DIR, "outliers", id, "outliers.md")), captions: existsSync(join(RESEARCH_DIR, "outliers", id, "legendas.md")) };
   });
-  const posts = folder("posts").map((id) => ({ id, comments: existsSync(join(RESEARCH_DIR, "posts", id, "comments.md")) }));
+  const posts = folder("posts").map((id) => ({ id, comments: existsSync(join(RESEARCH_DIR, "posts", id, "comments.md")), video: existsSync(join(RESEARCH_DIR, "posts", id, "video.mp4")) }));
   return { ok: true, command: "list", interface_version: INTERFACE_VERSION, app: APP, dir: rel(RESEARCH_DIR), profiles, outliers, posts };
 }
 
@@ -392,7 +584,9 @@ Comandos
   profile <@perfil>            Os últimos posts de um perfil, o normal dele e os que passaram desse normal.
   outliers <@perfil> <@perfil>…  De 2 a 25 perfis: cada post contra o normal do próprio perfil, num ranking só.
   import <arquivo>             Uma leitura feita à mão (capturas de tela lidas pela IA) ou um arquivo de posts já colhido.
+  captions <pesquisa | @perfil>  Os traços das legendas (pergunta, lista, hashtags, pedidos ao público…) contra o multiplicador.
   comments <post>              Os comentários de um post ou Reels, sem o nome de quem escreveu.
+  video <post> [<post>…]       Baixa o vídeo de 1 a ${MAX_VIDEOS} Reels colhidos, para a Análise de vídeo assistir. O link da coleta vence.
   list                         O que já foi pesquisado neste projeto.
   help                         Esta ajuda.
 
@@ -403,8 +597,11 @@ Opções
   --rank index|multiplier|metric   Ordem do resultado (padrão: index).
   --name <nome>                (outliers) Nome da pasta do resultado.
   --max N                      (comments) Quantos comentários, de 10 a 500 (padrão: 100).
+  --min-n N                    (captions) Tamanho mínimo de grupo, de 2 a 50 (padrão: 5); abaixo dele, indício.
+  --exclude id,id              (captions) Os posts fora do tema, que saem da conta.
+  --max-mb N                   (video) Tamanho máximo de cada vídeo, de 1 a ${MAX_MB} MB (padrão: ${DEFAULT_MAX_MB}).
   --confirm-cost               Confirma uma coleta acima do limite de custo, depois do sim do integrante.
-  --refresh                    Colhe de novo em vez de reaproveitar o que já foi colhido.
+  --refresh                    Colhe (ou, em video, baixa) de novo em vez de reaproveitar o que o projeto já tem.
   --json                       Saída em JSON, para a IA e para outros apps.`;
 
 function humanText(result) {
@@ -427,6 +624,12 @@ function humanText(result) {
       return result.profiles.map((profile) => `@${profile.id}: ${profile.sample.posts} posts importados. Resultado: ${profile.files.md}`).join("\n");
     case "comments":
       return [`${result.count} comentários → ${result.files.md}`, ...warnings].join("\n");
+    case "captions":
+      return [`Traços de legenda: ${result.reels.sample.measured} Reels e ${result.static.sample.measured} posts estáticos com multiplicador e legenda. Resultado: ${result.files.md}`, ...warnings].join("\n");
+    case "video":
+      return result.items
+        .map((item) => (item.ok ? `${item.id}: ${item.files.video} (${(item.bytes / MB).toFixed(1).replace(".", ",")} MB${item.cached ? ", já estava no projeto" : ""})` : `${item.id}: erro (${item.error.code}): ${item.error.message}`))
+        .join("\n");
     case "list":
       return [`Perfis: ${result.profiles.length} · pesquisas: ${result.outliers.length} · posts com comentários: ${result.posts.filter((post) => post.comments).length} (em ${result.dir})`, ...result.profiles.map((profile) => `- @${profile.id} (${profile.source ?? "sem dado"})`)].join("\n");
     default:
@@ -449,10 +652,14 @@ async function main(argv) {
       return importCommand(positionals, values);
     case "comments":
       return commentsCommand(positionals, values);
+    case "captions":
+      return captionsCommand(positionals, values);
+    case "video":
+      return videoCommand(positionals, values);
     case "list":
       return listCommand();
     default:
-      throw usage(`Comando desconhecido: ${command}.`, "Comandos: check, profile, outliers, import, comments, list, help.");
+      throw usage(`Comando desconhecido: ${command}.`, "Comandos: check, profile, outliers, import, captions, comments, video, list, help.");
   }
 }
 

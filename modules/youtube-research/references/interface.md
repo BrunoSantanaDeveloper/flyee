@@ -85,28 +85,76 @@ Os três aceitam de 1 a 20 vídeos (endereço ou id de 11 caracteres) e devolvem
 
 Tudo fica em `youtube-research/videos/<id>/` e é reaproveitado: a transcrição sempre, os comentários por 7 dias, os dados por 1 dia.
 
-## 5. Traços de título
+## 5. Títulos de alta performance
 
 ```
 node .flyee/modules/youtube-research/scripts/research.mjs titles <id da pesquisa de outliers> --tools "Nome A,Nome B" --json
+node .flyee/modules/youtube-research/scripts/research.mjs titles --channel <@canal> --json
 ```
 
-Mede, nos títulos de uma pesquisa de `outliers`, cada traço contra o multiplicador: a mediana dos títulos que têm o traço e a dos que não têm, com o tamanho de cada grupo. Grava `titulos.md` e `titulos.json` na pasta da pesquisa.
+Analisa os títulos de uma pesquisa de `outliers`, ou os envios de um canal já lido por `channel`:
+- **a lista:** os títulos que mais passaram do normal e os que ficaram abaixo dele, cada um com os traços que tem;
+- **os traços:** a mediana do multiplicador dos títulos que têm cada um e a dos que não têm, com o tamanho de cada grupo;
+- **as palavras:** o mesmo para as palavras e pares de palavras que se repetem.
+
+Grava `titulos.md` e `titulos.json` na pasta da pesquisa ou do canal. Cada rodada grava por cima da anterior.
+
+Com `--channel`, o multiplicador de cada vídeo é contra o normal daquele canal: mostra o que o público do canal já respondeu, não o tema. As views da aba vêm arredondadas pelo YouTube, e com uns 30 vídeos quase todo grupo é pequeno.
 
 | Opção | Para quê |
 |---|---|
+| `--channel <canal>` | mede os envios de um canal já lido: o `@` dele, a pasta que `channel` devolveu em `dir` ou o caminho do `channel.json`. Não vai junto com o id de uma pesquisa |
 | `--tools "A,B"` | os nomes de ferramentas, produtos ou marcas do tema; sem ela, o traço "ferramenta" fica de fora e `suggested_tools` mostra os nomes que aparecem nos títulos, para você confirmar |
-| `--min-n N` | o tamanho mínimo de grupo (padrão 5); abaixo dele, `small_n: true` |
+| `--min-n N` | o tamanho mínimo de grupo (padrão 5); abaixo dele, `small_n: true`. Uma palavra só entra em `terms` se aparecer em N títulos ou mais |
 | `--base any\|channel` | `channel` usa só os vídeos medidos pela mediana do próprio canal (padrão `any`) |
-| `--exclude id,id` | os vídeos fora do tema (os `id` de `outliers.json`): a busca pega palavras com outro sentido e nichos vizinhos, e eles distorcem os traços. Saem da conta e voltam em `excluded` |
+| `--exclude id,id` | os vídeos fora do tema (os `id` de `outliers.json` ou de `channel.json`): a busca pega palavras com outro sentido e nichos vizinhos, e eles distorcem os traços. Saem da conta e voltam em `excluded` |
+| `--top N` | quantos títulos acima do normal listar, de 5 a 50 (padrão 15) |
 
-Cada rodada grava `titulos.md` e `titulos.json` por cima da anterior.
+Resposta:
 
-Resposta: `sample` (`items`, `measured`, `base`), `traits[]` (`trait`, `label`, `with` e `without` com `n` e `median`, `ratio`, `small_n`; ou `skipped` e `note`), `length` (`median_all`, `median_outliers`, `outliers_n`, `buckets[]` com `range`, `n`, `median`), `suggested_tools[]` (`name`, `titles`), `files` e `warnings`.
+| Campo | O que é |
+|---|---|
+| `source` | `outliers` ou `channel` |
+| `id`, `queries` | a pesquisa (com `--channel`, `null` e `[]`) |
+| `channel`, `read_at` | com `--channel`: o canal (`name`, `handle`…) e quando foi lido |
+| `sample` | `items`, `measured`, `base` |
+| `traits[]` | `trait`, `label`, `group` (`gatilho` ou `forma`), `trigger` (o gatilho da embalagem, nos de `group` `gatilho`), `with` e `without` com `n` e `median`, `ratio`, `small_n`; ou `skipped` e `note` |
+| `top_titles[]` | os títulos acima do normal (multiplicador maior que 1), do maior para o menor: `id`, `title`, `channel`, `multiplier`, `views`, `band`, `base` (`channel`, `sample`, `subscribers`), `traits` (as chaves dos traços que ele tem) |
+| `bottom_titles[]` | os que ficaram abaixo do normal, do menor para cima, com os mesmos campos |
+| `terms[]` | `term` (N é qualquer número), `with`, `without`, `ratio`, `small_n`, do maior `ratio` para o menor. As palavras das buscas ficam de fora |
+| `length` | `median_all`, `median_outliers`, `outliers_n`, `buckets[]` com `range`, `n`, `median` |
+| `suggested_tools[]` | `name`, `titles` |
+| `excluded`, `files`, `warnings` | como nos outros comandos |
 
-Os traços: `number` (número), `tool` (ferramenta ou marca), `brackets` (parênteses ou colchetes), `starts_how` (começa com "Como"), `question` (pergunta), `first_person` (primeira pessoa), `without` ("sem X"), `concrete_result` (dinheiro, tempo, número com unidade), `caps_word` (uma palavra em caixa alta).
+Os traços (as nove primeiras chaves vêm da primeira versão desta interface e não mudam):
 
-O dado é desta amostra: mostra o que anda junto com os títulos que foram bem, nunca a causa. Ao usar, cite o traço e o número ("os títulos com o nome da ferramenta tiveram mediana de 1,9× contra 1,0×, n=40 e 84"). Grupo pequeno é indício.
+| `trait` | O que procura | `trigger` |
+|---|---|---|
+| `number` | um número | |
+| `tool` | um nome de `--tools` | |
+| `brackets` | parênteses ou colchetes | |
+| `starts_how` | começa com "Como" | |
+| `question` | ponto de interrogação | |
+| `first_person` | primeira pessoa ("eu", "testei", "fiz") | |
+| `without` | "sem X" | |
+| `concrete_result` | dinheiro, tempo, número com unidade | `resultado` |
+| `caps_word` | uma palavra em caixa alta | |
+| `gap` | "isso", "esse", "o segredo", "por que", "o X que" | `curiosidade` |
+| `search` | "como", "passo a passo", "tutorial", "iniciantes" | `busca direta` |
+| `contrarian` | "pare de", "não faça", "mito", "ninguém conta" | `contrário` |
+| `mistake` | "erro", "evite", "perdendo", "jogando fora" | `custo ou erro` |
+| `experiment` | "testei", "por 30 dias", "desafio" | `experimento ou história` |
+| `list` | "5 dicas", "3 erros", "top 10" | `lista` |
+| `comparison` | "vs", "X x Y", "melhor que", "qual escolher" | `comparação` |
+| `you` | "você", "seu", "sua" | |
+| `superlative` | "o melhor", "o pior", "mais fácil" | |
+| `year` | um ano ("2026") | |
+| `two_parts` | dois pontos, barra ou traço separando duas partes | |
+| `emoji` | um emoji | |
+
+Os gatilhos são o que um script consegue ver nas palavras: um título de curiosidade sem nenhuma dessas palavras não entra na conta. Leia a lista antes das tabelas: ela mostra o mecanismo que os números resumem.
+
+O dado é desta amostra: mostra o que anda junto com os títulos que foram bem, nunca a causa. Ao usar, cite o traço ou a palavra e o número ("os títulos com o nome da ferramenta tiveram mediana de 1,9× contra 1,0×, n=40 e 84"). Grupo pequeno é indício. Com muitos traços e palavras medidos na mesma amostra, algum parece forte por acaso: vale mais o que se repete em duas leituras, como o tema e o canal.
 
 ## 6. O que já existe
 
@@ -123,11 +171,12 @@ Em erro do comando, `ok` é `false`, a saída termina com código 1 (2 para uso 
 | `no_captions` | o vídeo não tem legenda, nem a automática; diga ao integrante numa frase e ofereça três caminhos: ele colar a transcrição num arquivo, o app Análise de vídeo ler imagem e som, ou seguir sem aquele vídeo |
 | `captions_unavailable` | o vídeo tem legenda, mas o YouTube não a entregou agora (ou ela veio vazia); espere alguns minutos e tente uma vez de novo; se repetir, ofereça os três caminhos de `no_captions` |
 | `no_tab` | o canal não tem essa aba; use a outra |
+| `tool_timeout` | o yt-dlp passou de 10 minutos numa chamada e foi interrompido: repita uma vez; se repetir, use menos buscas, canais ou vídeos, ou espere alguns minutos |
 | `not_youtube`, `not_found`, `video_unavailable`, `private_video`, `members_only`, `age_restricted` | o endereço não serve; repasse `fix` |
 | `offline`, `ytdlp_failed`, `unexpected` | repasse `message` e `fix` |
 | `usage` | uma opção errada: corrija o comando |
 
-Quando a leitura de um vídeo falha, nunca tente outro caminho por conta própria para o mesmo conteúdo (outro site, outra ferramenta, a página aberta no navegador). Diga o que falhou e deixe o integrante escolher entre os caminhos da linha `no_captions`. O código `captions_unavailable` chegou na versão 1.0.1, dentro da interface 1; antes dela, o mesmo caso voltava como `no_captions`.
+Quando a leitura de um vídeo falha, nunca tente outro caminho por conta própria para o mesmo conteúdo (outro site, outra ferramenta, a página aberta no navegador). Diga o que falhou e deixe o integrante escolher entre os caminhos da linha `no_captions`. O código `captions_unavailable` chegou na versão 1.0.1, dentro da interface 1; antes dela, o mesmo caso voltava como `no_captions`. O código `tool_timeout`, a opção `--channel` e os campos novos de `titles` chegaram na versão 1.1.0, também dentro da interface 1: com uma versão anterior instalada, `titles` não traz `top_titles`, `terms` nem os traços novos, e `npx --yes flyee@latest update youtube-research --yes --json` atualiza.
 
 ## 8. O que não muda
 

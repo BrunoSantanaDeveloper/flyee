@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { CliError } from "../api/errors.ts";
 import { isCloudSession, reach } from "../api/network.ts";
 import type { Context } from "../context.ts";
-import { t } from "../i18n.ts";
+import { listed, t } from "../i18n.ts";
 import { moduleDir, readLock } from "../state/lock.ts";
 import { MANIFEST_FILE } from "./zip.ts";
 
@@ -68,11 +68,6 @@ export async function refusedHosts(ctx: Context, hosts: string[]): Promise<strin
 }
 
 export type CloudNetwork = { blocked: string[]; notes: string[]; message?: string };
-
-function listed(ctx: Context, items: string[]): string {
-  const and = ctx.locale === "en" ? "and" : "e";
-  return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} ${and} ${items[items.length - 1]}`;
-}
 
 /**
  * In a Claude Code cloud session, the network the installed apps need and this session does not

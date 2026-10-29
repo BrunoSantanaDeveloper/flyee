@@ -69,6 +69,8 @@ export function buildModuleZip(input: {
   version: string;
   trail?: string;
   type?: string;
+  /** The app's name per language, as the store shows it; the slug by default. */
+  title?: Record<string, string>;
   skills?: { name: string; description: string; body?: string }[];
   readme?: string;
   files?: Record<string, string>;
@@ -90,7 +92,7 @@ export function buildModuleZip(input: {
     version: input.version,
     type: input.type ?? "skill",
     trail: input.trail ?? "divulgar",
-    title: { "pt-BR": input.slug },
+    title: input.title ?? { "pt-BR": input.slug },
     summary: { "pt-BR": `Resumo de ${input.slug}.` },
     compatible_ais: ["claude_code", "codex"],
     entry: input.entry ?? `skills/${skills[0].name}/SKILL.md`,

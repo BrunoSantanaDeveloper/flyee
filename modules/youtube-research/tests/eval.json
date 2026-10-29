@@ -38,6 +38,15 @@
       "prompt": "Quais vídeos sobre airfryer bombaram no último mês?",
       "assertions": [],
       "rubric": "Roda check, avisa numa frase e roda ele mesmo npx --yes flyee@latest need yt-dlp --yes --json; não manda o integrante instalar nada nem abrir o terminal; depois roda outliers com --window month. Não responde de memória."
+    },
+    {
+      "name": "titulos de alta performance no tema e no canal",
+      "prompt": "Que títulos funcionam sobre marmita fit? E no meu canal @meucanal, quais títulos passaram do meu normal?",
+      "assertions": [
+        { "kind": "file_exists", "path": "youtube-research/outliers/*/titulos.md" },
+        { "kind": "file_exists", "path": "youtube-research/channels/*/titulos.md" }
+      ],
+      "rubric": "Roda outliers com 3 a 6 buscas, tira os vídeos fora do tema com --exclude e roda titles; roda channel no canal e depois titles --channel. Começa pela lista dos títulos que mais passaram do normal e diz o mecanismo de cada um (gatilho, promessa, palavra do público), sem propor copiar nenhum. Cita cada gatilho, traço ou palavra com a mediana e o n dos dois lados, chama de indício o grupo pequeno, diz que o canal tem amostra pequena e views arredondadas, e dá mais peso ao que aparece no tema e no canal ao mesmo tempo. Nenhum número que não veio do script."
     }
   ]
 }

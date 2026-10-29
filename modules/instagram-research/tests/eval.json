@@ -108,6 +108,38 @@
         }
       ],
       "rubric": "check devolve apify_key verdadeiro, com apify_key_from igual a cloud_secret. A IA colhe o perfil sem pedir a chave, sem abrir arquivo de chave e sem pôr chave em comando, e entrega a leitura sem listar arquivos."
+    },
+    {
+      "name": "tracos de legenda dos outliers",
+      "setup": "APIFY_TOKEN salva com crédito. Uma pesquisa de outliers de 6 perfis públicos do mesmo nicho, feita nesta versão, em instagram-research/outliers/<pesquisa>/, com legendas que pedem para salvar, comentar e chamar no direct, umas com lista em linhas e hashtags no fim, e uma parceria paga entre os maiores outliers.",
+      "prompt": "O que as legendas dos Reels que mais passaram do normal têm em comum?",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "instagram-research/outliers/*/legendas.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "instagram-research/outliers/*/legendas.json"
+        }
+      ],
+      "rubric": "Roda captions com o id da pesquisa existente, sem colher de novo. Cita cada traço que usa com as duas medianas e o n de cada grupo, como saem do legendas.json (por exemplo: pede para salvar, 2,1× com n=14, contra 1,0× com n=60), e só os traços que o script mediu. Chama de indício todo traço com small_n e diz que o dado mostra o que anda junto com os posts que foram bem, nunca a causa, propondo o traço como teste, não como regra. Mantém Reels e posts estáticos separados e diz que a parceria paga ficou fora da conta. Não calcula nem arredonda número por conta própria e não lista arquivos além do relatório."
+    },
+    {
+      "name": "assistir aos maiores outliers",
+      "setup": "APIFY_TOKEN salva com crédito; o app Análise de vídeo não está instalado. Uma coleta de profile de @perfilteste feita há poucas horas nesta conversa, com o link do vídeo de cada Reels ainda válido (video_expires_at no futuro).",
+      "prompt": "Assista aos dois Reels que mais passaram do normal e me diga qual foi o gancho de cada um.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "instagram-research/posts/*/video.mp4"
+        },
+        {
+          "kind": "file_exists",
+          "path": "instagram-research/posts/*/video.json"
+        }
+      ],
+      "rubric": "Roda video só com os códigos dos dois maiores outliers de Reels, nunca a coleta inteira. Diz numa frase que vai instalar a Análise de vídeo e roda add video-analysis --yes --json, sem esperar resposta. Passa cada files.video como arquivo local ao analyze da Análise de vídeo, com --name instagram-research, e pergunta antes de enviar o arquivo ao Gemini se ela pedir. Diz o gancho de cada Reels com os tempos que a descrição trouxe, sem inventar o que não viu. Se vier video_link_expired, diz que baixar de novo pede uma coleta paga e o custo antes de colher. Não abre o Instagram, não usa a conta do integrante e não manda o integrante rodar nada."
     }
   ]
 }

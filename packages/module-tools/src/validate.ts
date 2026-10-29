@@ -6,6 +6,7 @@ import { parseFrontmatter } from "./frontmatter.ts";
 import { crossFieldErrors, MAX_UNCOMPRESSED_BYTES, type Manifest, readManifest, schemaErrors } from "./manifest.ts";
 import { listModuleDirs } from "./paths.ts";
 import { PLACEHOLDER, placeholdersIn } from "./placeholders.ts";
+import { referenceErrors } from "./references.ts";
 import { referencedApps } from "./relations.ts";
 import { guideErrors } from "./guides.ts";
 import { scriptTextErrors } from "./script-text.ts";
@@ -196,6 +197,8 @@ export function validateModule(dir: string): Report {
   }
   report.errors.push(...scriptTextErrors(dir, files));
   report.errors.push(...guideErrors(dir, files));
+  // A shipped text that names a package file (`../../references/x.md`, `.flyee/modules/<slug>/scripts/x.mjs`) needs the file.
+  report.errors.push(...referenceErrors(dir, files));
   const unfilled = placeholdersIn(dir, files);
   if (unfilled.length) report.errors.push(`${PLACEHOLDER} still to be written in: ${unfilled.join(", ")}`);
   validateEval(dir, slug, report.errors);

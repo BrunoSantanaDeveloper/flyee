@@ -6,7 +6,7 @@ Um roteiro pedido de uma vez a uma IA costuma sair genérico, presumir o que nã
 
 ### 1. O perfil do canal e as suas regras
 
-O `canal.md` é lido antes de todo roteiro. Ele guarda o público e o que ele já sabe, a promessa do canal, os formatos, a sua prova, o ritmo de fala, como você fala de si ("cansado" ou "cansada") e se o canal usa o teste de miniaturas do YouTube.
+O `canal.md` é lido antes de todo roteiro. Ele guarda o público e o que ele já sabe, a promessa do canal, os formatos, a sua prova, o ritmo de fala, como você fala de si ("cansado" ou "cansada") e se o canal usa o teste A/B do YouTube.
 
 A voz é feita de exemplos, não de adjetivos: tratamento, vocabulário, ritmo, tiques, humor, como você abre e fecha, três frases de referência tiradas do seu material e três que você nunca diria. A fonte preferida é um texto seu. Depois vem a fala de 5 a 8 vídeos do seu canal. Num canal novo, entra a mecânica de 2 a 4 criadores que você indicar, nunca o conteúdo deles, e cada traço emprestado fica marcado "(emprestado de referências, confirme)" até você dizer que fala assim. O ritmo não se empresta: fica em 180 palavras por minuto até ser medido nos seus vídeos.
 
@@ -22,7 +22,7 @@ Quando o vídeo mostra uma ferramenta, um produto ou um serviço, a IA lê as fo
 
 Com a Pesquisa no YouTube, a IA traduz o tema em 3 a 6 buscas e acha os outliers, os vídeos que fizeram muito mais do que o normal do próprio canal. Padrão é o que se repete em dois ou mais deles. O que aparece num só é aposta, e muito vídeo abaixo do normal indica tema saturado.
 
-Depois ela mede os traços de título: número, nome da ferramenta, parênteses, começar com "Como", pergunta, primeira pessoa, "sem X", resultado concreto, palavra em caixa alta. Para cada um, sai a mediana do multiplicador com e sem o traço e o tamanho de cada grupo. O número mostra o que andou junto com o resultado, nunca a causa, e grupo pequeno é só indício.
+Depois ela analisa os títulos de alta performance: a lista dos que mais passaram do normal e dos que ficaram abaixo, com os traços de cada um; os gatilhos (resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista, comparação); a forma (número, nome da ferramenta, parênteses, começar com "Como", pergunta, primeira pessoa, "sem X", palavra em caixa alta, "você", ano); e as palavras que se repetem. Com o seu canal lido, faz o mesmo nos seus vídeos, contra o seu normal. Para cada traço e cada palavra, sai a mediana do multiplicador com e sem ele e o tamanho de cada grupo. O número mostra o que andou junto com o resultado, nunca a causa, e grupo pequeno é só indício.
 
 Ela lê ainda a fala de 2 ou 3 outliers (a abertura, os blocos, onde pagam a promessa, os trechos mais revistos) e até 100 comentários por vídeo, separados em dúvidas, objeções e pedidos, com as palavras do público. Uma dúvida que se repete e que nenhum vídeo do topo respondeu bem é a melhor ideia central disponível. Cada fato ganha fonte e data: três fontes independentes permitem afirmar, duas viram "segundo…", uma só vira aviso ou corte e nenhuma vira marca. Sem o app, a etapa fica de fora e o briefing registra que a pauta é uma aposta.
 
@@ -32,7 +32,7 @@ Um vídeo que funcionou, até de outro país, mostra um fluxo que já prendeu ge
 
 ### 5. Título e thumbnail
 
-A embalagem vem antes do roteiro porque, sem o clique, o melhor texto não é visto. São cinco títulos de gatilhos diferentes (resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista), cada um com o traço medido de onde veio quando há dado, e duas ou três ideias de thumbnail com um assunto só e até quatro palavras. Com o teste de miniaturas, elas viram três variantes da mesma promessa, cada uma mudando um elemento, sempre com quadros reais do vídeo. Cada par passa pelo teste do clique, e a etapa fecha com a promessa em uma frase e o bloco onde o vídeo a paga, antes do terço final.
+A embalagem vem antes do roteiro porque, sem o clique, o melhor texto não é visto. Os títulos partem dos de alta performance: a IA lê a lista dos que mais passaram do normal no tema e, quando o seu canal já foi lido, no seu canal, e adapta o mecanismo deles ao seu jeito, sem copiar nenhum. São cinco títulos de gatilhos diferentes (resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista, comparação), cada um com o gatilho, o traço ou a palavra medida de onde veio quando há dado. As duas ou três ideias de thumbnail têm um assunto só, até quatro palavras e nada no canto de baixo à direita, onde o YouTube mostra a duração. O teste A/B do YouTube agora compara títulos, thumbnails ou os dois e escolhe pelo tempo assistido: com ele, você recebe até três títulos e três thumbnails da mesma promessa, cada variante mudando um elemento, sempre com quadros reais do vídeo. Cada par passa pelo teste do clique, e a etapa fecha com a promessa em uma frase e o bloco onde o vídeo a paga, antes do terço final. A conferência lê o título escolhido e avisa se a fala não diz, até ali, um número, uma sigla ou um nome que ele promete.
 
 ### 6. Ganchos e estrutura
 
@@ -65,7 +65,7 @@ Tudo fica em `roteiros/`: o perfil e as pautas na raiz, e uma pasta por vídeo.
 | `roteiro.md` | a fala, bloco a bloco, com as marcas | você e a IA |
 | `revisao.md` | o resumo da conferência, as notas e as rodadas | a IA |
 | `descricao.md` | a descrição, os capítulos estimados e o comentário fixado | a IA; você completa os links |
-| `checklist.md` | o que gravar antes, cada marca pendente e o que conferir antes de publicar | o app gera |
+| `checklist.md` | o que gravar antes, cada marca pendente e o que conferir e responder ao publicar (a thumbnail, o público, o uso de IA, a promoção paga, o teste A/B) | o app gera |
 | `roteiro-completo.md` e `roteiro.docx` | tudo junto num arquivo, e o roteiro em Word com as marcas em cinza | o app gera |
 | `teleprompter.txt` | só a fala, uma frase por linha | o app gera quando não sobra marca |
 

@@ -3,7 +3,9 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { basename, dirname, relative, resolve, sep } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
+
+const WINDOWS = process.platform === "win32";
 
 /** An error with a stable code: other apps branch on `code`; the member reads `message` and `fix` (pt-BR). */
 export class AppError extends Error {
@@ -136,18 +138,131 @@ export function removeDir(path) {
 }
 
 /**
- * Runs a program without a shell, so arguments arrive intact (URLs with & included).
- * `onStdout` receives the output bytes; `onStderrLine` receives each error line.
+ * How long each program this app runs may take, in milliseconds. Generous on purpose: a limit
+ * is only reached by a program that hangs, never by a slow machine or connection doing real work.
  */
-export function run(file, args, { cwd, env, onStdout, onStderrLine, stderrLimit = 256 * 1024 } = {}) {
+export const LIMITS = {
+  // reading a file's header or a program's version takes seconds
+  probe: 2 * 60 * 1000,
+  // the least a call over media gets: one frame or one grid takes seconds, a short piece a few minutes on a slow machine
+  media: 10 * 60 * 1000,
+  // yt-dlp reads a video's page and its captions in seconds, and retries a slow site by itself
+  metadata: 10 * 60 * 1000,
+  // a download depends on the connection: three hours fit a long video on a slow line, and yt-dlp gives up on a dead one by itself
+  download: 3 * 60 * 60 * 1000,
+  // a call nobody sized, or media of unknown length: longer than any job of this app
+  default: 60 * 60 * 1000,
+};
+
+// decoding runs faster than real time even on a weak machine: six times the duration is room to spare
+const MEDIA_FACTOR = 6;
+
+// setTimeout fires at once past 2^31 - 1 ms (24.8 days): a longer limit waits that long instead
+const MAX_TIMER = 2 ** 31 - 1;
+
+/** The limit of a call that decodes or encodes `seconds` of media: max(10 min, 6 × the duration); unknown length gets the default. */
+export function mediaLimit(seconds) {
+  const length = Number(seconds);
+  if (!(length > 0)) return LIMITS.default;
+  return Math.max(LIMITS.media, Math.ceil(length * 1000 * MEDIA_FACTOR));
+}
+
+/** 500 → "0,5 s"; 600000 → "10 min"; 10800000 → "3 h". */
+export function formatLimit(ms) {
+  const seconds = ms / 1000;
+  if (seconds < 120) return `${String(Math.round(seconds * 10) / 10).replace(".", ",")} s`;
+  const minutes = seconds / 60;
+  if (minutes < 120) return `${Math.round(minutes)} min`;
+  return `${String(Math.round(minutes / 6) / 10).replace(".", ",")} h`;
+}
+
+/** "ffmpeg" for C:\…\ffmpeg.exe; "yt-dlp" for python -m yt_dlp. */
+function programName(file, args = []) {
+  const module = args.indexOf("-m");
+  if (module >= 0 && args[module + 1]) return String(args[module + 1]).replace(/_/g, "-");
+  return basename(String(file)).replace(/\.(exe|com|cmd|bat)$/i, "");
+}
+
+/** The error of a program that passed its limit: which one and for how long, and what the AI does next. */
+export function toolTimeout(file, timeoutMs, args = []) {
+  return new AppError(
+    "tool_timeout",
+    `O ${programName(file, args)} não terminou em ${formatLimit(timeoutMs)} e foi interrompido.`,
+    "Tente de novo uma vez. Se travar de novo, reduza o trabalho: um trecho mais curto (--start e --end), menos frames (--max-frames) ou, num download, uma qualidade menor (--quality 480).",
+  );
+}
+
+/**
+ * Ends a program with every process it started and resolves once it is gone (a few seconds at
+ * most, so a failure never waits on a process that will not die). On Windows taskkill ends the
+ * tree; elsewhere `run` starts each program as the leader of its own process group, and one
+ * signal to the group ends them all (yt-dlp with the ffmpeg it opened to join picture and sound).
+ */
+export function killTree(child, { waitMs = 5000 } = {}) {
+  return new Promise((resolvePromise) => {
+    if (!child?.pid || child.exitCode !== null || child.signalCode !== null) {
+      resolvePromise();
+      return;
+    }
+    let timer = null;
+    const finish = () => {
+      clearTimeout(timer);
+      child.removeListener("exit", finish);
+      resolvePromise();
+    };
+    timer = setTimeout(finish, waitMs);
+    child.once("exit", finish);
+    const alone = () => {
+      try {
+        child.kill("SIGKILL");
+      } catch {
+        // already gone
+      }
+    };
+    if (WINDOWS) {
+      try {
+        const taskkill = spawn(join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe"), ["/PID", String(child.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" });
+        taskkill.once("error", alone);
+        taskkill.once("exit", (code) => {
+          if (code !== 0) alone();
+        });
+      } catch {
+        alone();
+      }
+      return;
+    }
+    try {
+      process.kill(-child.pid, "SIGKILL");
+    } catch {
+      alone();
+    }
+  });
+}
+
+/**
+ * Runs a program without a shell, so arguments arrive intact (URLs with & included).
+ * `onStdout` receives the output bytes; `onStderrLine` receives each error line. Past
+ * `timeoutMs` (LIMITS.default when the caller names none) the program is ended with
+ * everything it started, and the call fails with `tool_timeout`.
+ */
+export function run(file, args, { cwd, env, onStdout, onStderrLine, stderrLimit = 256 * 1024, timeoutMs = LIMITS.default } = {}) {
   return new Promise((resolvePromise, reject) => {
     let child;
     try {
-      child = spawn(file, args, { cwd, env, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+      // outside Windows the program leads its own process group, so killTree also ends what it starts
+      child = spawn(file, args, { cwd, env, windowsHide: true, detached: !WINDOWS, stdio: ["ignore", "pipe", "pipe"] });
     } catch (error) {
       reject(error);
       return;
     }
+    let timedOut = false;
+    const timer =
+      Number.isFinite(timeoutMs) && timeoutMs > 0
+        ? setTimeout(() => {
+            timedOut = true;
+            killTree(child).then(() => reject(toolTimeout(file, timeoutMs, args)));
+          }, Math.min(timeoutMs, MAX_TIMER))
+        : null;
     const stdout = [];
     let tail = "";
     let pending = "";
@@ -161,8 +276,14 @@ export function run(file, args, { cwd, env, onStdout, onStderrLine, stderrLimit 
       pending = lines.pop() ?? "";
       for (const line of lines) onStderrLine(line);
     });
-    child.on("error", reject);
+    child.on("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
     child.on("close", (code) => {
+      clearTimeout(timer);
+      // past the limit the timer settles the call, once the program is gone
+      if (timedOut) return;
       if (onStderrLine && pending) onStderrLine(pending);
       resolvePromise({ code, stdout: Buffer.concat(stdout), stderr: tail });
     });

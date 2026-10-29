@@ -60,12 +60,33 @@ Pesos do índice: engajamento de 1,00 a 1,50, saturando em 10%; frescor 1,25 at�
 
 Os Reels com duração conhecida são agrupados em até 20 s, de 21 a 60 s e acima de 60 s, com a mediana de plays e de multiplicador de cada faixa. Compare as medianas de multiplicador, não as de plays, porque cada perfil tem o seu tamanho. Uma faixa com menos de 5 Reels é indício. A coleta pelo Apify traz a duração; a leitura da aba de Reels, não.
 
+## Traços de legenda (`captions`)
+
+O comando `captions` separa os posts em dois grupos para cada traço da legenda, os que têm e os que não têm, e compara a mediana do multiplicador dos dois. "Pedido para salvar: 2,1× (n=14) contra 1,0× (n=60)" quer dizer que, nesta amostra, os posts que pediam para salvar fizeram, na mediana, 2,1 vezes o normal do próprio perfil, e os outros, 1,0.
+
+| Campo | Leitura |
+|---|---|
+| `with`, `without` | a mediana do multiplicador e o `n` de cada grupo; cite sempre os dois |
+| `ratio` | mediana com o traço ÷ mediana sem; só resume, não substitui as duas medianas |
+| `small_n` | um dos grupos tem menos posts que `min_n` (5 por padrão): indício, nunca padrão |
+| `first_line`, `total`, `hashtags` | o tamanho da primeira linha (o texto até a primeira quebra de linha), o da legenda inteira e o número de hashtags, em faixas com a mediana do multiplicador e o `n` de cada uma |
+
+Como usar:
+
+- **Junto não é causa.** Um traço com mediana alta anda junto com os posts que foram bem nesta amostra. Pode ser o traço, pode ser o tema que costuma vir com ele. Trate como hipótese para testar no próximo post.
+- **Os dois grupos precisam de tamanho.** Com 2 posts de um lado, uma mediana alta é sorte de amostra. Com `small_n`, diga "indício".
+- **Reels e posts estáticos ficam separados.** O multiplicador de um mede plays; o do outro, interações.
+- **O que o script não viu não existe.** As regras leem português e inglês, e cada `label` diz o que procurou. Um pedido escrito de outro jeito fica de fora; não some nem complete a conta por conta própria.
+- **Parcerias pagas saem da conta**, porque parte do alcance foi comprada. Um post fora do tema sai com `--exclude`.
+- **Isca de comentário pesa no traço "pede comentário".** Um post com `dm_bait` infla o número pedindo comentário; diga isso quando ele estiver no grupo.
+- **Pesquisas feitas antes da versão 1.1.0 do app** guardaram só os primeiros 300 caracteres de cada legenda, numa linha só. O `warnings` avisa; rode a pesquisa de novo para medir as legendas inteiras.
+
 ## De onde veio cada número (`source`)
 
 | Fonte | O que esperar |
 |---|---|
-| `apify` | o coletor de posts do Instagram rodou no Apify, sem login. Traz plays, curtidas, comentários, duração, data, legenda e parceria paga |
-| `screenshot` | a IA leu capturas da aba de Reels. Só plays, arredondados como o Instagram mostra ("12,3 mil"), o que basta para uma mediana. Sem data, duração e curtidas |
+| `apify` | o coletor de posts do Instagram rodou no Apify, sem login. Traz plays, curtidas, comentários, duração, data, a legenda inteira, parceria paga e, em cada Reels, o link do vídeo, que vence na hora de `video_expires_at` |
+| `screenshot` | a IA leu capturas da aba de Reels. Só plays, arredondados como o Instagram mostra ("12,3 mil"), o que basta para uma mediana. Sem data, duração, curtidas, legenda e vídeo |
 | `export` | um arquivo do coletor que o integrante já tinha |
 | `link`, `declared` | o integrante trouxe os endereços ou disse os números |
 
@@ -73,7 +94,7 @@ Ao entregar, diga a fonte de cada perfil. Nunca misture na mesma frase um númer
 
 ## Como transformar em decisão
 
-1. **Padrão, não post.** Liste o que se repete entre os outliers: o gancho dos primeiros segundos, o tema, o formato (de frente para a câmera, tela, lista, bastidor, antes e depois), a duração e a promessa da legenda. Um padrão só conta quando aparece em **dois ou mais** outliers, de preferência de perfis diferentes. Em um só, é aposta.
+1. **Padrão, não post.** Liste o que se repete entre os outliers: o gancho dos primeiros segundos, o tema, o formato (de frente para a câmera, tela, lista, bastidor, antes e depois), a duração e a promessa da legenda. Um padrão só conta quando aparece em **dois ou mais** outliers, de preferência de perfis diferentes. Em um só, é aposta. Para o que está escrito na legenda, use os números de `captions`; para o gancho e a edição, só o vídeo assistido confirma.
 2. **O mecanismo, não a cópia.** O que se leva é o ângulo e o formato. O post nasce da voz de quem vai publicar.
 3. **O normal do integrante.** O perfil dele mostra o que é um bom resultado para ele; o ranking do nicho mostra o que puxa público novo.
 4. **Ressalvas.** Diga a fonte de cada perfil, quantos têm normal só indicativo, quantos posts estão maturando e o tamanho da amostra. Com menos de 5 perfis ou menos de 60 Reels no total, os padrões são indício.

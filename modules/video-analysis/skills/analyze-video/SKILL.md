@@ -92,4 +92,5 @@ Outro app pode chamar este com `--focus`, `--instructions` e `--name`. Siga o gu
 | `upload_consent_required` | pergunte se pode enviar ao Google; com o sim, repita com `--allow-upload` |
 | `gemini_quota` | o limite da chave acabou por agora; repita com `--mode local` ou mais tarde |
 | `private_video`, `members_only`, `age_restricted` | o vídeo exige login: peça o arquivo do vídeo ao integrante; só se ele pedir, repita com `--cookies-from-browser <navegador>`, que usa a sessão dele naquele navegador (o YouTube pode marcar a conta usada) |
+| `tool_timeout` | um programa travou e foi encerrado ao passar do tempo limite: tente de novo uma vez; se travar de novo, siga `error.fix` (um trecho mais curto, menos frames ou uma qualidade menor no download) |
 | outros | mostre `error.message` e `error.fix` |

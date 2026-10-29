@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "youtube-research",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "type": "tool",
   "trail": "planejar",
   "title": {
@@ -72,8 +72,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Quando outro app precisa da Pesquisa no YouTube e ela ainda não está no projeto, a sua IA diz numa frase que vai instalá-la e instala na hora, sem pedir confirmação.",
-    "en": "When another app needs YouTube research and it is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
+    "pt-BR": "A análise dos títulos de alta performance: a lista dos títulos que mais passaram do normal e dos que ficaram abaixo, com os traços de cada um; os gatilhos de título medidos (resultado, curiosidade, busca direta, contrário, erro, experimento, lista, comparação), a forma e as palavras que se repetem; e a mesma análise nos vídeos de um canal, contra o normal dele. Uma leitura do YouTube que trava é interrompida em 10 minutos, com um aviso.",
+    "en": "High-performing title analysis: the titles that went furthest above their channel's normal and those that stayed below, each with its traits; title triggers measured (result, curiosity, direct search, contrarian, mistake, experiment, list, comparison), the form and the recurring words; and the same analysis on a channel's own videos, against its normal. A YouTube read that hangs is stopped after 10 minutes, with a notice."
   },
   "license": "member"
 }

@@ -243,6 +243,16 @@
         }
       ],
       "rubric": "A origem do vídeo usa a história de \"Como eu comecei\" do perfil (2019, os cinco potes iguais, a quarta-feira), com as palavras dela, contada como cena, e nenhuma outra história de origem é inventada. A opinião do fim parte de \"O que eu defendo\" (variar o tempero rende mais do que variar a receita) e termina em aposta. O contraste com o jeito comum usa \"O que me incomoda\" (os cinco potes idênticos no domingo). O caso da irmã com o peixe aguado entra onde ensina (separar o que tem caldo). Nada disso aparece como proposta \"para você assinar\" nem como [CONFIRMAR]: é dela. A fala usa o feminino na primeira pessoa (\"cansada\"). O que não está no perfil (o tempo de preparo, o cardápio desta semana) fica em marca com exemplo de forma. Nenhum \"marmita fitness\" e nenhuma promessa de emagrecimento."
+    },
+    {
+      "name": "titulos de alta performance e teste A/B",
+      "setup": "Copie tests/fixtures/regressao/canal.md para roteiros/canal.md e troque a linha do teste por \"- Teste A/B: sim\". O canal do criador é @meucanal.",
+      "prompt": "Me dá títulos e thumbnails para um vídeo sobre marmita da semana na airfryer, e já deixa pronto para o teste A/B do YouTube.",
+      "assertions": [
+        { "kind": "file_exists", "path": "youtube-research/outliers/*/titulos.md" },
+        { "kind": "file_exists", "path": "roteiros/*/embalagem.md" }
+      ],
+      "rubric": "Roda outliers e titles no tema e, com o canal lido, titles --channel. Antes de propor, lê a lista dos títulos que mais passaram do normal e diz o mecanismo de dois ou três deles, sem copiar nenhum. Os cinco títulos são de gatilhos diferentes, entre aspas, cada um com o gatilho, o traço ou a palavra de onde veio e o número com o n; grupo pequeno é indício, e o que aparece no tema e no canal pesa mais. A seção do teste A/B traz até três títulos e três thumbnails da mesma promessa, a recomendada primeiro, e diz que o YouTube escolhe pelo tempo assistido, que o teste não vale para Shorts e que não se mexe no título nem na thumbnail até o fim. Cada thumbnail tem o texto entre aspas depois de \"Texto:\", até quatro palavras, sem repetir o título escolhido, e nada no canto de baixo à direita. A escolha diz o número do título. Nenhum número de taxa de clique ou de visualizações prometido."
     }
   ]
 }

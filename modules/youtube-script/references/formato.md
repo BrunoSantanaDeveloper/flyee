@@ -37,7 +37,7 @@ Nunca apague o que o integrante escreveu. Para mudar um arquivo pronto, mostre a
 - Prova e autoridade: … (o que o criador viveu, mediu ou construiu e pode mostrar)
 - Ritmo de fala: 180 palavras por minuto (estimado)
 - Na primeira pessoa: … ("cansado" ou "cansada"; sem a resposta, a fala evita as palavras que mudam com o gênero)
-- Teste de miniaturas: sim/não (o "Testar e comparar" do YouTube)
+- Teste A/B: sim/não (o "Testar e comparar" do YouTube, que testa títulos e thumbnails)
 
 ## Voz
 <os pilares de voz (pelo menos três traços), as frases no tom e fora do tom; veja perfil-de-voz.md>
@@ -159,7 +159,7 @@ O plano de gravação. Num vídeo que mostra fazer, testar ou experimentar algo 
 
 ## embalagem.md
 
-Os títulos (5, de gatilhos diferentes, cada um entre aspas, com o gatilho e o traço medido), as thumbnails (como variantes do teste de miniaturas quando o canal tem esse teste), o par escolhido, a promessa em uma frase e onde o vídeo paga essa promessa. Veja `embalagem.md`.
+Os títulos (5, de gatilhos diferentes, cada um entre aspas, com o gatilho e o traço medido), as thumbnails (com o texto entre aspas depois de "Texto:"), as variantes do teste A/B quando o canal tem esse teste, o par escolhido pelo número do título, a promessa em uma frase e onde o vídeo paga essa promessa. Veja `embalagem.md`. Um perfil escrito antes desta versão chama a linha do teste de "Teste de miniaturas": vale o mesmo.
 
 ## estrutura.md
 
@@ -243,8 +243,8 @@ Capítulos (estimados; confira depois da edição)
 Comentário fixado: <uma pergunta fácil, ou o material prometido no fecho>
 ```
 
-Os tempos dos capítulos saem do `lint`. Depois da edição, eles mudam: avise o integrante para conferir no vídeo final. A descrição passa pela conferência também: um `[CONFIRMAR]` esquecido nela gera aviso.
+Os tempos dos capítulos saem do `lint`. Depois da edição, eles mudam: avise o integrante para conferir no vídeo final. A descrição passa pela conferência também: um `[CONFIRMAR]` esquecido nela gera aviso. O YouTube aceita até 5.000 bytes na descrição (uma letra com acento conta 2) e recusa os sinais `<` e `>`: a conferência bloqueia os dois, contando tudo até a linha do comentário fixado, que não entra na descrição. Até três hashtags aparecem junto ao título, e com mais de 60 o YouTube ignora todas (ajuda do YouTube, conferida em outubro de 2026).
 
 ## checklist.md e roteiro-completo.md
 
-Os dois são gerados pelo script. O `checklist` tem três tempos: o que fazer e gravar antes da fala (os itens de `gravacao.md`; sem o plano, as cenas que as marcas pedem); cada `[CONFIRMAR]` e `[ESCOLHER]` do roteiro, da descrição, do briefing, da ficha, da embalagem, do plano e do perfil, com o bloco e a linha; e o que conferir antes de publicar (telas sem dados pessoais, legendas com os nomes certos, quadros reais nas thumbnails, links). O `documento` junta o briefing, a ficha, a referência, a embalagem, a estrutura, o plano de gravação, o roteiro, a descrição, o checklist e a revisão num arquivo só, e avisa no alto quando ainda é rascunho.
+Os dois são gerados pelo script. O `checklist` tem três tempos: o que fazer e gravar antes da fala (os itens de `gravacao.md`; sem o plano, as cenas que as marcas pedem); cada `[CONFIRMAR]` e `[ESCOLHER]` do roteiro, da descrição, do briefing, da ficha, da embalagem, do plano e do perfil, com o bloco e a linha; e o que conferir antes de publicar (telas sem dados pessoais, legendas com os nomes certos, quadros reais nas thumbnails e o canto da duração livre, o arquivo da thumbnail, links, capítulos, a resposta sobre conteúdo para crianças, o "Uso de IA", a promoção paga quando há bloco de publi e as variantes do teste A/B). O `documento` junta o briefing, a ficha, a referência, a embalagem, a estrutura, o plano de gravação, o roteiro, a descrição, o checklist e a revisão num arquivo só, e avisa no alto quando ainda é rascunho.

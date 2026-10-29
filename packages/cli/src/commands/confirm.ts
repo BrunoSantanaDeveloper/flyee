@@ -16,21 +16,25 @@ export function commandLine(args: ParsedArgs): string {
   return parts.filter(Boolean).join(" ");
 }
 
+/** A refusal of its own, for a command whose question has a reason the AI must relay (remove, `has_dependents`). */
+export type Refusal = { error: string; message: (yes: string, plan: string | null) => string };
+
 /**
  * Asks before a change. True goes on and false is the person's no; without a
  * terminal to ask on (the member's AI ran the command) nothing can answer, so
  * the result says how the confirmation comes instead: show the plan with
  * --dry-run, then run again with --yes after the member's yes. Its own error
- * code, `confirmation_required`, keeps it apart from a "no".
+ * code, `confirmation_required`, keeps it apart from a "no"; a command with a
+ * reason to ask names its own code and message, and the way to confirm stays.
  */
-export async function askOrExplain(ctx: Context, question: string, args: ParsedArgs, options: { plan?: boolean } = {}): Promise<boolean | Fail> {
+export async function askOrExplain(ctx: Context, question: string, args: ParsedArgs, options: { plan?: boolean; refusal?: Refusal } = {}): Promise<boolean | Fail> {
   if (ctx.yes) return true;
   const answer = await ctx.io.confirm(question);
   if (answer !== null) return answer;
   const run = `npx --yes flyee@latest ${commandLine(args)}`;
   const yes = `${run} --yes --json`;
   const plan = options.plan === false ? null : `${run} --dry-run --json`;
-  const message = plan ? t(ctx, "confirm.no_terminal_plan", { plan, yes }) : t(ctx, "confirm.no_terminal", { yes });
+  const message = options.refusal ? options.refusal.message(yes, plan) : plan ? t(ctx, "confirm.no_terminal_plan", { plan, yes }) : t(ctx, "confirm.no_terminal", { yes });
   ctx.io.out(message);
-  return { ok: false, error: "confirmation_required", message, confirm_with: yes, ...(plan ? { plan_with: plan } : {}) };
+  return { ok: false, error: options.refusal?.error ?? "confirmation_required", message, confirm_with: yes, ...(plan ? { plan_with: plan } : {}) };
 }

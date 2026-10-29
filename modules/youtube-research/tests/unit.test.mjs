@@ -246,3 +246,115 @@ test("titles measures each trait against the multiplier, with the size of each g
   assert.match(md, /\| começa com "Como" \| 5× \(n=3\) \|/);
   assert.match(md, /não a causa/);
 });
+
+test("the triggers of the packaging guide are measured as traits", async () => {
+  const { TRAITS } = await import("../scripts/lib/titles.mjs");
+  const has = (key, title) => TRAITS.find((trait) => trait.key === key).test(title, { tools: null });
+  assert.ok(has("list", "5 dicas para economizar na feira"));
+  assert.ok(has("list", "Top 10 receitas de marmita"));
+  assert.ok(!has("list", "Fiz 30 dias de marmita"), "a period is an experiment, not a list");
+  assert.ok(has("experiment", "Fiz 30 dias de marmita"));
+  assert.ok(has("experiment", "Testei a Airfryer por 7 dias"));
+  assert.ok(!has("experiment", "Marmita da semana em 2 horas"), "a time result is not an experiment");
+  assert.ok(has("contrarian", "Pare de lavar o arroz"));
+  assert.ok(has("contrarian", "O que ninguém te conta sobre airfryer"));
+  assert.ok(has("contrarian", "Stop buying cheap knives"));
+  assert.ok(has("mistake", "Você está jogando fora metade do café"));
+  assert.ok(has("comparison", "Airfryer vs forno elétrico"));
+  assert.ok(has("comparison", "Mondial x Philco: qual escolher?"));
+  assert.ok(has("gap", "O ingrediente que fazia o meu bolo afundar"));
+  assert.ok(has("gap", "Por que o seu bolo afunda"));
+  assert.ok(!has("gap", "A melhor airfryer de 2026"));
+  assert.ok(has("search", "Bolo de pote para vender (passo a passo)"));
+  assert.ok(has("year", "A melhor airfryer de 2026"));
+  assert.ok(has("superlative", "A melhor airfryer de 2026"));
+  assert.ok(has("two_parts", "Airfryer – vale a pena"));
+  assert.ok(has("emoji", "Bolo de pote \u{1F370}"));
+  assert.ok(!has("emoji", "Bolo de pote"));
+  assert.ok(has("you", "O erro que estraga o seu feijão"));
+  const keys = TRAITS.map((trait) => trait.key);
+  assert.deepEqual(keys.slice(0, 9), ["number", "tool", "brackets", "starts_how", "question", "first_person", "without", "concrete_result", "caps_word"], "interface 1 keeps the first nine in order");
+  assert.ok(TRAITS.filter((trait) => trait.group === "gatilho").every((trait) => trait.trigger));
+});
+
+test("titles lists the titles above and below the normal with their traits, and the words that go with them", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { rankedTitles, termTable, titlesMarkdown, traitTable } = await import("../scripts/lib/titles.mjs");
+  const data = JSON.parse(readFileSync(new URL("./fixtures/outliers-titulos.json", import.meta.url), "utf8"));
+  const ranked = rankedTitles(data.items, {});
+  assert.deepEqual(ranked.top_titles.map((item) => item.id), ["v0", "v6", "v1", "v4", "v9", "v2", "v3", "v10"]);
+  assert.ok(ranked.top_titles.every((item) => item.multiplier > 1), "the list above the normal never shows a title at or below it");
+  assert.deepEqual(ranked.bottom_titles.map((item) => item.id), ["v8", "v5"]);
+  assert.deepEqual(ranked.top_titles[0].traits, ["number", "brackets", "starts_how", "first_person", "concrete_result", "search"]);
+  const terms = termTable(data.items, { minN: 2, queries: data.queries });
+  assert.deepEqual(terms.map((row) => row.term), ["N dias", "cardápio"], "the search words are out, a word always paired is shown as the pair, a stray letter makes no pair");
+  assert.deepEqual([terms[0].with.n, terms[0].with.median, terms[0].without.median], [2, 2.25, 1.2]);
+  const table = traitTable(data.items, { minN: 2 });
+  const row = (key) => table.traits.find((trait) => trait.trait === key);
+  assert.deepEqual([row("mistake").with.n, row("mistake").with.median, row("mistake").trigger], [2, 4.25, "custo ou erro"]);
+  assert.equal(row("list").with.n, 0);
+  const md = titlesMarkdown({ ...table, ...ranked, terms, queries: data.queries, suggested_tools: [] });
+  assert.match(md, /^# Títulos de alta performance: marmita da semana · airfryer\n/);
+  assert.match(md, /\| 6× \| Como eu organizo a marmita da semana em 2 horas \(passo a passo\) \| medido por inscritos \| número, parênteses, começa com Como, primeira pessoa, resultado, busca direta \|/);
+  assert.match(md, /## Os que ficaram abaixo do normal[\s\S]*\| 0,6× \| Meu cardápio da semana \|/);
+  assert.match(md, /## Os gatilhos[\s\S]*\| experimento \("testei", "por 30 dias", "desafio"\) \| 2,25× \(n=2\) \| 1,2× \(n=9\) \|/);
+  assert.match(md, /## A forma[\s\S]*\| tem número \|/);
+  assert.match(md, /\| N dias \| 2,25× \(n=2\) \| 1,2× \(n=9\) \|/);
+  assert.match(md, /Copiar um deles é o erro mais comum/);
+  assert.doesNotMatch(md, /[–—]/u);
+});
+
+test("titles --channel measures the uploads of a channel already read, against that channel's normal", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const root = mkdtempSync(join(tmpdir(), "yr-titles-"));
+  const script = fileURLToPath(new URL("../scripts/research.mjs", import.meta.url));
+  try {
+    const dir = join(root, "youtube-research", "channels", "meucanal");
+    mkdirSync(dir, { recursive: true });
+    const titles = [
+      ["a1", "Testei 5 panelas por 30 dias", 3.1],
+      ["a2", "O erro que estraga o arroz", 2.4],
+      ["a3", "Como fazer marmita para a semana", 1.3],
+      ["a4", "Minha rotina de domingo", 0.9],
+      ["a5", "Receita rápida de feijão", 0.7],
+      ["a6", "Vlog da feira", 0.5],
+    ];
+    const items = titles.map(([id, title, multiplier]) => ({ id, url: `https://youtu.be/${id}`, title, views: Math.round(multiplier * 1000), multiplier, band: multiplier >= 2 ? "outlier" : "normal" }));
+    writeFileSync(join(dir, "channel.json"), JSON.stringify({ ok: true, command: "channel", created_at: "2026-10-20T12:00:00Z", channel: { name: "Meu Canal", handle: "@meucanal" }, median_views: 1000, items }));
+    const out = JSON.parse(execFileSync(process.execPath, [script, "titles", "--channel", "@meucanal", "--min-n", "2", "--json"], { cwd: root, encoding: "utf8" }));
+    assert.equal(out.source, "channel");
+    assert.equal(out.channel.name, "Meu Canal");
+    assert.equal(out.sample.measured, 6);
+    assert.deepEqual(out.top_titles.map((item) => item.id), ["a1", "a2", "a3"]);
+    assert.deepEqual(out.bottom_titles.map((item) => item.id), ["a6", "a5", "a4"]);
+    assert.ok(out.top_titles[0].traits.includes("experiment"));
+    assert.ok(out.warnings.some((warning) => /arredondadas/.test(warning)));
+    assert.equal(out.files.md.replace(/\\/g, "/"), "youtube-research/channels/meucanal/titulos.md");
+    const md = readFileSync(join(dir, "titulos.md"), "utf8");
+    assert.match(md, /^# Títulos de alta performance: Meu Canal\n/);
+    assert.match(md, /o normal deste canal, não do tema/);
+    assert.match(md, /lidos em 2026-10-20/);
+    const both = () => execFileSync(process.execPath, [script, "titles", "abc", "--channel", "@meucanal", "--json"], { cwd: root, encoding: "utf8", stdio: "pipe" });
+    assert.throws(both, (error) => error.status === 2 && JSON.parse(error.stdout).error.code === "usage");
+    const missing = () => execFileSync(process.execPath, [script, "titles", "--channel", "@outro", "--json"], { cwd: root, encoding: "utf8", stdio: "pipe" });
+    assert.throws(missing, (error) => error.status === 1 && JSON.parse(error.stdout).error.code === "not_found");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a program past its time limit is ended and fails with tool_timeout", async () => {
+  const { run } = await import("../scripts/lib/util.mjs");
+  const started = Date.now();
+  await assert.rejects(
+    run(process.execPath, ["-e", "setTimeout(() => {}, 60000)"], { timeoutMs: 500, label: "teste" }),
+    (error) => error.code === "tool_timeout" && /O teste passou de 1 segundo/.test(error.message) && Boolean(error.fix),
+  );
+  assert.ok(Date.now() - started < 20000, "the call returns soon after the limit, not when the program would end");
+  const done = await run(process.execPath, ["-e", "process.stdout.write('ok')"], { timeoutMs: 20000 });
+  assert.equal(done.stdout.toString(), "ok");
+});

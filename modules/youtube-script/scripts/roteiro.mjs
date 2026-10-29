@@ -9,7 +9,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { scriptDocx } from "./lib/docx.mjs";
-import { creatorRules, lint, packagingTitles, PLACEHOLDERS, screenIssues } from "./lib/rules.mjs";
+import { creatorRules, lint, packagingChoice, packagingThumbnails, packagingTitles, PLACEHOLDERS, screenIssues, thumbnailIssues, titleCoverage } from "./lib/rules.mjs";
 import { chapters, DEFAULT_WPM, parseScript, screenSync, sentences, timing } from "./lib/script.mjs";
 import { AppError, choiceOption, formatTime, intOption, parseArgs, projectRoot, readJson, toPosix, writeFileAtomic } from "./lib/util.mjs";
 
@@ -60,8 +60,10 @@ const PROFILE_FIELDS = [
   [/^-\s*promessa/im, "promessa do canal"],
   [/^-\s*prova/im, "prova e autoridade"],
   [/^-\s*na primeira pessoa/im, "na primeira pessoa"],
-  [/^-\s*teste de miniaturas/im, "teste de miniaturas"],
+  // "Teste de miniaturas" is the line's name in profiles written before the test covered titles too.
+  [/^-\s*teste (?:de miniaturas|a\s*\/\s*b)/im, "teste A/B"],
 ];
+const AB_TEST = /teste (?:de miniaturas|a\s*\/\s*b)/i;
 
 /**
  * What the channel profile still lacks: a field that is missing, empty ("…")
@@ -152,13 +154,16 @@ function rulesFor(file, dirOption) {
 
 /**
  * The titles of embalagem.md next to the script: a title over the platform's
- * 100 characters blocks; the others get their length, and the median length of
- * the outliers when the research measured title traits.
+ * 100 characters, or with < or >, blocks; the others get their length, and the
+ * median length of the outliers when the research measured title traits. The
+ * thumbnails' text is checked against the chosen title.
  */
 function packagingChecks(file) {
   const path = join(dirname(file), "embalagem.md");
-  if (!existsSync(path)) return { titles: null, issues: [] };
-  const { titles, unquoted } = packagingTitles(readFileSync(path, "utf8"));
+  if (!existsSync(path)) return { titles: null, chosen: null, issues: [] };
+  const text = readFileSync(path, "utf8");
+  const { titles, unquoted } = packagingTitles(text);
+  const chosen = packagingChoice(text, titles);
   const issues = [];
   let reference = null;
   const research = join(dirname(file), "pesquisa.md");
@@ -170,9 +175,41 @@ function packagingChecks(file) {
   for (const title of titles) {
     const size = [...title].length;
     if (size > 100) issues.push({ rule: "title_too_long", severity: "blocker", excerpt: title, message: `Título com ${size} caracteres: passa do limite de 100 da plataforma.`, fix: "Encurte o título em embalagem.md." });
+    if (/[<>]/.test(title)) issues.push({ rule: "title_forbidden_char", severity: "blocker", excerpt: title, message: "Título com < ou >, que o YouTube não aceita.", fix: "Tire os sinais < e > do título em embalagem.md." });
   }
   if (unquoted) issues.push({ rule: "titles_unreadable", severity: "info", excerpt: "", message: `${unquoted} título(s) de embalagem.md sem aspas: não consegui medir.`, fix: "Escreva cada título entre aspas: 1. \"o título\" · gatilho: …" });
-  return { titles: titles.map((title) => ({ title, length: [...title].length })), median_outliers_length: reference, issues };
+  issues.push(...thumbnailIssues(packagingThumbnails(text), chosen));
+  return { titles: titles.map((title) => ({ title, length: [...title].length })), chosen, median_outliers_length: reference, issues };
+}
+
+// YouTube's limit for a description, in bytes: a letter with an accent counts 2
+// (Data API reference, videos, snippet.description; checked on 2026-10-29).
+const DESCRIPTION_BYTES = 5000;
+// More than 60 hashtags and YouTube ignores them all (YouTube Help, hashtags; checked on 2026-10-29).
+const MAX_HASHTAGS = 60;
+
+/** What goes into YouTube's description box: descricao.md up to the pinned comment. */
+export function descriptionBox(text) {
+  return String(text ?? "").split(/^\s*coment[áa]rio fixado\s*:/im)[0].trim();
+}
+
+/** The description's limits: its size in bytes, the < and > YouTube refuses, and too many hashtags. */
+export function descriptionIssues(text) {
+  const box = descriptionBox(text);
+  const issues = [];
+  const bytes = Buffer.byteLength(box, "utf8");
+  if (bytes > DESCRIPTION_BYTES) {
+    issues.push({ rule: "description_too_long", severity: "blocker", excerpt: "", message: `A descrição tem ${bytes} bytes, e o YouTube aceita até ${DESCRIPTION_BYTES.toLocaleString("pt-BR")} (cada letra com acento conta 2).`, fix: "Encurte a descrição em descricao.md: corte o que repete o vídeo ou junte os links numa página só." });
+  }
+  const angle = /[<>]/.exec(box);
+  if (angle) {
+    issues.push({ rule: "description_forbidden_char", severity: "blocker", excerpt: box.slice(Math.max(0, angle.index - 25), angle.index + 25).replace(/\s+/g, " ").trim(), message: "A descrição tem < ou >, que o YouTube não aceita. Um trecho do modelo que ficou sem preencher também aparece assim.", fix: "Tire os sinais < e > de descricao.md, ou preencha o trecho do modelo." });
+  }
+  const hashtags = box.match(/(?<![\p{L}\d&#/])#[\p{L}\d_]+/gu) ?? [];
+  if (hashtags.length > MAX_HASHTAGS) {
+    issues.push({ rule: "hashtags_ignored", severity: "warn", excerpt: "", message: `A descrição tem ${hashtags.length} hashtags: acima de ${MAX_HASHTAGS}, o YouTube ignora todas.`, fix: "Deixe só as poucas que dizem o tema; até três delas aparecem junto ao título." });
+  }
+  return { bytes, hashtags: hashtags.length, issues };
 }
 
 /** "8" or "8:30" or "8min" → seconds. */
@@ -213,6 +250,12 @@ function lintCommand(positionals, values) {
     note({ rule: "chapters", severity: "info", message: "Os blocos ainda não formam capítulos válidos no YouTube (3 ou mais, de 10 s ou mais).", fix: "Use títulos ## para cada bloco do corpo." });
   }
   for (const issue of packaging.issues) note(issue);
+  // The chosen title is a promise: its numbers and names are said before the last third.
+  if (packaging.chosen) {
+    for (const gap of titleCoverage(script, packaging.chosen)) {
+      note({ rule: "title_unpaid", severity: "warn", excerpt: gap.term, message: `O título escolhido promete "${gap.term}", e a fala ${gap.later ? "só diz isso no terço final" : "não diz isso"}.`, fix: "Diga antes do terço final o que o título promete, ou escolha em embalagem.md um título que o vídeo paga." });
+    }
+  }
   for (const chapter of chaptered.items.filter((item) => item.internal)) {
     note({ rule: "chapter_name", severity: "info", excerpt: chapter.title, message: `O capítulo "${chapter.title}" tem um nome de trabalho, não um nome para o público.`, fix: "Dê ao bloco um nome que diga o que a pessoa leva ali, como os outros blocos; ele aparece na descrição." });
   }
@@ -222,6 +265,7 @@ function lintCommand(positionals, values) {
     const text = readFileSync(description, "utf8");
     const pending = PLACEHOLDERS.map((pattern) => pattern.exec(text)).find(Boolean);
     if (pending) note({ rule: "description_placeholder", severity: "warn", excerpt: pending[0], message: "A descrição (descricao.md) ainda tem um trecho a completar.", fix: "Peça ao integrante o que falta (um link, um nome) ou avise na entrega que ele completa antes de publicar." });
+    for (const issue of descriptionIssues(text).issues) note(issue);
   }
   const result = {
     ok: true,
@@ -247,6 +291,7 @@ function lintCommand(positionals, values) {
     own_product: own,
     pending: script.pending.length,
     titles: packaging.titles,
+    chosen_title: packaging.chosen ?? null,
     median_outliers_title_length: packaging.median_outliers_length ?? null,
     summary: checked.summary,
     ready: checked.summary.blockers === 0,
@@ -394,8 +439,13 @@ export function buildChecklist(dir) {
   const pending = [...elsewhere.filter((item) => !said.has(item.text.toLowerCase())), ...inScript];
   // The profile's open lines are not needed to record this video: they get their own section.
   const profile = join(dir, "..", "canal.md");
-  const profilePending = existsSync(profile) ? pendingMarks(readFileSync(profile, "utf8"), "perfil do canal") : [];
+  const profileText = existsSync(profile) ? readFileSync(profile, "utf8") : "";
+  const profilePending = profileText ? pendingMarks(profileText, "perfil do canal") : [];
   const tools = toolNames(dir);
+  const packaging = read("embalagem.md");
+  const variants = packagingThumbnails(packaging).length >= 2 || packagingTitles(packaging).titles.length >= 2;
+  const abTest = briefingAnswer(profileText, AB_TEST);
+  const sponsored = /^##\s+(?:publi|patroc[íi]nio|an[úu]ncio|parceiro|merchan)/im.test(script);
   const lines = [`# Checklist: ${basename(dir)}`, ""];
   lines.push("## 1. Fazer e gravar antes da fala", "");
   if (resultMissing && !plan.length) lines.push("- [ ] Fazer o que o vídeo mostra antes de gravar a fala, registrando tudo: gravar, anotar os tempos, as escolhas e o que acontecer de verdade.");
@@ -411,10 +461,20 @@ export function buildChecklist(dir) {
     "",
     "- [ ] O que aparece na tela, do computador ou do celular, sem dados pessoais: e-mails, nomes, notificações, conversas, chaves e abas.",
     `- [ ] Legendas automáticas revisadas, com os nomes escritos certo${tools.length ? `: ${tools.join(", ")}` : ""}.`,
-    "- [ ] Quadros reais do vídeo nas thumbnails, nunca uma tela montada.",
+    "- [ ] Quadros reais do vídeo nas thumbnails, nunca uma tela montada, e nada importante no canto de baixo à direita, onde o YouTube mostra a duração.",
+    // YouTube Help, custom thumbnails (checked on 2026-10-29): 16:9, JPG or PNG, 2 MB from a phone, 50 MB from a computer.
+    "- [ ] Thumbnail em JPG ou PNG, na proporção 16:9, com até 2 MB para subir pelo celular (pelo computador, o limite é maior).",
     "- [ ] Links da descrição abertos e conferidos.",
     "- [ ] Tempos dos capítulos conferidos no vídeo editado.",
+    // YouTube Help in pt-BR (checked on 2026-10-29): the audience answer is asked of every upload; "Uso de IA" sits in the Atributos step.
+    "- [ ] Responder se o vídeo é conteúdo para crianças: o YouTube pede essa resposta em todo envio.",
+    "- [ ] Responder \"Uso de IA\", na etapa Atributos: \"Sim\" só se o vídeo mostra como real algo gerado ou alterado por IA (uma pessoa, um lugar, um acontecimento). Roteiro, título, thumbnail e legendas feitos com IA não contam.",
   );
+  if (sponsored) lines.push("- [ ] Marcar \"Meu vídeo contém promoção paga\" no YouTube Studio: o roteiro tem um bloco de publi.");
+  if (variants && abTest !== "não") {
+    const upload = "subir as variantes no \"Testar e comparar\" do YouTube Studio, no computador: até 3 títulos, thumbnails ou os dois. Não mude o título nem a thumbnail até o teste acabar.";
+    lines.push(abTest === "sim" ? `- [ ] ${upload[0].toUpperCase()}${upload.slice(1)}` : `- [ ] Se o canal tem o "Testar e comparar": ${upload}`);
+  }
   if (profilePending.length) {
     lines.push("", "## Quando puder: o perfil do canal", "");
     for (const item of profilePending) lines.push(`- [ ] ${item.block ? `"${item.block}", ` : ""}linha ${item.line}: ${item.text}`);
@@ -449,7 +509,7 @@ const DOCUMENT_SECTIONS = [
   ["briefing.md", "Resumo e premissas"],
   ["verdade.md", "O que aparece no vídeo: a ficha de verdade"],
   ["referencia.md", "O fluxo do vídeo: o mapa da referência"],
-  ["embalagem.md", "Título, thumbnail e teste de miniaturas"],
+  ["embalagem.md", "Título, thumbnail e teste A/B"],
   ["estrutura.md", "Ganchos, estrutura e pontos de retenção"],
   ["gravacao.md", "Plano de gravação"],
   ["roteiro.md", "Roteiro completo"],

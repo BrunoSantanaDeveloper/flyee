@@ -4,7 +4,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 
-import { isFile, MAC, run, WINDOWS } from "./util.mjs";
+import { isFile, LIMITS, MAC, run, WINDOWS } from "./util.mjs";
 
 /**
  * Folders where installers usually put the programs. An AI started before the
@@ -62,7 +62,7 @@ export function findExecutable(name) {
 
 async function firstLine(file, args) {
   try {
-    const { code, stdout } = await run(file, args);
+    const { code, stdout } = await run(file, args, { timeoutMs: LIMITS.probe });
     if (code !== 0) return null;
     return stdout.toString("utf8").split(/\r?\n/)[0].trim() || null;
   } catch {
@@ -131,7 +131,7 @@ export async function checkTools({ versions = false } = {}) {
 /** The ffmpeg filters this build has (drawtext needs a font library that some builds lack). */
 export async function ffmpegFilters(ffmpegPath) {
   try {
-    const { stdout } = await run(ffmpegPath, ["-hide_banner", "-filters"]);
+    const { stdout } = await run(ffmpegPath, ["-hide_banner", "-filters"], { timeoutMs: LIMITS.probe });
     return new Set(stdout.toString("utf8").split(/\r?\n/).map((line) => line.trim().split(/\s+/)[1]).filter(Boolean));
   } catch {
     return new Set();
@@ -141,7 +141,7 @@ export async function ffmpegFilters(ffmpegPath) {
 /** The encoders this ffmpeg build has (libx264, prores_ks, libvpx-vp9, aac, libopus…). */
 export async function ffmpegEncoders(ffmpegPath) {
   try {
-    const { stdout } = await run(ffmpegPath, ["-hide_banner", "-encoders"]);
+    const { stdout } = await run(ffmpegPath, ["-hide_banner", "-encoders"], { timeoutMs: LIMITS.probe });
     return new Set(stdout.toString("utf8").split(/\r?\n/).map((line) => line.trim().split(/\s+/)[1]).filter(Boolean));
   } catch {
     return new Set();

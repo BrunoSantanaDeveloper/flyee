@@ -71,7 +71,7 @@ Faça o diagnóstico de `../../references/estrutura.md` ("Antes de escrever"): o
 
 ## Passo 2: o que já funciona e a referência
 
-Siga `../../references/pesquisa.md`: os outliers do tema, os padrões em dois ou mais deles, os traços de título medidos (`titles`), como os melhores abrem e se organizam, o que o público pergunta, se o criador pode ocupar esse ângulo e os fatos com fonte. Grave `pesquisa.md` e mostre a leitura em poucas linhas.
+Siga `../../references/pesquisa.md`: os outliers do tema, os padrões em dois ou mais deles, os títulos de alta performance (`titles`: a lista dos que mais subiram, os gatilhos, a forma e as palavras, no tema e, quando o canal dele já foi lido, no canal), como os melhores abrem e se organizam, o que o público pergunta, se o criador pode ocupar esse ângulo e os fatos com fonte. Grave `pesquisa.md` e mostre a leitura em poucas linhas.
 
 **A referência.** Com um vídeo de referência (indicado por ele, ou o outlier de fluxo mais próximo, que você propõe e ele confirma), faça o mapa batida a batida da seção "Um vídeo de referência": o que ela faz, como diz, como entra no nosso, o que muda no contexto do público e o que fica de fora. Grave `referencia.md` e mostre antes da estrutura.
 
@@ -79,7 +79,7 @@ Se uma leitura falhar, siga "Quando a leitura falha" em `pesquisa.md`: diga o qu
 
 ## Passo 3: título e thumbnail primeiro
 
-Siga `../../references/embalagem.md`: cinco títulos de gatilhos diferentes, cada um entre aspas, com o gatilho e o traço medido de onde veio (com o número, quando houver); as thumbnails como variantes do teste de miniaturas, com o que cada uma testa; a promessa em uma frase. Passe cada par pelo teste do clique e diga qual você escolheria e por quê. Ele escolhe. Grave `embalagem.md`.
+Siga `../../references/embalagem.md`: cinco títulos de gatilhos diferentes, cada um entre aspas, com o gatilho, o traço ou a palavra medida de onde veio (com o número, quando houver), a partir do mecanismo dos títulos que mais passaram do normal no tema e no canal dele; as thumbnails com o texto entre aspas e nada no canto da duração; as variantes do teste A/B (até três títulos e três thumbnails, a recomendada primeiro), com o que cada uma testa; a promessa em uma frase. Passe cada par pelo teste do clique e diga qual você escolheria e por quê. Ele escolhe. Grave `embalagem.md`, com a escolha pelo número do título.
 
 ## Passo 4: gancho e estrutura
 
@@ -106,7 +106,7 @@ node .flyee/modules/youtube-script/scripts/roteiro.mjs lint <vídeo> --target <m
 - `warn`: corrija, ou mantenha só quando houver motivo e anote o motivo na revisão.
 - `info`: olhe e decida.
 
-O `lint` também confere o "Nunca dizer" do perfil, a afirmação de ausência sem escopo, a frase de anúncio fora de um bloco de publi, o preço, o plano, a versão, o "grátis" e a loja num vídeo do que é dele (pela resposta do briefing), os títulos de `embalagem.md` (acima de 100 caracteres bloqueia) e as pendências da descrição. Cada marca pendente conta, e a duração de um roteiro com marcas não inclui o que vai entrar no lugar delas: confira de novo depois de preenchê-las. Uma marca sozinha na linha e um bloco quase todo em marcas geram aviso: a fala vem escrita, e a marca é só o detalhe. Use `sections` para os tempos (atualize os de `estrutura.md` quando mudarem) e `chapters` para a descrição.
+O `lint` também confere o "Nunca dizer" do perfil, a afirmação de ausência sem escopo, a frase de anúncio fora de um bloco de publi, o preço, o plano, a versão, o "grátis" e a loja num vídeo do que é dele (pela resposta do briefing), os títulos de `embalagem.md` (acima de 100 caracteres, ou com `<` ou `>`, bloqueia), a promessa do título escolhido (um número, uma sigla ou um nome dele que a fala não diz antes do terço final gera aviso), o texto das thumbnails (mais de quatro palavras, ou palavras do título, gera aviso), as pendências da descrição e os limites dela (acima de 5.000 bytes, ou com `<` ou `>`, bloqueia; mais de 60 hashtags gera aviso). Cada marca pendente conta, e a duração de um roteiro com marcas não inclui o que vai entrar no lugar delas: confira de novo depois de preenchê-las. Uma marca sozinha na linha e um bloco quase todo em marcas geram aviso: a fala vem escrita, e a marca é só o detalhe. Use `sections` para os tempos (atualize os de `estrutura.md` quando mudarem) e `chapters` para a descrição.
 
 ## Passo 7: a crítica com olhos novos
 
@@ -115,7 +115,7 @@ Siga `../../references/revisao.md`. Se a sua ferramenta consegue abrir um subage
 ## Passo 8: entregar
 
 1. Escreva `descricao.md` no formato de `formato.md`: a promessa com as palavras do público, "Tudo que eu usei" com os links, a frase de transparência quando algo é do criador, os capítulos do `lint` marcados como estimados e o comentário fixado.
-2. Rode `checklist <vídeo> --json`: grava `checklist.md` com o plano de gravação e as cenas a gravar, cada `[CONFIRMAR]` e `[ESCOLHER]` de todos os arquivos, com o bloco, e o que conferir antes de publicar.
+2. Rode `checklist <vídeo> --json`: grava `checklist.md` com o plano de gravação e as cenas a gravar, cada `[CONFIRMAR]` e `[ESCOLHER]` de todos os arquivos, com o bloco, e o que conferir e responder antes de publicar (a thumbnail, o público, o "Uso de IA", a promoção paga e o teste A/B).
 3. Rode `documento <vídeo> --json`: grava `roteiro-completo.md`, tudo junto na ordem de leitura.
 4. Rode `docx <vídeo> --json`: o roteiro em Word, com as marcas à vista, para ele ler e preencher. Quando não houver pendência, rode `teleprompter <vídeo> --json` (ele recusa enquanto houver marca).
 5. Mostre ao integrante a duração estimada, os arquivos, as decisões que você tomou por ele, as opiniões que você propôs na voz dele (para ele assinar ou trocar), o checklist e o que conferir depois da edição.

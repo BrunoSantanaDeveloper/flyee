@@ -131,4 +131,5 @@ Siga `../../references/interface.md`, o mesmo guia que o outro app lê, e devolv
 | `networks_table_invalid` | a tabela das redes do app está corrompida: repasse `message` e `fix` ao integrante |
 | `site_blocked`, `site_unreachable`, `invalid_url`, `capture_failed` | o site barrou o navegador ou não abre: peça as telas ao integrante ou outro endereço |
 | `ffmpeg_failed`, `browser_failed`, `browser_exited`, `browser_protocol`, `unexpected` | tente de novo uma vez; se repetir, repasse `message` e `fix` |
+| `tool_timeout` | o ffmpeg travou e foi encerrado ao passar do tempo limite: tente de novo uma vez; se travar de novo, divida o trabalho (um trecho mais curto, menos quadros por vez) |
 | `usage` | uma opção ou um valor errado: `fix` e `help --json` mostram o certo |

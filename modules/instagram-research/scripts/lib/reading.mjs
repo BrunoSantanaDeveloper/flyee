@@ -2,7 +2,7 @@
 // the member already has. The AI writes the text exactly as it appears ("12,3 mil") and this file
 // converts it; a text it cannot read is refused with the path of the field, never guessed.
 
-import { ageDays, normalizePost, parseCount, parseProfile } from "./instagram.mjs";
+import { ageDays, fullCaption, normalizePost, parseCount, parseProfile } from "./instagram.mjs";
 import { AppError } from "./util.mjs";
 
 export const READING_VERSION = 1;
@@ -10,6 +10,8 @@ export const READING_KINDS = ["reels_grid", "posts"];
 export const SOURCE_TYPES = ["screenshot", "link", "export", "declared"];
 
 const DATE = /^\d{4}-\d{2}-\d{2}/;
+/** A caption copied before tapping "mais" ends in an ellipsis and that word: its end is missing. */
+const CUT_CAPTION = /(?:…|\.{2,3})\s*(?:mais|more)\s*$/iu;
 
 /** "0:15", "1:02" or "15" (seconds) → seconds; null when absent; NaN when unreadable. */
 function durationOf(text) {
@@ -63,6 +65,7 @@ export function readingToPosts(reading) {
     const duration = durationOf(item.duration_text);
     need(!Number.isNaN(duration), `${at}.duration_text`, `não consegui ler "${item.duration_text}" como duração (0:15)`);
     if (item.posted_at !== undefined) need(typeof item.posted_at === "string" && DATE.test(item.posted_at), `${at}.posted_at`, "precisa ser AAAA-MM-DD");
+    if (typeof item.caption === "string") need(!CUT_CAPTION.test(item.caption.trim()), `${at}.caption`, "a legenda parece cortada no \"mais\": abra a legenda inteira e copie tudo, com as quebras de linha, ou tire o campo");
     const shortcode = /(?:p|reel|reels|tv)\/([A-Za-z0-9_-]{5,})/.exec(item.url ?? "")?.[1] ?? null;
     posts.push({
       id: shortcode ?? `${profile ?? "perfil"}-${index + 1}`,
@@ -77,8 +80,9 @@ export function readingToPosts(reading) {
       duration_s: Number.isNaN(duration) ? null : duration,
       posted_at: item.posted_at ?? null,
       age_days: ageDays(item.posted_at, reading.collected_at),
-      caption: typeof item.caption === "string" ? item.caption.slice(0, 300) : null,
+      caption: fullCaption(item.caption),
       ad: item.ad === true,
+      video_expires_at: null,
     });
   });
   if (problems.length) {

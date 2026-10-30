@@ -2,7 +2,7 @@
 
 **Objetivo:** o integrante passa a ver, com a amostra que cada vídeo tem, como os vídeos dele foram no YouTube (impressões, cliques, tempo assistido) a partir de um export que ele baixa do YouTube Studio, sem chave nem login, e recebe as thumbnails do vídeo como imagens prontas, conferidas no tamanho do celular, em vez de ideias em texto.
 
-> Auditado contra o código em 2026-10-29: commit 2dd73e2 mais as mudanças ainda não commitadas desta rodada (`youtube-research` 1.1.0 e `youtube-script` 1.2.0). Atualizado em 2026-10-30 com a rodada "a embalagem que vende" (`youtube-research` 1.2.0 e `youtube-script` 1.3.0, sobre ae99c03, ainda não commitados). Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
+> Auditado contra o código em 2026-10-29: commit 2dd73e2 mais as mudanças ainda não commitadas desta rodada (`youtube-research` 1.1.0 e `youtube-script` 1.2.0). Atualizado em 2026-10-30 com a rodada "a embalagem que vende" (`youtube-research` 1.2.0 e `youtube-script` 1.3.0, commit 6c01f53). Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
 
 ## Origem
 
@@ -14,7 +14,11 @@ Os fatos do YouTube citados aqui foram lidos nas páginas oficiais em 2026-10-29
 
 ### A rodada de 2026-10-30: a embalagem que vende
 
-O operador pediu que título e thumbnail despertem interesse com gatilhos fortes, não só digam do que o vídeo trata, e que a thumbnail siga o padrão do canal quando ele existe. Esta rodada já foi feita, mas ainda não foi commitada:
+O operador pediu que título e thumbnail despertem interesse com gatilhos fortes, não só digam do que o vídeo trata, e que a thumbnail siga o padrão do canal quando ele existe. A rodada está no commit 6c01f53 e foi enviada à plataforma como rascunho no mesmo dia, uma tag por vez:
+- `youtube-research@1.2.0`: SHA-256 2f04ce40…, execução 41067617251;
+- `youtube-script@1.3.0`: SHA-256 e4fd3ba6…, execução 41067730124.
+
+Nos dois, o SHA-256 da plataforma é igual ao do pacote e ao do pacote refeito a partir de uma exportação do commit. Publicar no console continua sendo do operador.
 
 **`youtube-research` 1.2.0**
 - Cinco gatilhos medidos: `stakes`, `extreme`, `insider`, `callout` e `transformation` (`scripts/lib/titles.mjs`).
@@ -49,7 +53,7 @@ O implementador não inventa estes valores. Os que estão em aberto ficam como e
 | Y4 | Onde mora a thumbnail | **Aberta.** Recomendado: o motor (`video-render`) ganha a imagem parada e a conferência de thumbnail, que servem também à capa de Reels e às imagens de anúncio; o `youtube-script` ganha a etapa depois da gravação, porque é dono da embalagem | manifestos dos dois apps |
 | Y5 | O tamanho do arquivo de thumbnail | **Aberta.** Recomendado: 1920×1080 em JPG de até 2 MB, que sobe também pelo celular, e 3840×2160 como opção para quem sobe pelo computador. O YouTube recomenda 3840×2160 e aceita até 2 MB pelo celular e 50 MB pelo computador (resposta 72431) | opção do comando; padrão em `references/redes.json` |
 | Y6 | O canto da duração: o tamanho da área que a thumbnail deixa livre | **Aberta.** O YouTube não publica o tamanho do selo de duração. Vira margem de projeto rotulada, medida em capturas reais com data, como a `ads_meta_feed` do `video-render` 1.0.2 | `video-render/references/redes.json` |
-| Y7 | Baixar as thumbnails dos outliers (imagens públicas em `i.ytimg.com`) para a vitrine local | **Implementada antes da decisão, a confirmar pelo operador antes de publicar.** O comando `thumbnails` do `youtube-research` 1.2.0 baixa as imagens de vídeos avulsos ou de um canal já lido, só para leitura no projeto do integrante. Termos de uso lidos em 2026-10-30 (youtube.com/t/terms, "Em vigor a partir de 5 de janeiro de 2022"): não é permitido "fazer download" de "qualquer Conteúdo" sem autorização nem "acessar o Serviço usando qualquer meio automatizado". A mesma cláusula já alcança o que o app faz desde a 1.0.0 com o yt-dlp (busca, legendas, comentários). Se a resposta for não, o comando sai antes de publicar | permissão `network` do `youtube-research` (`i.ytimg.com`) |
+| Y7 | Baixar as thumbnails dos outliers (imagens públicas em `i.ytimg.com`) para a vitrine local | **Decidida em 2026-10-30: sim, como está.** O operador viu o comando funcionando e o trecho dos termos abaixo e mandou publicar assim. O comando `thumbnails` do `youtube-research` 1.2.0 baixa as imagens de vídeos avulsos ou de um canal já lido, só para leitura no projeto do integrante. Termos de uso lidos em 2026-10-30 (youtube.com/t/terms, "Em vigor a partir de 5 de janeiro de 2022"): não é permitido "fazer download" de "qualquer Conteúdo" sem autorização nem "acessar o Serviço usando qualquer meio automatizado". A mesma cláusula já alcança o que o app faz desde a 1.0.0 com o yt-dlp (busca, legendas, comentários) | permissão `network` do `youtube-research` (`i.ytimg.com`) |
 | Y8 | Imagem gerada por IA na thumbnail | **Fora da v1.** ⚠️ A regra citada aqui era "quadro real do vídeo"; desde o `youtube-script` 1.3.0 é "montar vale, inventar não": a thumbnail junta elementos que estão no vídeo e nunca mostra cena, tela ou resultado que ele não tem (`youtube-script/references/embalagem.md`, seção "A thumbnail"). Uma versão futura pode aceitar cena conceitual rotulada como ilustração, pelo caminho de imagem que o `motion-carousel` já tem | `embalagem.md` |
 | Y9 | Contraste do texto (WCAG, 4,5:1) no `accept` | **Aberta.** Em todo formato ou só na thumbnail. O plano de anúncios falados já prevê `text_over_text` nas mesmas caixas (`docs/PLANO-ANUNCIOS-FALA.md:175`). Decidir junto para não abrir duas regras parecidas | `video-render/references/aceite.md` |
 
@@ -144,7 +148,7 @@ O trabalho, depois de Y4, Y5, Y6 e Y9:
   - os testes do motor passam, um app de cada vez.
 
 ### T2.2: as thumbnails dos outliers
-**Estado: 🟡** (2026-10-30, aguardando Y7). O `youtube-research` 1.2.0 tem o comando `thumbnails`:
+**Estado: 🟡** (2026-10-30, Y7 decidida). O `youtube-research` 1.2.0 tem o comando `thumbnails`:
 - `scripts/research.mjs`, função `thumbnailsCommand`;
 - `scripts/lib/thumbnails.mjs`, que baixa o maior tamanho que existe, de `maxresdefault` a `hqdefault`;
 - `i.ytimg.com` declarado nas permissões.
@@ -183,7 +187,7 @@ O trabalho:
 | O integrante otimiza thumbnail só por clique, e o teste A/B do YouTube decide por tempo assistido | a embalagem ou a leitura recomenda uma thumbnail pela taxa de cliques sem olhar a porcentagem assistida |
 | Muitos traços medidos numa amostra pequena dão um vencedor por acaso | um traço forte no canal que não aparece no tema; a regra das duas leituras (`youtube-research/references/metodologia.md`, "Títulos de alta performance") |
 | O motor muda em paralelo ao ÉPICO 12 do plano de anúncios falados | outra sessão com mudança não commitada em `modules/video-render`; conferir com a lista de sessões antes de cada tarefa |
-| Os termos de uso das imagens públicas do YouTube | a T2.2 foi feita antes de Y7 (2026-10-30): se a resposta for não, o comando `thumbnails` sai antes de publicar o `youtube-research` 1.2.0, e a vitrine sai só com as variantes |
+| Os termos de uso das imagens públicas do YouTube | o operador decidiu manter o download (Y7, 2026-10-30); o primeiro sinal de problema é `i.ytimg.com` recusando os pedidos (`rate_limited`, `offline`) ou um aviso do YouTube |
 | A regra de exagerar no interesse vira promessa que o vídeo não cumpre ("clickbait malicioso" na política do YouTube) | o `lint` dá `title_unpaid` no título escolhido, ou a crítica marca o defeito 2 (promessa não paga) |
 
 ## O que esta especificação não cobriu

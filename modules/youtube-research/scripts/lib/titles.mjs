@@ -24,6 +24,14 @@ const SUPERLATIVE = /(?<!\p{L})(?:melhor|melhores|pior|piores|best|worst|easiest
 const YEAR = /(?<!\d)20[2-3]\d(?!\d)/;
 const TWO_PARTS = /[:|]|\s[-–—]\s/u;
 const EMOJI = /\p{Extended_Pictographic}/u;
+// The levers added in 1.2.0: what the creator put at stake, an extreme or a
+// contrast of values, the inside view, a call to whom the video is for, and the
+// same thing before and after.
+const STAKES = /(?<!\p{L})(?:apostei|arrisquei|investi|coloquei|gastei|torrei)\s+(?:R\$|US\$|\$|€|\d|tudo|todo|toda|minhas?|meus?|o\s+meu|a\s+minha)|(?<!\p{L})quase\s+(?:perdi|desisti|quebrei|fali|larguei|morri)(?!\p{L})|(?<!\p{L})(?:larguei|deixei|abandonei)\s+(?:o\s+|a\s+|meu\s+|minha\s+)?(?:emprego|clt|faculdade|trabalho|carreira)(?!\p{L})|(?<!\p{L})(?:pedi\s+demiss[ãa]o|tudo\s+ou\s+nada|[úu]ltima\s+chance|sem\s+volta|perdi\s+tudo|i\s+(?:bet|risked|quit)|almost\s+(?:lost|quit|died)|all\s+in|last\s+chance|lost\s+everything)(?!\p{L})/iu;
+const EXTREME = /(?:R\$|US\$|\$|€)\s?\d[\s\S]*?(?:R\$|US\$|\$|€)\s?\d|(?<!\p{L})(?:barat[oa]s?|car[oa]s?|cheap|expensive)\s+(?:x|vs\.?|versus|contra|ou|or)\s+(?:o\s+|a\s+)?(?:mais\s+)?(?:barat[oa]s?|car[oa]s?|cheap|expensive)(?!\p{L})|(?<!\p{L})(?:do\s+mundo|da\s+hist[óo]ria|de\s+todos\s+os\s+tempos|n[íi]vel\s+\d+|mais\s+car[oa]s?|extrem[oa]s?|in\s+the\s+world|of\s+all\s+time|level\s+\d+|most\s+expensive)(?!\p{L})|(?<![\p{L}\d])\d+\s*(?:x|vezes)\s+mais(?!\p{L})/iu;
+const INSIDER = /(?<!\p{L})(?:bastidores?|por\s+dentro|um\s+dia\s+(?:na\s+rotina|na\s+vida|comigo)|behind\s+the\s+scenes|inside|a\s+day\s+in\s+the\s+life)(?!\p{L})|(?<!\p{L})o\s+que\s+(?:\p{L}+\s+){0,5}n[ãa]o\s+(?:te\s+|nos\s+)?(?:mostra|mostram|conta|contam|fala|falam)(?!\p{L})|(?<!\p{L})what\s+(?:\p{L}+\s+){0,5}(?:don'?t|won'?t|doesn'?t)\s+(?:tell|show)(?!\p{L})/iu;
+const CALLOUT = /(?<!\p{L})(?:se\s+voc[êe]|voc[êe]\s+que|para\s+quem|pra\s+quem|if\s+you|for\s+(?:people|anyone|those)\s+who|anyone\s+who)(?!\p{L})|(?<!\p{L})quem\s+(?:tem|usa|vende|trabalha|mora|quer|faz|come[çc]ou|come[çc]a|est[áa])(?!\p{L})|(?<!\p{L})(?:tod[oa]s?|every)\s+(?:\p{L}+\s+){1,2}(?:precisa|precisam|deveria|deveriam|should|needs)(?!\p{L})/iu;
+const TRANSFORMATION = /(?<!\p{L})(?:antes\s+e\s+depois|transform\p{L}*|do\s+zero\s+(?:a|ao|aos|à|at[ée])|mudou\s+(?:a\s+)?minha|vir(?:ei|ou)\s+(?:outr[oa]|um|uma)|before\s+(?:and|&)\s+after|from\s+(?:zero|scratch)\s+to|glow\s*up|makeover|changed\s+my)(?!\p{L})|(?<![\p{L}\d])de\s+(?:R\$\s?)?\d[\d.,]*\s*(?:k|mil)?\s*\p{L}*\s+(?:para|pra|at[ée])\s+(?:R\$\s?)?\d|(?<!\p{L})from\s+\$?\d[\d.,]*\s*k?\s+to\s+\$?\d/iu;
 
 /** A word of 4+ letters written all in capitals, in a title that is not all capitals. */
 function capsWord(title) {
@@ -69,6 +77,11 @@ export const TRAITS = [
   { key: "year", group: "forma", short: "ano", label: "ano no título (\"2026\")", test: matches(YEAR) },
   { key: "two_parts", group: "forma", short: "duas partes", label: "duas partes (dois pontos, barra ou traço)", test: matches(TWO_PARTS) },
   { key: "emoji", group: "forma", short: "emoji", label: "emoji", test: matches(EMOJI) },
+  { key: "stakes", group: "gatilho", trigger: "o que está em jogo", short: "em jogo", label: "o que está em jogo (\"apostei\", \"quase perdi\", \"larguei o emprego\")", test: matches(STAKES) },
+  { key: "extreme", group: "gatilho", trigger: "extremo ou contraste", short: "extremo", label: "extremo ou contraste (\"R$ 10 contra R$ 1.000\", \"barato x caro\", \"do mundo\")", test: matches(EXTREME) },
+  { key: "insider", group: "gatilho", trigger: "bastidor", short: "bastidor", label: "bastidor (\"por dentro\", \"bastidores\", \"o que o vendedor não mostra\")", test: matches(INSIDER) },
+  { key: "callout", group: "gatilho", trigger: "chamado direto", short: "chamado", label: "chamado direto (\"se você\", \"para quem\", \"quem tem\")", test: matches(CALLOUT) },
+  { key: "transformation", group: "gatilho", trigger: "transformação", short: "transformação", label: "transformação (\"antes e depois\", \"de 2 para 9\", \"do zero a\")", test: matches(TRANSFORMATION) },
 ];
 
 /**

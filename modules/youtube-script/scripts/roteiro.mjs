@@ -9,7 +9,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { scriptDocx } from "./lib/docx.mjs";
-import { creatorRules, lint, packagingChoice, packagingThumbnails, packagingTitles, PLACEHOLDERS, screenIssues, thumbnailIssues, titleCoverage } from "./lib/rules.mjs";
+import { creatorRules, lint, packagingChoice, packagingThumbnails, packagingTitles, PLACEHOLDERS, screenIssues, thumbnailIssues, titleCoverage, triggerIssues } from "./lib/rules.mjs";
 import { chapters, DEFAULT_WPM, parseScript, screenSync, sentences, timing } from "./lib/script.mjs";
 import { AppError, choiceOption, formatTime, intOption, parseArgs, projectRoot, readJson, toPosix, writeFileAtomic } from "./lib/util.mjs";
 
@@ -156,13 +156,14 @@ function rulesFor(file, dirOption) {
  * The titles of embalagem.md next to the script: a title over the platform's
  * 100 characters, or with < or >, blocks; the others get their length, and the
  * median length of the outliers when the research measured title traits. The
- * thumbnails' text is checked against the chosen title.
+ * triggers they declare are checked for strength, and the thumbnails' text
+ * against the chosen title.
  */
 function packagingChecks(file) {
   const path = join(dirname(file), "embalagem.md");
   if (!existsSync(path)) return { titles: null, chosen: null, issues: [] };
   const text = readFileSync(path, "utf8");
-  const { titles, unquoted } = packagingTitles(text);
+  const { titles, unquoted, triggers } = packagingTitles(text);
   const chosen = packagingChoice(text, titles);
   const issues = [];
   let reference = null;
@@ -178,8 +179,9 @@ function packagingChecks(file) {
     if (/[<>]/.test(title)) issues.push({ rule: "title_forbidden_char", severity: "blocker", excerpt: title, message: "Título com < ou >, que o YouTube não aceita.", fix: "Tire os sinais < e > do título em embalagem.md." });
   }
   if (unquoted) issues.push({ rule: "titles_unreadable", severity: "info", excerpt: "", message: `${unquoted} título(s) de embalagem.md sem aspas: não consegui medir.`, fix: "Escreva cada título entre aspas: 1. \"o título\" · gatilho: …" });
+  issues.push(...triggerIssues(titles, triggers, chosen));
   issues.push(...thumbnailIssues(packagingThumbnails(text), chosen));
-  return { titles: titles.map((title) => ({ title, length: [...title].length })), chosen, median_outliers_length: reference, issues };
+  return { titles: titles.map((title, i) => ({ title, length: [...title].length, triggers: triggers[i].declared })), chosen, median_outliers_length: reference, issues };
 }
 
 // YouTube's limit for a description, in bytes: a letter with an accent counts 2
@@ -461,7 +463,7 @@ export function buildChecklist(dir) {
     "",
     "- [ ] O que aparece na tela, do computador ou do celular, sem dados pessoais: e-mails, nomes, notificações, conversas, chaves e abas.",
     `- [ ] Legendas automáticas revisadas, com os nomes escritos certo${tools.length ? `: ${tools.join(", ")}` : ""}.`,
-    "- [ ] Quadros reais do vídeo nas thumbnails, nunca uma tela montada, e nada importante no canto de baixo à direita, onde o YouTube mostra a duração.",
+    "- [ ] Nas thumbnails, só o que está no vídeo (montar com esses elementos vale; inventar uma cena, uma tela ou um resultado, não), e nada importante no canto de baixo à direita, onde o YouTube mostra a duração.",
     // YouTube Help, custom thumbnails (checked on 2026-10-29): 16:9, JPG or PNG, 2 MB from a phone, 50 MB from a computer.
     "- [ ] Thumbnail em JPG ou PNG, na proporção 16:9, com até 2 MB para subir pelo celular (pelo computador, o limite é maior).",
     "- [ ] Links da descrição abertos e conferidos.",

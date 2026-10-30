@@ -61,6 +61,7 @@ Os critérios marcados com (P) são portões: precisam de **7 ou mais**. Os outr
 | 7. Fatos (P) | dado inventado ou sem origem | "estudos mostram"; uma fonte só, sem aviso | todo número tem `[fonte: …]` ou é do criador | fontes de primeira mão; as incertezas são ditas em voz alta |
 | 8. Ideia central e valor | tema sem ideia; conselho que todo mundo dá; só serve para quem compra ou instala algo | o ângulo se dilui; motivos misturados; o valor depende de usar a ferramenta | uma ideia reconhecível, um motivo dominante e algo que vale mesmo para quem não clicar em nada | um ponto de vista que só este criador sustenta e uma lição que a pessoa usa amanhã |
 | 9. Fecho | despedida, ou vários pedidos empilhados | um pedido só, sem dizer o que a pessoa ganha | a promessa paga antes; um pedido com promessa; a objeção respondida | a frase final é forte e leva à próxima ação que o canal quer: um vídeo específico, o material, a pergunta |
+| 10. Força da embalagem | o título e a thumbnail só dizem do que o vídeo trata | uma alavanca fraca ou genérica; a thumbnail ilustra o tema | o título escolhido tem uma alavanca que o vídeo paga; a thumbnail faz uma pergunta que o título não faz, no padrão do canal | um estranho pararia de rolar a página, e o vídeo entrega mais do que a embalagem promete |
 
 ### As batidas que mais pesam
 

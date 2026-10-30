@@ -39,7 +39,7 @@ node .flyee/modules/youtube-research/scripts/research.mjs titles <id da pesquisa
 O `titulos.md` traz quatro coisas, e a `embalagem.md` usa as quatro ao propor os títulos:
 
 - **a lista** dos títulos que mais passaram do normal e dos que ficaram abaixo, cada um com os traços que tem. Leia primeiro: é o mecanismo dos que subiram (o gatilho, a promessa, a palavra do público), que você adapta ao canal, nunca copia;
-- **os gatilhos** medidos: resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista e comparação, os mesmos da tabela da embalagem;
+- **os gatilhos** medidos: resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista, comparação, o que está em jogo, extremo ou contraste, bastidor, chamado direto e transformação, os mesmos da tabela da embalagem (os cinco últimos a partir da Pesquisa no YouTube 1.2.0);
 - **a forma**: número, ferramenta, parênteses, "Como", pergunta, primeira pessoa, "sem X", caixa alta, "você", superlativo, ano, duas partes, emoji, e o tamanho mediano dos títulos dos outliers;
 - **as palavras** que se repetem nos títulos acima e abaixo do normal, sem as das buscas.
 
@@ -52,6 +52,14 @@ node .flyee/modules/youtube-research/scripts/research.mjs titles --channel <@can
 ```
 
 A mesma análise, contra o normal do próprio canal: mostra o que o público dele já respondeu. Com uns 30 vídeos quase todo grupo é pequeno. Um gatilho ou uma palavra forte no tema **e** no canal pesa mais do que um forte num só; um forte no tema e fraco no canal é uma aposta, e você diz isso.
+
+**As thumbnails dos que mais subiram.** Baixe as dos 6 a 10 outliers do tema que mais passaram do normal (os `id` da lista de `titulos.md`) e as de dois ou três que ficaram abaixo:
+
+```
+node .flyee/modules/youtube-research/scripts/research.mjs thumbnails <id> <id> <id> --json
+```
+
+Abra as imagens de `items[].file` e anote o que se repete em duas ou mais das que subiram: o rosto e a emoção, quantas palavras de texto, o contraste, o objeto em destaque, antes e depois, a seta ou o círculo, o que fica meio escondido. É a sua leitura, não uma medida, e o multiplicador mede o vídeo inteiro, não só a imagem: diga isso. O padrão visual do canal dele vem de `embalagem.md` ("O padrão do canal"). Se o comando voltar com `usage`, a Pesquisa no YouTube instalada é anterior à 1.2.0: atualize com `npx --yes flyee@latest update youtube-research --yes --json` e rode de novo.
 
 ## 2. Por que funcionou
 
@@ -204,6 +212,9 @@ Os que mais subiram e o mecanismo de cada um: <de titulos.md, os 5 a 8 do topo, 
 <de titulos.md; o tamanho mediano dos títulos dos outliers>
 No canal dele: <de titles --channel, quando houver; o que coincide com o tema>
 
+## Thumbnails que funcionaram
+<o que se repete nas thumbnails dos outliers que subiram e falta nas de baixo, com o multiplicador de cada exemplo; leitura visual, sem número próprio>
+
 ## Como os melhores fazem
 <por vídeo: abertura, blocos, onde paga, o que prendeu>
 
@@ -222,7 +233,7 @@ Dúvidas: … · Objeções: … · Pedidos: … · Palavras dele para a dor: "�
 
 ## Como a pesquisa entra no resto
 
-- **Embalagem:** os títulos usam os mecanismos que funcionaram (nomeie qual), os gatilhos e traços medidos (com o número), as palavras que se repetem nos que subiram e o que já funciona no canal dele.
+- **Embalagem:** os títulos usam os mecanismos que funcionaram (nomeie qual), os gatilhos e traços medidos (com o número), as palavras que se repetem nos que subiram e o que já funciona no canal dele; as thumbnails usam as alavancas visuais que se repetem nos outliers, no padrão do canal dele.
 - **Gancho:** a dúvida mais repetida dos comentários é candidata a primeira frase.
 - **Estrutura:** a lacuna é a ideia central; a objeção mais comum é respondida antes do pedido final.
 - **Revisão:** o critério de fatos confere a tabela "Fatos".

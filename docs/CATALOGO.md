@@ -15,8 +15,8 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | [Análise de vídeo](#video-analysis) | 1.0.2 | tool | planejar | — | `ad-creatives`, `instagram-research`, `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.0.3 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
 | [Estúdio de vídeo](#video-studio) | 1.1.1 | workflow | divulgar | `video-render` | — |
-| [Pesquisa no YouTube](#youtube-research) | 1.1.0 | tool | planejar | — | `ad-creatives`, `youtube-script` |
-| [Roteiro para YouTube](#youtube-script) | 1.2.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
+| [Pesquisa no YouTube](#youtube-research) | 1.2.0 | tool | planejar | — | `ad-creatives`, `youtube-script` |
+| [Roteiro para YouTube](#youtube-script) | 1.3.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
 
 ## ad-creatives
 
@@ -297,21 +297,21 @@ Transforma um pedido em um vídeo animado para Reels, TikTok e Shorts. Você diz
 
 ## youtube-research
 
-**Pesquisa no YouTube** (YouTube research) · versão 1.1.0 · tool · trilha planejar · testado em `claude_code`
+**Pesquisa no YouTube** (YouTube research) · versão 1.2.0 · tool · trilha planejar · testado em `claude_code`
 
-> Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público e o normal de qualquer canal, sem chave.
+> Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público, as thumbnails e o normal de qualquer canal, sem chave.
 
 Mostra, com números de verdade, quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e por quê. Assim você decide o que gravar pela demanda real, não pelo achismo.
 
 **Skills**
 
-- `youtube-research`: Pesquisa o YouTube sem chave. Acha os vídeos de um tema que fizeram muito acima do normal do próprio canal (outliers), mede o quanto e analisa os títulos de alta performance. Lê o normal de um canal, a fala de um vídeo e os comentários. Use quando pedirem "o que está funcionando no YouTube sobre X", "validar pauta", "que título funciona", "analisar um canal" ou "o que o público pergunta".
+- `youtube-research`: Pesquisa o YouTube sem chave. Acha os vídeos de um tema que fizeram muito acima do normal do próprio canal (outliers), mede o quanto e analisa os títulos de alta performance. Lê o normal de um canal, a fala, os comentários e as thumbnails. Use quando pedirem "o que está funcionando no YouTube sobre X", "validar pauta", "que título funciona", "analisar um canal" ou "o que o público pergunta".
 
 **Serve outros apps**
 
 - Guia: `modules/youtube-research/references/interface.md`, interface v1
 - Entrada: `node .flyee/modules/youtube-research/scripts/research.mjs <comando> --json`
-- Comandos nos exemplos: `channel`, `check`, `comments`, `outliers`, `titles`, `transcript`
+- Comandos nos exemplos: `channel`, `check`, `comments`, `outliers`, `thumbnails`, `titles`, `transcript`
 
 **Usa** — · **Usado por** `ad-creatives`, `youtube-script`
 
@@ -320,11 +320,12 @@ Mostra, com números de verdade, quais vídeos de um tema fizeram muito mais do 
 - shell: node .flyee/modules/youtube-research/scripts/research.mjs
 - shell: yt-dlp
 - network: youtube.com
+- network: i.ytimg.com
 - fs:write: ./youtube-research/
 
 ## youtube-script
 
-**Roteiro para YouTube** (YouTube script) · versão 1.2.0 · workflow · trilha divulgar · testado em `claude_code`
+**Roteiro para YouTube** (YouTube script) · versão 1.3.0 · workflow · trilha divulgar · testado em `claude_code`
 
 > Escreve com você roteiros para o YouTube que prendem do começo ao fim, a partir do que já funciona no seu tema: título e thumbnail medidos, o fluxo de um vídeo de referência, o texto na sua voz e revisão antes de gravar.
 
@@ -341,5 +342,5 @@ Escreve com você roteiros que prendem do primeiro segundo ao fim, a partir do q
 - shell: node .flyee/modules/youtube-script/scripts/roteiro.mjs
 - shell: node .flyee/modules/youtube-research/scripts/research.mjs
 - shell: node .flyee/modules/video-analysis/scripts/video.mjs
-- fs:read: ./roteiros/, os textos e a gravação de tela que você indicar, e a documentação dos apps em .flyee/modules/ (README, manifesto, references e skills)
+- fs:read: ./roteiros/, ./youtube-research/, os textos e a gravação de tela que você indicar, e a documentação dos apps em .flyee/modules/ (README, manifesto, references e skills)
 - fs:write: ./roteiros/

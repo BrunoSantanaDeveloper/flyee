@@ -77,7 +77,7 @@ O app lê os comentários principais, sem as respostas: por padrão os 100 mais 
 Sobre uma pesquisa já feita, o app analisa os títulos de alta performance em quatro partes.
 
 1. **A lista.** Os títulos que mais passaram do normal do próprio canal, do maior para o menor, e os que ficaram abaixo do normal, cada um com os traços que tem. É por ela que a leitura começa: mostra o mecanismo que as tabelas resumem.
-2. **Os gatilhos.** Oito formas de puxar o clique, contadas pelas palavras que as marcam:
+2. **Os gatilhos.** Treze formas de puxar o clique, contadas pelas palavras que as marcam:
    - resultado: dinheiro, tempo, número com unidade;
    - curiosidade: "isso", "esse", "o segredo", "por que", "o X que";
    - busca direta: "como", "passo a passo", "tutorial", "iniciantes";
@@ -85,15 +85,26 @@ Sobre uma pesquisa já feita, o app analisa os títulos de alta performance em q
    - custo ou erro: "erro", "evite", "perdendo", "jogando fora";
    - experimento: "testei", "por 30 dias", "desafio";
    - lista: "5 dicas", "top 10";
-   - comparação: "vs", "X x Y", "melhor que", "qual escolher".
+   - comparação: "vs", "X x Y", "melhor que", "qual escolher";
+   - o que está em jogo: "apostei", "gastei R$", "quase perdi", "larguei o emprego";
+   - extremo ou contraste: dois valores em dinheiro, "barato x caro", "do mundo", "nível 100";
+   - bastidor: "por dentro", "bastidores", "o que o vendedor não mostra";
+   - chamado direto: "se você", "para quem", "quem tem";
+   - transformação: "antes e depois", "de 2 para 9", "do zero a".
 
-   Um título de curiosidade sem nenhuma dessas palavras fica fora da conta, então o número é um piso.
+   Um título de curiosidade sem nenhuma dessas palavras fica fora da conta, então o número é um piso. A busca direta diz do que o vídeo trata; os outros dão um motivo para clicar.
 3. **A forma.** Ter número; nome de ferramenta ou marca, quando os nomes do tema são informados; parênteses ou colchetes; começar com "Como"; ser uma pergunta; primeira pessoa; "sem X"; uma palavra em caixa alta; falar com "você"; superlativo; um ano; duas partes separadas por dois pontos, barra ou traço; emoji. E o tamanho: a mediana de caracteres na amostra e nos outliers, e o multiplicador em quatro faixas (até 40, 41 a 60, 61 a 80 e acima de 80 caracteres).
 4. **As palavras.** As palavras e os pares de palavras que aparecem em pelo menos 5 títulos, sem as palavras das buscas, que estão em todos. Qualquer número conta como N, então "7 dias" e "30 dias" somam juntos.
 
 Para cada traço e cada palavra, o app compara a mediana do multiplicador dos títulos que têm o traço com a dos que não têm, e mostra quantos títulos há em cada grupo. Um grupo com menos de 5 títulos aparece como indício.
 
 A mesma análise vale para o seu canal: depois de ler os seus últimos envios, o app mede os seus títulos contra o seu próprio normal. Mostra o que o seu público já respondeu. Com uns 30 vídeos, quase todo grupo é pequeno, e as views da aba do canal vêm arredondadas pelo YouTube.
+
+### As thumbnails
+
+O app baixa a thumbnail de cada vídeo no maior tamanho que o YouTube tiver: a de até 20 vídeos que você ou a sua IA escolherem, ou a dos envios mais recentes do seu canal (12, se ninguém disser outro número). No canal, monta também uma página com todas lado a lado, cada uma com o quanto o vídeo passou do seu normal. As imagens ficam guardadas por uma semana.
+
+A leitura das imagens é da sua IA, com os olhos: o seu padrão visual (onde fica o rosto, a letra e a cor do texto, as cores, a marca que se repete) e o que as thumbnails que passaram do normal têm e as que ficaram abaixo não têm. Nenhum número sai dessa leitura, e o multiplicador mede o vídeo inteiro, não só a imagem. Algumas thumbnails vêm em 4:3, com faixas pretas em cima e embaixo, quando o YouTube não tem delas o tamanho grande.
 
 O app sugere nomes que parecem ferramentas ou marcas nos títulos, para você e a IA confirmarem antes de usar, e deixa tirar da conta os vídeos fora do tema. A busca pega palavras com outro sentido e nichos vizinhos, e eles distorcem os traços.
 

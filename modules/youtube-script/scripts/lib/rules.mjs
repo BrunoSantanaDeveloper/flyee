@@ -128,9 +128,56 @@ function termPattern(term) {
   return new RegExp(`(?<![\\p{L}\\d])${escaped}(?![\\p{L}\\d])`, "iu");
 }
 
-/** Titles of embalagem.md: the numbered lines under "## Títulos", each title between quotes. */
+/**
+ * The triggers of the packaging guide (embalagem.md), with the short names a
+ * title line may use for them. Only "busca direta" says what the video is
+ * about; every other one gives a reason to click.
+ */
+export const TRIGGERS = [
+  ["resultado"],
+  ["curiosidade", "lacuna"],
+  ["busca direta", "busca"],
+  ["contrário", "contrario", "contra o senso comum"],
+  ["custo ou erro", "erro", "custo"],
+  ["experimento ou história", "experimento", "história", "historia"],
+  ["lista"],
+  ["comparação", "comparacao"],
+  ["o que está em jogo", "em jogo", "aposta", "risco"],
+  ["extremo ou contraste", "extremo", "contraste"],
+  ["bastidor", "bastidores"],
+  ["chamado direto", "chamado"],
+  ["transformação", "transformacao", "antes e depois"],
+];
+const SEARCH_TRIGGER = "busca direta";
+const plainWords = (text) => String(text).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+const TRIGGER_NAMES = new Map(TRIGGERS.flatMap(([name, ...aliases]) => [name, ...aliases].map((alias) => [plainWords(alias), name])));
+
+/** The triggers written after "gatilho:" on a title line: "chamado direto + contrário" gives both; a name outside the table is kept apart. */
+function declaredTriggers(line) {
+  const m = /gatilhos?\s*:\s*\**([^·|\n]*)/i.exec(line);
+  if (!m) return { labeled: false, declared: [], unknown: [] };
+  const declared = [];
+  const unknown = [];
+  for (const part of m[1].replace(/\(.*?\)/g, "").split(/\s*[+,/]\s*/)) {
+    const word = plainWords(part.replace(/\*+/g, ""));
+    if (!word) continue;
+    const name = TRIGGER_NAMES.get(word);
+    if (name) {
+      if (!declared.includes(name)) declared.push(name);
+    } else {
+      unknown.push(part.trim());
+    }
+  }
+  return { labeled: true, declared, unknown };
+}
+
+/**
+ * Titles of embalagem.md: the numbered lines under "## Títulos", each title
+ * between quotes, and the triggers written after "gatilho:" on the same line.
+ */
 export function packagingTitles(text) {
   const titles = [];
+  const triggers = [];
   let inside = false;
   let unquoted = 0;
   for (const raw of String(text ?? "").split(/\r?\n/)) {
@@ -141,10 +188,42 @@ export function packagingTitles(text) {
     }
     if (!inside || !/^\d+[.)]\s+/.test(line)) continue;
     const m = /["“]([^"“”]+)["”]/.exec(line);
-    if (m) titles.push(m[1].trim());
-    else unquoted += 1;
+    if (!m) {
+      unquoted += 1;
+      continue;
+    }
+    titles.push(m[1].trim());
+    triggers.push(declaredTriggers(line.slice(m.index + m[0].length)));
   }
-  return { titles, unquoted };
+  return { titles, unquoted, triggers };
+}
+
+/**
+ * The strength of the titles, by the triggers they declare: the chosen title
+ * with only "busca direta" says what the video is about and gives no reason to
+ * click; five titles with fewer than four triggers are versions of one phrase.
+ */
+export function triggerIssues(titles, triggers, chosen) {
+  const issues = [];
+  const unlabeled = triggers.filter((item) => !item.labeled).length;
+  if (unlabeled) {
+    issues.push({ rule: "title_trigger_missing", severity: "info", excerpt: "", message: `${unlabeled} título(s) de embalagem.md sem o gatilho: não consegui conferir a força deles.`, fix: "Escreva o gatilho da tabela depois do título: 1. \"o título\" · gatilho: curiosidade (dois, com +)." });
+  }
+  const unknown = [...new Set(triggers.flatMap((item) => item.unknown))];
+  if (unknown.length) {
+    issues.push({ rule: "title_trigger_unknown", severity: "info", excerpt: unknown.join(", "), message: `Gatilho fora da tabela de embalagem.md: ${unknown.join(", ")}.`, fix: `Use um nome da tabela: ${TRIGGERS.map(([name]) => name).join(", ")}.` });
+  }
+  const primary = triggers.map((item) => item.declared[0]).filter(Boolean);
+  const distinct = new Set(primary);
+  if (titles.length >= 5 && primary.length >= 5 && distinct.size < 4) {
+    issues.push({ rule: "titles_same_trigger", severity: "warn", excerpt: [...distinct].join(", "), message: `Os ${titles.length} títulos usam só ${distinct.size} gatilho(s) (${[...distinct].join(", ")}): são versões da mesma frase.`, fix: "Troque os repetidos por títulos de outras linhas da tabela de embalagem.md, como o que está em jogo, o contraste, o bastidor, o chamado direto ou a transformação." });
+  }
+  const index = chosen ? titles.indexOf(chosen) : -1;
+  const declared = index >= 0 ? triggers[index]?.declared ?? [] : [];
+  if (declared.length && declared.every((name) => name === SEARCH_TRIGGER)) {
+    issues.push({ rule: "title_descriptive", severity: "warn", excerpt: chosen, message: "O título escolhido só tem o gatilho busca direta: diz do que o vídeo trata, sem um motivo para clicar.", fix: "Depois das palavras da busca, acrescente uma alavanca que o vídeo paga (o resultado, o erro, o prazo, o \"sem X\"), ou escolha outro título de embalagem.md." });
+  }
+  return issues;
 }
 
 /**

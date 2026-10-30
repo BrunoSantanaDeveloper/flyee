@@ -73,3 +73,14 @@ See `docs/PLANO.md`. P0 (repository and harness), P1 (module tools) and P2 (the 
 - `validate` refuses a shipped reference to a package file that does not exist.
 
 The results of the member's own channel (a YouTube Studio export) and the real thumbnail image are specified, with their open decisions, in `docs/PLANO-YOUTUBE.md`. The six app versions reached the platform as drafts the same day, one tag at a time on 864c566, each with the platform's SHA-256 equal to the pack's. CLI 1.2.5 (tag `cli-v1.2.5` on c7a763c) is npm `latest`. The repository has been public since then. The `youtube-script` regression (the approved example of the operator's own video, which needed that channel's real stories) left the project at the operator's request; the fictitious-creator case and the lint guard on the approved speech stay.
+
+On 2026-10-30 the operator asked that title and thumbnail sell, not only say what the video is about, and that the thumbnail follow the channel's pattern. Not committed yet:
+- `youtube-research` 1.2.0 measures five more title triggers: what is at stake, extreme or contrast, behind the scenes, direct call, transformation. It also downloads thumbnails from `i.ytimg.com` with `thumbnails`, for single videos or for a channel already read, with a page that shows them side by side. Downloading thumbnails was decision Y7 in `docs/PLANO-YOUTUBE.md`; it was built before the operator answered and is still waiting for that answer, with YouTube's terms of use quoted.
+- `youtube-script` 1.3.0 adds:
+  - the rule "exaggerate the interest, never the facts", with YouTube's "Clickbait malicioso" policy;
+  - thirteen triggers;
+  - a click test that fails a pair that only describes;
+  - the thumbnail as a visual question, where combining what is in the video is allowed and inventing is not;
+  - the channel's pattern in `canal.md` ("Thumbnails do canal");
+  - the lint warnings `title_descriptive` and `titles_same_trigger`;
+  - a tenth critique criterion, packaging strength.

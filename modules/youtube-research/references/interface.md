@@ -151,16 +151,36 @@ Os traços (as nove primeiras chaves vêm da primeira versão desta interface e 
 | `year` | um ano ("2026") | |
 | `two_parts` | dois pontos, barra ou traço separando duas partes | |
 | `emoji` | um emoji | |
+| `stakes` | "apostei", "gastei R$", "quase perdi", "larguei o emprego" | `o que está em jogo` |
+| `extreme` | dois valores em dinheiro, "barato x caro", "do mundo", "nível 100" | `extremo ou contraste` |
+| `insider` | "por dentro", "bastidores", "o que o vendedor não mostra" | `bastidor` |
+| `callout` | "se você", "para quem", "quem tem", "todo confeiteiro precisa" | `chamado direto` |
+| `transformation` | "antes e depois", "de 2 para 9", "do zero a" | `transformação` |
 
 Os gatilhos são o que um script consegue ver nas palavras: um título de curiosidade sem nenhuma dessas palavras não entra na conta. Leia a lista antes das tabelas: ela mostra o mecanismo que os números resumem.
 
 O dado é desta amostra: mostra o que anda junto com os títulos que foram bem, nunca a causa. Ao usar, cite o traço ou a palavra e o número ("os títulos com o nome da ferramenta tiveram mediana de 1,9× contra 1,0×, n=40 e 84"). Grupo pequeno é indício. Com muitos traços e palavras medidos na mesma amostra, algum parece forte por acaso: vale mais o que se repete em duas leituras, como o tema e o canal.
 
-## 6. O que já existe
+## 6. Thumbnails
 
-`list --json` devolve `outliers[]`, `channels[]` e `videos[]` já pesquisados neste projeto.
+```
+node .flyee/modules/youtube-research/scripts/research.mjs thumbnails <vídeo> <vídeo>… --json
+node .flyee/modules/youtube-research/scripts/research.mjs thumbnails --channel <@canal> --limit 12 --json
+```
 
-## 7. Erros
+Baixa a thumbnail de cada vídeo, de 1 a 20, ou dos envios mais recentes de um canal já lido por `channel` (`--limit` de 1 a 30, padrão 12), no maior tamanho que o YouTube tiver, para você olhar as imagens. Cada uma fica em `youtube-research/videos/<id>/thumbnail.jpg` e é reaproveitada por 7 dias (`--refresh` baixa de novo). Com `--channel`, grava também `thumbnails.md` na pasta do canal: as imagens lado a lado, com o multiplicador e o título de cada vídeo.
+
+Resposta: `source` (`videos` ou `channel`), `channel` e `read_at` (com `--channel`), `items[]` e `files.md` (com `--channel`). Cada item traz `ok`, `id`, `file`, `quality` (`maxresdefault`, `hq720`, `sddefault` ou `hqdefault`), `width`, `height`, `letterboxed`, `url`, `cached` e, com `--channel`, `title`, `multiplier` e `band`. Um vídeo que falha traz `ok: false` e `error`, sem derrubar os outros.
+
+- `letterboxed: true` é uma imagem 4:3 com faixas pretas em cima e embaixo: o YouTube não tem dela o tamanho grande. Ignore as faixas ao olhar.
+- O multiplicador de `--channel` é o mesmo de `channel`: compare as thumbnails que passaram do normal do canal com as que ficaram abaixo.
+- A leitura das imagens é sua, não do script: diga o que se repete (o rosto e a emoção, o texto, as cores, a composição) como observação, nunca como medida.
+
+## 7. O que já existe
+
+`list --json` devolve `outliers[]`, `channels[]` e `videos[]` já pesquisados neste projeto. Cada vídeo diz se tem `transcript`, `comments` e `thumbnail`.
+
+## 8. Erros
 
 Em erro do comando, `ok` é `false`, a saída termina com código 1 (2 para uso errado) e vem `error` com `code`, `message` e `fix`. Mostre `message` e `fix` ao integrante; decida pelo `code`.
 
@@ -172,17 +192,17 @@ Em erro do comando, `ok` é `false`, a saída termina com código 1 (2 para uso 
 | `captions_unavailable` | o vídeo tem legenda, mas o YouTube não a entregou agora (ou ela veio vazia); espere alguns minutos e tente uma vez de novo; se repetir, ofereça os três caminhos de `no_captions` |
 | `no_tab` | o canal não tem essa aba; use a outra |
 | `tool_timeout` | o yt-dlp passou de 10 minutos numa chamada e foi interrompido: repita uma vez; se repetir, use menos buscas, canais ou vídeos, ou espere alguns minutos |
-| `not_youtube`, `not_found`, `video_unavailable`, `private_video`, `members_only`, `age_restricted` | o endereço não serve; repasse `fix` |
-| `offline`, `ytdlp_failed`, `unexpected` | repasse `message` e `fix` |
+| `not_youtube`, `not_found`, `video_unavailable`, `private_video`, `members_only`, `age_restricted` | o endereço não serve; repasse `fix`. Em `thumbnails`, `not_found` é um vídeo sem thumbnail no YouTube |
+| `offline`, `ytdlp_failed`, `unexpected` | repasse `message` e `fix`. Em `thumbnails`, `offline` é a imagem que não chegou: tente uma vez de novo |
 | `usage` | uma opção errada: corrija o comando |
 
-Quando a leitura de um vídeo falha, nunca tente outro caminho por conta própria para o mesmo conteúdo (outro site, outra ferramenta, a página aberta no navegador). Diga o que falhou e deixe o integrante escolher entre os caminhos da linha `no_captions`. O código `captions_unavailable` chegou na versão 1.0.1, dentro da interface 1; antes dela, o mesmo caso voltava como `no_captions`. O código `tool_timeout`, a opção `--channel` e os campos novos de `titles` chegaram na versão 1.1.0, também dentro da interface 1: com uma versão anterior instalada, `titles` não traz `top_titles`, `terms` nem os traços novos, e `npx --yes flyee@latest update youtube-research --yes --json` atualiza.
+Quando a leitura de um vídeo falha, nunca tente outro caminho por conta própria para o mesmo conteúdo (outro site, outra ferramenta, a página aberta no navegador). Diga o que falhou e deixe o integrante escolher entre os caminhos da linha `no_captions`. O código `captions_unavailable` chegou na versão 1.0.1, dentro da interface 1; antes dela, o mesmo caso voltava como `no_captions`. O código `tool_timeout`, a opção `--channel` e os campos novos de `titles` chegaram na versão 1.1.0, também dentro da interface 1: com uma versão anterior instalada, `titles` não traz `top_titles`, `terms` nem os traços novos, e `npx --yes flyee@latest update youtube-research --yes --json` atualiza. O comando `thumbnails` e os traços `stakes`, `extreme`, `insider`, `callout` e `transformation` chegaram na versão 1.2.0, dentro da interface 1: com uma versão anterior, `thumbnails` volta com `usage` (comando desconhecido) e o mesmo `update` resolve.
 
-## 8. O que não muda
+## 9. O que não muda
 
 Dentro da interface 1, comandos, opções, campos e códigos deste guia continuam valendo; campos novos podem aparecer. Uma mudança que quebre algo vira interface 2 e uma versão maior do app.
 
-## 9. Exemplo: um app de roteiro validando uma pauta
+## 10. Exemplo: um app de roteiro validando uma pauta
 
 ```
 node .flyee/modules/youtube-research/scripts/research.mjs outliers "roteiro para youtube" "como prender a atenção no vídeo" "gancho de vídeo" --name roteiro-gancho --json

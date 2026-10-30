@@ -1,6 +1,6 @@
 ---
 name: youtube-research
-description: Pesquisa o YouTube sem chave. Acha os vídeos de um tema que fizeram muito acima do normal do próprio canal (outliers), mede o quanto e analisa os títulos de alta performance. Lê o normal de um canal, a fala de um vídeo e os comentários. Use quando pedirem "o que está funcionando no YouTube sobre X", "validar pauta", "que título funciona", "analisar um canal" ou "o que o público pergunta".
+description: Pesquisa o YouTube sem chave. Acha os vídeos de um tema que fizeram muito acima do normal do próprio canal (outliers), mede o quanto e analisa os títulos de alta performance. Lê o normal de um canal, a fala, os comentários e as thumbnails. Use quando pedirem "o que está funcionando no YouTube sobre X", "validar pauta", "que título funciona", "analisar um canal" ou "o que o público pergunta".
 ---
 
 # Pesquisa no YouTube
@@ -68,12 +68,13 @@ Ofereça o que fizer sentido, sem rodar tudo de uma vez:
 - **Um canal:** `channel <@canal> --json` dá o normal do canal e os envios que mais passaram dele, inclusive do canal do próprio integrante.
 - **Que título funciona:** `titles <id da pesquisa> --tools "nomes de ferramentas ou marcas do tema" --json` analisa os títulos de alta performance do tema. Antes, tire da conta os vídeos fora do tema com `--exclude id,id`. O `titulos.md` traz:
   - os títulos que mais passaram do normal e os que ficaram abaixo, cada um com os traços que tem;
-  - os gatilhos medidos: resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista e comparação;
+  - os gatilhos medidos: resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista, comparação, o que está em jogo, extremo ou contraste, bastidor, chamado direto e transformação;
   - a forma: número, ferramenta, parênteses, "Como", pergunta, primeira pessoa, "você", ano, tamanho;
   - as palavras que andam com os títulos acima e abaixo do normal.
 
   Leia a lista antes das tabelas: ela mostra o mecanismo que os números resumem. Cite o traço ou a palavra com o número e o n; grupo pequeno é indício, e o dado vale só para esta amostra.
 - **Que título funciona no canal dele:** depois de `channel <@canal do integrante> --json`, rode `titles --channel <@canal> --json`. A mesma análise mede os envios do canal contra o normal do próprio canal: o que o público dele já respondeu. Com uns 30 vídeos quase tudo é indício. O que aparece forte no tema e no canal vale mais do que o que aparece num só.
+- **As thumbnails:** `thumbnails <id> <id> --json` baixa a thumbnail de cada vídeo (até 20, como os outliers do topo) e `thumbnails --channel <@canal> --json` baixa as dos envios mais recentes de um canal já lido, com o multiplicador de cada um e uma página que mostra todas lado a lado. Olhe as imagens dos arquivos de `items[].file` e diga o que se repete nas que passaram do normal e falta nas que ficaram abaixo: o rosto e a emoção, o texto, as cores, a composição. Essa leitura é sua, não uma medida: diga isso, e trate um padrão de duas ou três imagens como indício.
 
 Se a leitura de um vídeo falhar (sem legenda, recusa do YouTube), diga numa frase o que falhou e ofereça três caminhos: o integrante colar a transcrição num arquivo, o app Análise de vídeo ler imagem e som, ou seguir sem aquele vídeo. Nunca tente por conta própria outro caminho para o mesmo conteúdo.
 

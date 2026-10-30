@@ -277,6 +277,37 @@ test("the triggers of the packaging guide are measured as traits", async () => {
   assert.ok(TRAITS.filter((trait) => trait.group === "gatilho").every((trait) => trait.trigger));
 });
 
+test("the levers of 1.2.0 are triggers too: what is at stake, extreme or contrast, inside view, direct call, transformation", async () => {
+  const { TRAITS } = await import("../scripts/lib/titles.mjs");
+  const has = (key, title) => TRAITS.find((trait) => trait.key === key).test(title, { tools: null });
+  assert.ok(has("stakes", "Coloquei R$ 3 mil num forno sem saber se ia vender"));
+  assert.ok(has("stakes", "Quase desisti do canal"));
+  assert.ok(has("stakes", "Larguei o emprego para vender bolo"));
+  assert.ok(has("stakes", "I quit my job to bake"));
+  assert.ok(!has("stakes", "Gastei pouco na feira"), "spending without an amount is no stake");
+  assert.ok(has("extreme", "Café de R$ 8 contra café de R$ 80"));
+  assert.ok(has("extreme", "Barato x caro: qual airfryer vale"));
+  assert.ok(has("extreme", "A cozinha mais cara do mundo"));
+  assert.ok(!has("extreme", "Airfryer vs forno elétrico"), "a comparison of two things is not an extreme");
+  assert.ok(has("insider", "Por dentro de uma cozinha que vende 300 marmitas por semana"));
+  assert.ok(has("insider", "O que o vendedor de airfryer não te mostra"));
+  assert.ok(has("insider", "Bastidores do meu canal"));
+  assert.ok(has("callout", "Se você vende bolo pelo WhatsApp, assista antes de baixar o preço"));
+  assert.ok(has("callout", "Marmita para quem trabalha fora"));
+  assert.ok(has("callout", "Todo confeiteiro precisa saber disso"));
+  assert.ok(!has("callout", "Bolo de pote para vender (passo a passo)"), "\"para vender\" calls nobody");
+  assert.ok(has("transformation", "Antes e depois: a mesma cozinha, um mês de organização"));
+  assert.ok(has("transformation", "Como eu passei de 2 para 9 bolos vendidos por dia"));
+  assert.ok(has("transformation", "Do zero aos 10 mil inscritos"));
+  assert.ok(!has("transformation", "Marmita de 3 a 4 dias na geladeira"), "a range is not a before and after");
+  const levers = TRAITS.filter((trait) => ["stakes", "extreme", "insider", "callout", "transformation"].includes(trait.key));
+  assert.deepEqual(levers.map((trait) => trait.trigger), ["o que está em jogo", "extremo ou contraste", "bastidor", "chamado direto", "transformação"]);
+  assert.ok(levers.every((trait) => trait.group === "gatilho"));
+  for (const title of ["Como eu organizo a marmita da semana em 2 horas (passo a passo)", "Pare de lavar o arroz", "A melhor airfryer de 2026"]) {
+    assert.deepEqual(levers.filter((trait) => trait.test(title, { tools: null })).map((trait) => trait.key), [], `${title} has none of the new levers`);
+  }
+});
+
 test("titles lists the titles above and below the normal with their traits, and the words that go with them", async () => {
   const { readFileSync } = await import("node:fs");
   const { rankedTitles, termTable, titlesMarkdown, traitTable } = await import("../scripts/lib/titles.mjs");

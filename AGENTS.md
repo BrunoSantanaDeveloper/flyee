@@ -102,6 +102,17 @@ See `docs/PLANO.md`. P0 (repository and harness), P1 (module tools) and P2 (the 
 
 The results of the member's own channel (a YouTube Studio export) and the real thumbnail image are specified, with their open decisions, in `docs/PLANO-YOUTUBE.md`. The six app versions reached the platform as drafts the same day, one tag at a time on 864c566, each with the platform's SHA-256 equal to the pack's. CLI 1.2.5 (tag `cli-v1.2.5` on c7a763c) is npm `latest`. The repository has been public since then. The `youtube-script` regression (the approved example of the operator's own video, which needed that channel's real stories) left the project at the operator's request; the fictitious-creator case and the lint guard on the approved speech stay.
 
+On 2026-10-30 the operator asked that title and thumbnail sell, not only say what the video is about, and that the thumbnail follow the channel's pattern. Not committed yet:
+- `youtube-research` 1.2.0 measures five more title triggers: what is at stake, extreme or contrast, behind the scenes, direct call, transformation. It also downloads thumbnails from `i.ytimg.com` with `thumbnails`, for single videos or for a channel already read, with a page that shows them side by side. Downloading thumbnails was decision Y7 in `docs/PLANO-YOUTUBE.md`; it was built before the operator answered and is still waiting for that answer, with YouTube's terms of use quoted.
+- `youtube-script` 1.3.0 adds:
+  - the rule "exaggerate the interest, never the facts", with YouTube's "Clickbait malicioso" policy;
+  - thirteen triggers;
+  - a click test that fails a pair that only describes;
+  - the thumbnail as a visual question, where combining what is in the video is allowed and inventing is not;
+  - the channel's pattern in `canal.md` ("Thumbnails do canal");
+  - the lint warnings `title_descriptive` and `titles_same_trigger`;
+  - a tenth critique criterion, packaging strength.
+
 ===== .claude/rules/apps.md =====
 
 # Apps (modules)
@@ -144,8 +155,8 @@ Every app that exists in `modules/`, so that a request to create or change an ap
 | `video-analysis` 1.0.2 | tool · planejar | Assiste a vídeos do YouTube ou do seu computador, com imagem e som, e entrega uma descrição com tempos do que aparece na tela, do que é dito e de como foi editado. | `analyze-video` | sim v1 `scripts/video.mjs` | — | `ad-creatives`, `instagram-research`, `youtube-script` |
 | `video-render` 1.0.3 | tool · divulgar | Transforma uma página animada em vídeo pronto para as redes, com trilha original e efeitos na batida, prévia, a marca do seu site e conferência antes de publicar: capa, texto, área segura, volume e, por rede, formato e duração. É o motor que outros apps usam para renderizar. | `video-render` | sim v1 `scripts/render.mjs` | — | `ad-creatives`, `motion-carousel`, `video-studio` |
 | `video-studio` 1.1.1 | workflow · divulgar | Cria vídeos animados para Reels, TikTok e Shorts a partir do seu pedido: pergunta o que falta, usa o logo, as cores e as telas reais da sua marca, compõe a trilha na batida, mostra uma prévia e entrega o vídeo conferido para as redes. | `motion-video` | — | `video-render` | — |
-| `youtube-research` 1.1.0 | tool · planejar | Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público e o normal de qualquer canal, sem chave. | `youtube-research` | sim v1 `scripts/research.mjs` | — | `ad-creatives`, `youtube-script` |
-| `youtube-script` 1.2.0 | workflow · divulgar | Escreve com você roteiros para o YouTube que prendem do começo ao fim, a partir do que já funciona no seu tema: título e thumbnail medidos, o fluxo de um vídeo de referência, o texto na sua voz e revisão antes de gravar. | `youtube-script` | — | `video-analysis`, `youtube-research` | — |
+| `youtube-research` 1.2.0 | tool · planejar | Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público, as thumbnails e o normal de qualquer canal, sem chave. | `youtube-research` | sim v1 `scripts/research.mjs` | — | `ad-creatives`, `youtube-script` |
+| `youtube-script` 1.3.0 | workflow · divulgar | Escreve com você roteiros para o YouTube que prendem do começo ao fim, a partir do que já funciona no seu tema: título e thumbnail medidos, o fluxo de um vídeo de referência, o texto na sua voz e revisão antes de gravar. | `youtube-script` | — | `video-analysis`, `youtube-research` | — |
 
 ===== .claude/rules/contrato.md =====
 

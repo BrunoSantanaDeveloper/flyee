@@ -30,6 +30,7 @@ Nunca apague o que o integrante escreveu. Para mudar um arquivo pronto, mostre a
 ```markdown
 # <nome do canal>
 
+- Canal no YouTube: @… (ou "ainda não publicou")
 - Nicho e tema: …
 - Para quem: … (quem é, o que já sabe, o que quer, o que teme)
 - Promessa do canal: … (o que o público leva de todo vídeo)
@@ -66,9 +67,19 @@ Nunca apague o que o integrante escreveu. Para mudar um arquivo pronto, mostre a
 
 ### Pedido padrão
 - o que o canal pede no fim
+
+## Thumbnails do canal
+(lido das thumbnails do canal em <data>, confirme)
+- Rosto: … (se aparece, de que lado, com que expressão, recortado ou na cena)
+- Texto: … (quantas palavras, a letra, a cor, o contorno, onde fica)
+- Cores: … (o fundo, o destaque, a cor da marca)
+- Composição: … (um assunto, antes e depois, objeto em destaque, seta ou círculo)
+- Marca: … (o que se repete em toda thumbnail)
+- Nas que passaram do normal: … (o que elas têm e as abaixo do normal não têm)
 ```
 
 - A linha "Ritmo de fala: N palavras por minuto" é lida pelo script para estimar a duração. Escreva "(estimado)" até haver uma medida.
+- **Thumbnails do canal** é o padrão visual lido das thumbnails dele (`embalagem.md`, "O padrão do canal"). As ideias de thumbnail seguem esse padrão e mudam a alavanca; mudar o padrão é decisão dele. Num canal sem vídeos, a seção fica de fora até ele aprovar uma "sugestão de padrão".
 - **Nunca dizer** é uma lista de termos exatos, um por linha, entre aspas quando têm mais de uma palavra. A conferência bloqueia o roteiro que tiver um deles na fala.
 - **Histórias e opiniões** é o material dele que vale para todo vídeo: a origem, as posições, o que o incomoda e os casos, com as palavras dele. O roteiro usa daqui antes de propor qualquer coisa, e o que ele assina ou corrige num vídeo entra aqui, com o sim dele.
 - **Nunca fazer** é conferido pela crítica: "explicar planos ou preços", "citar ferramenta que eu não uso", "prometer resultado".
@@ -159,7 +170,7 @@ O plano de gravação. Num vídeo que mostra fazer, testar ou experimentar algo 
 
 ## embalagem.md
 
-Os títulos (5, de gatilhos diferentes, cada um entre aspas, com o gatilho e o traço medido), as thumbnails (com o texto entre aspas depois de "Texto:"), as variantes do teste A/B quando o canal tem esse teste, o par escolhido pelo número do título, a promessa em uma frase e onde o vídeo paga essa promessa. Veja `embalagem.md`. Um perfil escrito antes desta versão chama a linha do teste de "Teste de miniaturas": vale o mesmo.
+Os títulos (5, de gatilhos diferentes, cada um entre aspas, com o gatilho da tabela depois de "gatilho:" e o traço medido), as thumbnails (com o texto entre aspas depois de "Texto:" e a alavanca visual), as variantes do teste A/B quando o canal tem esse teste, o par escolhido pelo número do título, a promessa em uma frase e onde o vídeo paga essa promessa. Veja `embalagem.md`. Um perfil escrito antes desta versão chama a linha do teste de "Teste de miniaturas": vale o mesmo.
 
 ## estrutura.md
 
@@ -247,4 +258,4 @@ Os tempos dos capítulos saem do `lint`. Depois da edição, eles mudam: avise o
 
 ## checklist.md e roteiro-completo.md
 
-Os dois são gerados pelo script. O `checklist` tem três tempos: o que fazer e gravar antes da fala (os itens de `gravacao.md`; sem o plano, as cenas que as marcas pedem); cada `[CONFIRMAR]` e `[ESCOLHER]` do roteiro, da descrição, do briefing, da ficha, da embalagem, do plano e do perfil, com o bloco e a linha; e o que conferir antes de publicar (telas sem dados pessoais, legendas com os nomes certos, quadros reais nas thumbnails e o canto da duração livre, o arquivo da thumbnail, links, capítulos, a resposta sobre conteúdo para crianças, o "Uso de IA", a promoção paga quando há bloco de publi e as variantes do teste A/B). O `documento` junta o briefing, a ficha, a referência, a embalagem, a estrutura, o plano de gravação, o roteiro, a descrição, o checklist e a revisão num arquivo só, e avisa no alto quando ainda é rascunho.
+Os dois são gerados pelo script. O `checklist` tem três tempos: o que fazer e gravar antes da fala (os itens de `gravacao.md`; sem o plano, as cenas que as marcas pedem); cada `[CONFIRMAR]` e `[ESCOLHER]` do roteiro, da descrição, do briefing, da ficha, da embalagem, do plano e do perfil, com o bloco e a linha; e o que conferir antes de publicar (telas sem dados pessoais, legendas com os nomes certos, só o que está no vídeo nas thumbnails e o canto da duração livre, o arquivo da thumbnail, links, capítulos, a resposta sobre conteúdo para crianças, o "Uso de IA", a promoção paga quando há bloco de publi e as variantes do teste A/B). O `documento` junta o briefing, a ficha, a referência, a embalagem, a estrutura, o plano de gravação, o roteiro, a descrição, o checklist e a revisão num arquivo só, e avisa no alto quando ainda é rascunho.

@@ -11,6 +11,7 @@ import { speechStats } from "./lib/captions.mjs";
 import { baseLanguage, titleLanguage } from "./lib/language.mjs";
 import { channelMarkdown, commentsMarkdown, outliersCsv, outliersMarkdown, transcriptMarkdown } from "./lib/report.mjs";
 import { chooseBase, median, MIN_CHANNEL_SAMPLE, pickForDetails, rank, RANKS, sampleMedians, scoreVideo } from "./lib/score.mjs";
+import { downloadThumbnail, proxyRelaunchEnv } from "./lib/thumbnails.mjs";
 import { rankedTitles, suggestTools, termTable, titlesMarkdown, traitTable } from "./lib/titles.mjs";
 import { findYtdlp, installHints } from "./lib/tools.mjs";
 import {
@@ -24,6 +25,7 @@ import {
   progress,
   projectRoot,
   readJson,
+  run,
   slugify,
   toPosix,
   writeFileAtomic,
@@ -53,7 +55,7 @@ const RESEARCH_DIR = "youtube-research";
 const SCRIPT_COMMAND = `node ${toPosix(ROOT, join(SCRIPTS_DIR, "research.mjs"))}`;
 const FORMATS = ["long", "short", "any"];
 /** How long each kind of saved answer stays fresh, in hours. */
-const FRESH = { baseline: 7 * 24, video: 24, comments: 7 * 24 };
+const FRESH = { baseline: 7 * 24, video: 24, comments: 7 * 24, thumbnail: 7 * 24 };
 const ARG_SPEC = {
   flags: ["json", "refresh", "any-language"],
   options: ["window", "sort", "format", "per-query", "max-channels", "details", "min-views", "lang", "rank", "name", "tab", "limit", "max", "dir", "tools", "min-n", "base", "exclude", "channel", "top"],
@@ -522,6 +524,96 @@ async function commentsCommand(positionals, values) {
   return { ok: true, command: "comments", interface_version: INTERFACE_VERSION, items };
 }
 
+// ---------------------------------------------------------------- thumbnails
+
+/** A video's thumbnail, kept for a week in its folder: youtube-research/videos/<id>/thumbnail.jpg. */
+async function thumbnailOne(base, id, refresh) {
+  const dir = videoDir(base, id);
+  const file = join(dir, "thumbnail.jpg");
+  const metaPath = join(dir, "thumbnail.json");
+  const saved = !refresh && ageHours(file) < FRESH.thumbnail ? readJson(metaPath) : null;
+  if (saved?.quality) return { ok: true, id, cached: true, ...saved, file: rel(file) };
+  const got = await downloadThumbnail(id);
+  writeFileAtomic(file, got.bytes);
+  const meta = { quality: got.quality, width: got.width, height: got.height, letterboxed: got.letterboxed, url: got.url, fetched_at: new Date().toISOString() };
+  writeJson(metaPath, meta);
+  return { ok: true, id, cached: false, ...meta, file: rel(file) };
+}
+
+const cell = (text) => String(text ?? "").replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
+
+/** The channel's thumbnails side by side, newest first, with each video's multiplier: what the AI and the member look at. */
+function thumbnailsMarkdown(result, dir, base) {
+  const name = result.channel?.name ?? result.channel?.handle ?? "o canal";
+  const image = (item) => (item.ok ? `![](${toPosix(dir, join(videoDir(base, item.id), "thumbnail.jpg"))})` : `não veio: ${cell(item.error.message)}`);
+  const times = (value) => (typeof value === "number" ? `${value.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}×` : "");
+  return `${[
+    `# Thumbnails: ${name}`,
+    "",
+    `As ${result.items.length} mais recentes do canal${result.read_at ? `, na leitura de ${result.read_at.slice(0, 10)}` : ""}, da mais nova para a mais antiga. O multiplicador é quantas vezes o vídeo fez o normal deste canal: compare as que passaram do normal com as que ficaram abaixo dele. Ele mostra o que andou junto, não a causa.`,
+    "",
+    "| Thumbnail | Multiplicador | Título |",
+    "|---|---|---|",
+    ...result.items.map((item) => `| ${image(item)} | ${times(item.multiplier)} | ${cell(item.title)} |`),
+  ].join("\n")}\n`;
+}
+
+async function thumbnailsCommand(positionals, values) {
+  const fromChannel = values.channel !== undefined;
+  if (fromChannel && positionals.length) throw usage("Use os vídeos ou --channel, não os dois.", "thumbnails <vídeo>… baixa as thumbnails de vídeos; thumbnails --channel <canal> baixa as dos envios de um canal já lido por channel.");
+  const base = researchDir(values.dir);
+  const read = fromChannel ? resolveChannelRead(values.channel, values.dir) : null;
+  const targets = read
+    ? read.data.items.slice(0, intOption(values, "limit", 12, 1, 30)).map((item) => ({ id: item.id, title: item.title ?? null, multiplier: typeof item.multiplier === "number" ? item.multiplier : null, band: item.band ?? null }))
+    : videoIds(positionals, "thumbnails").map((id) => ({ id }));
+  progress(`Baixando ${targets.length} thumbnail(s)…`);
+  const items = await mapLimit(targets, 4, async (target) => {
+    try {
+      const { ok, ...got } = await thumbnailOne(base, target.id, Boolean(values.refresh));
+      return { ok, ...target, ...got };
+    } catch (error) {
+      return { ok: false, ...target, error: errorOf(error) };
+    }
+  });
+  const letterboxed = items.filter((item) => item.ok && item.letterboxed).length;
+  const readAt = read?.data.created_at ?? null;
+  const warnings = [
+    ...(letterboxed ? [`${letterboxed} thumbnail(s) vieram em 4:3, com faixas pretas em cima e embaixo: o YouTube não tem delas o tamanho grande. Ignore as faixas.`] : []),
+    ...(readAt && Date.now() - Date.parse(readAt) > 14 * 864e5 ? [`A leitura do canal é de ${readAt.slice(0, 10)}: rode channel de novo para trazer os envios mais novos.`] : []),
+  ];
+  const dir = read ? dirname(read.file) : null;
+  const result = {
+    ok: true,
+    command: "thumbnails",
+    interface_version: INTERFACE_VERSION,
+    source: read ? "channel" : "videos",
+    channel: read?.data.channel ?? null,
+    read_at: readAt,
+    items,
+    files: read ? { md: rel(join(dir, "thumbnails.md")) } : {},
+    warnings,
+  };
+  if (read) writeFileAtomic(join(dir, "thumbnails.md"), thumbnailsMarkdown(result, dir, base));
+  return result;
+}
+
+/**
+ * The same command in a new Node with NODE_USE_ENV_PROXY=1 (`proxyRelaunchEnv`):
+ * behind a proxy, Node's fetch goes around it and every thumbnail would fail.
+ */
+async function relaunched(argv, env) {
+  const args = [fileURLToPath(import.meta.url), ...argv.filter((arg) => arg !== "--json"), "--json"];
+  const { stdout } = await run(process.execPath, args, { env, label: "node" });
+  let result;
+  try {
+    result = JSON.parse(stdout.toString("utf8"));
+  } catch {
+    throw new AppError("unexpected", "O download das thumbnails parou sem resposta.", "Tente de novo; se repetir, rode o comando check e guarde esta mensagem.");
+  }
+  if (!result.ok) throw new AppError(result.error?.code ?? "unexpected", result.error?.message ?? "O download das thumbnails falhou.", result.error?.fix ?? "");
+  return result;
+}
+
 // ---------------------------------------------------------------- check, list, help
 
 async function checkCommand(values) {
@@ -557,7 +649,7 @@ function resolveOutliers(input, dirOption) {
 /** A channel already read by `channel`: its folder name, its @, or the path of its channel.json. */
 function resolveChannelRead(input, dirOption) {
   const text = String(input ?? "").trim();
-  if (!text) throw usage("Informe o canal: titles --channel <@canal ou a pasta que o channel devolveu>.");
+  if (!text) throw usage("Informe o canal: --channel <@canal ou a pasta que o channel devolveu>.");
   const base = researchDir(dirOption);
   const candidates = [
     join(base, "channels", text, "channel.json"),
@@ -634,7 +726,7 @@ function listCommand(values) {
   const videos = folder("videos").map((id) => {
     const files = readdirSync(join(base, "videos", id));
     const data = readJson(join(base, "videos", id, "video.json"));
-    return { id, title: data?.title ?? null, transcript: files.includes("transcript.md"), comments: files.includes("comments.md") };
+    return { id, title: data?.title ?? null, transcript: files.includes("transcript.md"), comments: files.includes("comments.md"), thumbnail: files.includes("thumbnail.jpg") };
   });
   return { ok: true, command: "list", dir: rel(base), outliers, channels, videos };
 }
@@ -652,6 +744,8 @@ Comandos
   comments <vídeo>…              Os comentários mais relevantes (ou os mais novos), sem respostas e sem nomes.
   titles <pesquisa>              Os títulos de alta performance: os que mais passaram do normal, os gatilhos, a forma e as palavras, contra o multiplicador.
   titles --channel <canal>       O mesmo nos vídeos de um canal já lido por channel: o que funciona naquele canal.
+  thumbnails <vídeo>…            A thumbnail de cada vídeo, no maior tamanho que o YouTube tiver, para a IA olhar.
+  thumbnails --channel <canal>   As thumbnails dos envios mais recentes de um canal já lido por channel, com o multiplicador de cada um.
   list                           O que já foi pesquisado neste projeto.
   help                           Esta ajuda.
 
@@ -674,6 +768,7 @@ Outras opções
   --tools "A,B" --min-n N --base any|channel   (titles) Nomes de ferramentas ou marcas do tema; tamanho mínimo de grupo (padrão: 5); só a base do canal.
   --exclude id,id                (titles) Os vídeos fora do tema, que saem da conta.
   --top N                        (titles) Quantos títulos acima do normal listar, de 5 a 50 (padrão: 15).
+  --limit N                      (thumbnails --channel) Quantas thumbnails, das mais recentes, de 1 a 30 (padrão: 12).
   --refresh                      Busca de novo em vez de reaproveitar o que já foi lido.
   --dir <pasta>                  Outra pasta para a pesquisa (padrão: ${RESEARCH_DIR}).
   --json                         Saída em JSON, para a IA e para outros apps.`;
@@ -722,6 +817,12 @@ function humanText(result) {
         ...result.traits.map((row) => (row.skipped ? `- ${row.label}: ${row.note}` : `- ${row.label}: ${times(row.with.median)}com (n=${row.with.n}) contra ${times(row.without.median)}sem (n=${row.without.n})${row.small_n ? " · grupo pequeno" : ""}`)),
         ...warnings,
       ].join("\n");
+    case "thumbnails":
+      return [
+        `${result.items.filter((item) => item.ok).length} de ${result.items.length} thumbnail(s) baixadas.${result.files.md ? ` Para ver lado a lado: ${result.files.md}` : ""}`,
+        ...result.items.map((item) => itemLine(item, (ok) => `${ok.id}: ${ok.file}${ok.letterboxed ? " (4:3, com faixas)" : ""}`)),
+        ...warnings,
+      ].join("\n");
     case "list":
       return [
         `Pesquisas de outliers: ${result.outliers.length} · canais: ${result.channels.length} · vídeos: ${result.videos.length} (em ${result.dir})`,
@@ -751,10 +852,14 @@ async function main(argv) {
       return commentsCommand(positionals, values);
     case "titles":
       return titlesCommand(positionals, values);
+    case "thumbnails": {
+      const env = proxyRelaunchEnv(process.env);
+      return env ? relaunched(argv, env) : thumbnailsCommand(positionals, values);
+    }
     case "list":
       return listCommand(values);
     default:
-      throw usage(`Comando desconhecido: ${command}.`, "Comandos: check, outliers, channel, video, transcript, comments, titles, list, help.");
+      throw usage(`Comando desconhecido: ${command}.`, "Comandos: check, outliers, channel, video, transcript, comments, titles, thumbnails, list, help.");
   }
 }
 

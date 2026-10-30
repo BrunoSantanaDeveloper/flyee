@@ -60,10 +60,19 @@ Medido por inscritos, a escala é outra: 10 explosivo, 5 outlier, 1 acima, 0,1 n
 O comando `titles` lê os títulos com o mesmo multiplicador: cada título conta pelo quanto o vídeo passou do normal do próprio canal, não pelas views.
 
 1. **A lista primeiro.** Os títulos que mais passaram do normal, com os traços de cada um, mostram o mecanismo: a promessa, o gatilho, a palavra do público. Os que ficaram abaixo, lado a lado, mostram o que não bastou.
-2. **Os gatilhos.** Resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista e comparação são contados pelas palavras que os marcam ("testei", "pare de", "5 dicas"). Um título de curiosidade sem nenhuma dessas palavras fica fora da conta: o número é um piso, não o retrato inteiro.
+2. **Os gatilhos.** Resultado, curiosidade, busca direta, contrário, custo ou erro, experimento, lista, comparação, o que está em jogo, extremo ou contraste, bastidor, chamado direto e transformação são contados pelas palavras que os marcam ("testei", "pare de", "5 dicas", "quase perdi", "por dentro", "se você"). Um título de curiosidade sem nenhuma dessas palavras fica fora da conta: o número é um piso, não o retrato inteiro. Busca direta diz do que o vídeo trata; os outros dão um motivo para clicar. Quando a busca direta vai bem no tema, olhe se os títulos que subiram com ela trazem também uma alavanca (um resultado, um erro, um prazo).
 3. **As palavras.** As que se repetem nos títulos acima do normal são o vocabulário do público que respondeu; as das buscas ficam de fora, porque estão em todos.
 4. **O canal.** Com `--channel`, a mesma leitura nos envios de um canal mostra o que o público dele já respondeu. Uns 30 vídeos dão grupos pequenos: é indício.
 5. **Duas leituras.** Com muitos traços e palavras medidos de uma vez, algum parece forte por acaso. Vale mais o que aparece em duas leituras, como o tema e o canal, ou duas pesquisas do mesmo tema.
+
+## Thumbnails
+
+O comando `thumbnails` traz as imagens; a leitura é sua, com os olhos, e nenhum número sai dela.
+
+1. **No tema:** baixe as dos 6 a 10 outliers do topo e as de alguns vídeos abaixo do normal. Anote o que se repete em duas ou mais das que subiram: um rosto e que emoção, quantas palavras de texto e de que tamanho, o contraste, um objeto em destaque, antes e depois, uma seta ou um círculo, algo meio escondido.
+2. **No canal:** com `--channel`, as imagens vêm com o multiplicador de cada vídeo. Descreva o padrão do canal (onde fica o rosto, a letra e a cor do texto, as cores de fundo, a marca que se repete) e o que as que passaram do normal têm e as abaixo não têm.
+3. **O tamanho do celular:** uma thumbnail é vista pequena. Um detalhe que só aparece na imagem grande não conta para quem rola a página.
+4. **O que não afirmar:** o multiplicador mede o vídeo inteiro (o tema, o título e a thumbnail juntos), não a imagem sozinha. Com poucas imagens, o padrão é indício, e você diz isso.
 
 ## Armadilhas
 

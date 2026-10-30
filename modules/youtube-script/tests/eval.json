@@ -39,7 +39,7 @@
           "path": "roteiros/*/descricao.md"
         }
       ],
-      "rubric": "Segue os passos na ordem (perfil, briefing, embalagem, ganchos e estrutura, roteiro, lint, crítica, entrega) sem perguntar o que o pedido já respondeu. embalagem.md tem 5 títulos de gatilhos diferentes e 2-3 thumbnails; estrutura.md tem 3-4 ganchos de famílias diferentes e blocos com nome de resultado e tempo. O roteiro usa só os fatos dados (12 trabalhos, 300 reais, 4.200, 68 horas, 62 reais), sem estatística inventada; o que faltar vira [CONFIRMAR] e é resolvido ou apontado. O lint termina com ready: true e a duração estimada fica a 15% de 6 minutos. A voz respeita o perfil (você, sem 'galera'). revisao.md tem as notas dos 9 critérios com porquês e separa obrigatórias de sugestões. O fecho pede uma coisa só (a planilha)."
+      "rubric": "Segue os passos na ordem (perfil, briefing, embalagem, ganchos e estrutura, roteiro, lint, crítica, entrega) sem perguntar o que o pedido já respondeu. embalagem.md tem 5 títulos de gatilhos diferentes e 2-3 thumbnails; estrutura.md tem 3-4 ganchos de famílias diferentes e blocos com nome de resultado e tempo. O roteiro usa só os fatos dados (12 trabalhos, 300 reais, 4.200, 68 horas, 62 reais), sem estatística inventada; o que faltar vira [CONFIRMAR] e é resolvido ou apontado. O lint termina com ready: true e a duração estimada fica a 15% de 6 minutos. A voz respeita o perfil (você, sem 'galera'). revisao.md tem as notas dos 10 critérios com porquês e separa obrigatórias de sugestões. O fecho pede uma coisa só (a planilha)."
     },
     {
       "name": "melhora meu roteiro",
@@ -58,7 +58,7 @@
       "setup": "Projeto com roteiros/canal.md de um canal de culinária caseira.",
       "prompt": "Me dá títulos e ideias de thumbnail para um vídeo sobre pão de fermentação natural para quem nunca fez.",
       "assertions": [],
-      "rubric": "Faz só o passo 2: 5 títulos de gatilhos diferentes (não variações da mesma frase), 2-3 thumbnails com imagem e até 4 palavras, a micro-história título+thumbnail sem repetir palavras, o teste do clique e a recomendação. Não inventa resultado do criador ('fiz 100 pães'): pergunta ou usa forma que não dependa de fato. Não escreve o roteiro inteiro."
+      "rubric": "Faz só o passo 2: 5 títulos de gatilhos diferentes (não variações da mesma frase), cada um com uma alavanca além de dizer o assunto (nenhum só descritivo; busca direta só com uma alavanca depois e nunca a recomendada), 2-3 thumbnails com imagem, até 4 palavras e uma alavanca visual cada (emoção, contraste, mistério ou escala), sem cena que o vídeo não teria, a micro-história título+thumbnail sem repetir palavras, o teste do clique e a recomendação. Não inventa resultado do criador ('fiz 100 pães'): pergunta ou usa forma que não dependa de fato. Não escreve o roteiro inteiro."
     },
     {
       "name": "fato que falta nao e inventado",
@@ -235,6 +235,25 @@
         }
       ],
       "rubric": "Roda outliers e titles no tema e, com o canal lido, titles --channel. Antes de propor, lê a lista dos títulos que mais passaram do normal e diz o mecanismo de dois ou três deles, sem copiar nenhum. Os cinco títulos são de gatilhos diferentes, entre aspas, cada um com o gatilho, o traço ou a palavra de onde veio e o número com o n; grupo pequeno é indício, e o que aparece no tema e no canal pesa mais. A seção do teste A/B traz até três títulos e três thumbnails da mesma promessa, a recomendada primeiro, e diz que o YouTube escolhe pelo tempo assistido, que o teste não vale para Shorts e que não se mexe no título nem na thumbnail até o fim. Cada thumbnail tem o texto entre aspas depois de \"Texto:\", até quatro palavras, sem repetir o título escolhido, e nada no canto de baixo à direita. A escolha diz o número do título. Nenhum número de taxa de clique ou de visualizações prometido."
+    },
+    {
+      "name": "embalagem que vende no padrao do canal",
+      "prompt": "Meu canal é @meucanal. Quero títulos e thumbnails que façam a pessoa clicar de verdade, nada de título que só diz o assunto, para um vídeo sobre como eu organizo a marmita da semana em 2 horas.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "roteiros/*/embalagem.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "youtube-research/channels/*/thumbnails.md"
+        },
+        {
+          "kind": "file_exists",
+          "path": "roteiros/canal.md"
+        }
+      ],
+      "rubric": "Lê o canal (channel e thumbnails --channel), abre as imagens e grava em canal.md a seção Thumbnails do canal (rosto, texto, cores, composição, marca e o que as acima do normal têm a mais), marcada para confirmar, e pergunta \"é esse o seu padrão?\". Olha as thumbnails dos outliers do tema. Os cinco títulos têm gatilhos diferentes declarados com os nomes da tabela, cada um com uma alavanca que o vídeo paga (nenhum só descreve; o recomendado não é busca direta sozinha) e sem número ou resultado que o criador não deu. As thumbnails seguem o padrão do canal, cada uma com uma alavanca visual, só com elementos do vídeo. O teste do clique reprova pelo menos um par só descritivo ou exagerado, se houver. O lint roda sem title_descriptive nem titles_same_trigger. Diz que a leitura das imagens é visual e que o teste A/B decide."
     }
   ]
 }

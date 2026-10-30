@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "youtube-script",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -54,8 +54,8 @@
       "kind": "shell",
       "scope": "node .flyee/modules/youtube-research/scripts/research.mjs",
       "reason": {
-        "pt-BR": "Só com o app Pesquisa no YouTube instalado: busca o que funciona no tema, a fala de vídeos (inclusive os seus) e os comentários do público. Grava em ./youtube-research/.",
-        "en": "Only with the YouTube research app installed: finds what works on the topic, the speech of videos (yours included) and the audience's comments. Writes to ./youtube-research/."
+        "pt-BR": "Só com o app Pesquisa no YouTube instalado: busca o que funciona no tema, a fala de vídeos (inclusive os seus), os comentários do público e as thumbnails do tema e do seu canal. Grava em ./youtube-research/.",
+        "en": "Only with the YouTube research app installed: finds what works on the topic, the speech of videos (yours included), the audience's comments and the thumbnails of the topic and of your channel. Writes to ./youtube-research/."
       }
     },
     {
@@ -68,10 +68,10 @@
     },
     {
       "kind": "fs:read",
-      "scope": "./roteiros/, os textos e a gravação de tela que você indicar, e a documentação dos apps em .flyee/modules/ (README, manifesto, references e skills)",
+      "scope": "./roteiros/, ./youtube-research/, os textos e a gravação de tela que você indicar, e a documentação dos apps em .flyee/modules/ (README, manifesto, references e skills)",
       "reason": {
-        "pt-BR": "Lê o perfil do canal, os roteiros em andamento, os textos e transcrições que você indicar para aprender a sua voz ou seguir uma referência, a gravação de tela de um tutorial e, quando o vídeo mostra um app instalado, a documentação dele, para a ficha de verdade.",
-        "en": "Reads the channel profile, the scripts in progress, the texts and transcripts you point to for your voice or a reference, the screen recording of a tutorial and, when the video shows an installed app, its documentation, for the truth sheet."
+        "pt-BR": "Lê o perfil do canal, os roteiros em andamento, o que a Pesquisa no YouTube trouxe (títulos medidos e thumbnails), os textos que você indicar para a voz ou uma referência, a gravação de tela de um tutorial e a documentação do app que o vídeo mostra, para a ficha de verdade.",
+        "en": "Reads the channel profile, the scripts in progress, what YouTube research brought (measured titles and thumbnails), the texts you point to for your voice or a reference, a tutorial screen recording and the docs of the app the video shows, for the truth sheet."
       }
     },
     {
@@ -84,8 +84,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Os títulos partem dos de alta performance do tema e do seu canal, com o gatilho e as palavras medidos. O teste A/B do YouTube, que agora compara títulos também, ganha as variantes de título, e a thumbnail ganha o canto da duração, o tamanho e o arquivo certos. A conferência avisa quando a fala não paga um número ou um nome do título escolhido e quando o texto da thumbnail passa de quatro palavras ou repete o título, e bloqueia a descrição acima de 5.000 bytes ou com sinais que o YouTube recusa. O checklist lembra o que responder ao publicar: público, uso de IA, promoção paga e teste A/B.",
-    "en": "Titles start from the high-performing ones of the topic and of your channel, with the trigger and the words measured. YouTube's A/B test, which now compares titles too, gets title variants, and the thumbnail gets the duration corner, the right size and the right file. The check warns when the speech does not pay a number or a name of the chosen title and when the thumbnail text goes past four words or repeats the title, and blocks a description over 5,000 bytes or with characters YouTube refuses. The checklist lists what to answer when publishing: audience, AI use, paid promotion and the A/B test."
+    "pt-BR": "O título e a thumbnail passam a vender, não só dizer do que o vídeo trata: cinco gatilhos novos (o que está em jogo, extremo ou contraste, bastidor, chamado direto e transformação), a regra de exagerar no interesse e nunca no fato, e um teste do clique que reprova o par que só descreve. A thumbnail vira uma pergunta visual, com emoção, contraste, mistério ou escala, pode juntar o que está no vídeo e segue o padrão visual do seu canal, lido das suas thumbnails e comparado com as dos vídeos que mais subiram no tema. A conferência avisa quando o título escolhido só descreve e quando os cinco títulos repetem o gatilho, e a crítica ganha uma nota para a força da embalagem.",
+    "en": "The title and thumbnail now sell, not just say what the video is about: five new triggers (what is at stake, extreme or contrast, behind the scenes, direct call and transformation), the rule of exaggerating the interest and never the facts, and a click test that fails a pair that only describes. The thumbnail becomes a visual question, with emotion, contrast, mystery or scale, may combine what is in the video and follows your channel's visual pattern, read from your thumbnails and compared with those of the videos that rose most on the topic. The check warns when the chosen title only describes and when the five titles repeat the trigger, and the critique gets a score for the packaging's strength."
   },
   "license": "member"
 }

@@ -4,7 +4,7 @@ A Pesquisa no YouTube mostra quais vídeos de um tema fizeram muito mais do que 
 
 Um vídeo com 1 milhão de views num canal que sempre faz 1 milhão diz pouco. Um vídeo com 80 mil views num canal que costuma fazer 8 mil diz bastante: o tema, o ângulo ou o título trouxeram um público que não viria sozinho. Esses são os outliers. O app os encontra, e a sua IA explica por que eles subiram, o que se repete entre eles, o que já está saturado e o que ninguém cobriu bem.
 
-O app traz também a fala de um vídeo (pela legenda, sem baixar o vídeo), os comentários mais relevantes, o normal de qualquer canal, inclusive o seu, e a análise dos títulos de alta performance: os que mais passaram do normal, os gatilhos e as palavras que andam junto com os vídeos que foram bem, no tema ou só no seu canal. Tudo vem de páginas públicas do YouTube, sem chave e sem login.
+O app traz também a fala de um vídeo (pela legenda, sem baixar o vídeo), os comentários mais relevantes, o normal de qualquer canal, inclusive o seu, e a análise dos títulos de alta performance: os que mais passaram do normal, os gatilhos e as palavras que andam junto com os vídeos que foram bem, no tema ou só no seu canal. Traz ainda as thumbnails dos vídeos e do seu canal, lado a lado e com o quanto cada vídeo passou do normal, para a sua IA ver o seu padrão visual e o que se repete nas que foram bem. Tudo vem de páginas públicas do YouTube, sem chave e sem login.
 
 Você pode pedir a pesquisa direto à sua IA. O app Roteiro para YouTube também usa este por baixo, para pesquisar o tema antes de propor uma pauta, medir títulos e ler a fala de vídeos de referência.
 

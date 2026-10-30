@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "youtube-research",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "tool",
   "trail": "planejar",
   "title": {
@@ -9,8 +9,8 @@
     "en": "YouTube research"
   },
   "summary": {
-    "pt-BR": "Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público e o normal de qualquer canal, sem chave.",
-    "en": "Shows which videos on a topic did far better than their own channel's normal, and by how much. Also brings the videos' speech, the audience's comments and any channel's normal, with no key."
+    "pt-BR": "Mostra quais vídeos de um tema fizeram muito mais do que o normal do próprio canal, e quanto. Traz também a fala dos vídeos, os comentários do público, as thumbnails e o normal de qualquer canal, sem chave.",
+    "en": "Shows which videos on a topic did far better than their own channel's normal, and by how much. Also brings the videos' speech, the audience's comments, the thumbnails and any channel's normal, with no key."
   },
   "compatible_ais": [
     "claude_code"
@@ -29,6 +29,7 @@
     "scripts/lib/language.mjs",
     "scripts/lib/report.mjs",
     "scripts/lib/score.mjs",
+    "scripts/lib/thumbnails.mjs",
     "scripts/lib/titles.mjs",
     "scripts/lib/tools.mjs",
     "scripts/lib/util.mjs",
@@ -63,6 +64,14 @@
       }
     },
     {
+      "kind": "network",
+      "scope": "i.ytimg.com",
+      "reason": {
+        "pt-BR": "Baixa as thumbnails públicas dos vídeos e dos canais que você pesquisar, para a IA olhar o que elas têm em comum.",
+        "en": "Downloads the public thumbnails of the videos and channels you research, so the AI can see what they have in common."
+      }
+    },
+    {
       "kind": "fs:write",
       "scope": "./youtube-research/",
       "reason": {
@@ -72,8 +81,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "A análise dos títulos de alta performance: a lista dos títulos que mais passaram do normal e dos que ficaram abaixo, com os traços de cada um; os gatilhos de título medidos (resultado, curiosidade, busca direta, contrário, erro, experimento, lista, comparação), a forma e as palavras que se repetem; e a mesma análise nos vídeos de um canal, contra o normal dele. Uma leitura do YouTube que trava é interrompida em 10 minutos, com um aviso.",
-    "en": "High-performing title analysis: the titles that went furthest above their channel's normal and those that stayed below, each with its traits; title triggers measured (result, curiosity, direct search, contrarian, mistake, experiment, list, comparison), the form and the recurring words; and the same analysis on a channel's own videos, against its normal. A YouTube read that hangs is stopped after 10 minutes, with a notice."
+    "pt-BR": "A análise de títulos mede cinco gatilhos novos, os que vão além de dizer do que o vídeo trata: o que está em jogo, extremo ou contraste, bastidor, chamado direto e transformação. E o app baixa as thumbnails de vídeos ou dos envios recentes de um canal, com o multiplicador de cada um, numa página que mostra todas lado a lado, para a IA ver o padrão visual do seu canal e o que se repete nas que passaram do normal.",
+    "en": "Title analysis measures five new triggers, the ones that go beyond saying what the video is about: what is at stake, extreme or contrast, behind the scenes, direct call and transformation. And the app downloads the thumbnails of videos or of a channel's recent uploads, with each one's multiplier, on a page that shows them side by side, so the AI can see your channel's visual pattern and what repeats in the ones that went above normal."
   },
   "license": "member"
 }

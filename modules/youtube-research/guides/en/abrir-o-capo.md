@@ -77,7 +77,7 @@ The app reads top-level comments, without replies: by default the 100 most relev
 On a search already done, the app analyzes the high-performing titles in four parts.
 
 1. **The list.** The titles that went furthest above their own channel's normal, from the highest down, and those that stayed below the normal, each with the traits it carries. The reading starts here: it shows the mechanism the tables sum up.
-2. **The triggers.** Eight ways of pulling the click, counted by the words that mark them:
+2. **The triggers.** Thirteen ways of pulling the click, counted by the words that mark them:
    - result: money, time, a number with a unit;
    - curiosity: "this", "the secret", "why", "the X that";
    - direct search: "how to", "step by step", "tutorial", "beginners";
@@ -85,15 +85,26 @@ On a search already done, the app analyzes the high-performing titles in four pa
    - cost or mistake: "mistake", "avoid", "losing", "wasting";
    - experiment: "I tried", "for 30 days", "challenge";
    - list: "5 tips", "top 10";
-   - comparison: "vs", "X x Y", "better than", "which one".
+   - comparison: "vs", "X x Y", "better than", "which one";
+   - what is at stake: "I bet", "I quit my job", "almost lost";
+   - extreme or contrast: two amounts of money, "cheap vs expensive", "in the world", "level 100";
+   - behind the scenes: "inside", "behind the scenes", "what they don't show";
+   - direct call: "if you", "for people who", "anyone who";
+   - transformation: "before and after", "from 2 to 9", "from zero to".
 
-   A curiosity title with none of these words is not counted, so the number is a floor.
+   A curiosity title with none of these words is not counted, so the number is a floor. Direct search says what the video is about; the others give a reason to click.
 3. **The form.** Having a number; a tool or brand name, when the topic's names are given; parentheses or brackets; starting with "How" (or "Como" in Portuguese); being a question; first person; "without X"; one word in capitals; talking to "you"; a superlative; a year; two parts split by a colon, a bar or a dash; an emoji. And length: the median number of characters in the sample and among the outliers, and the multiplier in four ranges (up to 40, 41 to 60, 61 to 80 and over 80 characters).
 4. **The words.** The words and word pairs found in at least 5 titles, leaving out the search words, which are in all of them. Any number counts as N, so "7 days" and "30 days" add up together.
 
 For each trait and each word, the app compares the median multiplier of the titles that have it with that of the titles that don't, and shows how many titles are in each group. A group with fewer than 5 titles is marked as a hint.
 
 The same analysis works on your channel: after reading your latest uploads, the app measures your titles against your own normal. It shows what your audience has already responded to. With about 30 videos, almost every group is small, and the views on the channel's tab come rounded by YouTube.
+
+### The thumbnails
+
+The app downloads each video's thumbnail at the largest size YouTube has: up to 20 videos that you or your AI choose, or your channel's latest uploads (12, unless someone says another number). For a channel, it also builds a page with all of them side by side, each with how far the video went above your normal. The images are kept for a week.
+
+Reading the images is your AI's job, by eye: your visual pattern (where the face goes, the font and color of the text, the colors, the brand mark that repeats) and what the thumbnails above your normal have that those below it lack. No number comes out of that reading, and the multiplier measures the whole video, not only the image. Some thumbnails come in 4:3, with black bands above and below, when YouTube does not have their large size.
 
 The app suggests names in the titles that look like tools or brands, for you and the AI to confirm before using them, and lets you leave off-topic videos out of the count. Search picks up words with other meanings and neighboring niches, and they skew the traits.
 

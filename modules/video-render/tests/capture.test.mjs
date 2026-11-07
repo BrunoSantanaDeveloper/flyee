@@ -412,6 +412,13 @@ test("captureSite reads the fixture site: brand, screens, scroll and assets", { 
   const saved = JSON.parse(readFileSync(join(dir, "captura.json"), "utf8"));
   assert.equal(saved.format_version, 1);
   assert.equal(saved.brand.headline, capture.brand.headline);
+  // 1.1.0: what the page was, its anatomy and its whole text (tests/anatomy.test.mjs reads them in depth)
+  assert.equal(saved.input_kind, "html");
+  assert.ok(saved.anatomy, "the anatomy was read");
+  assert.ok(!saved.anatomy.ctas.some((c) => c.text === "Aceitar"), "the cookie banner's button is no call to action");
+  assert.ok(saved.anatomy.fixed.some((f) => f.position === "sticky" && f.edge === "top"), "the sticky header");
+  assert.equal(capture.files.text, "texto.md");
+  assert.match(readFileSync(join(dir, "texto.md"), "utf8"), /## Planos e valores\n/);
   assert.equal(pngSize(readFileSync(join(dir, "desktop.png"))).width, 1440);
   assert.equal(pngSize(readFileSync(join(dir, "desktop.png"))).height, 900);
   const desktopFull = pngSize(readFileSync(join(dir, "desktop-full.png")));
@@ -524,7 +531,7 @@ test("captureSite reads the fixture site: brand, screens, scroll and assets", { 
     assert.ok(capture.warnings.some((w) => /ffmpeg/.test(w)));
   }
   assert.ok(messages.some((m) => /Lendo a página/.test(m)), messages.join("\n"));
-  assert.ok(!capture.warnings.some((w) => /Parte da leitura falhou/.test(w)), capture.warnings.join("\n"));
+  assert.ok(!capture.warnings.some((w) => /Parte da leitura falhou|anatomia/.test(w)), capture.warnings.join("\n"));
 });
 
 test("captureSite reports unreachable sites and invalid addresses with stable codes", { skip: noBrowser, timeout: 120000 }, async () => {
@@ -559,6 +566,10 @@ test("capture command: the fixture through render.mjs with --json", { skip: noBr
   assert.ok(existsSync(join(dir, "captura.json")));
   assert.ok(existsSync(join(dir, "desktop.png")));
   assert.equal(r.files.desktop, "desktop.png");
+  assert.equal(r.files.text, "texto.md");
+  assert.equal(r.input_kind, "html");
+  assert.equal(r.anatomy_counts?.sections, 10, JSON.stringify(r.anatomy_counts));
+  assert.equal(r.anatomy, undefined, "the anatomy stays in captura.json");
   assert.equal(r.cookie_banner, "Aceitar");
   assert.ok(r.dir.endsWith("command"), r.dir);
   if (tools.ffmpeg) {

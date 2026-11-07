@@ -1,9 +1,10 @@
-// The `capture` command: visits a site and saves its screens, scroll recordings and brand sheet.
-// Loaded by render.mjs as a command group; the capture itself lives in ../lib/capture.mjs.
+// The `capture` command: visits a site (or opens a saved page) and saves its screens, scroll
+// recordings, brand sheet, whole text and anatomy. Loaded by render.mjs as a command group; the
+// capture itself lives in ../lib/capture.mjs.
 
 import { join, resolve } from "node:path";
 
-import { captureSite, hostSlug, normalizeUrl } from "../lib/capture.mjs";
+import { anatomyCounts, captureSite, hostSlug, normalizeUrl } from "../lib/capture.mjs";
 import { checkTools } from "../lib/tools.mjs";
 import { parseNumber, round, usage } from "../lib/util.mjs";
 
@@ -13,6 +14,7 @@ export const argSpec = {
 };
 
 export const help = `Opções de capture
+  <endereço>                     Um site (https://www.exemplo.com.br), um arquivo .html ou uma página salva pelo navegador (.mhtml ou .mht).
   --out <pasta>                  Onde gravar (padrão: capturas/<site>/ na raiz do projeto).
   --mobile <px> --desktop <px>   Larguras do celular (390) e do computador (1440).
   --scroll <s>                   Segundos da rolagem gravada no celular (padrão: 6; 0 desliga); o computador grava dois terços disso.
@@ -27,9 +29,24 @@ function describeScroll(scroll) {
   return parts.length ? `rolagem (${parts.join(", ")})` : "sem rolagem";
 }
 
+const count = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+function describeAnatomy(counts) {
+  if (!counts) return null;
+  return `Anatomia: ${[
+    count(counts.sections, "seção", "seções"),
+    count(counts.ctas, "chamado", "chamados"),
+    count(counts.fixed, "elemento fixo", "elementos fixos"),
+    count(counts.forms, "caixa ou opção", "caixas e opções"),
+    count(counts.prices, "preço", "preços"),
+    count(counts.videos, "vídeo", "vídeos"),
+    count(counts.animations, "animação rodando", "animações rodando"),
+  ].join(", ")}.`;
+}
+
 export const commands = {
   capture: {
-    summary: "Visita um site e guarda telas, rolagem, logo, cores, fontes, textos e números em capturas/<site>/.",
+    summary: "Visita um site, ou abre uma página salva, e guarda telas, rolagem, a marca, o texto inteiro e a anatomia da página em capturas/<site>/.",
     help,
     async run(positionals, values, ctx) {
       if (positionals.length !== 1) throw usage("Informe o endereço: capture <url> [--out <pasta>].");
@@ -59,12 +76,14 @@ export const commands = {
         url: capture.url,
         final_url: capture.final_url,
         site: capture.site,
+        input_kind: capture.input_kind,
         http_status: capture.http_status,
         dir: ctx.rel(outDir),
         capture_file: ctx.rel(join(outDir, "captura.json")),
         files: capture.files,
         viewports: capture.viewports,
         scroll: capture.scroll,
+        anatomy_counts: anatomyCounts(capture.anatomy),
         brand: capture.brand,
         cookie_banner: capture.cookie_banner?.desktop?.dismissed ? capture.cookie_banner.desktop.button : null,
         elapsed_s: round((Date.now() - started) / 1000, 1),
@@ -84,10 +103,13 @@ export const commands = {
         `${brand.prices?.length ?? 0} preços`,
         `redes: ${networks.length ? networks.join(", ") : "nenhuma"}`,
       ];
+      const what = result.input_kind === "mhtml" ? `a página salva ${result.site}` : result.site;
       const lines = [
-        `Capturei ${result.site}${brand.name ? ` (${brand.name})` : ""}: ${parts.join(", ")}.`,
+        `Capturei ${what}${brand.name ? ` (${brand.name})` : ""}: ${parts.join(", ")}.`,
         brand.headline ? `Título: ${brand.headline}` : null,
         brand.fonts?.headline || brand.fonts?.body ? `Fontes: ${[brand.fonts.headline, brand.fonts.body].filter(Boolean).join(" / ")}` : null,
+        describeAnatomy(result.anatomy_counts),
+        result.files?.text ? `Texto inteiro da página: ${result.files.text}` : null,
         `Pasta: ${result.dir} (tudo em ${result.capture_file}) em ${result.elapsed_s} s.`,
         ...(result.warnings ?? []).map((warning) => `Aviso: ${warning}`),
       ];

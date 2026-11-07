@@ -73,7 +73,7 @@ The page follows a method written for short product videos:
 | `previa.mp4` and `quadros/` | the preview and the check photos | nothing; the next round redoes and replaces them |
 | the silent video and the final video | the render without sound and the video with the mix | a new render after a change in the page or the sound |
 | `.aceite.json` | the check report, item by item, with what to change | nothing; it is the record of what was checked |
-| `capturas/`, one folder per website | `captura.json` with the brand it read (name, logo, colors, fonts, buttons, numbers, prices and social links), desktop and phone screens, the full page, the recorded scrolls and the logo | a fix for anything that came out wrong: give the right color or send the logo, and the AI uses what you said |
+| `capturas/`, one folder per website | `captura.json` with the brand it read (name, logo, colors, fonts, buttons, numbers, prices and social links) and the page's anatomy, the page's whole text in `texto.md`, desktop and phone screens, the full page, the recorded scrolls and the logo | a fix for anything that came out wrong: give the right color or send the logo, and the AI uses what you said |
 
 If a file already has the name the engine is about to write, it is replaced; the AI picks the names and warns you before overwriting a page of yours.
 
@@ -114,6 +114,7 @@ If a file already has the name the engine is about to write, it is replaced; the
 
 - "Capture my brand's website without recording the scroll" or "without downloading the logo".
 - "Capture it with the phone at 430 px wide." The phone goes from 280 to 1080 px (390 by default); the desktop, from 800 to 3840 px (1440 by default).
+- "Capture this offer page" or "capture the page I saved from the browser". The capture reads the whole page: the sections, the buttons and whether they show on the first desktop and phone screen, the fixed bars, the checkboxes that come already checked, struck-through prices, videos, animations and countdown timers, and it keeps the page's whole text. A page that only opens after a login goes in as a page saved from the browser (.mhtml); there the timers stand still, because the page's own scripts do not run.
 
 ## The checks
 

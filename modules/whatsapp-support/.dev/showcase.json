@@ -1,0 +1,24 @@
+{
+  "pt-BR": {
+    "request": "Implante o atendimento pelo WhatsApp com IA e equipe neste sistema, usando a API oficial, com o robô sugerindo as respostas para a equipe aprovar.",
+    "reply": [
+      { "label": "Plano", "text": "O kit fica em src/atendimento e substitui o pacote de WhatsApp de teste. Cada empresa do sistema vira uma conta no painel de atendimento, e a equipe dela entra como atendente pelo botão Atendimento." },
+      { "label": "Telas", "text": "Conectar WhatsApp e Robô de atendimento entraram nas configurações da empresa, com os componentes do seu design system. O robô começa no modo sugestão: escreve a resposta numa nota interna e alguém da equipe envia." },
+      { "label": "Painel", "text": "O painel vai abrir com o nome, o logo e a cor do sistema; campanhas, central de ajuda e canais que não são WhatsApp saíram do menu." },
+      { "label": "Consultas", "text": "O robô pode consultar a situação de um pedido, e só da própria pessoa da conversa, achada pelo telefone." },
+      { "label": "É com você", "text": "Apontar atendimento.seudominio.com.br para o servidor, criar o super administrador no primeiro acesso e o Platform App, pôr a chave da IA no cofre e cadastrar o retorno no app da Meta." }
+    ],
+    "saved": "Salvo em src/atendimento, com a base, as escolhas do painel e o tema gerado; os segredos ficam fora do git"
+  },
+  "en": {
+    "request": "Set up WhatsApp support with AI and a team in this system, using the official API, with the bot suggesting replies for the team to approve.",
+    "reply": [
+      { "label": "Plan", "text": "The kit lives in src/atendimento and replaces the test WhatsApp package. Each company in the system becomes an account in the support panel, and its team signs in as agents through the Support button." },
+      { "label": "Screens", "text": "Connect WhatsApp and Support bot are now in the company settings, built with your design system's components. The bot starts in suggestion mode: it writes the reply in a private note and someone on the team sends it." },
+      { "label": "Panel", "text": "The panel will open with the system's name, logo and color; campaigns, the help center and non WhatsApp channels are out of the menu." },
+      { "label": "Lookups", "text": "The bot can check an order's status, and only for the person in the conversation, matched by phone number." },
+      { "label": "Your part", "text": "Point atendimento.yourdomain.com to the server, create the super admin on first access and the Platform App, put the AI key in the secret store and register the webhook in the Meta app." }
+    ],
+    "saved": "Saved in src/atendimento, with the base, the panel choices and the generated theme; secrets stay out of git"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "manifest_version": 1,
+  "name": "conversion-pages",
+  "version": "1.0.0",
+  "type": "workflow",
+  "trail": "vender",
+  "title": {
+    "pt-BR": "Páginas que vendem",
+    "en": "Pages that sell"
+  },
+  "summary": {
+    "pt-BR": "Monta e confere páginas de oferta pelo tipo (order bump, upsell, downsell, cross-sell e página de obrigado) com a estratégia que o mercado usa e modelos reais analisados, e aponta o que corrigir antes de publicar.",
+    "en": "Builds and checks offer pages by type (order bump, upsell, downsell, cross-sell and thank-you page) with the strategy the market uses and real analysed models, and points out what to fix before publishing."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.3.0",
+  "entry": "skills/conversion-pages/SKILL.md",
+  "files": [
+    "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
+    "references/checks.json",
+    "references/lei.md",
+    "references/medicao.md",
+    "references/modelos.json",
+    "references/modelos/hostinger-agente-pos-compra.md",
+    "references/movimento.md",
+    "references/principios.md",
+    "references/tipos.json",
+    "references/tipos/cross-sell.md",
+    "references/tipos/downsell.md",
+    "references/tipos/obrigado.md",
+    "references/tipos/order-bump.md",
+    "references/tipos/upsell.md",
+    "scripts/lib/checks.mjs",
+    "scripts/lib/plan.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/pages.mjs",
+    "skills/conversion-pages/SKILL.md"
+  ],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/conversion-pages/scripts/pages.mjs",
+      "reason": {
+        "pt-BR": "Lista os tipos de página e os modelos, grava os fatos e o plano de cada página e confere a página pronta.",
+        "en": "Lists the page types and the models, writes each page's facts and plan, and checks the finished page."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/video-render/scripts/render.mjs, quando instalado",
+      "reason": {
+        "pt-BR": "O Motor de vídeo abre a página pronta num navegador sem janela, no computador e no celular, e lê o que ela mostra para a conferência.",
+        "en": "The Video engine opens the finished page in a windowless browser, on desktop and on mobile, and reads what it shows for the check."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "o navegador já instalado (Microsoft Edge, Google Chrome ou Chromium), aberto sem janela para ler a página",
+      "reason": {
+        "pt-BR": "A captura usa o navegador que já está no computador, sem abrir janela. No Windows o Microsoft Edge já vem instalado.",
+        "en": "The capture uses the browser already on the computer, without opening a window. Microsoft Edge comes with Windows."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "o código do projeto (package.json, rotas, componentes e estilos), as pastas de paginas/ e a página salva (.mhtml) que você indicar",
+      "reason": {
+        "pt-BR": "Olha o que o projeto já tem antes de perguntar: as páginas, o visual da marca, o checkout e o provedor de pagamento. Lê a página salva que você indicar.",
+        "en": "Looks at what the project already has before asking: the pages, the brand's look, the checkout and the payment provider. Reads the saved page you point to."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./paginas/ ou ./docs/paginas/, e os arquivos da página no código do projeto",
+      "reason": {
+        "pt-BR": "Grava os fatos, o plano, a conferência e a captura de cada página, e constrói ou corrige a página no código quando você pede.",
+        "en": "Writes each page's facts, plan, check and capture, and builds or fixes the page in the code when you ask."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "o endereço da página que você pedir para conferir, no seu computador ou publicado",
+      "reason": {
+        "pt-BR": "Só na conferência, para abrir a página pronta.",
+        "en": "Only during the check, to open the finished page."
+      }
+    },
+    {
+      "kind": "env",
+      "scope": "FLYEE_USER_APPS",
+      "reason": {
+        "pt-BR": "Quando o app está instalado para o seu usuário, e não no projeto, garante que ele grave sempre no projeto aberto.",
+        "en": "When the app is installed for your user rather than in the project, makes sure it always writes to the open project."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: order bump, upsell, downsell, cross-sell e página de obrigado, cada tipo com o seu roteiro; o modelo da oferta pós-compra da Hostinger; e a conferência da página pronta pela captura do Motor de vídeo.",
+    "en": "First version: order bump, upsell, downsell, cross-sell and thank-you page, each type with its playbook; the model of Hostinger's post-purchase offer; and the check of the finished page through the Video engine's capture."
+  },
+  "license": "member"
+}

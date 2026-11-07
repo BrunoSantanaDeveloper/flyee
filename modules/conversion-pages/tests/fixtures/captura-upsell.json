@@ -1,0 +1,53 @@
+{
+  "format_version": 1,
+  "url": "http://localhost:3000/oferta",
+  "final_url": "http://localhost:3000/oferta",
+  "input_kind": "url",
+  "viewports": {
+    "desktop": { "width": 1440, "height": 900, "full_height": 7200 },
+    "mobile": { "width": 390, "height": 844, "full_height": 9800 }
+  },
+  "anatomy": {
+    "format_version": 1,
+    "viewports": { "desktop": { "width": 1440, "height": 900 }, "mobile": { "width": 390, "height": 844 } },
+    "sections": [
+      { "index": 0, "heading": null, "y": 0, "height": 120, "text": "Pedido recebido Sua oferta Pedido concluído", "words": 6 },
+      { "index": 1, "heading": { "tag": "h1", "text": "Expanda seus negócios com uma equipe de agentes de IA." }, "y": 160, "height": 520, "text": "O Agente oferece sete especialistas. Por R$ 49,99/mês. Seu primeiro mês custa R$ 24,99. 30 dias para pedir reembolso.", "words": 20 },
+      { "index": 2, "heading": { "tag": "h2", "text": "Agente da Hostinger" }, "y": 700, "height": 640, "text": "Preço padrão R$ 49,99/mês -50% R$ 24,99 no primeiro mês. Plano mensal. Renovação automática por R$ 49,99/mês após o primeiro mês. Adicionar ao meu pedido. Utiliza o mesmo método de pagamento do seu pedido. Sem formulários. Garantia de reembolso de 30 dias no valor da assinatura. Pular oferta", "words": 50 },
+      { "index": 3, "heading": { "tag": "h2", "text": "Não acredite apenas na nossa palavra" }, "y": 5200, "height": 600, "text": "Consegui gerenciar a hospedagem, o nome de domínio e o certificado SSL em um só lugar. A Hostinger é a melhor provedora de hospedagem que já usei.", "words": 30 },
+      { "index": 4, "heading": null, "y": 6800, "height": 300, "text": "Política de solicitação de dados Política de Privacidade Política de Reembolso Termos de serviço", "words": 12 }
+    ],
+    "ctas": [
+      { "index": 0, "kind": "button", "text": "Adicionar ao meu pedido", "href": null, "x": 980, "y": 1100, "width": 280, "height": 48, "above_fold": { "desktop": false, "mobile": true }, "in_fixed": false, "section": 2, "disabled": false },
+      { "index": 1, "kind": "link", "text": "Pular oferta", "href": "#", "x": 1080, "y": 1260, "width": 90, "height": 20, "above_fold": { "desktop": false, "mobile": false }, "in_fixed": false, "section": 2, "disabled": false },
+      { "index": 2, "kind": "link", "text": "Comece agora", "href": "#agent-offer", "x": 200, "y": 2600, "width": 160, "height": 48, "above_fold": { "desktop": false, "mobile": false }, "in_fixed": false, "section": null, "disabled": false },
+      { "index": 3, "kind": "button", "text": "Adicionar ao meu pedido", "href": null, "x": 1100, "y": 8000, "width": 200, "height": 40, "above_fold": { "desktop": false, "mobile": false }, "in_fixed": true, "section": null, "disabled": false }
+    ],
+    "fixed": [
+      { "pass": "mobile", "position": "fixed", "edge": "bottom", "text": "Seu desconto de 50% está ativo: R$ 24,99 no primeiro mês Adicionar ao meu pedido", "height": 72, "ctas": ["Adicionar ao meu pedido"], "appeared_after_scroll": true }
+    ],
+    "forms": [],
+    "prices": [
+      { "text": "R$ 49,99", "value": 49.99, "struck": true, "context": "Preço padrão R$ 49,99/mês", "section": 2, "y": 760 },
+      { "text": "R$ 24,99", "value": 24.99, "struck": false, "context": "R$ 24,99 no primeiro mês", "section": 2, "y": 800 },
+      { "text": "R$ 49,99", "value": 49.99, "struck": false, "context": "Renovação automática por R$ 49,99/mês", "section": 2, "y": 860 }
+    ],
+    "media": {
+      "videos": [
+        { "src": "http://localhost:3000/demo.mp4", "poster": "http://localhost:3000/capa.jpg", "autoplay": true, "muted": true, "loop": true, "playsinline": true, "controls": false, "width": 640, "height": 419, "duration_s": 22.7, "section": 1 }
+      ],
+      "iframes": [],
+      "images": { "count": 12, "without_alt": 0 }
+    },
+    "motion": {
+      "running": [{ "kind": "css-animation", "name": "reviews-scroll", "duration_ms": 65000, "iterations": "infinite", "target": "div.reviews-group" }],
+      "keyframes": ["reviews-scroll"],
+      "transitions": 4,
+      "reduced_motion_rules": 1,
+      "smooth_scroll": true,
+      "scroll_snap": 2,
+      "stylesheets_unread": 0
+    },
+    "countdowns": []
+  }
+}

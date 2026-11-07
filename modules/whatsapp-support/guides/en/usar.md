@@ -1,0 +1,36 @@
+# WhatsApp support with AI and your team
+
+This app is for people who build a system. It brings WhatsApp support for your customers into your project: an AI bot that answers what it knows and a team that works in a full support panel, signed in with your system's login. Your AI does the integration in the code; the app never installs anything on a server.
+
+## What to ask
+
+Open your AI in the system's folder and ask:
+
+> Set up WhatsApp support with AI and a team in this system, using the official API, with the bot suggesting replies for the team to approve.
+
+The AI reads the project, proposes a short plan, asks only what it could not find out and does the integration. At the end it lists what only you can do: the server, the domain, the first access to the panel, the AI key and, with the official API, the Meta side.
+
+Other requests:
+
+- "Update the WhatsApp support to the new version of the app."
+- "Check that the support panel is live and in the system's colors."
+- "Hide campaigns and the help center from the support panel."
+- "Switch the bot to answer on its own."
+
+## What your customer gets
+
+- A "Support" button in your system that opens the panel already signed in, with the system's name, logo and colors.
+- A "Connect WhatsApp" screen: through the official API, with Meta credentials, or through WhatsApp Web, scanning a QR code after accepting the risk notice.
+- A "Support bot" screen: introduction, instructions, questions and answers, team hours, when to hand over to the team and which system data the bot may look up.
+
+## How the bot works
+
+- It answers only about your customer's business, with what was configured and the lookups the system allows.
+- It sees data only from the person in the conversation.
+- It hands over to the team when the person asks, when it is not sure or when something fails. Outside working hours, it says the team will reply when they are back.
+- It can just suggest replies in a private note, for someone on the team to review and send.
+- It uses the AI you choose, including the system's own.
+
+## Updating
+
+Each system updates when you ask. The AI shows what changed and checks everything again.

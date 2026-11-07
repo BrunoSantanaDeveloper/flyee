@@ -11,7 +11,7 @@ O jeito normal de trabalhar é conversar com a IA aberta neste repositório. A s
 | `npm run apps -- list` | cada app com versão, validação, última tag, cópia na pasta de trabalho e quem usa quem |
 | `npm run apps -- new <slug> --type <tipo> --trail <trilha> --title "…" --summary "…"` | cria o app a partir do modelo, com `[PREENCHER]` onde falta escrever |
 | `npm run apps -- bump <slug> patch\|minor\|major` | sobe a versão e põe o changelog em `[PREENCHER]` |
-| `npm run apps -- link <slug…>` / `unlink` | instala ou tira apps da pasta de trabalho |
+| `npm run apps -- link <slug…>` / `unlink` | instala ou tira apps da pasta de trabalho; com `--user`, instala para o seu usuário, para usar num repositório de código sem gravar nada nele |
 | `npm run apps -- catalog` | regenera o catálogo (um gancho já faz isso a cada mudança em `modules/`) |
 
 **O catálogo.** `.claude/rules/catalogo.md` e `docs/CATALOGO.md` são gerados a partir dos apps: o que cada um entrega, as skills, a interface para outros apps, quem usa quem. A IA deste repositório sempre os tem no contexto, e por isso, ao pedir um app novo, ela começa dizendo quais apps existentes o novo deve chamar, quais ajudam a construí-lo agora, o que já existe em parte e que ferramenta nova valeria a pena separar. Quem usa quem é lido do que os apps distribuem: um app usa outro quando cita o caminho instalado dele (`.flyee/modules/<slug>/`). Não edite esses dois arquivos.

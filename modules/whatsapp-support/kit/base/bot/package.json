@@ -1,0 +1,13 @@
+{
+  "name": "atendimento-robo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Robô de atendimento do kit whatsapp-support: recebe os avisos do Chatwoot, consulta o projeto e responde ou passa para a equipe.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.mjs"
+  }
+}

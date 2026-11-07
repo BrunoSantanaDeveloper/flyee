@@ -1,0 +1,44 @@
+{
+  "kit": "whatsapp-support",
+  "marca": {
+    "nome": "Nome do sistema",
+    "cor_principal": "#0B5FFF",
+    "cor_principal_escuro": null,
+    "fonte": { "familia": null, "css": null },
+    "logo": null,
+    "logo_escuro": null,
+    "icone": null,
+    "site": null,
+    "termos": null,
+    "privacidade": null,
+    "saida": null
+  },
+  "chatwoot": {
+    "features_off": [
+      "campaigns",
+      "help_center",
+      "companies",
+      "channel_email",
+      "channel_facebook",
+      "channel_website",
+      "channel_instagram",
+      "channel_tiktok",
+      "inbound_emails"
+    ],
+    "esconder": [],
+    "moldura": false
+  },
+  "acrescentar": {
+    "links": []
+  },
+  "robo": {
+    "nome": "Assistente virtual"
+  },
+  "conferencia": {
+    "telas": [
+      { "nome": "conversas", "caminho": "/app/accounts/{conta}/dashboard" },
+      { "nome": "contatos", "caminho": "/app/accounts/{conta}/contacts" },
+      { "nome": "perfil", "caminho": "/app/accounts/{conta}/profile/settings" }
+    ]
+  }
+}

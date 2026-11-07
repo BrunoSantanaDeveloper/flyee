@@ -1,0 +1,167 @@
+{
+  "manifest_version": 1,
+  "name": "whatsapp-support",
+  "version": "1.0.0",
+  "type": "workflow",
+  "trail": "construir",
+  "title": {
+    "pt-BR": "Atendimento no WhatsApp com IA e equipe",
+    "en": "WhatsApp support with AI and your team"
+  },
+  "summary": {
+    "pt-BR": "Monta no seu sistema o atendimento pelo WhatsApp com robô de IA e equipe: o painel com o seu login e as suas cores, o número conectado pela API oficial ou não oficial, o robô que consulta só o que você liberar e chama a equipe, e o caminho para atualizar.",
+    "en": "Builds WhatsApp support with an AI bot and your team into your system: the support panel with your login and colors, the number connected through the official or unofficial API, a bot that looks up only what you allow and calls the team, and the way to update."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.10.0",
+  "entry": "skills/whatsapp-support/SKILL.md",
+  "files": [
+    "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
+    "kit/base/bot/Dockerfile",
+    "kit/base/bot/package.json",
+    "kit/base/bot/src/agent.mjs",
+    "kit/base/bot/src/ai/anthropic.mjs",
+    "kit/base/bot/src/ai/errors.mjs",
+    "kit/base/bot/src/ai/gemini.mjs",
+    "kit/base/bot/src/ai/index.mjs",
+    "kit/base/bot/src/ai/openai.mjs",
+    "kit/base/bot/src/ai/project.mjs",
+    "kit/base/bot/src/bot.mjs",
+    "kit/base/bot/src/chatwoot.mjs",
+    "kit/base/bot/src/http.mjs",
+    "kit/base/bot/src/log.mjs",
+    "kit/base/bot/src/memory.mjs",
+    "kit/base/bot/src/policy.mjs",
+    "kit/base/bot/src/project.mjs",
+    "kit/base/bot/src/prompt.mjs",
+    "kit/base/bot/src/queue.mjs",
+    "kit/base/bot/src/server.mjs",
+    "kit/base/bot/src/signature.mjs",
+    "kit/base/deploy/apply-config.rb",
+    "kit/base/server/bot-contract.d.mts",
+    "kit/base/server/bot-contract.mjs",
+    "kit/base/server/chatwoot.mjs",
+    "kit/base/server/openwa.mjs",
+    "kit/base/server/provision.d.mts",
+    "kit/base/server/provision.mjs",
+    "kit/base/server/request.mjs",
+    "kit/base/shared/phone.d.mts",
+    "kit/base/shared/phone.mjs",
+    "kit/base/shared/settings.d.mts",
+    "kit/base/shared/settings.mjs",
+    "kit/base/shared/signature.d.mts",
+    "kit/base/shared/signature.mjs",
+    "kit/base/ui/client.d.mts",
+    "kit/base/ui/client.mjs",
+    "kit/base/ui/connect.d.mts",
+    "kit/base/ui/connect.mjs",
+    "kit/modelos/implantacao/Caddyfile",
+    "kit/modelos/implantacao/chatwoot.env.example",
+    "kit/modelos/implantacao/compose.yml",
+    "kit/modelos/implantacao/openwa.env.example",
+    "kit/modelos/implantacao/proxy.env.example",
+    "kit/modelos/implantacao/robo.env.example",
+    "kit/modelos/next/app/api/atendimento/config/route.ts",
+    "kit/modelos/next/app/api/atendimento/entrar/route.ts",
+    "kit/modelos/next/app/api/atendimento/robo/[...rota]/route.ts",
+    "kit/modelos/next/app/api/atendimento/whatsapp/route.ts",
+    "kit/modelos/next/lib/atendimento.ts",
+    "kit/modelos/react/AtendimentoBotao.tsx",
+    "kit/modelos/react/ConectarWhatsApp.tsx",
+    "kit/modelos/react/PainelAtendimento.tsx",
+    "kit/modelos/react/RoboAtendimento.tsx",
+    "kit/modelos/react/primitives.tsx",
+    "kit/versoes.json",
+    "references/arquitetura.md",
+    "references/atualizar.md",
+    "references/chatwoot.md",
+    "references/contratos.md",
+    "references/enxugar.md",
+    "references/escolhas.exemplo.json",
+    "references/n-brand.json",
+    "references/pre-requisitos.md",
+    "references/seguranca.md",
+    "references/tema.md",
+    "references/whatsapp.md",
+    "scripts/kit.mjs",
+    "scripts/lib/browser.mjs",
+    "scripts/lib/color.mjs",
+    "scripts/lib/env.mjs",
+    "scripts/lib/files.mjs",
+    "scripts/lib/look.mjs",
+    "scripts/lib/theme.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/lib/verify.mjs",
+    "skills/whatsapp-support/SKILL.md"
+  ],
+  "external_credentials": [],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/whatsapp-support/scripts/kit.mjs",
+      "reason": {
+        "pt-BR": "O script do app instala e atualiza a base do atendimento no projeto, gera o tema do painel e confere se tudo está no ar.",
+        "en": "The app's script installs and updates the support base in the project, builds the panel theme and checks that everything is live."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "Edge, Chrome ou Chromium sem janela, só na conferência visual",
+      "reason": {
+        "pt-BR": "A conferência visual abre o painel num navegador sem janela, entra com uma pessoa de teste e salva capturas das telas.",
+        "en": "The visual check opens the panel in a headless browser, signs in as a test person and saves screenshots."
+      }
+    },
+    {
+      "kind": "shell",
+      "scope": "docker compose, só no teste local, quando você pedir",
+      "reason": {
+        "pt-BR": "Para testar o atendimento na sua máquina antes de implantar. Nada roda em servidor pelo app.",
+        "en": "To try the support stack on your machine before deploying. The app never runs anything on a server."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "o código do projeto aberto e o arquivo .env que você indicar para as conferências",
+      "reason": {
+        "pt-BR": "A IA lê o projeto para ligar o atendimento ao jeito dele; as conferências leem os endereços e tokens do .env e nunca mostram os valores.",
+        "en": "The AI reads the project to fit the support into it; the checks read addresses and tokens from the .env and never show the values."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "a pasta do kit que você escolher no projeto e os arquivos do projeto que a integração adapta",
+      "reason": {
+        "pt-BR": "A base, os modelos, as escolhas, o tema gerado e as capturas ficam numa pasta do projeto; segredos e capturas ficam fora do git.",
+        "en": "The base, templates, choices, generated theme and screenshots live in a project folder; secrets and screenshots stay out of git."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "os endereços do seu próprio atendimento: o painel, o robô, o OpenWA e as rotas do robô no seu sistema",
+      "reason": {
+        "pt-BR": "As conferências perguntam a esses endereços se estão no ar, com a marca, o tema e as assinaturas certas.",
+        "en": "The checks ask these addresses whether they are live, with the right brand, theme and signatures."
+      }
+    },
+    {
+      "kind": "env",
+      "scope": "CHATWOOT_PUBLIC_URL, CHATWOOT_PLATFORM_TOKEN, SUPPORT_BOT_PUBLIC_URL, SUPPORT_BOT_SECRET, PROJECT_URL, PROJECT_ORIGIN, OPENWA_PUBLIC_URL, OPENWA_API_KEY",
+      "reason": {
+        "pt-BR": "As conferências usam essas variáveis do projeto para chegar ao atendimento; nenhum valor é impresso.",
+        "en": "The checks use these project variables to reach the support stack; no value is printed."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: robô de IA com qualquer provedor, que consulta só o que o sistema libera e passa para a equipe; painel do Chatwoot com o login e as cores do sistema; conexão pela API oficial ou pelo OpenWA; telas e rotas de modelo; tema, conferências e atualização por projeto.",
+    "en": "First version: an AI bot with any provider that looks up only what the system allows and hands over to the team; the Chatwoot panel with the system's login and colors; connection through the official API or OpenWA; template screens and routes; theme, checks and per-project updates."
+  },
+  "license": "member"
+}

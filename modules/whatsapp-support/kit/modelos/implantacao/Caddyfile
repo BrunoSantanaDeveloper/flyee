@@ -1,0 +1,35 @@
+# Kit whatsapp-support: proxy de referência com TLS automático. Traefik e Nginx: veja a referência
+# de arquitetura do kit, que traz as mesmas regras.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$CHATWOOT_HOST} {
+	encode gzip
+
+	# O robô recebe os avisos do Chatwoot em https://<CHATWOOT_HOST>/robo/chatwoot.
+	handle_path /robo/* {
+		reverse_proxy robo:8080
+	}
+
+	handle {
+		reverse_proxy chatwoot-rails:3000 {
+			# Modo moldura (o painel dentro do sistema): tire o comentário das duas linhas abaixo.
+			# O Chatwoot manda X-Frame-Options SAMEORIGIN; trocamos por frame-ancestors com a origem do sistema.
+			# header_down -X-Frame-Options
+			# header_down Content-Security-Policy "frame-ancestors 'self' {$PROJECT_ORIGIN}"
+		}
+	}
+}
+
+{$OPENWA_HOST} {
+	# Só a API (protegida pela chave) e os avisos assinados do Chatwoot. O painel do OpenWA não fica exposto.
+	@api path /api/*
+	handle @api {
+		reverse_proxy openwa:2785
+	}
+	handle {
+		respond 404
+	}
+}

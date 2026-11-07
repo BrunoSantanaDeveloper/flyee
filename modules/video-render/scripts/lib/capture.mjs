@@ -611,22 +611,26 @@ export function iconSize(icon) {
 // URLs, names, files
 // ---------------------------------------------------------------------------------------------
 
-/** Accepts "https://site.com", "site.com" and local HTML files; everything else is invalid_url. */
+/** A page file the capture opens from disk: HTML, or a page saved by the browser as MHTML. */
+const LOCAL_PAGE = /\.(?:html?|mhtml|mht)$/i;
+
+/** Accepts "https://site.com", "site.com" and local pages (.html, .htm, .mhtml, .mht); everything else is invalid_url. */
 export function normalizeUrl(input, { cwd = process.cwd() } = {}) {
   const text = String(input ?? "").trim();
   if (!text) throw new AppError("invalid_url", "Informe o endereço do site.", "Exemplo: capture https://www.exemplo.com.br --json");
-  // A local page: "pagina.html", "site\index.html" or "C:\...\index.html" (a drive letter is not a scheme).
-  if (/\.html?$/i.test(text) && !/^[a-z][a-z0-9+.-]*:\/\//i.test(text) && !/^file:/i.test(text)) {
+  // A local page: "pagina.html", "site\index.html", "C:\...\index.html" (a drive letter is not a scheme) or a
+  // page the member saved in the browser ("pagina.mhtml"), the way into a page that only opens after a login.
+  if (LOCAL_PAGE.test(text) && !/^[a-z][a-z0-9+.-]*:\/\//i.test(text) && !/^file:/i.test(text)) {
     const local = resolve(cwd, text);
     if (isFile(local)) return fileUrl(local);
-    if (!/^[\w.-]+\.[a-z]{2,}\//i.test(text)) throw new AppError("invalid_url", `Não encontrei o arquivo ${text}.`, "Confira o caminho do arquivo .html, ou passe o endereço do site.");
+    if (!/^[\w.-]+\.[a-z]{2,}\//i.test(text)) throw new AppError("invalid_url", `Não encontrei o arquivo ${text}.`, "Confira o caminho do arquivo .html ou da página salva .mhtml, ou passe o endereço do site.");
   }
   let candidate = text;
   if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(?::\d+)?(?:[/?#]|$)/i.test(candidate)) {
     candidate = `http://${candidate}`; // a local development server, almost never https
   } else if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(candidate) && !/^file:/i.test(candidate)) {
     if (!/^[\w.-]+\.[a-z]{2,}(?::\d+)?(?:[/?#]|$)/i.test(candidate)) {
-      throw new AppError("invalid_url", `Não reconheci o endereço: ${text}.`, "Use um endereço completo, como https://www.exemplo.com.br, ou o caminho de um arquivo .html.");
+      throw new AppError("invalid_url", `Não reconheci o endereço: ${text}.`, "Use um endereço completo, como https://www.exemplo.com.br, o caminho de um arquivo .html ou o de uma página salva .mhtml.");
     }
     candidate = `https://${candidate}`;
   }
@@ -640,6 +644,18 @@ export function normalizeUrl(input, { cwd = process.cwd() } = {}) {
     throw new AppError("invalid_url", `Só capturo endereços http, https ou arquivos locais (recebi ${url.protocol}).`, "Use um endereço completo, como https://www.exemplo.com.br.");
   }
   return url.href;
+}
+
+/** What the capture opened: `url` (a site), `html` (a page file) or `mhtml` (a page saved by the browser). */
+export function inputKind(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return "url";
+  }
+  if (parsed.protocol !== "file:") return "url";
+  return /\.(?:mhtml|mht)$/i.test(decodeURIComponent(parsed.pathname)) ? "mhtml" : "html";
 }
 
 /** "https://www.Clinica-Sorriso.com.br/planos" → "clinica-sorriso-com-br"; a local file → its name. */
@@ -783,13 +799,325 @@ export function scrollPlan(frames, maxScroll) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// The page's anatomy (pure): what an audit of an offer page reads from captura.json
+// ---------------------------------------------------------------------------------------------
+
+export const ANATOMY_FORMAT_VERSION = 1;
+/** Characters of the whole page text kept for texto.md. */
+export const PAGE_TEXT_MAX = 60000;
+/** Characters of each section's text in captura.json (texto.md keeps the whole text). */
+export const SECTION_TEXT_MAX = 4000;
+/** Fixed and sticky elements kept per pass (desktop and mobile): 20 in all. */
+export const FIXED_PER_PASS = 10;
+const ANATOMY_LIMITS = { maxText: PAGE_TEXT_MAX, maxSections: 120, maxCtas: 200, maxFixed: FIXED_PER_PASS, maxForms: 100, maxPrices: 100, maxAnimations: 200, maxTimers: 40, maxElements: 60000 };
+/** Two reads of the timers this far apart: a countdown changes between them, a clock time does not. */
+const TIMER_GAP_MS = 1200;
+/** Time for scroll handlers and transitions to settle after a jump to the end of the page. */
+const SCROLL_SETTLE_MS = 500;
+const TEXT_CUT_MARK = "[texto cortado em 60.000 caracteres]";
+
+/** The accept button of a cookie banner: the banner dismissal clicks it, the anatomy leaves its banner out. */
+export const COOKIE_ACCEPT_PATTERN = /^(aceitar|aceito|concordo|ok|entendi|accept( all)?|agree|got it|allow( all)?|permitir|continuar)/i;
+/** Where the dismissal looks for the banner around an accept button. */
+const COOKIE_HINT_PATTERN = /cookie|consent|lgpd|gdpr|privac|aviso|banner/i;
+/** The name (id, class, label) of a cookie or consent banner; narrower than the hint above, because a promo "banner" is not one. */
+export const COOKIE_NAME_PATTERN = /cookie|consent|lgpd|gdpr|onetrust|cookiebot|didomi|usercentrics/i;
+/** The text of a cookie or consent banner. */
+export const COOKIE_TEXT_PATTERN = /cookie|lgpd|gdpr|consentimento|(?<![a-z])consent(?![a-z])/i;
+/**
+ * A link that declines or skips an offer, read on lowercase text without accents. Such a link
+ * counts as a call to action even when it does not look like a button: an audit has to find it.
+ */
+export const DECLINE_PATTERN = /(?:^|[^a-z])(?:nao,? obrigad[oa]|nao quero|nao tenho interesse|prefiro nao|agora nao|pular|dispensar|recusar|continuar sem|talvez depois|no,? thanks?|skip|not now|decline|maybe later)(?:[^a-z]|$)/;
+/** An accessibility link that jumps to the content: never the refusal of an offer. */
+export const SKIP_LINK_PATTERN = /(?:pular|ir|skip|jump) (?:para o|para a|para|ao|to the|to) (?:conteudo|conteudo principal|main|content|menu|navegacao|navigation|rodape|footer)/;
+/** A timer on the page: 00:12:34, 12:34, 2d 14h 33m, "02 dias 14 horas", "33 min 12 s". */
+export const TIMER_PATTERN = /(?<!\d)\d{1,2}(?:\s?:\s?\d{2}){1,3}(?!\d)|(?<![\p{L}\d])\d{1,3}\s?(?:d|dias?|days?|h|hs|hrs?|horas?|hours?|m|min|mins|minutos?|minutes?|s|seg|segs|segundos?|secs?|seconds?)(?!\p{L})\s*[:,]?\s*\d{1,2}\s?(?:d|dias?|days?|h|hs|hrs?|horas?|hours?|m|min|mins|minutos?|minutes?|s|seg|segs|segundos?|secs?|seconds?)(?!\p{L})/iu;
+
+const foldedLine = (text) => fold(text).replace(/\s+/g, " ").trim();
+
+/** Whether a link text declines or skips an offer ("Não, obrigado", "Pular oferta", "No thanks"), skip-to-content links aside. */
+export function isDeclineText(text) {
+  const folded = foldedLine(text);
+  return Boolean(folded) && !SKIP_LINK_PATTERN.test(folded) && DECLINE_PATTERN.test(folded);
+}
+
+/** Whether a short text reads as a timer; the capture also demands that it changed between two reads. */
+export function looksLikeTimer(text) {
+  return TIMER_PATTERN.test(String(text ?? ""));
+}
+
+/** Seen in the first screen without scrolling: the element's vertical center is above the fold. Null without a viewport. */
+export function aboveFold(box, viewportHeight) {
+  if (!box || !Number.isFinite(viewportHeight) || viewportHeight <= 0) return null;
+  const y = Number(box.y);
+  const height = Math.max(0, Number(box.height) || 0);
+  if (!Number.isFinite(y)) return null;
+  return y + height > 0 && y + height / 2 <= viewportHeight;
+}
+
+/**
+ * Where a fixed or sticky element sits on the screen: `top` or `bottom` when it touches that
+ * edge (within 10% of the screen), `other` when it touches both (an overlay) or neither (a
+ * floating button in the middle of the side).
+ */
+export function fixedEdge(box, viewportHeight) {
+  if (!box || !Number.isFinite(viewportHeight) || viewportHeight <= 0) return "other";
+  const margin = Math.max(8, viewportHeight * 0.1);
+  const nearTop = Number(box.top) <= margin;
+  const nearBottom = Number(box.bottom) >= viewportHeight - margin;
+  if (nearTop && !nearBottom) return "top";
+  if (nearBottom && !nearTop) return "bottom";
+  return "other";
+}
+
+/**
+ * `above_fold.mobile` for each desktop call to action: the mobile call with the same text (no
+ * case, no accents) in the same order of appearance; null when the phone has no such call, or
+ * when there was no mobile reading at all.
+ */
+export function matchMobileCtas(desktop, mobile, viewportHeight) {
+  const list = Array.isArray(desktop) ? desktop : [];
+  if (!Array.isArray(mobile)) return list.map(() => null);
+  const pools = new Map();
+  for (const cta of mobile) {
+    const key = foldedLine(cta?.text);
+    if (!pools.has(key)) pools.set(key, []);
+    pools.get(key).push(cta);
+  }
+  const used = new Map();
+  return list.map((cta) => {
+    const key = foldedLine(cta?.text);
+    const nth = used.get(key) ?? 0;
+    used.set(key, nth + 1);
+    const match = pools.get(key)?.[nth];
+    return match ? aboveFold(match, viewportHeight) : null;
+  });
+}
+
+/**
+ * The fixed and sticky elements of one pass: those read at the top of the page, then those that
+ * showed up only after the scroll to the end (`appeared_after_scroll`). Elements are matched by
+ * the id the page reading gave them.
+ */
+export function mergeFixed(top, end, { pass, viewportHeight, max = FIXED_PER_PASS } = {}) {
+  const describe = (item, appeared) => ({
+    pass,
+    position: item.position === "sticky" ? "sticky" : "fixed",
+    edge: fixedEdge(item, viewportHeight),
+    text: String(item.text ?? "").slice(0, 280),
+    height: Math.round(Number(item.height) || 0),
+    ctas: Array.isArray(item.ctas) ? item.ctas : [],
+    appeared_after_scroll: appeared,
+  });
+  const first = Array.isArray(top) ? top : [];
+  const seen = new Set(first.map((item) => item.id));
+  const list = first.map((item) => describe(item, false));
+  for (const item of Array.isArray(end) ? end : []) if (!seen.has(item.id)) list.push(describe(item, true));
+  return list.slice(0, max);
+}
+
+/** The video service behind an iframe: youtube, vimeo or other. */
+export function iframeProvider(src) {
+  let host;
+  try {
+    host = new URL(src).hostname.toLowerCase();
+  } catch {
+    return "other";
+  }
+  if (/(^|\.)(youtube\.com|youtube-nocookie\.com|youtu\.be)$/.test(host)) return "youtube";
+  if (/(^|\.)vimeo\.com$/.test(host)) return "vimeo";
+  return "other";
+}
+
+/** The timers whose text changed between two reads and still reads as a timer: the countdowns. */
+export function countdownsFrom(first, second, { max = 20 } = {}) {
+  const now = new Map((Array.isArray(second) ? second : []).map((item) => [item.id, item.text]));
+  const list = [];
+  for (const item of Array.isArray(first) ? first : []) {
+    const text = now.get(item.id);
+    if (!text || text === item.text || !looksLikeTimer(text)) continue;
+    list.push({ text, section: item.section ?? null });
+    if (list.length >= max) break;
+  }
+  return list;
+}
+
+/** The sentence around a price, at most 120 characters, from the text of the block that holds it. */
+export function priceContext(block, at) {
+  const line = String(block ?? "").replace(/\s+/g, " ").trim();
+  if (!line) return null;
+  return sentenceAround(line, Math.max(0, Number(at) || 0), { max: 118 });
+}
+
+/**
+ * texto.md: the page text in order, each section under its heading (`## heading`), at most
+ * `max` characters; a cut text ends with a line that says so.
+ */
+export function pageText(sections, { max = PAGE_TEXT_MAX, truncated = false } = {}) {
+  const parts = [];
+  for (const section of Array.isArray(sections) ? sections : []) {
+    const body = String(section?.text ?? "").trim();
+    const heading = String(section?.heading?.text ?? "").trim();
+    if (heading) parts.push(body ? `## ${heading}\n\n${body}` : `## ${heading}`);
+    else if (body) parts.push(body);
+  }
+  let text = parts.join("\n\n");
+  let cut = Boolean(truncated);
+  if (text.length + 1 > max) cut = true; // the file ends with a line break
+  if (cut) {
+    const room = Math.max(0, max - TEXT_CUT_MARK.length - 3);
+    if (text.length > room) {
+      const slice = text.slice(0, room);
+      const edge = Math.max(slice.lastIndexOf("\n"), slice.lastIndexOf(" "));
+      text = (edge > room * 0.8 ? slice.slice(0, edge) : slice).trimEnd();
+    }
+    text = `${text}\n\n${TEXT_CUT_MARK}`;
+  }
+  return { text: text ? `${text}\n` : "", truncated: cut };
+}
+
+/** The anatomy assembled from the page readings (see anatomyInPage): the shape documented in references/interface.md. */
+export function buildAnatomy({ desktop, mobile = null, viewports = {} }) {
+  const top = desktop?.top ?? {};
+  const end = desktop?.end ?? {};
+  const size = (measured, fallback) => ({ width: measured?.width ?? fallback?.width ?? null, height: measured?.height ?? fallback?.height ?? null });
+  const desktopSize = size(top.viewport, viewports.desktop);
+  const mobileSize = size(mobile?.top?.viewport, viewports.mobile);
+
+  const sections = (top.sections?.list ?? []).map((section) => ({
+    index: section.index,
+    heading: section.heading ? { tag: section.heading.tag, text: section.heading.text } : null,
+    y: section.y,
+    height: section.height,
+    text: String(section.text ?? "").slice(0, SECTION_TEXT_MAX),
+    words: section.words,
+  }));
+
+  const desktopCtas = top.ctas ?? [];
+  const mobileFold = matchMobileCtas(desktopCtas, mobile ? mobile.top?.cta_positions ?? [] : null, mobileSize.height);
+  const ctas = desktopCtas.map((cta, index) => ({
+    index,
+    kind: cta.kind,
+    text: cta.text,
+    href: cta.href ?? null,
+    x: cta.x,
+    y: cta.y,
+    width: cta.width,
+    height: cta.height,
+    above_fold: { desktop: aboveFold(cta, desktopSize.height), mobile: mobileFold[index] },
+    in_fixed: Boolean(cta.in_fixed),
+    section: cta.section ?? null,
+    disabled: Boolean(cta.disabled),
+  }));
+
+  const fixed = [
+    ...mergeFixed(top.fixed, end.fixed, { pass: "desktop", viewportHeight: desktopSize.height }),
+    ...(mobile ? mergeFixed(mobile.top?.fixed, mobile.end?.fixed, { pass: "mobile", viewportHeight: mobileSize.height }) : []),
+  ];
+
+  const forms = (top.forms ?? []).map((item) => ({
+    type: item.type === "radio" ? "radio" : "checkbox",
+    label: item.label ?? "",
+    checked: Boolean(item.checked),
+    required: Boolean(item.required),
+    name: item.name ?? null,
+    price_text: item.price_text ?? null,
+    section: item.section ?? null,
+    y: item.y,
+  }));
+
+  const prices = (top.prices ?? []).map((item) => ({
+    text: item.text,
+    value: parsePrice(item.text),
+    struck: Boolean(item.struck),
+    context: priceContext(item.block, item.at),
+    section: item.section ?? null,
+    y: item.y,
+  }));
+
+  const media = top.media ?? {};
+  const motion = top.motion ?? {};
+  return {
+    format_version: ANATOMY_FORMAT_VERSION,
+    viewports: { desktop: desktopSize, mobile: mobileSize },
+    sections,
+    ctas,
+    fixed,
+    forms,
+    prices,
+    media: {
+      videos: media.videos ?? [],
+      iframes: (media.iframes ?? []).map((frame) => ({ src: frame.src, provider: iframeProvider(frame.src), section: frame.section ?? null })),
+      images: { count: media.images?.count ?? 0, without_alt: media.images?.without_alt ?? 0 },
+    },
+    motion: {
+      running: end.running ?? [],
+      keyframes: motion.keyframes ?? [],
+      transitions: motion.transitions ?? 0,
+      reduced_motion_rules: motion.reduced_motion_rules ?? 0,
+      smooth_scroll: Boolean(motion.smooth_scroll),
+      scroll_snap: motion.scroll_snap ?? 0,
+      stylesheets_unread: motion.stylesheets_unread ?? 0,
+    },
+    countdowns: countdownsFrom(top.timers, desktop?.again?.timer_texts),
+  };
+}
+
+/**
+ * The anatomy and texto.md from what the page readings returned. Any reading that failed makes
+ * the whole anatomy null, with a warning: an audit must never take a missing read for a page
+ * without the thing. texto.md comes from the sections when they were read, else from the text
+ * of the brand reading.
+ */
+export function finishAnatomy({ desktop = null, mobile = null, failure = null, rawText = null, viewports = {} } = {}) {
+  const warnings = [];
+  const errors = [desktop?.top, desktop?.end, desktop?.again, mobile?.top, mobile?.end].filter(Boolean).flatMap((read) => read.errors ?? []);
+  let reason = failure ? String(failure) : null;
+  if (!reason && !desktop) reason = "a leitura não chegou a rodar";
+  if (!reason && desktop && !mobile) reason = "faltou a leitura do celular";
+  if (!reason && errors.length) reason = errors.slice(0, 3).join(" | ");
+  let anatomy = null;
+  if (!reason) {
+    try {
+      anatomy = buildAnatomy({ desktop, mobile, viewports });
+    } catch (error) {
+      reason = String(error?.message ?? error);
+    }
+  }
+  if (!anatomy) warnings.push(`A leitura da anatomia da página falhou (${reason}): o resto da captura está completo, e o campo anatomy de captura.json ficou nulo.`);
+
+  const sections = desktop?.top?.sections;
+  let text = null;
+  if (Array.isArray(sections?.list)) text = pageText(sections.list, { truncated: Boolean(sections.truncated) });
+  else if (rawText) text = pageText([{ heading: null, text: rawText }], { truncated: rawText.length >= PAGE_TEXT_MAX });
+  if (text && !text.text) text = null;
+  if (text?.truncated) warnings.push("O texto da página passa de 60.000 caracteres: texto.md traz o começo dele.");
+  return { anatomy, text, warnings };
+}
+
+/** The anatomy's sizes for the command's answer; the anatomy itself stays in captura.json. */
+export function anatomyCounts(anatomy) {
+  if (!anatomy) return null;
+  return {
+    sections: anatomy.sections?.length ?? 0,
+    ctas: anatomy.ctas?.length ?? 0,
+    fixed: anatomy.fixed?.length ?? 0,
+    forms: anatomy.forms?.length ?? 0,
+    prices: anatomy.prices?.length ?? 0,
+    videos: anatomy.media?.videos?.length ?? 0,
+    animations: anatomy.motion?.running?.length ?? 0,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
 // In-page functions (serialized with toString(); DOM only, nothing from this module)
 // ---------------------------------------------------------------------------------------------
 
 /* eslint-disable no-undef */
-function dismissCookieBannerInPage() {
-  const re = /^(aceitar|aceito|concordo|ok|entendi|accept( all)?|agree|got it|allow( all)?|permitir|continuar)/i;
-  const cookieish = /cookie|consent|lgpd|gdpr|privac|aviso|banner/i;
+function dismissCookieBannerInPage(patterns) {
+  const re = new RegExp(patterns.accept.source, patterns.accept.flags);
+  const cookieish = new RegExp(patterns.hint.source, patterns.hint.flags);
   const isShown = (el) => {
     const r = el.getBoundingClientRect();
     if (r.width < 8 || r.height < 8) return false;
@@ -1264,9 +1592,528 @@ function extractInPage(limits) {
 
   return out;
 }
+
+/**
+ * The page's anatomy for an audit of an offer page; `options.parts` says which reads run:
+ * sections split at h1 to h3, calls to action, fixed and sticky elements, checkboxes and radios,
+ * prices, media, motion and timers. One function holds every read so its helpers exist once;
+ * an element read in one call is found again in the next through ids kept in a page global.
+ * It never waits: in a page saved as .mhtml the page's own timers never fire, so every pause
+ * happens in Node, between two calls.
+ */
+function anatomyInPage(options) {
+  const out = { errors: [], viewport: { width: innerWidth, height: innerHeight, scroll_y: Math.round(scrollY) } };
+  const want = new Set(options.parts || []);
+  const attempt = (name, fn) => {
+    if (!want.has(name)) return;
+    try {
+      out[name] = fn();
+    } catch (error) {
+      out[name] = null;
+      out.errors.push(`${name}: ${error && error.message ? error.message : error}`);
+    }
+  };
+  const store = window.__flyeeAnatomy || (window.__flyeeAnatomy = { next: 1, ids: new WeakMap(), elements: new Map() });
+  const idOf = (el) => {
+    let id = store.ids.get(el);
+    if (!id) {
+      id = store.next++;
+      store.ids.set(el, id);
+      store.elements.set(id, el);
+    }
+    return id;
+  };
+  const re = (pattern, extra = "") => new RegExp(pattern.source, pattern.flags + extra);
+  const clean = (text) => String(text || "").replace(/\s+/g, " ").trim();
+  const fold = (text) => clean(text).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  // "R$ 49 ,99" from split elements becomes "R$ 49,99"
+  const joinCents = (text) => text.replace(/(\d)\s+,(\d{2})(?!\d)/g, "$1,$2");
+  const abs = (href) => {
+    if (!href) return null;
+    try {
+      return new URL(href, location.href).href;
+    } catch {
+      return null;
+    }
+  };
+  const boxOf = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: Math.round(r.left + scrollX), y: Math.round(r.top + scrollY), width: Math.round(r.width), height: Math.round(r.height) };
+  };
+  const isTransparent = (c) => !c || c === "transparent" || /^rgba\([^)]*,\s*0(\.0+)?\s*\)$/.test(c) || /\/\s*0(\.0+)?\s*\)$/.test(c);
+  // Rendered with a size. Opacity counts only when asked: content that fades in on scroll is still content.
+  const shown = (el, withOpacity = false) => {
+    if (!el || el.nodeType !== 1) return false;
+    if (typeof el.checkVisibility === "function") {
+      if (!el.checkVisibility({ checkVisibilityCSS: true, visibilityProperty: true, checkOpacity: withOpacity, opacityProperty: withOpacity })) return false;
+    } else {
+      for (let node = el; node && node.nodeType === 1; node = node.parentElement) {
+        const s = getComputedStyle(node);
+        if (s.display === "none" || (withOpacity && Number(s.opacity) === 0)) return false;
+        if (node === el && s.visibility !== "visible") return false;
+      }
+    }
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  };
+  const pinned = (el) => {
+    const position = getComputedStyle(el).position;
+    return position === "fixed" || position === "sticky";
+  };
+
+  // Sections: the visible h1, h2 and h3 in document order; section 0 is what comes before the first one.
+  let headingList = null;
+  const headings = () => {
+    if (headingList) return headingList;
+    headingList = [];
+    for (const el of document.querySelectorAll("h1, h2, h3")) {
+      if (headingList.length >= options.maxSections - 1) break;
+      if (clean(el.innerText || el.textContent) && shown(el)) headingList.push(el);
+    }
+    return headingList;
+  };
+  const sectionOf = (el) => {
+    if (!el || !document.documentElement.contains(el)) return null;
+    const list = headings();
+    let lo = 0;
+    let hi = list.length - 1;
+    let found = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const heading = list[mid];
+      if (heading === el || (heading.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+        found = mid;
+        lo = mid + 1;
+      } else hi = mid - 1;
+    }
+    return found + 1;
+  };
+
+  // Calls to action and the cookie banner the anatomy leaves out
+  const CTA = "a[href], button, input[type='submit' i], input[type='button' i], input[type='image' i], [role='button']";
+  const DECLINE = re(options.decline);
+  const SKIP_LINK = re(options.skipLink);
+  const ACCEPT = re(options.cookieAccept);
+  const COOKIE_NAME = re(options.cookieName);
+  const COOKIE_TEXT = re(options.cookieText);
+  const ctaText = (el) => clean(el.innerText || (el.localName === "input" ? el.value : "") || el.getAttribute("aria-label") || el.getAttribute("title") || el.getAttribute("alt") || "");
+  const declining = (text) => {
+    const folded = fold(text);
+    return !SKIP_LINK.test(folded) && DECLINE.test(folded);
+  };
+  const styledAsButton = (style) => !isTransparent(style.backgroundColor) || /gradient\(/.test(style.backgroundImage || "") || (parseFloat(style.borderTopWidth) > 0 && style.borderTopStyle !== "none" && !isTransparent(style.borderTopColor));
+  const verdicts = new Map();
+  const cookieBanner = (node) => {
+    if (verdicts.has(node)) return verdicts.get(node);
+    const clicked = window.__flyeeCookieButton;
+    let verdict = Boolean(clicked && node.contains(clicked));
+    if (!verdict) verdict = COOKIE_NAME.test(`${node.id || ""} ${typeof node.className === "string" ? node.className : ""} ${node.getAttribute("aria-label") || ""}`);
+    if (!verdict && COOKIE_TEXT.test(clean(node.innerText).slice(0, 3000))) verdict = Array.from(node.querySelectorAll(CTA)).some((button) => ACCEPT.test(ctaText(button)));
+    verdicts.set(node, verdict);
+    return verdict;
+  };
+  const inCookieBanner = (el) => {
+    for (let node = el; node && node.nodeType === 1 && node !== document.body && node !== document.documentElement; node = node.parentElement) {
+      if (pinned(node) && cookieBanner(node)) return true;
+    }
+    return false;
+  };
+  const inFixed = (el) => {
+    for (let node = el; node && node.nodeType === 1; node = node.parentElement) if (pinned(node)) return true;
+    return false;
+  };
+  const kindOf = (el) => {
+    if (el.localName === "a") return "link";
+    if (el.localName === "input") return /^(submit|image)$/i.test(el.type) ? "submit" : "button";
+    if (el.localName === "button") return el.type === "submit" && el.form ? "submit" : "button";
+    return "button";
+  };
+  // Buttons, submit inputs, role=button and links that look like buttons (the brand reading's test),
+  // plus any link that declines or skips the offer; the outermost of nested candidates wins.
+  const ctaRead = (root, limit) => {
+    const found = [];
+    const accepted = new Set();
+    const candidates = root === document ? Array.from(document.querySelectorAll(CTA)) : [...(root.matches(CTA) ? [root] : []), ...root.querySelectorAll(CTA)];
+    for (const el of candidates) {
+      if (found.length >= limit) break;
+      let nested = false;
+      for (let node = el.parentElement; node && !nested; node = node.parentElement) nested = accepted.has(node);
+      if (nested || !shown(el)) continue;
+      const text = ctaText(el);
+      if (!text || text.length > 120) continue;
+      const r = el.getBoundingClientRect();
+      if (r.right + scrollX <= 0 || r.bottom + scrollY <= 0) continue; // parked outside the page, like a skip link
+      if (!declining(text)) {
+        if (r.width < 24 || r.height < 16) continue;
+        if (el.localName === "a" && el.getAttribute("role") !== "button" && !styledAsButton(getComputedStyle(el))) continue;
+      }
+      if (inCookieBanner(el)) continue;
+      accepted.add(el);
+      found.push({ el, text });
+    }
+    return found;
+  };
+
+  attempt("sections", () => {
+    const list = headings();
+    const place = new Map(list.map((el, index) => [el, index + 1]));
+    const buckets = [null, ...list].map((heading) => ({ heading, chunks: [], extra: 0 }));
+    const words = (text) => (String(text).match(/\S+/g) || []).length;
+    const SKIP = /^(script|style|noscript|template|head|title|meta|link|svg|math|iframe|object|embed|canvas|video|audio|img|picture|select|datalist|textarea|input)$/;
+    let current = 0;
+    let total = 0;
+    const push = (text) => {
+      if (!text) return;
+      const bucket = buckets[current];
+      if (!/\S/.test(text)) {
+        bucket.chunks.push(text.includes("\n") ? "\n" : " ");
+        return;
+      }
+      const room = options.maxText - total;
+      if (room <= 0) {
+        bucket.extra += words(text);
+        return;
+      }
+      const piece = text.slice(0, room);
+      bucket.chunks.push(piece);
+      total += piece.length;
+      if (piece.length < text.length) bucket.extra += words(text.slice(piece.length));
+    };
+    // A small innerText of our own, so each piece of text knows its section: hidden subtrees are
+    // skipped, blocks start a new line, and open shadow roots and slots are followed.
+    const visit = (node, depth, inherited) => {
+      if (depth > 400) return;
+      if (node.nodeType === 3) {
+        if (!inherited.visible || !node.nodeValue) return;
+        push(inherited.pre ? node.nodeValue.replace(/\r\n?/g, "\n") : node.nodeValue.replace(/\s+/g, " "));
+        return;
+      }
+      if (node.nodeType !== 1) return;
+      const name = node.localName;
+      if (SKIP.test(name)) return;
+      if (place.has(node)) {
+        current = place.get(node);
+        return;
+      }
+      const style = getComputedStyle(node);
+      const display = style.display;
+      if (display === "none") return;
+      if (name === "br") {
+        push("\n");
+        return;
+      }
+      const cell = display === "table-cell";
+      const block = !cell && !/^(inline|contents|ruby)/.test(display);
+      if (block) push("\n");
+      else if (cell) push(" ");
+      const assigned = name === "slot" && typeof node.assignedNodes === "function" ? node.assignedNodes({ flatten: true }) : [];
+      const kids = node.shadowRoot ? node.shadowRoot.childNodes : assigned.length ? assigned : node.childNodes;
+      const next = { visible: style.visibility === "visible", pre: /^(pre|pre-wrap|pre-line|break-spaces)$/.test(style.whiteSpace) };
+      for (const child of kids) visit(child, depth + 1, next);
+      if (block) push("\n");
+    };
+    if (document.body) visit(document.body, 0, { visible: true, pre: false });
+    const tidy = (text) => text.split("\n").map((line) => line.replace(/[ \t ]+/g, " ").trim()).filter(Boolean).join("\n");
+    const pageHeight = Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0);
+    const tops = buckets.map((bucket) => (bucket.heading ? Math.round(bucket.heading.getBoundingClientRect().top + scrollY) : 0));
+    return {
+      list: buckets.map((bucket, index) => {
+        const text = tidy(bucket.chunks.join(""));
+        const next = index + 1 < tops.length ? tops[index + 1] : pageHeight;
+        return {
+          index,
+          heading: bucket.heading ? { tag: bucket.heading.localName, text: clean(bucket.heading.innerText || bucket.heading.textContent).slice(0, 200) } : null,
+          y: tops[index],
+          height: Math.max(0, next - tops[index]),
+          text,
+          words: words(text) + bucket.extra,
+        };
+      }),
+      truncated: total >= options.maxText,
+    };
+  });
+
+  attempt("ctas", () =>
+    ctaRead(document, options.maxCtas).map(({ el, text }) => ({
+      kind: kindOf(el),
+      text,
+      href: el.localName === "a" ? abs(el.getAttribute("href")) : null,
+      ...boxOf(el),
+      in_fixed: inFixed(el),
+      section: sectionOf(el),
+      disabled: el.disabled === true || el.getAttribute("aria-disabled") === "true",
+    })));
+
+  // The mobile pass needs only where each call sits, to say whether it is in the first screen.
+  attempt("cta_positions", () =>
+    ctaRead(document, options.maxCtas).map(({ el, text }) => {
+      const box = boxOf(el);
+      return { text, y: box.y, height: box.height };
+    }));
+
+  // Fixed or sticky elements on screen now: bars (half the width or more) or anything holding a call.
+  attempt("fixed", () => {
+    const list = [];
+    const kept = new Set();
+    const all = document.querySelectorAll("body *");
+    for (let i = 0; i < all.length && i < options.maxElements && list.length < options.maxFixed; i++) {
+      const el = all[i];
+      if (!pinned(el)) continue;
+      let inside = false;
+      for (let node = el.parentElement; node && !inside; node = node.parentElement) inside = kept.has(node);
+      if (inside || !shown(el, true)) continue;
+      const r = el.getBoundingClientRect();
+      if (r.bottom <= 0 || r.top >= innerHeight || r.right <= 0 || r.left >= innerWidth) continue;
+      if (inCookieBanner(el)) continue;
+      const ctas = ctaRead(el, 10).map((cta) => cta.text.slice(0, 80));
+      if (r.width < innerWidth * 0.5 && !ctas.length) continue;
+      kept.add(el);
+      list.push({ id: idOf(el), position: getComputedStyle(el).position, top: Math.round(r.top), bottom: Math.round(r.bottom), height: Math.round(r.height), text: clean(el.innerText).slice(0, 280), ctas });
+    }
+    return list;
+  });
+
+  attempt("forms", () => {
+    const PRICE = re(options.price);
+    const list = [];
+    const controls = document.querySelectorAll("input[type='checkbox' i], input[type='radio' i], [role='checkbox'], [role='radio'], [role='switch'], [role='menuitemcheckbox'], [role='menuitemradio']");
+    for (const el of controls) {
+      if (list.length >= options.maxForms) break;
+      const native = el.localName === "input";
+      const label = native && el.labels ? Array.from(el.labels).find((candidate) => shown(candidate)) || null : null;
+      const visible = shown(el);
+      // a styled control often hides the native box and shows its label instead
+      if ((!visible && !label) || inCookieBanner(el)) continue;
+      let text = label ? clean(label.innerText) : "";
+      if (!text) text = clean(el.getAttribute("aria-label"));
+      if (!text) {
+        const ids = (el.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean);
+        text = clean(ids.map((id) => {
+          const target = document.getElementById(id);
+          return target ? target.innerText || target.textContent : "";
+        }).join(" "));
+      }
+      if (!text && !native) text = clean(el.innerText);
+      for (let node = el.parentElement, depth = 0; !text && node && node !== document.body && depth < 3; node = node.parentElement, depth++) {
+        const around = clean(node.innerText);
+        if (around.length > 300) break;
+        text = around;
+      }
+      text = text.slice(0, 200);
+      const role = el.getAttribute("role") || "";
+      const price = PRICE.exec(joinCents(text));
+      list.push({
+        type: native ? (String(el.type).toLowerCase() === "radio" ? "radio" : "checkbox") : /radio/.test(role) ? "radio" : "checkbox",
+        label: text,
+        checked: native ? el.checked === true : el.getAttribute("aria-checked") === "true",
+        required: native ? el.required === true : el.getAttribute("aria-required") === "true",
+        name: (native && el.name) || null,
+        price_text: price ? price[0] : null,
+        section: sectionOf(el),
+        y: boxOf(visible ? el : label).y,
+      });
+    }
+    return list;
+  });
+
+  // Prices from the text nodes, so "De <del>R$ 49,99</del> por R$ 19,99" gives two prices; a price
+  // split across elements (<span>R$</span><span>49</span><sup>,99</sup>) is read on through the next nodes.
+  attempt("prices", () => {
+    const PRICE = re(options.price, "g");
+    const list = [];
+    if (!document.body) return list;
+    const blocks = new Map();
+    // "R$29,99" and "R$ 29,99" are the same price when looking for it in a block's text.
+    const spaced = (text) => text.replace(/R\$\s*/g, () => "R$ ");
+    const textOf = (node) => spaced(joinCents(clean(node.innerText || node.textContent)));
+    // The text around a price: up from the element to the first box that holds the whole price and
+    // some words besides it, past inline elements. A price split in pieces (<span>R$</span><span>29</span>)
+    // climbs until the pieces meet; a button "Quero por R$ 19,99" is the context by itself.
+    const blockText = (el, price) => {
+      let node = el;
+      for (let depth = 0; depth < 8 && node.parentElement && node !== document.body; depth++) {
+        const text = textOf(node);
+        const display = getComputedStyle(node).display;
+        if (text.includes(price) && text.length > price.length + 4 && display !== "inline" && display !== "contents") break;
+        node = node.parentElement;
+      }
+      if (!blocks.has(node)) blocks.set(node, textOf(node));
+      return blocks.get(node);
+    };
+    const struck = (el) => {
+      for (let node = el, depth = 0; node && node.nodeType === 1 && node !== document.body && depth < 8; node = node.parentElement, depth++) {
+        if (/^(del|s|strike)$/.test(node.localName)) return true;
+        if (String(getComputedStyle(node).textDecorationLine || "").includes("line-through")) return true;
+      }
+      return false;
+    };
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node && list.length < options.maxPrices; node = walker.nextNode()) {
+      if (!node.nodeValue || node.nodeValue.indexOf("R$") < 0) continue;
+      const parent = node.parentElement;
+      if (!parent || parent.closest("script, style, noscript, template, textarea, select, option, title") || !shown(parent)) continue;
+      const own = joinCents(clean(node.nodeValue));
+      let joined = clean(node.nodeValue);
+      const peek = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      peek.currentNode = node;
+      for (let i = 0, next = peek.nextNode(); i < 3 && next && joined.length < own.length + 24; i++, next = peek.nextNode()) {
+        const more = clean(next.nodeValue);
+        if (more) joined += ` ${more}`;
+      }
+      for (const match of joinCents(joined).matchAll(PRICE)) {
+        if (match.index >= own.length || list.length >= options.maxPrices) break;
+        const price = spaced(match[0]);
+        const block = blockText(parent, price);
+        const at = block.indexOf(price);
+        const from = Math.max(0, at - 300);
+        list.push({ text: match[0], struck: struck(parent), block: block.slice(from, from + 700), at: at < 0 ? -1 : at - from, section: sectionOf(parent), y: boxOf(parent).y });
+      }
+    }
+    return list;
+  });
+
+  attempt("media", () => {
+    const videos = Array.from(document.querySelectorAll("video")).slice(0, 50).map((video) => {
+      const source = video.querySelector("source[src]");
+      const r = video.getBoundingClientRect();
+      return {
+        src: abs(video.currentSrc || video.getAttribute("src") || (source ? source.getAttribute("src") : "")),
+        poster: abs(video.getAttribute("poster")),
+        autoplay: video.autoplay === true || video.hasAttribute("autoplay"),
+        muted: video.muted === true || video.hasAttribute("muted"),
+        loop: video.loop === true || video.hasAttribute("loop"),
+        playsinline: video.playsInline === true || video.hasAttribute("playsinline") || video.hasAttribute("webkit-playsinline"),
+        controls: video.controls === true || video.hasAttribute("controls"),
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+        duration_s: Number.isFinite(video.duration) && video.duration > 0 ? Math.round(video.duration * 100) / 100 : null,
+        section: sectionOf(video),
+      };
+    });
+    const iframes = [];
+    for (const frame of document.querySelectorAll("iframe")) {
+      if (iframes.length >= 50) break;
+      const src = abs(frame.getAttribute("src") || frame.getAttribute("data-src"));
+      if (src && !/^about:/i.test(src)) iframes.push({ src, section: sectionOf(frame) });
+    }
+    const images = Array.from(document.images);
+    return { videos, iframes, images: { count: images.length, without_alt: images.filter((img) => !img.hasAttribute("alt")).length } };
+  });
+
+  // What the style sheets declare; a sheet from another origin cannot be read and is only counted.
+  attempt("motion", () => {
+    const keyframes = new Set();
+    const seen = new Set();
+    let transitions = 0;
+    let reduced = 0;
+    let unread = 0;
+    const declaresTransition = (style) => {
+      const duration = style.getPropertyValue("transition-duration");
+      if (duration) return style.getPropertyValue("transition-property").trim() !== "none" && (/var\(/.test(duration) || duration.split(",").some((part) => parseFloat(part) > 0));
+      const shorthand = style.getPropertyValue("transition").trim();
+      return Boolean(shorthand) && !/^(none|initial|unset|inherit|revert)$/i.test(shorthand);
+    };
+    const walkRules = (rules, depth) => {
+      if (!rules || depth > 8) return;
+      for (const rule of rules) {
+        if (typeof CSSKeyframesRule !== "undefined" && rule instanceof CSSKeyframesRule) {
+          if (keyframes.size < 100) keyframes.add(rule.name);
+          continue;
+        }
+        if (typeof CSSImportRule !== "undefined" && rule instanceof CSSImportRule) {
+          walkSheet(rule.styleSheet, depth + 1);
+          continue;
+        }
+        if (typeof CSSMediaRule !== "undefined" && rule instanceof CSSMediaRule && /prefers-reduced-motion/i.test(rule.conditionText || (rule.media && rule.media.mediaText) || "")) reduced++;
+        if (rule.style && declaresTransition(rule.style)) transitions++;
+        if (rule.cssRules) walkRules(rule.cssRules, depth + 1);
+      }
+    };
+    const walkSheet = (sheet, depth) => {
+      if (!sheet || seen.has(sheet)) return;
+      seen.add(sheet);
+      let rules;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        unread++;
+        return;
+      }
+      walkRules(rules, depth);
+    };
+    for (const sheet of document.styleSheets) walkSheet(sheet, 0);
+    for (const sheet of document.adoptedStyleSheets || []) walkSheet(sheet, 0);
+    let snap = 0;
+    const all = [document.documentElement, ...document.querySelectorAll("body, body *")];
+    for (let i = 0; i < all.length && i < options.maxElements; i++) {
+      const type = getComputedStyle(all[i]).scrollSnapType;
+      if (type && type !== "none") snap++;
+    }
+    const smooth = getComputedStyle(document.documentElement).scrollBehavior === "smooth" || Boolean(document.body && getComputedStyle(document.body).scrollBehavior === "smooth");
+    return { keyframes: Array.from(keyframes), transitions, reduced_motion_rules: reduced, smooth_scroll: smooth, scroll_snap: snap, stylesheets_unread: unread };
+  });
+
+  attempt("running", () => {
+    const list = [];
+    if (typeof document.getAnimations !== "function") return list;
+    for (const animation of document.getAnimations()) {
+      if (list.length >= options.maxAnimations) break;
+      if (animation.playState !== "running") continue;
+      const effect = animation.effect;
+      const timing = effect && typeof effect.getComputedTiming === "function" ? effect.getComputedTiming() : {};
+      const target = effect ? effect.target : null;
+      const kind = typeof CSSAnimation !== "undefined" && animation instanceof CSSAnimation ? "css-animation" : typeof CSSTransition !== "undefined" && animation instanceof CSSTransition ? "css-transition" : "web-animation";
+      const name = kind === "css-animation" ? animation.animationName : kind === "css-transition" ? animation.transitionProperty : animation.id;
+      list.push({
+        kind,
+        name: name || null,
+        duration_ms: Number.isFinite(timing.duration) ? Math.round(timing.duration) : 0,
+        iterations: timing.iterations === Infinity ? "infinite" : Number.isFinite(timing.iterations) ? timing.iterations : 1,
+        target: target ? `${target.localName}${target.classList && target.classList.length ? `.${target.classList[0]}` : ""}${effect.pseudoElement || ""}` : null,
+      });
+    }
+    return list;
+  });
+
+  // Timers: the deepest short element (80 characters at most) whose text reads as a timer. Node reads
+  // them again 1.2 s later; only those that changed are countdowns.
+  attempt("timers", () => {
+    const TIMER = re(options.timer);
+    const list = [];
+    const seen = new Set();
+    if (!document.body) return list;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node && list.length < options.maxTimers; node = walker.nextNode()) {
+      if (!/\d/.test(node.nodeValue || "")) continue;
+      for (let el = node.parentElement, depth = 0; el && el !== document.body && depth < 4; el = el.parentElement, depth++) {
+        const raw = el.textContent || "";
+        if (raw.length > 2000) break;
+        const text = clean(raw);
+        if (text.length > 80) break;
+        if (!TIMER.test(text)) continue;
+        if (!seen.has(el) && !/^(script|style|noscript|template|textarea|select|option)$/.test(el.localName) && shown(el)) {
+          seen.add(el);
+          list.push({ id: idOf(el), text, section: sectionOf(el) });
+        }
+        break;
+      }
+    }
+    return list;
+  });
+
+  attempt("timer_texts", () =>
+    (options.ids || []).map((id) => {
+      const el = store.elements.get(id);
+      return { id, text: el && el.isConnected ? clean(el.textContent) : null };
+    }));
+
+  return out;
+}
 /* eslint-enable no-undef */
 
 const inPage = (fn, arg) => `(${fn.toString()})(${arg === undefined ? "" : JSON.stringify(arg)})`;
+/** A regular expression as data a page function rebuilds with `new RegExp(source, flags)`, without the global flag. */
+const asPattern = (regex) => ({ source: regex.source, flags: regex.flags.replace("g", "") });
 
 // ---------------------------------------------------------------------------------------------
 // Brand assembly (pure)
@@ -1538,11 +2385,72 @@ async function warmUp(page) {
 }
 
 async function dismissCookies(page) {
-  const result = await page.evaluate(inPage(dismissCookieBannerInPage), { awaitPromise: false }).catch((error) => ({ clicked: false, error: error.message }));
+  const patterns = { accept: asPattern(COOKIE_ACCEPT_PATTERN), hint: asPattern(COOKIE_HINT_PATTERN) };
+  const result = await page.evaluate(inPage(dismissCookieBannerInPage, patterns), { awaitPromise: false }).catch((error) => ({ clicked: false, error: error.message }));
   if (!result.clicked) return { dismissed: false, button: null, candidates: result.candidates ?? 0 };
   await sleep(400);
   const hidden = await page.evaluate(inPage(cookieButtonHiddenInPage), { awaitPromise: false }).catch(() => null);
   return { dismissed: true, button: result.text, hidden_after_click: hidden, candidates: result.candidates ?? 0 };
+}
+
+const SCROLL_TOP = 'window.scrollTo({ top: 0, left: 0, behavior: "instant" }); 0';
+const SCROLL_END = 'window.scrollTo({ top: Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0), left: 0, behavior: "instant" }); 0';
+
+function anatomyOptions(parts, extra = {}) {
+  return {
+    parts,
+    ...ANATOMY_LIMITS,
+    price: asPattern(PRICE_PATTERN),
+    timer: asPattern(TIMER_PATTERN),
+    decline: asPattern(DECLINE_PATTERN),
+    skipLink: asPattern(SKIP_LINK_PATTERN),
+    cookieAccept: asPattern(COOKIE_ACCEPT_PATTERN),
+    cookieName: asPattern(COOKIE_NAME_PATTERN),
+    cookieText: asPattern(COOKIE_TEXT_PATTERN),
+    ...extra,
+  };
+}
+
+function readAnatomy(page, parts, { extra = {}, timeoutMs = 60000 } = {}) {
+  return page.evaluate(inPage(anatomyInPage, anatomyOptions(parts, extra)), { awaitPromise: false, timeoutMs });
+}
+
+/**
+ * The desktop reading: everything at the top of the page; after a jump to the end, the fixed
+ * elements again and the animations running; and the timers once more, 1.2 s after the first
+ * read. Leaves the page at the top for the scroll recording.
+ */
+async function readAnatomyDesktop(page) {
+  await page.evaluate(SCROLL_TOP, { awaitPromise: false });
+  await sleep(150);
+  const top = await readAnatomy(page, ["sections", "ctas", "fixed", "forms", "prices", "media", "motion", "timers"]);
+  const firstRead = Date.now();
+  await page.evaluate(SCROLL_END, { awaitPromise: false });
+  await sleep(SCROLL_SETTLE_MS);
+  const end = await readAnatomy(page, ["fixed", "running"], { timeoutMs: 30000 });
+  let again = null;
+  const timers = Array.isArray(top?.timers) ? top.timers : [];
+  if (timers.length) {
+    const wait = TIMER_GAP_MS - (Date.now() - firstRead);
+    if (wait > 0) await sleep(wait);
+    again = await readAnatomy(page, ["timer_texts"], { extra: { ids: timers.map((timer) => timer.id) }, timeoutMs: 30000 });
+  }
+  await page.evaluate(SCROLL_TOP, { awaitPromise: false });
+  await sleep(150);
+  return { top, end, again };
+}
+
+/** The mobile reading: where each call to action sits at the top, and the fixed elements at the top and at the end. */
+async function readAnatomyMobile(page) {
+  await page.evaluate(SCROLL_TOP, { awaitPromise: false });
+  await sleep(150);
+  const top = await readAnatomy(page, ["cta_positions", "fixed"]);
+  await page.evaluate(SCROLL_END, { awaitPromise: false });
+  await sleep(SCROLL_SETTLE_MS);
+  const end = await readAnatomy(page, ["fixed"], { timeoutMs: 30000 });
+  await page.evaluate(SCROLL_TOP, { awaitPromise: false });
+  await sleep(150);
+  return { top, end };
 }
 
 /**
@@ -1622,13 +2530,16 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
   const startedAt = Date.now();
   ensureDir(outDir);
   const warnings = [];
-  const files = { desktop: null, desktop_full: null, mobile: null, mobile_full: null, scroll_desktop: null, scroll_mobile: null, capture: "captura.json", assets: [] };
+  const files = { desktop: null, desktop_full: null, mobile: null, mobile_full: null, scroll_desktop: null, scroll_mobile: null, capture: "captura.json", text: null, assets: [] };
   const viewports = {
     desktop: { width: desktopWidth, height: DESKTOP_HEIGHT, scale: 1, full_height: null },
     mobile: { width: mobileWidth, height: MOBILE_HEIGHT, scale: MOBILE_SCALE, full_height: null },
   };
   const scroll = { desktop: null, mobile: null };
   const layout = { mobile: null };
+  // The anatomy never fails the capture: a reading that breaks leaves anatomy null, with a warning.
+  const anatomyReads = { desktop: null, mobile: null };
+  let anatomyFailure = null;
   const ffmpegPath = tools?.ffmpeg?.path ?? null;
   const desktopScrollSeconds = scrollSeconds > 0 ? Math.max(2, round(scrollSeconds * (2 / 3), 1)) : 0;
   let raw = null;
@@ -1708,6 +2619,13 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     raw = await page.evaluate(inPage(extractInPage, { maxElements: 6000, maxText: 60000 }), { timeoutMs: 60000 });
     if (raw.errors?.length) warnings.push(`Parte da leitura falhou: ${raw.errors.slice(0, 3).join(" | ")}`);
 
+    onProgress("Lendo a anatomia da página: seções, chamados, barras fixas, caixas, preços, vídeos e movimento…");
+    try {
+      anatomyReads.desktop = await readAnatomyDesktop(page);
+    } catch (error) {
+      anatomyFailure = error?.message ?? String(error);
+    }
+
     const desktopScrollable = Math.min(Math.max(0, state.scroll_height - state.inner_height), MAX_SCROLL);
     if (desktopScrollSeconds > 0 && ffmpegPath && desktopScrollable >= 100) {
       onProgress("Gravando a rolagem (computador)…");
@@ -1739,6 +2657,13 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     viewports.mobile.full_height = mobileFull.height;
     viewports.mobile.content_height = mobileFull.content_height;
     layout.mobile = mobileLayout(positions, { fullHeight: mobileFull.height, viewportHeight: MOBILE_HEIGHT });
+    if (anatomyReads.desktop && !anatomyFailure) {
+      try {
+        anatomyReads.mobile = await readAnatomyMobile(page);
+      } catch (error) {
+        anatomyFailure = error?.message ?? String(error);
+      }
+    }
 
     const mobileScrollable = Math.min(Math.max(0, mobileState.scroll_height - mobileState.inner_height), MAX_SCROLL);
     if (scrollSeconds > 0 && ffmpegPath && mobileScrollable >= 100) {
@@ -1778,17 +2703,32 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
   if (!brand.colors.primary) warnings.push("Não achei uma cor de destaque saturada; a paleta traz as cores mais usadas.");
   if (pageErrors.length) warnings.push(`A página registrou erros de JavaScript: ${pageErrors.slice(0, 2).join(" | ")}`);
 
+  const finished = finishAnatomy({
+    desktop: anatomyReads.desktop,
+    mobile: anatomyReads.mobile,
+    failure: anatomyFailure,
+    rawText: raw?.text ?? null,
+    viewports: { desktop: { width: desktopWidth, height: DESKTOP_HEIGHT }, mobile: { width: mobileWidth, height: MOBILE_HEIGHT } },
+  });
+  warnings.push(...finished.warnings);
+  if (finished.text) {
+    writeFileAtomic(join(outDir, "texto.md"), finished.text.text);
+    files.text = "texto.md";
+  }
+
   const capture = {
     format_version: CAPTURE_FORMAT_VERSION,
     url,
     final_url: finalUrl,
     site: siteLabel(finalUrl),
+    input_kind: inputKind(url),
     captured_at: new Date().toISOString(),
     http_status: httpStatus,
     viewports,
     files,
     scroll,
     layout,
+    anatomy: finished.anatomy,
     brand,
     cookie_banner: { desktop: cookieBanner, mobile: mobileCookieBanner },
     wall: wall ?? null,

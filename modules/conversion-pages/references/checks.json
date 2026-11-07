@@ -1,0 +1,25 @@
+{
+  "format_version": 1,
+  "weights": ["lei", "confianca", "venda", "acesso"],
+  "checks": {
+    "cta_first_screen": { "label": "O botão principal na primeira tela do celular", "weight": "venda", "fix": "Leve o preço e o botão para a primeira tela do celular." },
+    "single_offer": { "label": "Uma decisão por página", "weight": "venda", "fix": "Tire da página os botões que levam a outras compras; um botão que só rola até a oferta pode ficar." },
+    "decline_visible": { "label": "A recusa visível", "weight": "confianca", "fix": "Ponha um link de recusa perto do botão, com palavras neutras como Pular oferta ou Não, obrigado." },
+    "decline_honest": { "label": "A recusa sem constrangimento", "weight": "confianca", "fix": "Troque a frase da recusa por uma neutra: Pular oferta, Não, obrigado, Continuar sem." },
+    "price_shown": { "label": "O preço da oferta escrito na página", "weight": "lei", "fix": "Escreva o valor que vai ser cobrado perto do botão, como vai sair no recibo." },
+    "reference_price_true": { "label": "O preço riscado é o preço real", "weight": "lei", "fix": "Confirme que o preço riscado é o praticado e registre em pagina.json, ou tire o preço riscado." },
+    "renewal_shown": { "label": "A renovação escrita", "weight": "lei", "fix": "Escreva o valor da renovação e a periodicidade perto do preço de agora." },
+    "guarantee_near_cta": { "label": "A garantia perto do botão", "weight": "venda", "fix": "Repita a garantia ou o cancelamento ao lado do botão, com as mesmas palavras." },
+    "charge_clear": { "label": "A cobrança avisada antes do clique", "weight": "lei", "fix": "Diga perto do botão que o aceite usa o meio de pagamento do pedido, e mostre o valor numa confirmação antes de cobrar." },
+    "sticky_cta_long_page": { "label": "Barra fixa numa página longa", "weight": "venda", "fix": "Mostre uma barra fixa com o preço e o botão quando o cartão da oferta sair da tela." },
+    "proof_about_offer": { "label": "A prova fala do produto oferecido", "weight": "confianca", "fix": "Troque ou complete os depoimentos com quem usa o produto da oferta." },
+    "countdown_real": { "label": "Contador com prazo real", "weight": "lei", "fix": "Registre o prazo real em pagina.json ou tire o contador." },
+    "no_prechecked": { "label": "Nenhuma caixa paga já marcada", "weight": "lei", "fix": "Deixe a caixa desmarcada: só a pessoa marca." },
+    "bump_near_pay": { "label": "A caixa logo acima do botão de pagar", "weight": "venda", "fix": "Mova a caixa do order bump para logo acima do botão de pagar." },
+    "video_autoplay_ok": { "label": "Vídeo automático sem som, com capa", "weight": "acesso", "fix": "Use autoplay com muted, loop e playsinline, e uma capa no idioma da página." },
+    "reduced_motion": { "label": "A regra de menos movimento", "weight": "acesso", "fix": "Acrescente a regra prefers-reduced-motion: vídeo sem começar sozinho, animações paradas, transições desligadas." },
+    "legal_lines": { "label": "As linhas legais", "weight": "lei", "fix": "Inclua os links da política de privacidade e dos termos, e o caminho do arrependimento ou do reembolso." },
+    "thank_you_basics": { "label": "Confirmação, próximo passo e ajuda", "weight": "venda", "fix": "Confirme o pedido, diga o que acontece agora e onde pedir ajuda." },
+    "images_alt": { "label": "Imagens com texto alternativo", "weight": "acesso", "fix": "Descreva no atributo alt cada imagem que informa algo; imagem decorativa leva alt vazio." }
+  }
+}

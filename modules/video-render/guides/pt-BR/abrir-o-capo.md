@@ -73,7 +73,7 @@ A página segue um método escrito para vídeos curtos de produto:
 | `previa.mp4` e `quadros/` | a prévia e as fotos de conferência | nada; a rodada seguinte refaz e substitui |
 | o vídeo mudo e o vídeo final | o render sem som e o vídeo com a mixagem | um render novo depois de uma mudança na página ou no som |
 | `.aceite.json` | o relatório da conferência, item a item, com o que mudar | nada; é a prova do que foi conferido |
-| `capturas/`, uma pasta por site | `captura.json` com a marca lida (nome, logo, cores, fontes, botões, números, preços e redes sociais), as telas do computador e do celular, a página inteira, as rolagens gravadas e o logo | corrigir o que veio errado: diga a cor certa ou mande o logo, e a IA usa o que você disse |
+| `capturas/`, uma pasta por site | `captura.json` com a marca lida (nome, logo, cores, fontes, botões, números, preços e redes sociais) e a anatomia da página, o texto inteiro dela em `texto.md`, as telas do computador e do celular, a página inteira, as rolagens gravadas e o logo | corrigir o que veio errado: diga a cor certa ou mande o logo, e a IA usa o que você disse |
 
 Se já existe um arquivo com o nome que o Motor vai gravar, ele é substituído; a IA escolhe os nomes e avisa antes de sobrescrever uma página sua.
 
@@ -114,6 +114,7 @@ Se já existe um arquivo com o nome que o Motor vai gravar, ele é substituído;
 
 - "Capture o site da minha marca sem gravar a rolagem" ou "sem baixar o logo".
 - "Capture com o celular a 430 px de largura." O celular vai de 280 a 1080 px (padrão 390); o computador, de 800 a 3840 px (padrão 1440).
+- "Capture esta página de oferta" ou "capture a página que eu salvei no navegador". A captura lê a página inteira: as seções, os botões e se eles aparecem na primeira tela do computador e do celular, as barras fixas, as caixas que já vêm marcadas, os preços riscados, os vídeos, as animações e os relógios de contagem regressiva, e guarda o texto inteiro da página. Uma página que só abre com login vai como página salva pelo navegador (.mhtml); nela os relógios ficam parados, porque os scripts da página não rodam.
 
 ## As conferências
 

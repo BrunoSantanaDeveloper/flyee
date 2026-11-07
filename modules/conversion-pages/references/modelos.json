@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "models": [
+    {
+      "id": "hostinger-agente-pos-compra",
+      "title": "Hostinger: a oferta do agente de IA depois da compra",
+      "source": "Hostinger",
+      "seen_on": "2026-11-07",
+      "types": ["upsell", "downsell", "obrigado"],
+      "file": "modelos/hostinger-agente-pos-compra.md",
+      "highlights": [
+        "compra em um clique com o valor confirmado numa janela",
+        "vídeo de demonstração em três cenas, sem som e em loop",
+        "barra fixa que aparece quando o cartão da oferta sai da tela",
+        "segunda oferta só para quem recusou",
+        "regra de exibição: quem já tem ou veio de afiliado não vê"
+      ]
+    }
+  ]
+}

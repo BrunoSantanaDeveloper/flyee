@@ -1,0 +1,172 @@
+{
+  "format_version": 1,
+  "checked_on": "2026-11-07",
+  "types": [
+    {
+      "id": "upsell",
+      "label": "Upsell",
+      "asks": ["oferta depois da compra", "oferta pós-compra", "oferta de um clique", "upgrade depois de pagar"],
+      "where": "logo depois do pagamento confirmado, antes da página de obrigado",
+      "file": "tipos/upsell.md",
+      "facts": ["product.name", "main_purchase", "offer.price", "cta_text", "decline_text", "payment.one_click"],
+      "sections": [
+        "O progresso do pedido: Pedido recebido, Sua oferta, Pedido concluído",
+        "A faixa da oferta: para quem acabou de comprar",
+        "O topo: o resultado no título, o que é e quanto custa, a garantia, a demonstração do produto em uso",
+        "O cartão da oferta: o que inclui; o preço normal riscado, o preço de agora e a renovação; o botão, a nota do pagamento, a garantia e a recusa",
+        "A comparação com a alternativa que a pessoa já conhece",
+        "O que dá para fazer, com demonstrações curtas",
+        "Exemplos concretos em cartões",
+        "Com o que se conecta, quando faz parte do valor",
+        "A prova sobre o produto oferecido",
+        "Um último chamado e a recusa"
+      ],
+      "mechanics": [
+        "Aceite em um clique quando o meio de pagamento do pedido está salvo, com uma janela que mostra o valor antes de cobrar",
+        "Sem o meio salvo, um pagamento curto e já preenchido",
+        "A recusa leva ao downsell, se houver um de fato diferente, ou ao obrigado",
+        "Barra fixa com o preço e o botão quando o cartão da oferta sai da tela",
+        "Recarregar a página volta para a mesma etapa"
+      ],
+      "events": ["offer_view", "offer_accept", "offer_decline", "offer_payment_error"],
+      "legal": [
+        "O valor e a renovação antes do clique (CDC, art. 6, III, e art. 31)",
+        "O resumo da contratação antes de cobrar e a confirmação logo depois (Decreto 7.962/2013, art. 4)",
+        "O arrependimento em 7 dias desfaz também o que foi comprado junto (Decreto 7.962/2013, art. 5, §2)"
+      ],
+      "manual": [
+        "O clique mostra o valor numa confirmação antes de cobrar",
+        "Os números que a página promete aparecem na página: itens, especialistas, recursos",
+        "A capa e os textos dos vídeos estão no idioma da página",
+        "Quem já tem o produto não vê a oferta",
+        "A página de obrigado diz o que foi acrescentado"
+      ],
+      "checks": ["cta_first_screen", "single_offer", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "renewal_shown", "guarantee_near_cta", "charge_clear", "sticky_cta_long_page", "proof_about_offer", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "models": ["hostinger-agente-pos-compra"]
+    },
+    {
+      "id": "order-bump",
+      "label": "Order bump",
+      "asks": ["caixa antes de pagar", "oferta no checkout", "item a mais no pagamento"],
+      "where": "dentro do checkout, logo acima do botão de pagar",
+      "file": "tipos/order-bump.md",
+      "facts": ["product.name", "main_purchase", "offer.price", "cta_text"],
+      "sections": [
+        "Os dados de pagamento do checkout, como já são",
+        "A caixa do order bump: o título com a ação, uma ou duas linhas sobre o item, o preço",
+        "O resumo do pedido, que muda quando a caixa é marcada",
+        "O botão de pagar, com o total atualizado"
+      ],
+      "mechanics": [
+        "A caixa começa desmarcada e só a pessoa marca",
+        "Marcar atualiza o resumo e o valor do botão de pagar",
+        "Toda a caixa é área de toque no celular",
+        "O item entra no mesmo pagamento, sem outra tela"
+      ],
+      "events": ["bump_view", "bump_add", "bump_remove", "purchase"],
+      "legal": [
+        "Caixa desmarcada: item sem pedido não obriga a pagar (CDC, art. 39, III e parágrafo único)",
+        "O item descrito e o preço separado (Decreto 7.962/2013, art. 2)",
+        "O arrependimento do pedido desfaz o item junto (Decreto 7.962/2013, art. 5, §2)"
+      ],
+      "manual": [
+        "Marcar e desmarcar muda o total na hora",
+        "O recibo lista o item separado do principal",
+        "Nenhum contador ou oferta única que não seja verdade"
+      ],
+      "checks": ["no_prechecked", "bump_near_pay", "price_shown", "reference_price_true", "renewal_shown", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "models": []
+    },
+    {
+      "id": "downsell",
+      "label": "Downsell",
+      "asks": ["oferta depois da recusa", "última chance", "segunda oferta"],
+      "where": "logo depois que a pessoa recusou o upsell, uma vez só",
+      "file": "tipos/downsell.md",
+      "facts": ["product.name", "offer.price", "cta_text", "decline_text", "payment.one_click"],
+      "sections": [
+        "O aviso de que o pedido está confirmado",
+        "O título com o que mudou em relação à oferta recusada",
+        "O preço do primeiro período e a renovação",
+        "Três itens: o que inclui, por quanto tempo, como cancelar",
+        "O botão, a nota do pagamento, a garantia e a recusa"
+      ],
+      "mechanics": [
+        "Aparece uma vez, só para quem recusou o upsell",
+        "É de fato diferente da oferta recusada: preço, tamanho ou compromisso",
+        "Aceite em um clique com o valor confirmado antes de cobrar",
+        "Recusar leva ao obrigado"
+      ],
+      "events": ["downsell_view", "downsell_accept", "downsell_decline"],
+      "legal": [
+        "O valor e a renovação antes do clique (CDC, art. 6, III, e art. 31)",
+        "O resumo antes de cobrar e a confirmação logo depois (Decreto 7.962/2013, art. 4)"
+      ],
+      "manual": [
+        "A oferta é diferente da recusada, não a mesma com outro título",
+        "Depois dela não vem outra oferta"
+      ],
+      "checks": ["cta_first_screen", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "renewal_shown", "guarantee_near_cta", "charge_clear", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "models": ["hostinger-agente-pos-compra"]
+    },
+    {
+      "id": "cross-sell",
+      "label": "Cross-sell",
+      "asks": ["produtos relacionados", "quem comprou também levou", "combina com", "oferta no carrinho"],
+      "where": "na página do produto, no carrinho ou na página de obrigado, nunca no pagamento",
+      "file": "tipos/cross-sell.md",
+      "facts": ["product.name", "main_purchase", "offer.price"],
+      "sections": [
+        "Um a três itens ligados ao que está no carrinho, com imagem, preço e para que servem juntos",
+        "Adicionar em um toque, sem sair da página",
+        "O total atualizado"
+      ],
+      "mechanics": [
+        "Relevância antes de quantidade: de um a três itens",
+        "Nunca entre a pessoa e o botão de pagar",
+        "Nada pré-selecionado"
+      ],
+      "events": ["cross_sell_view", "cross_sell_add"],
+      "legal": [
+        "Nada pré-selecionado no carrinho (CDC, art. 39, III)",
+        "O preço do item e o total atualizado (Decreto 7.962/2013, art. 2)"
+      ],
+      "manual": [
+        "Quem comprou X também levou Y só com dado real da loja",
+        "Os itens mudam conforme o que está no carrinho"
+      ],
+      "checks": ["no_prechecked", "price_shown", "reference_price_true", "proof_about_offer", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "models": []
+    },
+    {
+      "id": "obrigado",
+      "label": "Página de obrigado",
+      "asks": ["página de obrigado", "pedido concluído", "confirmação da compra"],
+      "where": "o fim do pedido, depois do pagamento e das ofertas",
+      "file": "tipos/obrigado.md",
+      "facts": ["main_purchase", "cta_text"],
+      "sections": [
+        "A confirmação: pedido concluído, o número, o que foi comprado e o valor",
+        "O que acontece agora: o recibo, o acesso, onde entrar",
+        "O primeiro passo para usar, com um botão",
+        "Ajuda: suporte e o caminho do arrependimento",
+        "Um item para depois, opcional"
+      ],
+      "mechanics": [
+        "A compra é medida aqui uma vez, e recarregar não conta outra venda",
+        "Uma linha diz o que foi acrescentado no upsell ou no order bump"
+      ],
+      "events": ["purchase", "activation_click"],
+      "legal": [
+        "Confirmação imediata e contrato disponível para guardar (Decreto 7.962/2013, art. 4, III e IV)",
+        "O caminho do arrependimento, de forma clara (Decreto 7.962/2013, art. 5)"
+      ],
+      "manual": [
+        "O evento de compra sai uma vez, com a identificação do pedido",
+        "O que foi acrescentado aparece na confirmação"
+      ],
+      "checks": ["thank_you_basics", "cta_first_screen", "legal_lines", "video_autoplay_ok", "reduced_motion", "images_alt"],
+      "models": ["hostinger-agente-pos-compra"]
+    }
+  ]
+}

@@ -353,13 +353,13 @@ node .flyee/modules/video-render/scripts/render.mjs loudness <arquivo> --json
 
 Devolve `file`, `integrated_lufs`, `true_peak_dbtp`, `range_lu` e `threshold` do áudio do arquivo (EBU R128); num áudio em silêncio, os números vêm `null`. Um arquivo sem áudio dá `no_audio_stream`. A referência das redes é −14 LUFS com pico real até −1 dBTP.
 
-## 5. A marca: `capture`
+## 5. A marca e a anatomia da página: `capture`
 
 ```
 node .flyee/modules/video-render/scripts/render.mjs capture <endereço> --json
 ```
 
-Abre o site no navegador sem janela em tamanho de computador e de celular, fecha o aviso de cookies quando acha um, fotografa a tela e a página inteira, grava a rolagem, lê a marca na página e guarda tudo numa pasta com `captura.json`. Aceita `https://www.exemplo.com.br`, `exemplo.com.br` (vira https), `localhost:3000` ou `127.0.0.1` (http) e o caminho de um arquivo `.html`. É o único comando do Motor que vai à internet: além de abrir o site, baixa só imagens (o logo, os ícones e a imagem de compartilhamento, até 10 MB cada) e nunca roda nada do site fora do navegador. No render, a internet só entra quando a própria página carrega algo de fora (uma fonte da web, por exemplo).
+Abre o site no navegador sem janela em tamanho de computador e de celular, fecha o aviso de cookies quando acha um, fotografa a tela e a página inteira, grava a rolagem, lê a marca e a anatomia da página e guarda tudo numa pasta com `captura.json` e `texto.md`. Aceita `https://www.exemplo.com.br`, `exemplo.com.br` (vira https), `localhost:3000` ou `127.0.0.1` (http), o caminho de um arquivo `.html` e o de uma página salva pelo navegador (`.mhtml` ou `.mht`). A página salva é o caminho para uma página que só abre com login: o integrante salva a página no navegador como página da web em arquivo único e você captura o arquivo. É o único comando do Motor que vai à internet: além de abrir o site, baixa só imagens (o logo, os ícones e a imagem de compartilhamento, até 10 MB cada) e nunca roda nada do site fora do navegador. No render, a internet só entra quando a própria página carrega algo de fora (uma fonte da web, por exemplo).
 
 | Opção | Para quê |
 |---|---|
@@ -370,7 +370,7 @@ Abre o site no navegador sem janela em tamanho de computador e de celular, fecha
 | `--no-assets` | não baixa o logo, os ícones nem a imagem de compartilhamento |
 | `--browser <caminho>` | outro navegador |
 
-Precisa do navegador; sem o ffmpeg, as rolagens ficam de fora, com aviso. Devolve `url`, `final_url` (depois dos redirecionamentos), `site`, `http_status`, `dir`, `capture_file` (`<dir>/captura.json`), `files` (relativos a `dir`: `desktop`, `desktop_full`, `mobile`, `mobile_full`, `scroll_desktop` e `scroll_mobile` ou `null`, `capture` e `assets[]`), `viewports` (`desktop` e `mobile`: `width`, `height`, `scale`, `full_height`, `content_height`), `scroll` (`desktop` e `mobile`: `frames`, `seconds`, `fps`, `max_scroll`, `width`, `height`, ou `null`), `brand`, `cookie_banner` (o texto do botão fechado, ou `null`), `elapsed_s` e `warnings`.
+Precisa do navegador; sem o ffmpeg, as rolagens ficam de fora, com aviso. Devolve `url`, `final_url` (depois dos redirecionamentos; numa página salva, o próprio arquivo), `site`, `input_kind` (`url` para um site, `html` para um arquivo `.html`, `mhtml` para uma página salva), `http_status`, `dir`, `capture_file` (`<dir>/captura.json`), `files` (relativos a `dir`: `desktop`, `desktop_full`, `mobile`, `mobile_full`, `scroll_desktop` e `scroll_mobile` ou `null`, `capture`, `text` (`texto.md`, ou `null` quando não houve texto para ler) e `assets[]`), `viewports` (`desktop` e `mobile`: `width`, `height`, `scale`, `full_height`, `content_height`), `scroll` (`desktop` e `mobile`: `frames`, `seconds`, `fps`, `max_scroll`, `width`, `height`, ou `null`), `anatomy_counts` (quantos itens a anatomia achou: `sections`, `ctas`, `fixed`, `forms`, `prices`, `videos` e `animations`, ou `null` quando a leitura da anatomia falhou), `brand`, `cookie_banner` (o texto do botão fechado, ou `null`), `elapsed_s` e `warnings`. A anatomia inteira fica só no `captura.json`.
 
 | `brand` | O que traz |
 |---|---|
@@ -385,7 +385,7 @@ Precisa do navegador; sem o ffmpeg, as rolagens ficam de fora, com aviso. Devolv
 | `nav[]`, `sector_cues[]`, `language`, `has_login_area` | o menu, as pistas do setor (`sector`, `score`, `keywords`), o idioma (`declared`, `detected`) e se há área de login |
 | `word_count`, `jsonld_types`, `address` | quantas palavras, os tipos de dados estruturados e o endereço, quando há |
 
-O `captura.json` traz o mesmo e mais: `format_version` (1), `captured_at`, `cookie_banner` (`desktop` e `mobile`), `wall` (os sinais de bloqueio), `placeholder` (`null`, ou `kind: "coming_soon"` com `label` e `evidence` quando a página parece provisória), `assets[]` (cada download, com `role`, `file`, `saved` e `error`), `page_errors`, `layout` (abaixo) e `raw`, o que foi lido da página: `document` (`title`, `lang`, `description`, `canonical`, `og`), `headings` (`h1`, `h2`), `fonts` (`body`, `h1`, `h2`, `button`, `nav`), `logos[]` (com `in_header`), `cta`, `colors`, `prices`, `links`, `nav`, `layout` e `text_excerpt` (os primeiros 4.000 caracteres do texto).
+O `captura.json` traz o mesmo e mais: `format_version` (1), `input_kind`, `captured_at`, `cookie_banner` (`desktop` e `mobile`), `wall` (os sinais de bloqueio), `placeholder` (`null`, ou `kind: "coming_soon"` com `label` e `evidence` quando a página parece provisória), `assets[]` (cada download, com `role`, `file`, `saved` e `error`), `page_errors`, `layout` (abaixo), `anatomy` (abaixo) e `raw`, o que foi lido da página: `document` (`title`, `lang`, `description`, `canonical`, `og`), `headings` (`h1`, `h2`), `fonts` (`body`, `h1`, `h2`, `button`, `nav`), `logos[]` (com `in_header`), `cta`, `colors`, `prices`, `links`, `nav`, `layout` e `text_excerpt` (os primeiros 4.000 caracteres do texto; o texto inteiro está em `texto.md`).
 
 `layout.mobile` diz onde fica cada título na página inteira de celular, para rolar a imagem `mobile-full.png` até a seção de que uma cena fala. Ele só existe no `captura.json`, não na resposta do comando, e é `null` quando a leitura falhou.
 
@@ -396,6 +396,33 @@ O `captura.json` traz o mesmo e mais: `format_version` (1), `captured_at`, `cook
 | `headings[]` | até 60 títulos `h1`, `h2` e `h3` visíveis, de cima para baixo: `tag`, `text` (até 140 caracteres), `y` (px CSS desde o topo da página), `height` e `fraction` (`y / full_height`: 0 é o topo, 1 é o fim da imagem) |
 
 A página fotografada vai até 8.000 px CSS: títulos abaixo disso ficam de fora. Para levar a imagem até um título, use `fraction` vezes a altura da imagem que você desenhar, ou `y × 2` nos pixels de `mobile-full.png`.
+
+### A anatomia da página
+
+`anatomy` é a leitura da página para conferir uma página de oferta (upsell, order bump, página de obrigado) ou qualquer página de venda: o que há em cada seção, onde estão os chamados, o que fica fixo na tela, o que já vem marcado, os preços, os vídeos e o que se mexe. Ela só existe no `captura.json`. Quando a leitura falha, `anatomy` é `null` e `warnings` diz o motivo; o resto da captura vale. Trate o que dependia dela como não conferido, nunca como ausente: sem a leitura, uma página sem caixa marcada e uma página que não foi lida parecem iguais.
+
+As posições (`y`, `x`, `width`, `height`) são px CSS da página inteira no computador, a mesma régua em `sections`, `ctas`, `forms` e `prices`: uma caixa acima do botão de pagamento tem `y` menor que o dele. `section` é o `index` da seção em `sections` onde o item está.
+
+| Campo | O que é |
+|---|---|
+| `format_version` | 1 |
+| `viewports` | `desktop` e `mobile`, cada um com `width` e `height`: a primeira tela de cada tamanho, medida na página |
+| `sections[]` | a página dividida nos títulos `h1`, `h2` e `h3` visíveis, na ordem do documento, até 120. Cada uma traz `index`, `heading` (`tag` e `text`; `null` na seção 0, que é o que vem antes do primeiro título), `y` e `height`, `text` (até 4.000 caracteres; o texto inteiro está em `texto.md`) e `words` (as palavras do texto da seção, sem o título). Depois do 120º título, o texto segue na última seção |
+| `ctas[]` | até 200 chamados, na ordem da página: botões, `input` de envio, elementos com `role="button"`, links com cara de botão (fundo ou borda) e qualquer link que recusa ou pula a oferta ("Não, obrigado", "Pular", "Agora não", "Dispensar", "Continuar sem", "No thanks", "Skip", "Not now"). Cada um traz `index`, `kind` (`button`, `link` ou `submit`), `text`, `href` (só nos links, senão `null`), `x`, `y`, `width`, `height`, `above_fold`, `in_fixed` (dentro de um elemento fixo ou grudado), `section` e `disabled` |
+| `ctas[].above_fold` | `desktop` e `mobile`: `true` quando o centro do chamado cabe na primeira tela daquele tamanho, sem rolar. `mobile` vem da leitura do celular, pelo mesmo texto na mesma ordem, e é `null` quando o celular não mostra esse chamado |
+| `fixed[]` | os elementos fixos ou grudados (`position: fixed` ou `sticky`) que estão na tela e são faixas (metade da largura ou mais) ou têm um chamado, lidos no topo e de novo depois de rolar até o fim, até 10 por passada. Cada um traz `pass` (`desktop` ou `mobile`), `position` (`fixed` ou `sticky`), `edge` (`top` ou `bottom` quando encosta nessa borda da tela, `other` quando cobre a tela ou flutua no meio), `text` (até 280 caracteres), `height`, `ctas` (os textos dos chamados de dentro) e `appeared_after_scroll` (`true` quando só apareceu depois da rolagem). O aviso de cookies fica de fora |
+| `forms[]` | até 100 caixas de seleção e opções (`checkbox`, `radio` e os componentes com `role` equivalente). Cada uma traz `type` (`checkbox` ou `radio`), `label` (o rótulo ligado à caixa, o `aria-label` ou o texto mais próximo), `checked` (o estado na hora da captura: uma caixa paga que já vem marcada aparece aqui), `required`, `name` (ou `null`), `price_text` (o preço escrito no rótulo, ou `null`), `section` e `y` |
+| `prices[]` | até 100 preços em reais no texto, na ordem da página. Cada um traz `text` ("R$ 49,99"), `value` (49.99), `struck` (`true` quando o preço está riscado: dentro de `del`, `s` ou `strike`, ou com `text-decoration: line-through`), `context` (a frase em volta, até 120 caracteres), `section` e `y` |
+| `media.videos[]` | `src`, `poster`, `autoplay`, `muted` (a propriedade ou o atributo), `loop`, `playsinline`, `controls`, `width` e `height` (o tamanho na tela), `duration_s` (`null` quando o vídeo não carregou) e `section` |
+| `media.iframes[]` | `src`, `provider` (`youtube`, `vimeo` ou `other`) e `section` |
+| `media.images` | `count` (imagens da página) e `without_alt` (as que não têm o atributo `alt`) |
+| `motion.running[]` | até 200 animações rodando no fim da leitura do computador: `kind` (`css-animation`, `css-transition` ou `web-animation`), `name` (o nome da animação, a propriedade da transição ou `null`), `duration_ms`, `iterations` (um número, ou `"infinite"`) e `target` (a tag com a primeira classe, como `a.btn`) |
+| `motion` (o resto) | `keyframes` (os nomes dos `@keyframes`), `transitions` (quantas regras declaram transição), `reduced_motion_rules` (quantas regras `@media (prefers-reduced-motion)` existem: zero quer dizer que a página não respeita quem pede menos movimento), `smooth_scroll` (rolagem suave na página), `scroll_snap` (quantos elementos encaixam na rolagem) e `stylesheets_unread` (folhas de estilo de outro domínio que o navegador não deixa ler: o que elas declaram fica fora das contagens) |
+| `countdowns[]` | os relógios de contagem regressiva: textos como 00:12:34, 12:34 ou 2d 14h 33m que mudaram entre duas leituras feitas com 1,2 s de intervalo. Cada um traz `text` (o da segunda leitura) e `section`. Um horário fixo, como "das 08:00 às 18:00", não muda e fica de fora |
+
+Numa página salva (`input_kind: "mhtml"`), o navegador não roda os scripts da página: os relógios ficam parados (`countdowns` vem vazio) e o que só aparece com JavaScript, como uma barra que surge depois da rolagem, não aparece. Diga isso ao conferir uma página salva, em vez de concluir que a página não tem relógio ou barra.
+
+`texto.md` (em `files.text`) traz o texto da página na ordem: o que vem antes do primeiro título, depois cada seção com `## título` e o texto dela, até 60.000 caracteres; quando a página tem mais, a última linha diz que o texto foi cortado. É o texto da página como ela está, sem revisão: use-o para ler e citar a página, nunca como texto pronto para publicar.
 
 Use só o que a captura trouxe. O que ela não encontrou (um logo, uma cor de destaque), peça ao integrante como arquivo, em vez de inventar. Um site que barra o navegador dá `site_blocked` e deixa `bloqueio.png` na pasta: peça as telas ao integrante. Um endereço sem site publicado (domínio estacionado no provedor, página padrão do servidor) dá `site_placeholder` e deixa `sem-site.png`: nada dele é da marca. Uma página provisória ("em breve") é capturada, com aviso e com `placeholder` no `captura.json`: confirme com o integrante que o logo e as cores são dele.
 
@@ -520,7 +547,7 @@ Em erro, `ok` é `false` e vem `error` com `code`, `message` e `fix`. Mostre `me
 | `exists` | `scaffold` numa pasta que já tem `pagina.html`: use outra pasta, ou `--force` só com o sim do integrante |
 | `cues_invalid` | a lista de deixas do `sfx` está errada: `message` diz qual deixa e qual campo |
 | `audio_too_short`, `silent_audio`, `no_beats` | o `beats` não achou andamento (menos de um segundo de som, silêncio, fala sem ritmo): use um trecho mais longo de música, ou passe `--bpm` |
-| `invalid_url` | o endereço do `capture` não é válido ou o arquivo `.html` não existe: confira com o integrante |
+| `invalid_url` | o endereço do `capture` não é válido, ou o arquivo `.html` ou a página salva `.mhtml` não existe: confira com o integrante |
 | `site_unreachable` | o site não abriu ou respondeu com erro sem conteúdo: confira o endereço e a conexão e tente de novo |
 | `site_blocked` | o site barrou o navegador (`bloqueio.png` mostra o que ele devolveu): peça as telas ao integrante ou outro endereço do mesmo site |
 | `site_placeholder` | o endereço ainda não tem o site da marca: domínio estacionado ou página padrão do servidor (`sem-site.png` mostra o que veio). Peça outro endereço da marca, ou o logo e duas ou três imagens |

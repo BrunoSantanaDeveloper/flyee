@@ -9,12 +9,14 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | [Criativos para anúncios](#ad-creatives) | 1.2.0 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
 | [Medição e leitura de resultados](#ads-insights) | 1.0.0 | tool | escalar | — | — |
 | [Base de contatos e CRM](#contact-base) | 1.1.0 | workflow | vender | — | — |
+| [Páginas que vendem](#conversion-pages) | 1.0.0 | workflow | vender | `video-render` | — |
 | [Pesquisa no Instagram](#instagram-research) | 1.1.0 | tool | planejar | `video-analysis` | `ad-creatives` |
 | [Plano de estratégia e mídia](#media-plan) | 1.1.0 | workflow | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.3 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.2 | tool | planejar | — | `ad-creatives`, `instagram-research`, `youtube-script` |
-| [Motor de vídeo](#video-render) | 1.0.3 | tool | divulgar | — | `ad-creatives`, `motion-carousel`, `video-studio` |
+| [Motor de vídeo](#video-render) | 1.1.0 | tool | divulgar | — | `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio` |
 | [Estúdio de vídeo](#video-studio) | 1.1.1 | workflow | divulgar | `video-render` | — |
+| [Atendimento no WhatsApp com IA e equipe](#whatsapp-support) | 1.0.0 | workflow | construir | — | — |
 | [Pesquisa no YouTube](#youtube-research) | 1.2.0 | tool | planejar | — | `ad-creatives`, `youtube-script` |
 | [Roteiro para YouTube](#youtube-script) | 1.3.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
 
@@ -106,6 +108,30 @@ Transforma a sua base antiga de contatos numa régua que pode ser enviada, sem t
 - fs:read: os exports de usuários e contatos que você puser em contatos/entrada/, as respostas da voz do cliente em contatos/, e media-plan/<plano>/plano.json
 - network: o DNS público do seu domínio de envio (os registros SPF, DMARC e DKIM), só leitura
 - fs:write: ./contatos/
+
+## conversion-pages
+
+**Páginas que vendem** (Pages that sell) · versão 1.0.0 · workflow · trilha vender · testado em `claude_code`
+
+> Monta e confere páginas de oferta pelo tipo (order bump, upsell, downsell, cross-sell e página de obrigado) com a estratégia que o mercado usa e modelos reais analisados, e aponta o que corrigir antes de publicar.
+
+Monta e confere páginas de oferta pelo tipo, com a estratégia que o mercado usa e modelos reais analisados. Este texto é o guia dentro do projeto; a página do app no flyee.club lê os guias em `guides/`.
+
+**Skills**
+
+- `conversion-pages`: Monta e confere páginas de oferta pelo tipo (order bump, upsell, downsell, cross-sell e página de obrigado) com a estratégia de mercado de cada uma e modelos reais analisados. Use quando pedirem uma dessas páginas, uma oferta no checkout ou depois da compra, ou a revisão de uma delas. A página de destino de anúncio fica com o ad-landing-page.
+
+**Usa** `video-render` · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/conversion-pages/scripts/pages.mjs
+- shell: node .flyee/modules/video-render/scripts/render.mjs, quando instalado
+- shell: o navegador já instalado (Microsoft Edge, Google Chrome ou Chromium), aberto sem janela para ler a página
+- fs:read: o código do projeto (package.json, rotas, componentes e estilos), as pastas de paginas/ e a página salva (.mhtml) que você indicar
+- fs:write: ./paginas/ ou ./docs/paginas/, e os arquivos da página no código do projeto
+- network: o endereço da página que você pedir para conferir, no seu computador ou publicado
+- env: FLYEE_USER_APPS
 
 ## instagram-research
 
@@ -240,7 +266,7 @@ Assiste a vídeos por você, com imagem e som, e entrega uma descrição com tem
 
 ## video-render
 
-**Motor de vídeo** (Video engine) · versão 1.0.3 · tool · trilha divulgar · testado em `claude_code`
+**Motor de vídeo** (Video engine) · versão 1.1.0 · tool · trilha divulgar · testado em `claude_code`
 
 > Transforma uma página animada em vídeo pronto para as redes, com trilha original e efeitos na batida, prévia, a marca do seu site e conferência antes de publicar: capa, texto, área segura, volume e, por rede, formato e duração. É o motor que outros apps usam para renderizar.
 
@@ -256,7 +282,7 @@ Transforma uma página animada em vídeo pronto para publicar. A sua IA escreve 
 - Entrada: `node .flyee/modules/video-render/scripts/render.mjs <comando> --json`
 - Comandos nos exemplos: `accept`, `beats`, `capture`, `check`, `frames`, `help`, `loudness`, `mix`, `music`, `networks`, `open`, `preview`, `probe`, `render`, `scaffold`, `sfx`, `sheet`, `synth`
 
-**Usa** — · **Usado por** `ad-creatives`, `motion-carousel`, `video-studio`
+**Usa** — · **Usado por** `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio`
 
 **Permissões declaradas**
 
@@ -294,6 +320,30 @@ Transforma um pedido em um vídeo animado para Reels, TikTok e Shorts. Você diz
 - fs:read: README.md e package.json do projeto, e os arquivos que você puser em estudio-de-video/<vídeo>/materiais/
 - fs:write: ./estudio-de-video/ e ./capturas/
 - network: o site da marca que você indicar
+
+## whatsapp-support
+
+**Atendimento no WhatsApp com IA e equipe** (WhatsApp support with AI and your team) · versão 1.0.0 · workflow · trilha construir · testado em `claude_code`
+
+> Monta no seu sistema o atendimento pelo WhatsApp com robô de IA e equipe: o painel com o seu login e as suas cores, o número conectado pela API oficial ou não oficial, o robô que consulta só o que você liberar e chama a equipe, e o caminho para atualizar.
+
+Para quem desenvolve um sistema e quer dar aos clientes dele atendimento pelo WhatsApp: um robô de IA responde o que sabe e passa para a equipe o que precisa de gente, e a equipe atende num painel completo, entrando com o mesmo login do sistema.
+
+**Skills**
+
+- `whatsapp-support`: Monta num projeto de código o atendimento pelo WhatsApp com robô de IA e equipe, sobre o Chatwoot, com base pronta, telas no design system do projeto, login único, API oficial ou não oficial, tema e atualização. Use quando pedirem chatbot ou atendimento por WhatsApp num sistema, ou para atualizar ou conferir esse atendimento.
+
+**Usa** — · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/whatsapp-support/scripts/kit.mjs
+- shell: Edge, Chrome ou Chromium sem janela, só na conferência visual
+- shell: docker compose, só no teste local, quando você pedir
+- fs:read: o código do projeto aberto e o arquivo .env que você indicar para as conferências
+- fs:write: a pasta do kit que você escolher no projeto e os arquivos do projeto que a integração adapta
+- network: os endereços do seu próprio atendimento: o painel, o robô, o OpenWA e as rotas do robô no seu sistema
+- env: CHATWOOT_PUBLIC_URL, CHATWOOT_PLATFORM_TOKEN, SUPPORT_BOT_PUBLIC_URL, SUPPORT_BOT_SECRET, PROJECT_URL, PROJECT_ORIGIN, OPENWA_PUBLIC_URL, OPENWA_API_KEY
 
 ## youtube-research
 

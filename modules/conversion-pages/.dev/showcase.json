@@ -1,0 +1,14 @@
+{
+  "pt-BR": {
+    "request": "Crie a página de upsell que aparece depois do checkout do meu curso, oferecendo a mentoria em grupo com 50% de desconto no primeiro mês.",
+    "reply": [
+      { "label": "Tipo", "text": "Upsell logo depois do pagamento confirmado, antes da página de obrigado; o pedido do curso já está garantido e a recusa leva direto ao obrigado." },
+      { "label": "Mecânica", "text": "O seu checkout guarda o cartão, então o aceite é em um clique, com uma janela que mostra o valor antes de cobrar." },
+      { "label": "Página", "text": "Progresso do pedido, o resultado da mentoria no título, o cartão com o preço normal riscado e o primeiro mês pela metade, a garantia ao lado do botão e a recusa em palavras neutras." },
+      { "label": "Conferência", "text": "Dois pontos em atenção: os depoimentos falam do curso, não da mentoria, e a página longa ainda não tem barra fixa no celular." },
+      { "label": "Decisões suas", "text": "Confirmar que o preço normal da mentoria é o praticado hoje e qual depoimento de aluno da mentoria entra na página." }
+    ],
+    "saved": "Salvo em paginas/upsell-mentoria/plano.md, com a conferência em conferencia.json ao lado"
+  },
+  "en": null
+}

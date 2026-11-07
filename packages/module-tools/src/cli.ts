@@ -8,8 +8,11 @@
 //   npm run apps -- list [--json]
 //   npm run apps -- new <slug> --type <skill|workflow|tool|framework> --trail <trail> [--title "…"] [--title-en "…"] [--summary "…"]
 //   npm run apps -- bump <slug> <patch|minor|major|x.y.z>
-//   npm run apps -- link <slug...> | --all [--project <name>]     (also links the apps they call)
-//   npm run apps -- unlink <slug...> [--project <name>]
+//   npm run apps -- link <slug...> | --all [--project <name> | --user]     (also links the apps they call)
+//   npm run apps -- unlink <slug...> [--project <name> | --user]
+//     --user: installed once for this user, outside every repository (FLYEE_USER_APPS, by default
+//     ~/.flyee/user-apps), with a bridge per skill in Claude Code's personal skills folder
+//     (~/.claude/skills, or $CLAUDE_CONFIG_DIR/skills), so an app works in any code repository.
 //   npm run apps -- project list | new <name> [slug...] | sync [name...]
 //   npm run apps -- catalog [--check]
 //   npm run apps -- workspace
@@ -30,6 +33,7 @@ import { createProject, listProjects, projectDir, projectsRoot, readProject, wit
 import { referencedApps } from "./relations.ts";
 import { readManifest } from "./manifest.ts";
 import { sendApp } from "./platform-send.ts";
+import { bridgeLines, claudeSkillsDir, linkUserBridges, unlinkUserBridges, userAppsDir } from "./user-apps.ts";
 import { type Report, validateAll } from "./validate.ts";
 import { ensureCliBundle, ensureWorkspace, readWorkspaceLock, runCliInWorkspace, workspaceDir } from "./workspace.ts";
 
@@ -233,9 +237,37 @@ if (command === "validate") {
     { ok: true, slug, ...result, changelog: "placeholder", catalog },
     [`${slug}: ${result.from} → ${result.to}. Write the changelog in modules/${slug}/flyee.module.json (it is [PREENCHER] now) and the README's "O que há de novo".`],
   );
+} else if ((command === "link" || command === "unlink") && flags.user === true) {
+  // Installed once for this user, never inside a repository (docs/PLANO-PAGINAS.md, D1): user-apps.ts.
+  const slugs = flags.all === true ? listModuleDirs().map(slugOf) : positionals;
+  if (slugs.length === 0) fail(`Usage: npm run apps -- ${command} <slug...>${command === "link" ? " | --all" : ""} --user`);
+  if (flags.project !== undefined) fail("--user and --project are two different places: use one of them.");
+  const userDir = guard(() => userAppsDir());
+  const skillsDir = claudeSkillsDir();
+  const head = [`User apps: ${userDir}`, `Claude Code skills: ${skillsDir}`];
+  if (command === "link") {
+    const results = linkApps(userDir, slugs);
+    const bridges = guard(() => linkUserBridges(userDir, skillsDir));
+    const failed = results.filter((result) => !result.ok).length + bridges.refused.length;
+    emit({ ok: failed === 0, target: userDir, user: true, skills_dir: skillsDir, results, ...bridges }, [
+      ...head,
+      ...results.map(resultLine("link")),
+      ...bridgeLines(bridges),
+      "A new Claude Code session, in any folder, lists these skills; what an app writes stays in that session's project.",
+    ]);
+  } else {
+    // The bridges go first, and only the ones marked for these apps; then the packages.
+    const removed = guard(() => unlinkUserBridges(slugs, skillsDir));
+    const results = slugs.map((slug) => ({ slug, ...runCliInWorkspace(userDir, ["remove", slug]) }));
+    emit({ ok: results.every((result) => result.ok), target: userDir, user: true, skills_dir: skillsDir, results, removed }, [
+      ...head,
+      ...bridgeLines({ removed }),
+      ...results.map(resultLine("unlink")),
+    ]);
+  }
 } else if (command === "link" || command === "unlink") {
   const slugs = flags.all === true ? listModuleDirs().map(slugOf) : positionals;
-  if (slugs.length === 0) fail(`Usage: npm run apps -- ${command} <slug...>${command === "link" ? " | --all" : ""} [--project <name>]`);
+  if (slugs.length === 0) fail(`Usage: npm run apps -- ${command} <slug...>${command === "link" ? " | --all" : ""} [--project <name> | --user]`);
   const target = targetFolder(command === "link");
   const results = command === "link" ? linkApps(target.path, slugs) : slugs.map((slug) => ({ slug, ...runCliInWorkspace(target.path, ["remove", slug]) }));
   const failed = results.filter((result) => !result.ok);

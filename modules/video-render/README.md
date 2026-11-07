@@ -61,7 +61,7 @@ Tudo fica no seu computador, na pasta que a sua IA indicar. Por padrão:
 | ao lado de um vídeo pronto | a folha de contato (`<vídeo>-folha.png`), a tira de quadros seguidos, o teste de celular e o relatório da conferência (`<vídeo>.aceite.json`) |
 | na pasta que a IA indicar | as trilhas e os efeitos (`.wav`), a grade de batidas ao lado de cada trilha (`.beats.json`) e o vídeo final com som |
 | ao lado de uma música sua | a grade de batidas dela (`.beats.json`), quando a IA mede o andamento |
-| `capturas/<site>/` | `captura.json` com a marca (nome, logo, cores, fontes, botões, números, preços, redes), as telas do computador e do celular, as gravações de rolagem e os arquivos da marca em `assets/`; quando o site barra a visita, só `bloqueio.png`, com a tela que ele devolveu |
+| `capturas/<site>/` | `captura.json` com a marca (nome, logo, cores, fontes, botões, números, preços, redes) e a anatomia da página (seções, chamados, barras fixas, caixas marcadas, preços, vídeos e movimento), o texto inteiro da página em `texto.md`, as telas do computador e do celular, as gravações de rolagem e os arquivos da marca em `assets/`; quando o site barra a visita, só `bloqueio.png`, com a tela que ele devolveu |
 | a pasta temporária do sistema | quadros intermediários e o perfil do navegador sem janela, apagados ao final |
 
 Um arquivo com o mesmo nome de um que o Motor grava é substituído; a IA escolhe os nomes e avisa antes de sobrescrever uma página sua.
@@ -77,6 +77,7 @@ Um arquivo com o mesmo nome de um que o Motor grava é substituído; a IA escolh
 
 ## O que há de novo
 
+- 1.1.0: a captura lê a página inteira, para conferir páginas de oferta: as seções, os botões e links de ação e se aparecem na primeira tela do computador e do celular, as barras fixas, as caixas que já vêm marcadas, os preços riscados, os vídeos, as animações e os relógios de contagem regressiva. O texto inteiro da página fica em `texto.md`, e uma página salva pelo navegador (.mhtml) também pode ser capturada, para páginas que só abrem com login.
 - 1.0.3: um ffmpeg travado não deixa mais a sua IA esperando sem fim. Cada programa que o Motor roda tem um tempo limite folgado, que cresce com a duração do vídeo; passado esse tempo, o programa é encerrado e a sua IA recebe o erro com o que fazer.
 - 1.0.2: a tabela das redes ganha a zona de anúncio do feed da Meta (4:5 e 1:1), com a nota do que a Meta publica e do que é respiro de design; os anúncios de feed de outros apps passam a ser conferidos nela.
 - 1.0.1: quando outro app precisa do Motor de vídeo e ele ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.

@@ -1,3 +1,9 @@
+# Codex reads AGENTS.md only up to this many bytes (32 KiB by default). The
+# mirror has the rules first and the project state last; this lets a trusted
+# project read all of it. scripts/sync-agent-harness.mjs checks that the rules
+# alone fit in the default.
+project_doc_max_bytes = 65536
+
 [features]
 hooks = true
 

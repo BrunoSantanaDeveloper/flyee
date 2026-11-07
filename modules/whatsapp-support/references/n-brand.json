@@ -1,0 +1,76 @@
+{
+  "chatwoot": "4.19.1",
+  "checked_on": "2026-11-07",
+  "source": "classes com n-brand em app/javascript (dashboard, v3, shared) do Chatwoot v4.19.1; a cor n-brand é #2781F6 fixa em theme/colors.js",
+  "classes": [
+    "after:bg-n-brand",
+    "before:bg-n-brand",
+    "bg-n-brand",
+    "bg-n-brand/10",
+    "bg-n-brand/20",
+    "bg-n-brand/5",
+    "border-n-brand",
+    "border-n-brand/50",
+    "border-t-n-brand",
+    "checked:bg-n-brand",
+    "checked:border-n-brand",
+    "dark:bg-n-brand/10",
+    "dark:border-n-brand",
+    "dark:checked:bg-n-brand",
+    "dark:checked:border-n-brand",
+    "dark:focus-within:outline-n-brand",
+    "dark:focus:outline-n-brand",
+    "dark:hover:text-n-brand",
+    "dark:ring-n-brand",
+    "focus-visible:bg-n-brand/20",
+    "focus-visible:border-n-brand",
+    "focus-visible:outline-n-brand",
+    "focus-visible:ring-n-brand",
+    "focus-within:outline-n-brand",
+    "focus:border-n-brand",
+    "focus:outline-n-brand",
+    "focus:ring-n-brand",
+    "from-n-brand/15",
+    "group-focus-within:text-n-brand",
+    "group-hover:bg-n-brand",
+    "group-hover:text-n-brand",
+    "hover:bg-n-brand/10",
+    "hover:bg-n-brand/80",
+    "hover:bg-n-brand/90",
+    "hover:border-n-brand",
+    "hover:enabled:bg-n-brand/20",
+    "hover:text-n-brand",
+    "indeterminate:bg-n-brand",
+    "indeterminate:border-n-brand",
+    "outline-n-brand",
+    "prose-a:text-n-brand",
+    "prose-strong:text-n-brand",
+    "ring-n-brand",
+    "text-n-brand"
+  ],
+  "stylesheet_rules": [
+    {
+      "selector": "p a",
+      "property": "color",
+      "source": "dashboard/assets/scss/_base.scss"
+    },
+    {
+      "selector": ".field-base:focus",
+      "property": "outline-color",
+      "source": "dashboard/assets/scss/_base.scss"
+    },
+    {
+      "selector": ".text-link",
+      "property": "color",
+      "source": "v3/App.vue (tela de login)"
+    },
+    {
+      "selector": ".banner.primary",
+      "property": "background-color",
+      "source": "dashboard/components/ui/Banner.vue"
+    }
+  ],
+  "variables": [
+    "--ninja-accent-color"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "checked_on": "2026-11-07",
+  "chatwoot": "4.19.1",
+  "chatwoot_image": "chatwoot/chatwoot:v4.19.1-ce",
+  "postgres_image": "pgvector/pgvector:pg16",
+  "redis_image": "redis:7-alpine",
+  "openwa": "0.29.1",
+  "openwa_image": "ghcr.io/rmyndharis/openwa:0.29.1",
+  "chatwoot_adapter": "0.9.15",
+  "caddy_image": "caddy:2",
+  "bot_node_image": "node:22-alpine"
+}

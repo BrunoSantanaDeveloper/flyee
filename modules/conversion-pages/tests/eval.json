@@ -1,0 +1,28 @@
+{
+  "app": "conversion-pages",
+  "cases": [
+    {
+      "name": "upsell depois do checkout",
+      "prompt": "Crie a página de upsell que aparece depois do checkout do meu curso, oferecendo a mentoria em grupo com 50% de desconto no primeiro mês.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/pagina.json" },
+        { "kind": "file_exists", "path": "paginas/*/plano.md" }
+      ],
+      "rubric": "Reconhece o tipo upsell e lê o roteiro e o modelo antes de planejar. Olha o projeto antes de perguntar e faz numa mensagem só as perguntas que faltam, cada uma com sugestão. O plano tem o progresso do pedido, o cartão da oferta com a recusa visível, a nota de que o aceite usa o pagamento do pedido, a confirmação do valor antes de cobrar e a barra fixa. Não inventa preço normal riscado nem contador; resume em três linhas."
+    },
+    {
+      "name": "order bump com a caixa marcada",
+      "prompt": "Revise o order bump do checkout que está rodando em localhost:3000/checkout antes de eu publicar.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/conferencia.json" }
+      ],
+      "rubric": "Captura a página com audit e aponta a caixa do order bump que já vem marcada como atenção, com o motivo (item sem pedido não obriga a pagar) e a correção (caixa desmarcada). Corrige no código quando o integrante pede e roda audit de novo. Fala só do que está em atenção e não conferido."
+    },
+    {
+      "name": "página de anúncio encaminhada",
+      "prompt": "Faça a página de destino da minha campanha de Meta Ads da mentoria.",
+      "assertions": [],
+      "rubric": "Reconhece que é a página de destino de um anúncio pago e usa a skill ad-landing-page do app de criativos quando instalada; sem ela, segue os princípios do app e diz que a conferência entre o anúncio e a página ficou de fora. Não cria uma página de upsell nem de order bump."
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+# Kit whatsapp-support: serviços de referência do atendimento. Modelo: leve para o caminho de implantação
+# do projeto (este compose, um stack do Swarm, outro orquestrador) e ajuste lá. Versões travadas no kit 1.0.0.
+# Caminhos relativos a esta pasta, quando ela fica em <destino>/modelos/implantacao.
+#
+# Perfis:
+#   (nenhum)     Chatwoot, Postgres, Redis e o robô
+#   nao-oficial  OpenWA, para a conexão pelo WhatsApp Web
+#   proxy        Caddy com TLS, para servidor sem proxy próprio
+#   config       aplica a marca e o tema no Chatwoot (rodar uma vez a cada implantação)
+
+name: atendimento
+
+x-chatwoot: &chatwoot
+  image: chatwoot/chatwoot:v4.19.1-ce
+  env_file: ../../segredos/chatwoot.env
+  environment:
+    NODE_ENV: production
+    RAILS_ENV: production
+    INSTALLATION_ENV: docker
+  volumes:
+    - chatwoot_storage:/app/storage
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_started
+
+services:
+  chatwoot-rails:
+    <<: *chatwoot
+    entrypoint: docker/entrypoints/rails.sh
+    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    expose:
+      - "3000"
+
+  chatwoot-sidekiq:
+    <<: *chatwoot
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+
+  chatwoot-config:
+    <<: *chatwoot
+    profiles: ["config"]
+    restart: "no"
+    env_file:
+      - ../../segredos/chatwoot.env
+      - ../../gerado/marca.env
+    command: ["bundle", "exec", "rails", "runner", "/kit/apply-config.rb"]
+    volumes:
+      - chatwoot_storage:/app/storage
+      - ../../base/deploy/apply-config.rb:/kit/apply-config.rb:ro
+      - ../../gerado:/kit/gerado:ro
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    env_file: ../../segredos/chatwoot.env
+    environment:
+      POSTGRES_DB: chatwoot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d chatwoot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    env_file: ../../segredos/chatwoot.env
+    command: ["sh", "-c", "redis-server --requirepass \"$$REDIS_PASSWORD\""]
+    volumes:
+      - redis_data:/data
+
+  robo:
+    build: ../../base/bot
+    restart: unless-stopped
+    env_file: ../../segredos/robo.env
+    expose:
+      - "8080"
+
+  openwa:
+    image: ghcr.io/rmyndharis/openwa:0.29.1
+    profiles: ["nao-oficial"]
+    restart: unless-stopped
+    env_file: ../../segredos/openwa.env
+    security_opt:
+      - "no-new-privileges:true"
+    volumes:
+      - openwa_data:/app/data
+    expose:
+      - "2785"
+
+  caddy:
+    image: caddy:2
+    profiles: ["proxy"]
+    restart: unless-stopped
+    env_file: ../../segredos/proxy.env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  chatwoot_storage:
+  postgres_data:
+  redis_data:
+  openwa_data:
+  caddy_data:
+  caddy_config:

@@ -25,6 +25,8 @@ Por isso os avisos andam por endereços públicos e `SAFE_FETCH_ALLOW_PRIVATE_NE
 ## Quem pode o quê
 
 - A equipe do cliente é atendente. Administrador é só a conta de serviço, que ninguém usa para entrar.
+- Entra no painel só quem passa em `canEnterPanel`: no modelo `plataforma`, a equipe de suporte do sistema e o superadmin; no `por-cliente`, quem o cliente marcou como equipe de atendimento (`isSupportStaff`) e quem administra o cliente (`canConfigure`). O superadmin da plataforma não entra no painel dos clientes. A rota de entrar recusa o resto com 403; mostre o botão "Atendimento" só para quem entra.
+- Quem sai da equipe sai do Chatwoot. A sessão do painel dura até 2 meses, então o projeto chama `removeFromPanel` no ponto em que tira a permissão de atendimento, desativa ou apaga a pessoa, e roda `syncPanelStaff` numa rotina diária para cada cliente: ela tira da conta quem o kit pôs e não está mais em `listPanelPeople`, e aponta em `unknown` quem está na conta sem ter sido posto pelo kit. As conversas atribuídas a quem saiu voltam para a fila.
 - A pessoa de repasse do OpenWA é atendente e só da caixa API: se o OpenWA fosse comprometido, o token dele não mexe em configuração da conta.
 - As telas de configurar o robô e conectar o número ficam no projeto, para quem o projeto deixar (`canConfigure`).
 
@@ -36,6 +38,17 @@ O provedor de IA recebe as mensagens da conversa, o conhecimento e as instruçõ
 - Para dado sensível, exija uma confirmação além do telefone ou passe para a equipe.
 - Confira o contrato de tratamento de dados com o provedor de IA escolhido. Quem precisa da IA sob o próprio controle usa o provedor `project`.
 - O robô trata o que vem do cliente e das consultas como dado, nunca como ordem (regra 8 do prompt), mas a defesa real é a consulta só devolver o que pode.
+
+## Quem mexe no contexto
+
+- A camada da plataforma só aceita escrita de quem o projeto marca como superadmin; a de cada cliente, só do administrador daquele cliente e só nos grupos liberados. O servidor descarta o resto (`applyClientEdits`): esconder o campo na tela não é a barreira.
+- As regras da plataforma entram no prompt acima das do cliente; um cliente não consegue desligar uma regra da plataforma escrevendo o contrário nas instruções dele.
+
+## Relatório e sugestões
+
+- O trecho de cada passagem para a equipe e as sugestões de conhecimento saem do robô sem e-mail, telefone, CPF, CNPJ, número de processo e cartão (`privacy.mjs`); a conversa que vai para a IA na hora de sugerir também.
+- Sugestão nenhuma entra no conhecimento sem alguém aprovar; a tela lembra de conferir se ficou algum dado de uma pessoa.
+- O superadmin vê o relatório e as sugestões de todos os clientes; o administrador do cliente, só os dele.
 
 ## Regras da Meta
 

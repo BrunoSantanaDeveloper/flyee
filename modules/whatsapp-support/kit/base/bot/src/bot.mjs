@@ -1,5 +1,7 @@
 // O robô: recebe o aviso do Chatwoot, confere a assinatura com o segredo da conta, responde 200 na hora
-// e trabalha depois, uma conversa por vez. Toda falha vira passagem para a equipe.
+// e trabalha depois, uma conversa por vez. Toda falha vira passagem para a equipe. Cada passagem vai para
+// o relatório das lacunas do sistema; cada conversa passada à equipe e resolvida pode virar sugestão de
+// conhecimento, que alguém aprova no sistema antes de valer.
 
 import { providerFor } from "./ai/index.mjs";
 import { runAgent } from "./agent.mjs";
@@ -7,14 +9,16 @@ import { chatwootClient } from "./chatwoot.mjs";
 import { silentLogger } from "./log.mjs";
 import { createMemory, createSeenSet } from "./memory.mjs";
 import { asksForTeam, normalizeConfig, teamAvailable } from "./policy.mjs";
+import { scrub } from "./privacy.mjs";
 import { projectClient } from "./project.mjs";
-import { buildSystemPrompt, toMessages } from "./prompt.mjs";
+import { buildSuggestionPrompt, buildSystemPrompt, parseSuggestions, SUGGESTION_SCHEMA, toMessages } from "./prompt.mjs";
 import { createConversationQueue } from "./queue.mjs";
 import { verifyChatwoot } from "./signature.mjs";
 
 export const VERSION = "1.0.0";
 
 const SUGGESTION_PREFIX = "Sugestão do robô, revise antes de enviar:";
+const ROLE_LABEL = { cliente: "Cliente", robo: "Robô", equipe: "Equipe" };
 
 function header(headers, name) {
   const value = headers?.[name] ?? headers?.[name.toLowerCase()];
@@ -57,11 +61,17 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
   }
 
   function classify(payload, config) {
-    if (payload?.event !== "message_created" || payload.private === true) return {};
-    const conversation = payload.conversation ?? {};
+    const conversation = payload?.event === "conversation_resolved" ? payload : payload?.conversation ?? {};
     const conversationId = Number(conversation.id);
     if (!Number.isInteger(conversationId) || conversationId <= 0) return {};
-    const key = `${Number(payload.account.id)}:${conversationId}`;
+    const accountId = Number(payload.account.id);
+
+    if (payload.event === "conversation_resolved") {
+      const handedOff = (conversation.labels ?? []).some((label) => config.handoff.labels.includes(label));
+      return config.learning.enabled && handedOff ? { key: `aprender:${accountId}:${conversationId}`, learn: true } : {};
+    }
+    if (payload.event !== "message_created" || payload.private === true) return {};
+    const key = `${accountId}:${conversationId}`;
     const text = String(payload.content ?? "");
     if (payload.message_type === "outgoing") {
       const role = payload.sender?.type === "agent_bot" ? "robo" : "equipe";
@@ -73,7 +83,25 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
     return { key, record: text.trim() ? { id: payload.id, role: "cliente", text } : null, act };
   }
 
-  async function handoffFlow({ cw, ids, config, pending, text, reason }) {
+  async function report(config, ids, { category, topic, reason, excerpt }) {
+    if (!config.report.enabled) return;
+    try {
+      await project.event({
+        kind: "handoff",
+        account_id: ids.account,
+        conversation_id: ids.conversation,
+        category,
+        topic: scrub(topic, 80),
+        reason: scrub(reason, 200),
+        excerpt: scrub(excerpt, 300),
+        at: new Date(now()).toISOString(),
+      });
+    } catch (error) {
+      logger.warn({ event: "report_failed", account: ids.account, conversation: ids.conversation, code: error?.code ?? "unexpected" });
+    }
+  }
+
+  async function handoffFlow({ cw, ids, config, pending, text, reason, category = "outro", topic = "", excerpt = "" }) {
     const { account, conversation } = ids;
     if (config.mode === "sugestao") {
       const note = text ? `${SUGGESTION_PREFIX}\n\n${text}\n\nO robô sugere passar para a equipe: ${reason}.` : `O robô sugere passar para a equipe: ${reason}.`;
@@ -99,6 +127,7 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
         // a conversa já está aberta para a equipe toda
       }
     }
+    await report(config, ids, { category, topic, reason, excerpt });
   }
 
   async function processConversation(key, items) {
@@ -110,6 +139,8 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
     const cw = chatwootFactory({ baseUrl: env.chatwootUrl, token: config.chatwoot.bot_token, fetchImpl });
     const log = (fields) => logger.info({ account: accountId, conversation: conversationId, mode: config.mode, ...fields });
     let pending = last.payload.conversation.status === "pending";
+    const texts = items.map((item) => String(item.payload.content ?? "").trim()).filter(Boolean);
+    const excerpt = texts.join(" ");
 
     try {
       const fresh = await cw.show(accountId, conversationId).catch(() => null);
@@ -130,23 +161,22 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
         return;
       }
 
-      const texts = items.map((item) => String(item.payload.content ?? "").trim()).filter(Boolean);
       const attachments = items.some((item) => Array.isArray(item.payload.attachments) && item.payload.attachments.length > 0);
       if (!texts.length) {
         if (attachments && pending) {
-          await handoffFlow({ cw, ids, config, pending, text: config.messages.anexo, reason: "a pessoa mandou um arquivo" });
+          await handoffFlow({ cw, ids, config, pending, text: config.messages.anexo, reason: "a pessoa mandou um arquivo", category: "anexo", topic: "arquivo enviado" });
           log({ event: "handled", action: "handoff", code: "attachment" });
         } else log({ event: "skipped", code: "empty" });
         return;
       }
 
-      if (pending && asksForTeam(texts.join(" "), config.handoff.keywords)) {
-        await handoffFlow({ cw, ids, config, pending, text: "", reason: "a pessoa pediu a equipe" });
+      if (pending && asksForTeam(excerpt, config.handoff.keywords)) {
+        await handoffFlow({ cw, ids, config, pending, text: "", reason: "a pessoa pediu a equipe", category: "pedido_da_pessoa", excerpt });
         log({ event: "handled", action: "handoff", code: "asked_for_team" });
         return;
       }
       if (pending && memory.turns(key) >= config.handoff.max_bot_turns) {
-        await handoffFlow({ cw, ids, config, pending, text: "", reason: "o robô chegou ao limite de respostas" });
+        await handoffFlow({ cw, ids, config, pending, text: "", reason: "o robô chegou ao limite de respostas", category: "limite", excerpt });
         log({ event: "handled", action: "handoff", code: "max_turns" });
         return;
       }
@@ -165,7 +195,7 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
       if (!messages.length) messages.push({ role: "user", content: texts.join("\n") });
       const providerGenerate = providerFor(config.ai.provider);
       const generate = ({ system: prompt, messages: history, schema }) =>
-        providerGenerate({ ai: config.ai, system: prompt, messages: history, schema, keys: env.keys, fetchImpl, project, ids, tools: config.tools });
+        providerGenerate({ ai: config.ai, system: prompt, messages: history, schema, keys: env.keys, fetchImpl, project, ids, tools: config.tools, purpose: "acao" });
       const contact = contactOf(last.payload);
       const inboxId = last.payload.inbox?.id ?? last.payload.conversation?.inbox_id ?? null;
       const callTool = (name, input) =>
@@ -194,23 +224,63 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
       }
 
       if (pending || config.mode === "sugestao") {
-        await handoffFlow({ cw, ids, config, pending, text: action.text, reason: action.reason || "decisão do robô" });
+        await handoffFlow({ cw, ids, config, pending, text: action.text, reason: action.reason || "decisão do robô", category: action.category, topic: action.topic, excerpt });
       }
-      log({ event: "handled", action: "handoff", lookups: action.lookups, provider: config.ai.provider, ms: now() - started });
+      log({ event: "handled", action: "handoff", code: action.category, lookups: action.lookups, provider: config.ai.provider, ms: now() - started });
     } catch (error) {
       logger.error({ event: "failed", account: accountId, conversation: conversationId, code: error?.code ?? "unexpected", ms: now() - started });
       try {
         const text = config.mode === "sugestao" ? "" : config.messages.erro;
-        await handoffFlow({ cw, ids, config, pending, text, reason: `o robô falhou (${error?.code ?? "erro inesperado"})` });
+        await handoffFlow({ cw, ids, config, pending, text, reason: `o robô falhou (${error?.code ?? "erro inesperado"})`, category: "falha", excerpt });
       } catch (handoffError) {
         logger.error({ event: "handoff_failed", account: accountId, conversation: conversationId, code: handoffError?.code ?? "unexpected" });
       }
     }
   }
 
+  /** Conversa que o robô passou e a equipe resolveu: até 3 perguntas e respostas sugeridas, sem dado pessoal. */
+  async function processLearning(item) {
+    const { accountId, config, payload } = item;
+    const conversationId = Number(payload.id);
+    const ids = { account: accountId, conversation: conversationId };
+    try {
+      const history = await project.history(accountId, conversationId, 50);
+      const entries = (Array.isArray(history) ? history : history?.messages ?? []).filter((entry) => ROLE_LABEL[entry?.role] && String(entry.text ?? "").trim());
+      if (!entries.some((entry) => entry.role === "equipe")) {
+        logger.info({ event: "learning_skipped", account: accountId, conversation: conversationId, code: "no_team_reply" });
+        return;
+      }
+      const transcript = entries.map((entry) => `${ROLE_LABEL[entry.role]}: ${scrub(entry.text, 1500)}`).join("\n");
+      const providerGenerate = providerFor(config.ai.provider);
+      const { text } = await providerGenerate({
+        ai: config.ai,
+        system: buildSuggestionPrompt(config),
+        messages: [{ role: "user", content: `Conversa:\n${transcript}` }],
+        schema: SUGGESTION_SCHEMA,
+        keys: env.keys,
+        fetchImpl,
+        project,
+        ids,
+        tools: [],
+        purpose: "sugestoes",
+      });
+      const suggestions = parseSuggestions(text)
+        .map((suggestion) => ({ q: scrub(suggestion.q, 500), a: scrub(suggestion.a, 3000), why: scrub(suggestion.why, 300) }))
+        .filter((suggestion) => suggestion.q && suggestion.a);
+      if (!suggestions.length) {
+        logger.info({ event: "learning_skipped", account: accountId, conversation: conversationId, code: "nothing_general" });
+        return;
+      }
+      await project.suggestions({ account_id: accountId, conversation_id: conversationId, suggestions, at: new Date(now()).toISOString() });
+      logger.info({ event: "learning_sent", account: accountId, conversation: conversationId, items: suggestions.length });
+    } catch (error) {
+      logger.warn({ event: "learning_failed", account: accountId, conversation: conversationId, code: error?.code ?? "unexpected" });
+    }
+  }
+
   const queue = createConversationQueue({
     debounceMs: env.debounceMs,
-    run: processConversation,
+    run: (key, items) => (items[items.length - 1].learn ? processLearning(items[items.length - 1]) : processConversation(key, items)),
     onError: (error) => logger.error({ event: "queue_error", code: error?.code ?? "unexpected" }),
   });
 
@@ -249,7 +319,8 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
     const decision = classify(payload, config);
     if (decision.record) memory.add(decision.key, decision.record);
     if (decision.act) queue.push(decision.key, { payload, accountId, config });
-    return { status: 200, body: { ok: true, queued: Boolean(decision.act) } };
+    if (decision.learn) queue.push(decision.key, { payload, accountId, config, learn: true });
+    return { status: 200, body: { ok: true, queued: Boolean(decision.act || decision.learn) } };
   }
 
   return {

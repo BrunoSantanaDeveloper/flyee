@@ -52,6 +52,28 @@ export function ensureStaffUser(input: {
   fetchImpl?: FetchImpl;
 }): Promise<{ state: SupportState; userId: number }>;
 
+export function removeStaffUser(input: {
+  chatwootUrl: string;
+  platformToken: string;
+  state: SupportState;
+  personKey: string;
+  fetchImpl?: FetchImpl;
+}): Promise<{ state: SupportState; removed: number | null }>;
+
+export function syncStaff(input: {
+  chatwootUrl: string;
+  platformToken: string;
+  state: SupportState;
+  keepKeys: string[];
+  allowEmpty?: boolean;
+  fetchImpl?: FetchImpl;
+}): Promise<{
+  state: SupportState;
+  removed: Array<{ key: string; user_id: number }>;
+  unknown: Array<{ user_id: number; role: string | null }>;
+  skipped: "no_account" | "empty_list" | null;
+}>;
+
 export function ssoUrl(input: { chatwootUrl: string; platformToken: string; userId: number; fetchImpl?: FetchImpl }): Promise<string>;
 
 export function connectCloudApi(input: {

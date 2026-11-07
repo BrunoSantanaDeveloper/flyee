@@ -9,7 +9,7 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | [Criativos para anúncios](#ad-creatives) | 1.2.0 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
 | [Medição e leitura de resultados](#ads-insights) | 1.0.0 | tool | escalar | — | — |
 | [Base de contatos e CRM](#contact-base) | 1.1.0 | workflow | vender | — | — |
-| [Páginas que vendem](#conversion-pages) | 1.0.0 | workflow | vender | `video-render` | — |
+| [Páginas que vendem](#conversion-pages) | 1.1.0 | workflow | vender | `video-render` | — |
 | [Pesquisa no Instagram](#instagram-research) | 1.1.0 | tool | planejar | `video-analysis` | `ad-creatives` |
 | [Plano de estratégia e mídia](#media-plan) | 1.1.0 | workflow | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.3 | skill | divulgar | `video-render` | — |
@@ -111,15 +111,15 @@ Transforma a sua base antiga de contatos numa régua que pode ser enviada, sem t
 
 ## conversion-pages
 
-**Páginas que vendem** (Pages that sell) · versão 1.0.0 · workflow · trilha vender · testado em `claude_code`
+**Páginas que vendem** (Pages that sell) · versão 1.1.0 · workflow · trilha vender · testado em `claude_code`
 
-> Monta e confere páginas de oferta pelo tipo (order bump, upsell, downsell, cross-sell e página de obrigado) com a estratégia que o mercado usa e modelos reais analisados, e aponta o que corrigir antes de publicar.
+> Monta e confere páginas que vendem pelo tipo (página de vendas, planos e preços, API, order bump, upsell, downsell, cross-sell e obrigado) com a estratégia que o mercado usa e modelos reais analisados, e aponta o que corrigir antes de publicar.
 
-Monta e confere páginas de oferta pelo tipo, com a estratégia que o mercado usa e modelos reais analisados. Este texto é o guia dentro do projeto; a página do app no flyee.club lê os guias em `guides/`.
+Monta e confere páginas que vendem pelo tipo, com a estratégia que o mercado usa e modelos reais analisados. Este texto é o guia dentro do projeto; a página do app no flyee.club lê os guias em `guides/`.
 
 **Skills**
 
-- `conversion-pages`: Monta e confere páginas de oferta pelo tipo (order bump, upsell, downsell, cross-sell e página de obrigado) com a estratégia de mercado de cada uma e modelos reais analisados. Use quando pedirem uma dessas páginas, uma oferta no checkout ou depois da compra, ou a revisão de uma delas. A página de destino de anúncio fica com o ad-landing-page.
+- `conversion-pages`: Monta e confere páginas que vendem pelo tipo (página de vendas, planos e preços, API, order bump, upsell, downsell, cross-sell e obrigado), com a estratégia de mercado de cada uma e modelos reais analisados. Use quando pedirem uma dessas páginas ou a revisão de uma delas. A continuidade entre um anúncio e a página fica com o ad-landing-page.
 
 **Usa** `video-render` · **Usado por** —
 

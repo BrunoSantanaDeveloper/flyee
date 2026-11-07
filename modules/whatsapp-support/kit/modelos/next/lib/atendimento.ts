@@ -1,21 +1,48 @@
 // Ligação do kit de atendimento com este projeto (modelo para Next.js App Router).
 // Este arquivo é do projeto: a IA o copia uma vez e adapta o armazenamento, a sessão e as consultas.
-// Os arquivos da base (pasta base/ do kit) não se editam; ajuste só o caminho BASE abaixo.
+// Os arquivos da base (pasta base/ do kit) não se editam; ajuste só os caminhos de import.
+//
+// Dois modelos (escolhas.json, campo "modelo"):
+//   "plataforma"   o sistema atende os próprios clientes (suporte da plataforma). Uma conta no Chatwoot;
+//                  a equipe é a do sistema; o contexto do robô é só do superadmin.
+//   "por-cliente"  cada cliente do sistema atende os clientes dele. Uma conta por cliente; o superadmin
+//                  define as regras da plataforma e o que cada cliente pode mudar no robô dele.
 
-import { botConfig, defaultSettings, validateSettings, type BotSettings } from "../atendimento/base/shared/settings.mjs";
-import { createToolRunner, handleBotRequest, type BotRequest, type ProjectTool } from "../atendimento/base/server/bot-contract.mjs";
+import { summarizeGaps, GAP_CATEGORIES } from "../atendimento/base/shared/report.mjs";
+import {
+  applyClientEdits,
+  botConfig,
+  canEnterPanel,
+  clientPermissions,
+  defaultPlatformSettings,
+  defaultSettings,
+  editableGroups,
+  knowledgeOwner,
+  validateSettings,
+  type BotSettings,
+  type Model,
+  type PlatformSettings,
+  type Scope,
+} from "../atendimento/base/shared/settings.mjs";
+import { createToolRunner, handleBotRequest, type BotRequest, type GapEventPayload, type ProjectTool } from "../atendimento/base/server/bot-contract.mjs";
 import {
   connectCloudApi,
   connectOpenWA,
   conversationHistory,
   ensureStaffUser,
   provisionAccount,
+  removeStaffUser,
   ssoUrl,
+  syncStaff,
   whatsappStatus,
   type SupportState,
 } from "../atendimento/base/server/provision.mjs";
 import { brPhoneVariants, contactPhone } from "../atendimento/base/shared/phone.mjs";
 import escolhas from "../atendimento/escolhas.json";
+
+export const MODEL: Model = escolhas.modelo === "plataforma" ? "plataforma" : "por-cliente";
+/** No modelo plataforma, o "cliente" do atendimento é o próprio sistema. */
+export const PLATFORM_TENANT = "plataforma";
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
@@ -38,15 +65,34 @@ export const env = {
 
 /** A pessoa logada no projeto, do jeito que este projeto sabe. */
 export interface Person {
+  /** O cliente da pessoa; no modelo plataforma, ignorado. */
   tenantId: string;
   key: string;
   email: string;
   name: string;
-  /** Quem configura o robô e conecta o número do cliente (no projeto, não no Chatwoot). */
+  /** Superadmin do sistema: edita a camada da plataforma, vê todas as sugestões e lacunas. */
+  isSuperadmin: boolean;
+  /** Administrador do cliente (modelo por-cliente): edita o que a plataforma liberou, conecta o número e atende. */
   canConfigure: boolean;
+  /**
+   * Atende no painel. No modelo plataforma, a equipe de suporte do sistema; no por-cliente, quem o cliente
+   * marcou como equipe de atendimento. Quem não tem esta marca nem canConfigure não entra no painel.
+   */
+  isSupportStaff: boolean;
 }
 
-/** Onde o projeto guarda o atendimento de cada cliente. ADAPTE: use o banco e a sessão do projeto. */
+export interface StoredSuggestion {
+  id: string;
+  tenantId: string;
+  owner: Scope;
+  conversationId: number;
+  q: string;
+  a: string;
+  why: string;
+  at: string;
+}
+
+/** Onde o projeto guarda o atendimento. ADAPTE: use o banco e a sessão do projeto. */
 export interface SupportStore {
   currentPerson(request: Request): Promise<Person | null>;
   tenantName(tenantId: string): Promise<string>;
@@ -54,38 +100,52 @@ export interface SupportStore {
   loadState(tenantId: string): Promise<SupportState | null>;
   saveState(tenantId: string, state: SupportState): Promise<void>;
   tenantByAccount(accountId: number): Promise<string | null>;
+  /**
+   * As chaves (Person.key) de quem pode atender neste cliente hoje, com a mesma regra de canEnterPanel.
+   * No modelo plataforma, tenantId é PLATFORM_TENANT. A conferência diária tira do Chatwoot quem saiu da lista.
+   */
+  listPanelPeople(tenantId: string): Promise<string[]>;
+  /** A camada da plataforma (uma só no sistema), editada pelo superadmin. */
+  loadPlatformSettings(): Promise<PlatformSettings | null>;
+  savePlatformSettings(settings: PlatformSettings): Promise<void>;
+  /** A camada de cada cliente (modelo por-cliente). */
   loadSettings(tenantId: string): Promise<BotSettings | null>;
   saveSettings(tenantId: string, settings: BotSettings): Promise<void>;
+  addSuggestions(items: Omit<StoredSuggestion, "id">[]): Promise<void>;
+  listSuggestions(filter: { owner: Scope; tenantId?: string }): Promise<StoredSuggestion[]>;
+  /** Tira a sugestão da fila e a devolve (aprovada ou descartada). */
+  takeSuggestion(id: string): Promise<StoredSuggestion | null>;
+  addEvent(tenantId: string, event: GapEventPayload): Promise<void>;
+  listEvents(filter: { tenantId?: string; since: string }): Promise<GapEventPayload[]>;
 }
 
+const adapt = (what: string) => async (): Promise<never> => {
+  throw new Error(`ADAPTE: ${what}.`);
+};
+
 export const store: SupportStore = {
-  async currentPerson() {
-    throw new Error("ADAPTE: devolva a pessoa logada pela sessão do projeto.");
-  },
-  async tenantName() {
-    throw new Error("ADAPTE: devolva o nome do cliente.");
-  },
-  async loadState() {
-    throw new Error("ADAPTE: leia o estado do atendimento do cliente.");
-  },
-  async saveState() {
-    throw new Error("ADAPTE: grave o estado do atendimento do cliente, cifrado.");
-  },
-  async tenantByAccount() {
-    throw new Error("ADAPTE: encontre o cliente pela conta do Chatwoot (account_id do estado).");
-  },
-  async loadSettings() {
-    throw new Error("ADAPTE: leia as configurações do robô do cliente.");
-  },
-  async saveSettings() {
-    throw new Error("ADAPTE: grave as configurações do robô do cliente.");
-  },
+  currentPerson: adapt("devolva a pessoa logada pela sessão do projeto"),
+  tenantName: adapt("devolva o nome do cliente"),
+  loadState: adapt("leia o estado do atendimento do cliente"),
+  saveState: adapt("grave o estado do atendimento do cliente, cifrado"),
+  tenantByAccount: adapt("encontre o cliente pela conta do Chatwoot (account_id do estado)"),
+  listPanelPeople: adapt("liste as chaves de quem pode atender neste cliente hoje"),
+  loadPlatformSettings: adapt("leia a camada da plataforma"),
+  savePlatformSettings: adapt("grave a camada da plataforma"),
+  loadSettings: adapt("leia a camada do cliente"),
+  saveSettings: adapt("grave a camada do cliente"),
+  addSuggestions: adapt("guarde as sugestões de conhecimento"),
+  listSuggestions: adapt("liste as sugestões de conhecimento"),
+  takeSuggestion: adapt("tire uma sugestão da fila"),
+  addEvent: adapt("guarde a passagem para a equipe"),
+  listEvents: adapt("liste as passagens para a equipe"),
 };
 
 /**
  * As consultas que o robô pode fazer aos dados do projeto. Cada uma decide o que devolve e para quem:
  * só dados da pessoa da conversa, achada pelo telefone (ou por outra confirmação que o projeto exigir).
- * ADAPTE: troque o exemplo pelas consultas reais; o cliente liga cada uma na tela do robô.
+ * ADAPTE: troque o exemplo pelas consultas reais. O superadmin escolhe quais oferecer; no modelo
+ * por-cliente, cada cliente liga as dele, se a plataforma deixar.
  */
 export const tools: ProjectTool[] = [
   {
@@ -102,18 +162,32 @@ export const tools: ProjectTool[] = [
   },
 ];
 
-const runTool = createToolRunner(tools, {
-  isEnabled: async (accountId, name) => {
-    const tenantId = await store.tenantByAccount(accountId);
-    const settings = tenantId ? await store.loadSettings(tenantId) : null;
-    return Boolean(settings?.tools_enabled?.includes(name));
-  },
-});
+const declaredTools = tools.map((tool) => tool.name);
 
-/** O provedor de IA padrão do projeto; o cliente não escolhe (as chaves ficam no ambiente do robô). */
+/** O provedor de IA padrão do projeto; o superadmin pode trocar na camada da plataforma (ai). */
 export const defaultAi = { provider: "anthropic", model: "claude-opus-5-5", effort: "low" } as const;
 
-/** Cria, se faltar, a conta do cliente no Chatwoot, a conta de serviço e o robô. */
+async function platformSettings(): Promise<PlatformSettings> {
+  return (await store.loadPlatformSettings()) ?? defaultPlatformSettings("Nome do sistema");
+}
+
+function tenantOf(person: Person): string {
+  return MODEL === "plataforma" ? PLATFORM_TENANT : person.tenantId;
+}
+
+/** Quem pode o quê em cada camada. */
+function canEdit(person: Person | null, scope: Scope): boolean {
+  if (!person) return false;
+  if (scope === "plataforma") return person.isSuperadmin;
+  return MODEL === "por-cliente" && person.canConfigure;
+}
+
+function canConnect(person: Person | null): boolean {
+  if (!person) return false;
+  return MODEL === "plataforma" ? person.isSuperadmin : person.canConfigure || person.isSuperadmin;
+}
+
+/** Cria, se faltar, a conta no Chatwoot, a conta de serviço e o robô. */
 export async function ensureAccount(tenantId: string): Promise<SupportState> {
   const current = (await store.loadState(tenantId)) ?? {};
   const next = await provisionAccount({
@@ -121,7 +195,7 @@ export async function ensureAccount(tenantId: string): Promise<SupportState> {
     platformToken: env.platformToken(),
     state: current,
     input: {
-      name: await store.tenantName(tenantId),
+      name: MODEL === "plataforma" ? (await platformSettings()).brand || "Suporte" : await store.tenantName(tenantId),
       locale: "pt_BR",
       featuresOff: escolhas.chatwoot.features_off,
       serviceEmail: `atendimento+${tenantId}@${env.serviceEmailDomain()}`,
@@ -133,41 +207,136 @@ export async function ensureAccount(tenantId: string): Promise<SupportState> {
   return next;
 }
 
+export type EnterResult = { ok: true; url: string } | { ok: false; code: "unauthenticated" | "not_support_staff" };
+
 /** O link de entrada no painel para a pessoa logada (vale 5 minutos e uma vez só). */
-export async function enterPanel(request: Request): Promise<string | null> {
+export async function enterPanel(request: Request): Promise<EnterResult> {
   const person = await store.currentPerson(request);
-  if (!person) return null;
-  const state = await ensureAccount(person.tenantId);
+  if (!person) return { ok: false, code: "unauthenticated" };
+  const tenantId = tenantOf(person);
+  if (!canEnterPanel(MODEL, person)) {
+    // Quem perdeu a permissão e ainda estava na equipe sai do Chatwoot aqui também. Se o Chatwoot não
+    // responder, a recusa continua valendo e a conferência diária (syncPanelStaff) tira a pessoa depois.
+    await removeFromPanel(tenantId, person.key).catch(() => false);
+    return { ok: false, code: "not_support_staff" };
+  }
+  const state = await ensureAccount(tenantId);
   const { state: next, userId } = await ensureStaffUser({
     chatwootUrl: env.chatwootUrl(),
     platformToken: env.platformToken(),
     state,
     person: { key: person.key, email: person.email, name: person.name },
   });
-  await store.saveState(person.tenantId, next);
-  return ssoUrl({ chatwootUrl: env.chatwootUrl(), platformToken: env.platformToken(), userId });
+  await store.saveState(tenantId, next);
+  return { ok: true, url: await ssoUrl({ chatwootUrl: env.chatwootUrl(), platformToken: env.platformToken(), userId }) };
 }
 
-export async function readSettings(request: Request) {
-  const person = await store.currentPerson(request);
-  if (!person?.canConfigure) return null;
-  const settings = (await store.loadSettings(person.tenantId)) ?? defaultSettings(await store.tenantName(person.tenantId));
-  return { settings, tools: tools.map(({ name, description }) => ({ name, description })) };
+/**
+ * Tira a pessoa da equipe deste cliente no Chatwoot. ADAPTE: chame no ponto em que o projeto tira a
+ * permissão de atendimento, desativa ou apaga a pessoa. As conversas atribuídas a ela voltam para a fila.
+ */
+export async function removeFromPanel(tenantId: string, personKey: string): Promise<boolean> {
+  const state = await store.loadState(tenantId);
+  if (!state?.staff?.[personKey]) return false;
+  const { state: next, removed } = await removeStaffUser({ chatwootUrl: env.chatwootUrl(), platformToken: env.platformToken(), state, personKey });
+  await store.saveState(tenantId, next);
+  return removed !== null;
 }
 
-export async function writeSettings(request: Request, settings: BotSettings) {
+/**
+ * Conferência da equipe: tira do Chatwoot quem saiu da lista do projeto e aponta quem está na conta sem
+ * ter sido posto pelo kit. ADAPTE: rode numa rotina diária do projeto, para cada cliente com atendimento
+ * (no modelo plataforma, só PLATFORM_TENANT).
+ */
+export async function syncPanelStaff(tenantId: string) {
+  const state = await store.loadState(tenantId);
+  if (!state?.account_id) return { removed: [], unknown: [], skipped: "no_account" as const };
+  const result = await syncStaff({
+    chatwootUrl: env.chatwootUrl(),
+    platformToken: env.platformToken(),
+    state,
+    keepKeys: await store.listPanelPeople(tenantId),
+  });
+  if (result.removed.length) await store.saveState(tenantId, result.state);
+  return { removed: result.removed, unknown: result.unknown, skipped: result.skipped };
+}
+
+export async function readSettings(request: Request, scope: Scope) {
   const person = await store.currentPerson(request);
-  if (!person?.canConfigure) return { status: 403 as const, body: { code: "forbidden", message: "Só quem administra o atendimento muda o robô." } };
-  const problems = validateSettings(settings, { declaredTools: tools.map((tool) => tool.name) });
-  if (problems.length) return { status: 422 as const, body: { code: "invalid", message: "Confira os campos marcados.", problems } };
-  await store.saveSettings(person.tenantId, settings);
-  return { status: 200 as const, body: { ok: true } };
+  if (!canEdit(person, scope)) return null;
+  const platform = await platformSettings();
+  const settings = scope === "plataforma" ? platform : (await store.loadSettings(person!.tenantId)) ?? defaultSettings(await store.tenantName(person!.tenantId));
+  const offered = Array.isArray(platform.tools_available) ? platform.tools_available : declaredTools;
+  const visibleTools = scope === "plataforma" ? tools : tools.filter((tool) => offered.includes(tool.name));
+  return {
+    model: MODEL,
+    scope,
+    settings,
+    editable: editableGroups(scope, MODEL, platform),
+    tools: visibleTools.map(({ name, description }) => ({ name, description })),
+  };
+}
+
+export async function writeSettings(request: Request, scope: Scope, incoming: unknown) {
+  const person = await store.currentPerson(request);
+  if (!canEdit(person, scope)) return { status: 403, body: { code: "forbidden", message: "Você não pode mudar esta parte do robô." } };
+  if (scope === "plataforma") {
+    const problems = validateSettings(incoming, { declaredTools, scope });
+    if (problems.length) return { status: 422, body: { code: "invalid", message: "Confira os campos marcados.", problems } };
+    await store.savePlatformSettings(incoming as PlatformSettings);
+    return { status: 200, body: { ok: true } };
+  }
+  const platform = await platformSettings();
+  const current = await store.loadSettings(person!.tenantId);
+  const next = applyClientEdits(current, incoming as Partial<BotSettings>, clientPermissions(MODEL, platform));
+  const problems = validateSettings(next, { declaredTools, scope });
+  if (problems.length) return { status: 422, body: { code: "invalid", message: "Confira os campos marcados.", problems } };
+  await store.saveSettings(person!.tenantId, next);
+  return { status: 200, body: { ok: true } };
+}
+
+/** As sugestões de conhecimento que esta pessoa revisa. */
+export async function listSuggestionsFor(request: Request, scope: Scope) {
+  const person = await store.currentPerson(request);
+  if (!canEdit(person, scope)) return null;
+  const items = await store.listSuggestions(scope === "plataforma" ? { owner: "plataforma" } : { owner: "cliente", tenantId: person!.tenantId });
+  return { suggestions: items.map(({ id, q, a, why, at, tenantId }) => ({ id, q, a, why, at, tenant: scope === "plataforma" ? tenantId : null })) };
+}
+
+/** Aprovar põe a pergunta e a resposta (com as edições da pessoa) no conhecimento da camada dona. */
+export async function decideSuggestion(request: Request, id: string, body: { decisao?: string; q?: string; a?: string }) {
+  const person = await store.currentPerson(request);
+  const pending = (await store.listSuggestions({ owner: "plataforma" })).concat(person ? await store.listSuggestions({ owner: "cliente", tenantId: person.tenantId }) : []);
+  const item = pending.find((suggestion) => suggestion.id === id);
+  if (!item || !canEdit(person, item.owner)) return { status: 404, body: { code: "not_found", message: "Esta sugestão não existe mais." } };
+  if (body.decisao === "aprovar") {
+    const entry = { q: String(body.q ?? item.q).trim(), a: String(body.a ?? item.a).trim() };
+    if (!entry.q || !entry.a) return { status: 422, body: { code: "invalid", message: "A pergunta e a resposta precisam de texto." } };
+    if (item.owner === "plataforma") {
+      const platform = await platformSettings();
+      await store.savePlatformSettings({ ...platform, knowledge: [...(platform.knowledge ?? []), entry] });
+    } else {
+      const current = (await store.loadSettings(item.tenantId)) ?? defaultSettings(await store.tenantName(item.tenantId));
+      await store.saveSettings(item.tenantId, { ...current, knowledge: [...(current.knowledge ?? []), entry] });
+    }
+  }
+  await store.takeSuggestion(id);
+  return { status: 200, body: { ok: true } };
+}
+
+/** O relatório das lacunas: o superadmin vê todos os clientes; o administrador do cliente, só o dele. */
+export async function gapsFor(request: Request, scope: Scope, days: number) {
+  const person = await store.currentPerson(request);
+  if (!canEdit(person, scope)) return null;
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const events = await store.listEvents(scope === "plataforma" ? { since } : { since, tenantId: person!.tenantId });
+  return { groups: summarizeGaps(events, { days }), categories: GAP_CATEGORIES };
 }
 
 export async function whatsapp(request: Request) {
   const person = await store.currentPerson(request);
-  if (!person?.canConfigure) return null;
-  const state = (await store.loadState(person.tenantId)) ?? {};
+  if (!canConnect(person)) return null;
+  const state = (await store.loadState(tenantOf(person!))) ?? {};
   const inbox = state.inboxes?.[state.inboxes.length - 1];
   if (!inbox) return { connected: false, route: null, status: null, qrCode: null };
   if (inbox.route === "oficial") return { connected: true, route: "oficial", status: "ready", qrCode: null };
@@ -177,15 +346,16 @@ export async function whatsapp(request: Request) {
 
 export async function connectWhatsapp(request: Request, body: Record<string, string>) {
   const person = await store.currentPerson(request);
-  if (!person?.canConfigure) return { status: 403, body: { code: "forbidden", message: "Só quem administra o atendimento conecta o número." } };
-  const state = await ensureAccount(person.tenantId);
+  if (!canConnect(person)) return { status: 403, body: { code: "forbidden", message: "Você não pode conectar o número." } };
+  const tenantId = tenantOf(person!);
+  const state = await ensureAccount(tenantId);
   if (body.route === "oficial") {
     const result = await connectCloudApi({
       chatwootUrl: env.chatwootUrl(),
       state,
       cloud: { phoneNumber: body.phoneNumber, phoneNumberId: body.phoneNumberId, businessAccountId: body.businessAccountId, apiKey: body.apiKey },
     });
-    await store.saveState(person.tenantId, result.state);
+    await store.saveState(tenantId, result.state);
     return { status: 200, body: { metaWebhook: result.metaWebhook } };
   }
   const result = await connectOpenWA({
@@ -193,28 +363,45 @@ export async function connectWhatsapp(request: Request, body: Record<string, str
     platformToken: env.platformToken(),
     state,
     input: {
-      sessionName: `cliente-${person.tenantId}`.replace(/[^a-zA-Z0-9-]/g, "-").slice(0, 50),
-      relayEmail: `repasse+${person.tenantId}@${env.serviceEmailDomain()}`,
+      sessionName: `atendimento-${tenantId}`.replace(/[^a-zA-Z0-9-]/g, "-").slice(0, 50),
+      relayEmail: `repasse+${tenantId}@${env.serviceEmailDomain()}`,
       chatwootPublicUrl: env.chatwootPublicUrl(),
       openwaUrl: env.openwaUrl(),
       openwaPublicUrl: env.openwaPublicUrl(),
       openwaApiKey: env.openwaApiKey(),
     },
   });
-  await store.saveState(person.tenantId, result.state);
+  await store.saveState(tenantId, result.state);
   return { status: 200, body: { ok: true } };
 }
 
-/** As rotas que o robô chama (config, tools, history), conferidas pela assinatura. */
+/** A configuração que o robô recebe para uma conta, juntando as camadas. */
+async function configFor(accountId: number) {
+  const tenantId = await store.tenantByAccount(accountId);
+  if (!tenantId) return null;
+  const [state, platform, client] = await Promise.all([
+    store.loadState(tenantId),
+    platformSettings(),
+    MODEL === "por-cliente" ? store.loadSettings(tenantId) : Promise.resolve(null),
+  ]);
+  if (!state?.bot_token) return null;
+  const tenantName = MODEL === "por-cliente" ? await store.tenantName(tenantId) : "";
+  return { tenantId, platform, config: botConfig({ model: MODEL, platform, client, state, tools, ai: defaultAi, tenantName }) };
+}
+
+const runTool = createToolRunner(tools, {
+  isEnabled: async (accountId, name) => {
+    const found = await configFor(accountId);
+    return Boolean((found?.config.tools as Array<{ name: string }> | undefined)?.some((tool) => tool.name === name));
+  },
+});
+
+/** As rotas que o robô chama (config, tools, history, events, suggestions), conferidas pela assinatura. */
 export async function botHandler(request: BotRequest) {
   return handleBotRequest(request, {
     secret: env.botSecret(),
     async getConfig(accountId) {
-      const tenantId = await store.tenantByAccount(accountId);
-      if (!tenantId) return null;
-      const [state, settings] = await Promise.all([store.loadState(tenantId), store.loadSettings(tenantId)]);
-      if (!state?.bot_token) return null;
-      return botConfig({ settings: settings ?? defaultSettings(await store.tenantName(tenantId)), state, tools, ai: defaultAi });
+      return (await configFor(accountId))?.config ?? null;
     },
     runTool,
     async getHistory(accountId, conversationId, limit) {
@@ -222,6 +409,18 @@ export async function botHandler(request: BotRequest) {
       const state = tenantId ? await store.loadState(tenantId) : null;
       if (!state) return [];
       return conversationHistory({ chatwootUrl: env.chatwootUrl(), state, conversationId, limit });
+    },
+    async saveEvent(accountId, event) {
+      const tenantId = await store.tenantByAccount(accountId);
+      if (tenantId) await store.addEvent(tenantId, event);
+    },
+    async saveSuggestions(accountId, payload) {
+      const found = await configFor(accountId);
+      if (!found) return;
+      const owner = knowledgeOwner(MODEL, found.platform);
+      await store.addSuggestions(
+        payload.suggestions.map((suggestion) => ({ tenantId: found.tenantId, owner, conversationId: payload.conversation_id, ...suggestion, at: payload.at })),
+      );
     },
   });
 }

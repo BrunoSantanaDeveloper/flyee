@@ -25,9 +25,11 @@ A configuração da conta do Chatwoot. 404 quando a conta não é de nenhum clie
   "mode": "auto",
   "brand": "Nome do cliente",
   "chatwoot": { "bot_token": "segredo", "bot_secret": "segredo" },
-  "ai": { "provider": "anthropic", "model": "claude-opus-5-5", "effort": "low" },
+  "ai": { "provider": "anthropic", "model": "claude-opus-5-5", "effort": "low", "cache_ttl": "5m" },
   "persona": "Você é a Ana, da equipe...",
+  "platform_instructions": "Regras do superadmin que valem para todos os clientes...",
   "instructions": "Prazos, políticas, o que sempre passa para a equipe...",
+  "platform_knowledge": [{ "q": "O que é a plataforma?", "a": "..." }],
   "knowledge": [{ "q": "Qual o prazo de entrega?", "a": "Cinco dias úteis." }],
   "hours": { "timezone": "America/Sao_Paulo", "days": { "seg": [["08:00", "18:00"]] }, "holidays": ["2026-12-25"] },
   "messages": { "handoff": "", "handoff_fora_do_horario": "", "erro": "", "anexo": "" },
@@ -35,9 +37,14 @@ A configuração da conta do Chatwoot. 404 quando a conta não é de nenhum clie
   "tools": [{ "name": "consultar_pedido", "description": "...", "input_schema": { "type": "object", "properties": {} } }],
   "suggest_on_open": true,
   "history_from_project": true,
-  "privacy": { "share_contact_name": true }
+  "privacy": { "share_contact_name": true },
+  "learning": { "enabled": true },
+  "report": { "enabled": true }
 }
 ```
+
+- `platform_instructions` e `platform_knowledge` vêm da camada da plataforma no modelo `por-cliente` e entram no prompt antes das do cliente, valendo acima delas; no modelo `plataforma` ficam vazios e a camada da plataforma vai em `instructions` e `knowledge` (contexto.md).
+- `learning` e `report` ligam as sugestões de conhecimento e o relatório das lacunas; vêm da camada da plataforma.
 
 - `mode`: `auto` (responde sozinho), `sugestao` (nota privada e passa para a equipe; com `suggest_on_open`, também escreve notas nas conversas que a equipe já abriu) ou `desligado` (passa tudo para a equipe).
 - `ai.provider`: `anthropic`, `openai` (e serviços compatíveis, com `base_url` e `key_env`), `gemini` ou `project`. As chaves ficam no ambiente do robô; `key_env` só aceita nomes terminados em `_API_KEY`.
@@ -55,20 +62,29 @@ O projeto aplica a restrição: só dados da pessoa da conversa, achada pelo tel
 
 ### `POST generate` (só com o provedor `project`)
 
-Corpo: `{ "account_id", "conversation_id", "system", "messages": [{ "role": "user" | "assistant", "content" }], "schema", "tools" }`. Resposta: a ação, no formato abaixo. Serve ao projeto que gera respostas com a própria IA, com aprovação e registro.
+Corpo: `{ "purpose", "account_id", "conversation_id", "system", "messages": [{ "role": "user" | "assistant", "content" }], "schema", "tools" }`. Com `purpose: "acao"`, a resposta é a ação, no formato abaixo; com `purpose: "sugestoes"`, é `{ "suggestions": [{ "q", "a", "why" }] }`. Serve ao projeto que gera respostas com a própria IA, com aprovação e registro.
+
+### `POST events`
+
+Cada passagem para a equipe: `{ "kind": "handoff", "account_id", "conversation_id", "category", "topic", "reason", "excerpt", "at" }`. O trecho e o assunto chegam sem dado pessoal (o robô limpa antes). O projeto guarda por cliente e monta o relatório com `summarizeGaps` de `base/shared/report.mjs`. Sem essa rota, o robô segue e só registra a falha em log.
+
+### `POST suggestions`
+
+Perguntas e respostas tiradas de uma conversa que a equipe resolveu: `{ "account_id", "conversation_id", "suggestions": [{ "q", "a", "why" }], "at" }`, já sem dado pessoal. O projeto guarda como pendentes para a camada dona do conhecimento da conta (`knowledgeOwner`), que aprova, edita ou descarta. Nada entra no conhecimento sem aprovação.
 
 ## A ação que a IA devolve
 
 ```json
-{ "action": "reply" | "lookup" | "handoff", "text": "", "tool": "", "input": "", "reason": "" }
+{ "action": "reply" | "lookup" | "handoff", "text": "", "tool": "", "input": "", "reason": "", "category": "", "topic": "" }
 ```
 
-`reply` responde com `text`; `lookup` pede a consulta `tool` com `input` (um JSON em texto); `handoff` passa para a equipe, com `reason` para a equipe e `text` opcional para o cliente. Até três consultas por mensagem; JSON inválido ganha uma segunda chance; na terceira falha, o robô passa para a equipe.
+`reply` responde com `text`; `lookup` pede a consulta `tool` com `input` (um JSON em texto); `handoff` passa para a equipe, com `reason` para a equipe, `text` opcional para o cliente, `category` (`nao_sei`, `pedido_da_pessoa`, `decisao_humana`, `reclamacao`, `risco`, `outro`) e `topic`, o assunto em poucas palavras, que alimentam o relatório das lacunas. Até três consultas por mensagem; JSON inválido ganha uma segunda chance; na terceira falha, o robô passa para a equipe.
 
 ## Robô e Chatwoot
 
 - Recebe em `POST /chatwoot` o aviso do robô da conta e confere a assinatura com `chatwoot.bot_secret` da configuração. Responde 200 na hora e trabalha depois.
 - Age só em `message_created` recebida (`incoming`), não privada, em conversa pendente (e nas abertas no modo sugestão). Junta as mensagens que chegam em sequência (`DEBOUNCE_MS`, padrão 2,5 segundos).
+- Em `conversation_resolved` de uma conversa com a etiqueta `robo-passou`, com `learning` ligado, pede o histórico ao projeto e manda sugestões de conhecimento (contexto.md).
 - Chama o Chatwoot com o token do robô da conta, pela rede interna (`CHATWOOT_URL`).
 - Registra em log só identificadores, tempos e códigos, nunca conteúdo, telefone ou nome.
 
@@ -78,6 +94,8 @@ Corpo: `{ "account_id", "conversation_id", "system", "messages": [{ "role": "use
 |---|---|
 | `provisionAccount` | conta, funções, conta de serviço administradora, robô da conta; devolve o estado para gravar |
 | `ensureStaffUser` | pessoa da equipe como atendente, membro de todas as caixas, com as preferências do painel |
+| `removeStaffUser` | tira a pessoa da conta e do estado, sem apagá-la do Chatwoot; nunca a conta de serviço nem a de repasse |
+| `syncStaff` | confere a equipe da conta com a lista do projeto: tira quem o kit pôs e saiu da lista e aponta quem o kit não conhece; lista vazia não tira ninguém sem `allowEmpty` |
 | `ssoUrl` | o link de entrada já logado (5 minutos, uso único) |
 | `connectCloudApi` | caixa WhatsApp Cloud, robô, equipe; devolve o retorno para a Meta |
 | `connectOpenWA` | caixa API, repasse, webhook, adaptador, sessão, instância, robô |

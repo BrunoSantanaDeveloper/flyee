@@ -184,6 +184,180 @@ test("audit captures a real page through the Video engine", { timeout: 240000 },
   }
 });
 
+// ---------------------------------------------------------------------------------------------
+// Pages that sell a product, a plan or an API (1.1.0). The anatomy below follows the structure of
+// the Juridiq models (a promotion, two calls, plan cards with annual math, a window after the
+// scroll) with an invented brand: no text of the models is copied here.
+// ---------------------------------------------------------------------------------------------
+
+const PRICES = [
+  { text: "R$ 4.618,80", value: 4618.8, struck: true, context: "R$ 4.618,80 /ano", section: 2, y: 1200 },
+  { text: "R$ 269,43", value: 269.43, struck: false, context: "R$ 269,43 /média mensal", section: 2, y: 1220 },
+  { text: "R$ 3.233,16", value: 3233.16, struck: false, context: "R$ 3.233,16 /ano", section: 2, y: 1260 },
+  { text: "R$ 1.385,64", value: 1385.64, struck: false, context: "Economize R$ 1.385,64 no ano", section: 2, y: 1300 },
+  { text: "R$ 2.771,28", value: 2771.28, struck: false, context: "ou R$ 2.771,28 /ano à vista no PIX (40% OFF)", section: 2, y: 1330 },
+  { text: "R$ 2.998,80", value: 2998.8, struck: true, context: "R$ 2.998,80 /ano", section: 2, y: 1200 },
+  { text: "R$ 174,93", value: 174.93, struck: false, context: "R$ 174,93 /média mensal", section: 2, y: 1220 },
+  { text: "R$ 2.099,16", value: 2099.16, struck: false, context: "R$ 2.099,16 /ano", section: 2, y: 1260 },
+  { text: "R$ 899,64", value: 899.64, struck: false, context: "Economize R$ 899,64 no ano", section: 2, y: 1300 },
+  // the comparison table repeats a monthly price further down: it is not part of the last card
+  { text: "R$ 269,43", value: 269.43, struck: false, context: "R$ 269,43 /mês cobrado anualmente", section: 3, y: 1950 },
+];
+
+function salesPage({ anatomy = {}, text = null } = {}) {
+  const base = {
+    format_version: 1,
+    viewports: { desktop: { width: 1440, height: 900 }, mobile: { width: 390, height: 844 } },
+    sections: [
+      { index: 0, heading: null, y: 0, height: 200, text: "Oferta de fim de ano: 30% no anual. Termina em 3d 10h 20m 05s", words: 12 },
+      { index: 1, heading: { tag: "h1", text: "O seu escritório em um só lugar" }, y: 200, height: 800, text: "Agendar demonstração\nTestar grátis\n30 minutos · online", words: 20 },
+      { index: 2, heading: { tag: "h2", text: "Quem usa o Sistema Exemplo" }, y: 1000, height: 900, text: "0+\nescritórios atendidos\nRecomendado\nPlano Essencial\nPlano Sociedade", words: 30 },
+      { index: 3, heading: { tag: "h2", text: "Perguntas frequentes" }, y: 1900, height: 900, text: "Existe fidelidade? Não, cancele quando quiser.\nOferta válida até 31/12 para novos clientes.\nSistema Exemplo Ltda. CNPJ: 12.345.678/0001-90. Avenida Central, 1000, São Paulo. contato@exemplo.com.br\nPolítica de Privacidade · Termos de Uso", words: 60 },
+    ],
+    ctas: [
+      { index: 0, kind: "button", text: "Agendar demo", href: null, x: 1200, y: 50, width: 150, height: 40, above_fold: { desktop: true, mobile: true }, in_fixed: true, section: 0, disabled: false },
+      { index: 1, kind: "button", text: "Agendar demonstração", href: null, x: 400, y: 445, width: 300, height: 56, above_fold: { desktop: true, mobile: true }, in_fixed: false, section: 1, disabled: false },
+      { index: 2, kind: "button", text: "Testar grátis", href: null, x: 720, y: 444, width: 160, height: 56, above_fold: { desktop: true, mobile: null }, in_fixed: false, section: 1, disabled: false },
+      { index: 3, kind: "link", text: "Garantir desconto", href: "https://exemplo.com.br/planos", x: 600, y: 1500, width: 200, height: 48, above_fold: { desktop: false, mobile: false }, in_fixed: false, section: 2, disabled: false },
+    ],
+    fixed: [
+      { pass: "desktop", position: "fixed", edge: "top", text: "Agendar demo", height: 80, ctas: ["Agendar demo"], appeared_after_scroll: false },
+      { pass: "mobile", position: "fixed", edge: "top", text: "", height: 76, ctas: ["Abrir menu"], appeared_after_scroll: false },
+      { pass: "desktop", position: "fixed", edge: "other", text: "Oferta de fim de ano Ver planos com desconto Agora não", height: 900, ctas: ["Ver planos com desconto", "Agora não"], appeared_after_scroll: true },
+    ],
+    forms: [],
+    prices: PRICES,
+    media: { videos: [], iframes: [], images: { count: 20, without_alt: 0 } },
+    motion: { running: [{ kind: "css-animation", name: "faixa", duration_ms: 40000, iterations: "infinite", target: "div.flex" }], keyframes: ["faixa"], transitions: 3, reduced_motion_rules: 2, smooth_scroll: true, scroll_snap: 0, stylesheets_unread: 0 },
+    countdowns: [{ text: "3d 10h 20m 05s", section: 0 }],
+  };
+  const capture = {
+    final_url: "https://exemplo.com.br/",
+    input_kind: "url",
+    viewports: { desktop: { width: 1440, height: 900, full_height: 8000 }, mobile: { width: 390, height: 844, full_height: 8000 } },
+    anatomy: { ...base, ...anatomy },
+  };
+  return { capture, text };
+}
+
+const landingFacts = { ...newFacts({ name: "vendas", type: "landing", today: "2026-11-07" }), product: { name: "Sistema Exemplo", what: "gestão de escritórios" }, audience: "escritórios de advocacia" };
+const run = (id, page, facts = landingFacts) => audit({ type: type(id), capture: page.capture, facts, definitions: CHECKS, text: page.text });
+
+test("in lead mode the main call is the page's first button, preferring one the phone shows", () => {
+  const { capture } = salesPage();
+  assert.equal(mainCta(capture.anatomy, {}, capture.final_url, "lead").text, "Agendar demonstração");
+  assert.equal(mainCta(capture.anatomy, {}, capture.final_url).text, "Garantir desconto", "an offer page still looks for a purchase word");
+  assert.equal(mainCta(capture.anatomy, { cta_text: "Testar grátis" }, capture.final_url, "lead").text, "Testar grátis", "the declared text wins");
+});
+
+test("a sales page: every discount adds up, the window comes after the scroll with a way out, the seller is named", () => {
+  const result = run("landing", salesPage());
+  assert.equal(status(result, "discount_math"), "ok");
+  assert.match(result.items.find((i) => i.id === "discount_math").detail, /As 5 contas/);
+  for (const id of ["cta_first_screen", "h1_present", "promo_terms_shown", "popup_dismissable", "popup_on_arrival", "cancel_terms_shown", "supplier_identified", "legal_lines", "reduced_motion", "images_alt"]) assert.equal(status(result, id), "ok", id);
+  assert.equal(status(result, "trial_terms"), "atencao", "a trial without its length");
+  assert.equal(status(result, "numbers_not_zero"), "atencao", "a counter read before its animation");
+  // the phone has only a menu button fixed, and the window is not a bar
+  assert.equal(status(result, "sticky_cta_long_page"), "atencao");
+  assert.match(result.items.find((i) => i.id === "sticky_cta_long_page").detail, /computador, mas não no celular/);
+  assert.equal(status(result, "countdown_real"), "atencao", "a countdown without the deadline registered");
+});
+
+test("a window that covers the page on arrival, with no way out, is flagged twice", () => {
+  const page = salesPage({ anatomy: { fixed: [{ pass: "mobile", position: "fixed", edge: "other", text: "Oferta de fim de ano Ver planos", height: 844, ctas: ["Ver planos com desconto"], appeared_after_scroll: false }] } });
+  const result = run("landing", page);
+  assert.equal(status(result, "popup_on_arrival"), "atencao");
+  assert.match(result.items.find((i) => i.id === "popup_on_arrival").detail, /no celular logo na chegada/);
+  assert.equal(status(result, "popup_dismissable"), "atencao");
+  assert.equal(status(run("landing", salesPage({ anatomy: { fixed: [] } })), "popup_on_arrival"), "skipped", "no window, nothing to say");
+});
+
+test("discount math that does not add up is caught: the savings, the percentage and the monthly average", () => {
+  const wrong = (index, change) => PRICES.map((p, i) => (i === index ? { ...p, ...change } : p));
+  const savings = run("landing", salesPage({ anatomy: { prices: wrong(3, { text: "R$ 1.400,00", value: 1400, context: "Economize R$ 1.400,00 no ano" }) } }));
+  assert.equal(status(savings, "discount_math"), "atencao");
+  assert.match(savings.items.find((i) => i.id === "discount_math").detail, /economia de R\$ 1\.400,00/);
+  const percent = run("landing", salesPage({ anatomy: { prices: wrong(4, { text: "R$ 2.800,00", value: 2800, context: "ou R$ 2.800,00 /ano à vista no PIX (40% OFF)" }) } }));
+  assert.match(percent.items.find((i) => i.id === "discount_math").detail, /40% de desconto sobre R\$ 4\.618,80 dá R\$ 2\.771,28/);
+  const average = run("landing", salesPage({ anatomy: { prices: wrong(1, { text: "R$ 299,00", value: 299, context: "R$ 299,00 /média mensal" }) } }));
+  assert.match(average.items.find((i) => i.id === "discount_math").detail, /média mensal/);
+  assert.equal(status(run("landing", salesPage({ anatomy: { prices: PRICES.filter((p) => !p.struck) } })), "discount_math"), "skipped", "no struck price, no math to check");
+});
+
+test("the trial says its length, and the page text beats the sections for the footer", () => {
+  const sevenDays = salesPage({ text: "Teste gratuitamente por 7 dias, sem cartão de crédito.\nCNPJ: 12.345.678/0001-90\nRua das Flores, 10\ncontato@exemplo.com.br\nOferta válida até 31/12" });
+  assert.equal(status(run("landing", sevenDays), "trial_terms"), "ok");
+  assert.equal(status(run("landing", sevenDays, { ...landingFacts, offer: { ...landingFacts.offer, trial_days: 14 } }), "trial_terms"), "atencao", "the page and pagina.json disagree");
+  const noCnpj = salesPage({ text: "Testar grátis\nRua das Flores, 10\ncontato@exemplo.com.br" });
+  const result = run("landing", noCnpj);
+  assert.equal(status(result, "supplier_identified"), "atencao");
+  assert.match(result.items.find((i) => i.id === "supplier_identified").detail, /o CNPJ ou o CPF/);
+  assert.equal(status(result, "cancel_terms_shown"), "atencao", "prices and no word about cancelling");
+});
+
+test("a plans page: prices on the first screen, a highlighted plan, and the h1 that is missing", () => {
+  const plans = salesPage({ anatomy: {
+    sections: [
+      { index: 0, heading: null, y: 0, height: 1300, text: "Escolha o plano\nMensal\nAnual\nRecomendado\nPlano Essencial", words: 40 },
+      { index: 1, heading: { tag: "h3", text: "Comparação completa" }, y: 1300, height: 1600, text: "Existe fidelidade? Não, cancele quando quiser. CNPJ: 12.345.678/0001-90. Avenida Central, 1000. contato@exemplo.com.br Política de Privacidade Termos", words: 30 },
+    ],
+    prices: PRICES.map((p) => ({ ...p, section: p.section === 3 ? 1 : 0, y: p.y - 600 })),
+  } });
+  const result = run("planos", plans);
+  assert.equal(status(result, "prices_first_screen"), "ok");
+  assert.equal(status(result, "plan_highlighted"), "ok");
+  assert.equal(status(result, "discount_math"), "ok");
+  assert.equal(status(result, "h1_present"), "atencao");
+  const noBadge = salesPage({ anatomy: { sections: plans.capture.anatomy.sections.map((s) => ({ ...s, text: s.text.replace("Recomendado\n", "") })), prices: plans.capture.anatomy.prices } });
+  assert.equal(status(run("planos", noBadge), "plan_highlighted"), "atencao");
+});
+
+test("an API page: the documentation on the first screen, a request example, the usage limits in numbers", () => {
+  const api = salesPage({
+    anatomy: { ctas: [{ index: 0, kind: "link", text: "Ler a documentação", href: "https://docs.exemplo.com.br/", x: 300, y: 580, width: 220, height: 48, above_fold: { desktop: true, mobile: true }, in_fixed: false, section: 1, disabled: false }] },
+    text: "A operação, agora programável.\ncurl https://api.exemplo.com.br/v1/processos -H 'Authorization: Bearer $CHAVE'\nPlano Base R$ 98,90/mês\nCNPJ: 12.345.678/0001-90 Avenida Central, 1000 contato@exemplo.com.br Política de Privacidade Termos cancele quando quiser",
+  });
+  const result = run("api", api, { ...landingFacts, offer: { ...landingFacts.offer, price: "R$ 98,90" } });
+  assert.equal(status(result, "docs_first_screen"), "ok");
+  assert.equal(status(result, "code_sample"), "ok");
+  assert.equal(status(result, "rate_limits_shown"), "atencao");
+  const limited = salesPage({ anatomy: api.capture.anatomy, text: `${api.text}\nAté 60 requisições por minuto e 100 mil por mês.` });
+  assert.equal(status(run("api", limited), "rate_limits_shown"), "ok");
+});
+
+test("the new types plan their own facts", () => {
+  const facts = newFacts({ name: "planos", type: "planos", today: "2026-11-07" });
+  for (const key of ["audience", "secondary_cta_text"]) assert.ok(key in facts, key);
+  for (const key of ["plans", "recommended_plan", "trial_days", "cancellation"]) assert.ok(key in facts.offer, key);
+  assert.deepEqual(Object.keys(facts.api), ["docs_url", "rate_limit"]);
+  assert.deepEqual(missingFacts(facts, type("planos")), ["product.name", "offer.plans", "offer.recurrence", "offer.cancellation", "cta_text"]);
+  const plan = renderPlan({ facts, type: type("planos"), checks: CHECKS, models: MODELS.models.filter((m) => m.types.includes("planos")), today: "2026-11-07" });
+  assert.match(plan, /O seletor mensal ou anual/);
+  assert.match(plan, /Juridiq: a página de planos/);
+  assert.match(plan, /Um plano em destaque \(`plan_highlighted`\)/);
+  for (const id of ["landing", "planos", "api"]) assert.equal(type(id).cta, "lead", id);
+});
+
+test("audit of a sales page through the Video engine: the window after the scroll and the menu button the phone hides", { timeout: 240000 }, () => {
+  const engineFixture = resolve(app, "..", "video-render", "tests", "fixtures", "janela", "index.html");
+  if (!existsSync(engineFixture)) return;
+  const project = mkdtempSync(join(tmpdir(), "conversion-pages-landing-"));
+  const cli = (...args) => JSON.parse(spawnSync(process.execPath, [script, ...args, "--json"], { cwd: project, encoding: "utf8", timeout: 230000 }).stdout.trim());
+  try {
+    cli("new", "vendas", "--type", "landing");
+    const result = cli("audit", "vendas", "--url", engineFixture);
+    if (!result.ok && /browser|navegador/i.test(`${result.error?.code} ${result.error?.message}`)) return; // no browser on this machine
+    assert.equal(result.ok, true, JSON.stringify(result.error));
+    assert.equal(status(result, "popup_on_arrival"), "ok");
+    assert.equal(status(result, "popup_dismissable"), "ok");
+    assert.equal(status(result, "promo_terms_shown"), "ok");
+    assert.equal(status(result, "cta_first_screen"), "ok", JSON.stringify(result.items.find((i) => i.id === "cta_first_screen")));
+    assert.equal(status(result, "supplier_identified"), "atencao", "the fixture's footer has no CNPJ");
+  } finally {
+    rmSync(project, { recursive: true, force: true });
+  }
+});
+
 test("the command creates a page, plans it and audits a saved capture", () => {
   const project = mkdtempSync(join(tmpdir(), "conversion-pages-cli-"));
   const run = (...args) => {
@@ -206,6 +380,9 @@ test("the command creates a page, plans it and audits a saved capture", () => {
     mkdirSync(join(project, "docs"));
     assert.equal(run("new", "obrigado", "--type", "obrigado").dir, "docs/paginas/obrigado");
     assert.equal(run("list").pages.length, 2);
+    assert.deepEqual(run("types").types.map((t) => t.id), ["upsell", "order-bump", "downsell", "cross-sell", "obrigado", "landing", "planos", "api"]);
+    assert.deepEqual(run("models", "--type", "planos").models.map((m) => m.id), ["juridiq-planos", "jurichat-pagina-de-vendas"]);
+    assert.deepEqual(run("models", "--type", "api").models.map((m) => m.id), ["juridiq-api"]);
   } finally {
     rmSync(project, { recursive: true, force: true });
   }

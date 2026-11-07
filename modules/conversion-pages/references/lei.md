@@ -1,15 +1,17 @@
-# As linhas da lei nas páginas de oferta
+# As linhas da lei nas páginas que vendem
 
 Este guia é para a IA. É um método para não errar o básico; não é parecer jurídico. Em caso de dúvida, o integrante consulta o advogado dele.
 
-Artigos conferidos em 2026-11-07, no texto publicado pela Presidência da República (planalto.gov.br).
+Artigos conferidos em 2026-11-07, no texto publicado pela Presidência da República (planalto.gov.br). Valem para a venda ao consumidor; numa venda só entre empresas, o integrante confirma com o advogado dele o que se aplica.
 
 ## Código de Defesa do Consumidor (Lei 8.078/1990)
 
 | Artigo | O que diz | Na página de oferta |
 |---|---|---|
 | art. 6, III | direito à informação adequada e clara sobre o produto, inclusive o preço | o valor, a renovação e o que está incluído aparecem antes do clique |
+| art. 30 | a informação ou publicidade suficientemente precisa obriga quem a divulga e integra o contrato | o preço, o desconto, o prazo e as condições escritos na página são cumpridos; perguntas frequentes, cartões e janela dizem a mesma coisa |
 | art. 31 | a oferta traz informação correta, clara, precisa, ostensiva e em português sobre preço, garantia e prazos | preço, garantia e prazo visíveis, em português |
+| art. 35 | se quem vende recusa cumprir a oferta, o consumidor pode exigir o cumprimento, aceitar algo equivalente ou desfazer o contrato com a devolução do que pagou | uma promoção anunciada vale como foi escrita |
 | art. 37, §1 | é enganosa a informação falsa, mesmo em parte ou por omissão, capaz de induzir em erro sobre preço e características | preço riscado só se for o real; contador só com prazo real; o que a página promete, ela mostra |
 | art. 39, I | é prática abusiva condicionar o fornecimento de um produto a outro | o produto principal nunca depende de aceitar a oferta |
 | art. 39, III e parágrafo único | é prática abusiva fornecer produto ou serviço sem pedido prévio; o que foi entregue assim equivale a amostra, sem obrigação de pagamento | order bump e itens do carrinho começam desmarcados |
@@ -34,3 +36,8 @@ O §2 do art. 5 vale para toda oferta acrescentada ao pedido. Quem desiste do pe
 | contador sem prazo registrado | `countdown_real` |
 | assinatura sem a renovação escrita | `renewal_shown` |
 | sem política de privacidade, termos ou o caminho do arrependimento | `legal_lines` |
+| sem o CNPJ ou o CPF, o endereço e um contato de quem vende (art. 2, I e II) | `supplier_identified` |
+| uma promoção sem a data em que termina (art. 2, V e VI) | `promo_terms_shown` |
+| um teste grátis sem a duração (art. 31 do CDC; art. 2, V) | `trial_terms` |
+| um desconto, uma economia ou uma média mensal que não fecha com os preços (art. 37, §1) | `discount_math` |
+| preços sem como cancelar e sem dizer se há fidelidade (art. 6, III) | `cancel_terms_shown` |

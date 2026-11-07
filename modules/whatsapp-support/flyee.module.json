@@ -38,6 +38,7 @@
     "kit/base/bot/src/log.mjs",
     "kit/base/bot/src/memory.mjs",
     "kit/base/bot/src/policy.mjs",
+    "kit/base/bot/src/privacy.mjs",
     "kit/base/bot/src/project.mjs",
     "kit/base/bot/src/prompt.mjs",
     "kit/base/bot/src/queue.mjs",
@@ -53,6 +54,8 @@
     "kit/base/server/request.mjs",
     "kit/base/shared/phone.d.mts",
     "kit/base/shared/phone.mjs",
+    "kit/base/shared/report.d.mts",
+    "kit/base/shared/report.mjs",
     "kit/base/shared/settings.d.mts",
     "kit/base/shared/settings.mjs",
     "kit/base/shared/signature.d.mts",
@@ -69,18 +72,24 @@
     "kit/modelos/implantacao/robo.env.example",
     "kit/modelos/next/app/api/atendimento/config/route.ts",
     "kit/modelos/next/app/api/atendimento/entrar/route.ts",
+    "kit/modelos/next/app/api/atendimento/lacunas/route.ts",
     "kit/modelos/next/app/api/atendimento/robo/[...rota]/route.ts",
+    "kit/modelos/next/app/api/atendimento/sugestoes/[id]/route.ts",
+    "kit/modelos/next/app/api/atendimento/sugestoes/route.ts",
     "kit/modelos/next/app/api/atendimento/whatsapp/route.ts",
     "kit/modelos/next/lib/atendimento.ts",
     "kit/modelos/react/AtendimentoBotao.tsx",
     "kit/modelos/react/ConectarWhatsApp.tsx",
+    "kit/modelos/react/LacunasRobo.tsx",
     "kit/modelos/react/PainelAtendimento.tsx",
     "kit/modelos/react/RoboAtendimento.tsx",
+    "kit/modelos/react/SugestoesConhecimento.tsx",
     "kit/modelos/react/primitives.tsx",
     "kit/versoes.json",
     "references/arquitetura.md",
     "references/atualizar.md",
     "references/chatwoot.md",
+    "references/contexto.md",
     "references/contratos.md",
     "references/enxugar.md",
     "references/escolhas.exemplo.json",
@@ -160,8 +169,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: robô de IA com qualquer provedor, que consulta só o que o sistema libera e passa para a equipe; painel do Chatwoot com o login e as cores do sistema; conexão pela API oficial ou pelo OpenWA; telas e rotas de modelo; tema, conferências e atualização por projeto.",
-    "en": "First version: an AI bot with any provider that looks up only what the system allows and hands over to the team; the Chatwoot panel with the system's login and colors; connection through the official API or OpenWA; template screens and routes; theme, checks and per-project updates."
+    "pt-BR": "Primeira versão: robô de IA com qualquer provedor, que consulta só o que o sistema libera e passa para a equipe; contexto controlado pelo superadmin, para o suporte da própria plataforma ou para cada cliente atender os dele; sugestões de conhecimento com aprovação e relatório do que o robô não soube; painel do Chatwoot com o login e as cores do sistema; API oficial ou OpenWA.",
+    "en": "First version: an AI bot with any provider that looks up only what the system allows and hands over to the team; context controlled by the super admin, for the platform's own support or for each customer serving its own; knowledge suggestions with approval and a report of what the bot could not answer; the Chatwoot panel with the system's login and colors; official API or OpenWA."
   },
   "license": "member"
 }

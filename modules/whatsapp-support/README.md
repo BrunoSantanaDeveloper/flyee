@@ -6,10 +6,18 @@ O app não instala nada em servidor. Ele traz a base pronta e a sua IA, aberta n
 
 ## O que o seu cliente ganha
 
-- **Atender no painel do Chatwoot**, com o nome, o logo e as cores do seu sistema, sem outro login: o botão "Atendimento" do sistema abre o painel já logado. Conversas, notas internas, etiquetas, respostas prontas, modelos da Meta e relatórios vêm prontos.
+- **Atender no painel do Chatwoot**, com o nome, o logo e as cores do seu sistema, sem outro login: o botão "Atendimento" do sistema abre o painel já logado. Conversas, notas internas, etiquetas, respostas prontas e modelos da Meta vêm prontos.
+- **Uma equipe por cliente**: entra no painel só quem o sistema marca como equipe de atendimento, sem limite de atendentes. Cada cliente tem a conta dele, com o número, as conversas e a equipe dele, separada dos outros. Quem sai da equipe sai do painel, e as conversas dessa pessoa voltam para a fila.
 - **Conectar o número numa tela do sistema**: pela API oficial do WhatsApp (credenciais da Meta) ou pelo WhatsApp Web, lendo um QR, com o aviso de risco antes.
 - **Configurar o robô numa tela do sistema**: como ele se apresenta, o que ele sabe, o horário da equipe, quando passa a conversa e quais dados do sistema ele pode consultar.
 - **Escolher como o robô trabalha**: responde sozinho, só sugere a resposta numa nota interna para alguém da equipe enviar, ou fica desligado.
+
+## Quem controla o que o robô sabe
+
+- **Suporte da plataforma.** Quando o seu sistema atende os próprios clientes, há uma conta só, a equipe é a do sistema e tudo o que o robô sabe fica com o superadmin.
+- **Atendimento de cada cliente.** Quando cada cliente do sistema atende os clientes dele, o superadmin escreve as regras que valem para todos (e ficam acima do resto) e escolhe o que cada cliente pode mudar no robô dele: apresentação, instruções, perguntas e respostas, horário, consultas, modo.
+
+Nada é treinado: o robô lê o contexto a cada mensagem, e uma mudança salva vale em até um minuto.
 
 ## Como o robô se comporta
 
@@ -17,6 +25,8 @@ O app não instala nada em servidor. Ele traz a base pronta e a sua IA, aberta n
 - Consulta dados do sistema só pelas consultas que você escreve, e só da própria pessoa da conversa.
 - Passa para a equipe quando a pessoa pede, quando não tem certeza, quando o assunto pede decisão humana e quando algo falha.
 - Funciona com a IA que você escolher: Claude, OpenAI e serviços compatíveis, Gemini, ou a IA do próprio sistema.
+- Aprende com a equipe, com aprovação: quando a equipe resolve uma conversa que o robô passou adiante, ele sugere uma pergunta e resposta nova, sem dado pessoal, e quem cuida do conhecimento aprova, edita ou descarta.
+- Mostra o que não soube responder: um relatório agrupa por assunto as conversas que ele passou para a equipe.
 
 ## O que você precisa ter
 
@@ -25,6 +35,10 @@ Um servidor com Docker, o domínio do sistema, o Platform App do Chatwoot (criad
 ## Peça assim
 
 > Implante o atendimento pelo WhatsApp com IA e equipe neste sistema, usando a API oficial, com o robô sugerindo as respostas para a equipe aprovar.
+
+Para o suporte da própria plataforma:
+
+> Implante o suporte da plataforma pelo WhatsApp, com robô de IA e a nossa equipe, com o contexto do robô controlado só pelo superadmin.
 
 Outros pedidos: "Atualize o atendimento pelo WhatsApp para a versão nova do app", "Confira se o painel de atendimento está com as cores do sistema", "Esconda as campanhas e a central de ajuda do painel de atendimento".
 

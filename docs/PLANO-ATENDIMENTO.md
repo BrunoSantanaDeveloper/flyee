@@ -2,19 +2,25 @@
 
 **Objetivo:** existe no catálogo o app `whatsapp-support`, um kit que a IA do desenvolvedor usa dentro de um projeto de código para montar ali o atendimento pelo WhatsApp com robô de IA e equipe, com o Chatwoot como motor. O app não instala nada em servidor. Ele traz a base pronta, adaptável ao design system do projeto, as orientações e os pré-requisitos, e o caminho para atualizar cada projeto.
 
-> Auditado contra o código em 2026-11-07 (main em 848b820, com trabalho de outras sessões sem commit na árvore: `conversion-pages`, `video-render` 1.1.0, `user-apps.ts`). Fontes externas lidas no código, em clones rasos na pasta temporária da sessão: Chatwoot na tag `v4.19.1`, OpenWA em 79d7f86 (0.29.1, 2026-11-07) e OpenWA-plugins em 37a94c6 (`chatwoot-adapter` 0.9.15). Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
+> Auditado contra o código em 2026-11-07: a primeira rodada sobre main em 848b820, com trabalho de outras sessões sem commit na árvore (`conversion-pages`, `video-render` 1.1.0, `user-apps.ts`); a segunda rodada (ÉPICO 9) sobre main em a702826. Fontes externas lidas no código, em clones rasos na pasta temporária da sessão: Chatwoot na tag `v4.19.1`, OpenWA em 79d7f86 (0.29.1, 2026-11-07) e OpenWA-plugins em 37a94c6 (`chatwoot-adapter` 0.9.15). Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
 
 As decisões de produto vieram do operador nesta conversa de 2026-11-07 e estão na memória do projeto (`support-app-decisions`). Este plano não as repete além do necessário para executar.
 
 ## Estado em 2026-11-07, fim do dia
 
-O app `whatsapp-support` 1.0.0 foi construído no mesmo dia, **sem commit e sem tag**, e instalado para o usuário do operador (`npm run apps -- link whatsapp-support --user`) para o teste dele num projeto próprio.
+O app `whatsapp-support` 1.0.0 foi construído no mesmo dia em duas rodadas, **sem tag**, e instalado para o usuário do operador (`npm run apps -- link whatsapp-support --user`) para o teste dele num projeto próprio.
+
+- ⚠️ A primeira rodada (até o ÉPICO 8) entrou no commit a702826 às 13:46, junto com `conversion-pages` e `video-render` 1.1.0, por um commit que esta sessão não fez. A versão antiga deste parágrafo dizia "sem commit".
+- A segunda rodada (ÉPICO 9: contexto em camadas, cache, sugestões e lacunas, D19 e D20) está na árvore sem commit, ainda como 1.0.0, porque nenhuma 1.0.0 tem tag nem chegou à plataforma.
+- Um projeto que instalou o kit da primeira rodada vê a atualização: `kit.mjs status` compara a base gravada com a do kit (`base_changed`), além do número de versão.
+- Na mesma tarde, a pedido do operador, a equipe de cada cliente: quem entra no painel (T4.4) e a saída de quem deixa a equipe (T4.5).
+- ⚠️ O `README.md` dizia que os relatórios do Chatwoot vinham prontos para o cliente; só administrador os vê (`app/policies/report_policy.rb`), e no kit a equipe é sempre atendente. A frase saiu, e `references/enxugar.md` avisa para não prometer os relatórios.
 
 | Prova | Resultado |
 |---|---|
-| `node --test "modules/whatsapp-support/tests/*.test.mjs"` | 48 de 48 passam (robô, adaptadores de IA, provisionamento e conexão contra Chatwoot e OpenWA falsos, contrato, tema, instalar e atualizar, conferências) |
-| `npm run validate whatsapp-support` | OK, 81 arquivos, uma skill |
-| `npm run pack whatsapp-support` | `dist/modules/whatsapp-support-1.0.0.zip`, 128.369 bytes, sha256 `dda03250390b89426e43fffa468f8b14ca83997e399f3f9b85238f3e660f9f1e` |
+| `node --test "modules/whatsapp-support/tests/*.test.mjs"` | 68 de 68 passam (robô, adaptadores de IA, provisionamento e conexão contra Chatwoot e OpenWA falsos, contrato, tema, instalar e atualizar, conferências; na segunda rodada, camadas e permissões, cache, lacunas, sugestões, limpeza de dado pessoal, base diferente com a mesma versão, quem entra no painel, a saída da equipe e a conferência da equipe) |
+| `npm run validate whatsapp-support` | OK, 90 arquivos, uma skill |
+| `npm run pack whatsapp-support` | primeira rodada: 81 arquivos, sha256 `dda03250…`; segunda rodada, com a equipe: `dist/modules/whatsapp-support-1.0.0.zip`, 90 arquivos, 155.725 bytes, sha256 `e8ec131edc1094084f42e0df57eb75f8f73eb614169a2d92cce36d295918706e` |
 | `tsc --strict` dos modelos (`modelos/next`, `modelos/react`) num projeto de rascunho com a mesma estrutura de um app Next.js, com tipos do Node e uma declaração mínima de React | sem erros |
 | `look` no Edge contra uma imitação local do painel (variáveis e `n-brand` compiladas como no 4.19.1, tema do kit no fim do body) | passou nos modos claro e escuro: cor do projeto no botão com o azul fixo, seletor escondido invisível, link solto no canto |
 | `npm run harness:check` | sincronizado; o catálogo gerado já lista o app |
@@ -33,8 +39,8 @@ Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina est
 | D6 | Instalação fora de um projeto flyee | decidido: o operador usa `npm run apps -- link whatsapp-support --user`; a CLI dos integrantes ganha instalação para o usuário antes de o app ser publicado para eles (ÉPICO 8) | `packages/module-tools/src/user-apps.ts` hoje; `packages/cli` depois |
 | D7 | Regra do `validate` para kit de desenvolvedor | decidido: os textos falam com a IA do desenvolvedor, que roda tudo; ver "Onde é errado estar certo" | `packages/module-tools/src/validate.ts:37` |
 | D8 | Tipo e trilha | decidido: `workflow`, trilha `construir` | manifesto |
-| D9 | Nome | proposto, o operador pode trocar antes da primeira publicação: slug `whatsapp-support`, título "Atendimento no WhatsApp com IA e equipe" | manifesto |
-| D10 | Versão de entrada | **aberta**: a 1.0.0 nasce completa nesta entrega; se o operador tratar o app como principal, a 1.0 reduzida (sem o robô) e a 1.1 completa saem no mesmo dia, antes de publicar | manifesto e marca no console da plataforma |
+| D9 | Nome | decidido (o operador concordou com a sugestão, 2026-11-07): slug `whatsapp-support`, título "Atendimento no WhatsApp com IA e equipe" | manifesto |
+| D10 | Versão de entrada | decidido (o operador concordou com a sugestão, 2026-11-07): a 1.0.0 fica completa como foi construída; a divisão em 1.0 reduzida (sem o robô) e 1.1 completa no mesmo dia só entra se, antes de publicar, o app for tratado como principal | manifesto e marca no console da plataforma |
 | D11 | Robô sem estado e agnóstico | decidido: configuração, ferramentas e histórico vêm do projeto por HTTP assinado; as chaves de IA ficam no ambiente do robô; o provedor é escolhido por conta (`openai`, compatível com OpenAI por `base_url`, `anthropic`, `gemini` ou `project`, em que o próprio projeto gera a resposta) | `kit/base/bot/`, `references/contratos.md` |
 | D12 | Resposta imediata | decidido pelo código: o robô responde 200 antes de pensar e trabalha em segundo plano | invariante 5 |
 | D13 | Rota não oficial | decidido: OpenWA `ghcr.io/rmyndharis/openwa:0.29.1` com o plugin `chatwoot-adapter` 0.9.15, motor `whatsapp-web.js` por padrão | `kit/modelos/implantacao/compose.yml`, `references/whatsapp.md` |
@@ -43,6 +49,8 @@ Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina est
 | D16 | Modo sugestão | decidido: o robô escreve nota privada e passa a conversa para a equipe; é o padrão em projeto com regra de aprovação humana (ONE) | `kit/base/bot/src/bot.mjs` |
 | D17 | Onde o kit mora no projeto | proposto: `<destino>/base/` com os arquivos do kit, que o projeto nunca edita; `<destino>/escolhas.json` com as escolhas; `<destino>/kit.json` com a versão e o hash de cada arquivo da base. A IA escolhe o destino pela estrutura do projeto | `scripts/kit.mjs install` |
 | D18 | Versões travadas na 1.0.0 | proposto: Chatwoot `v4.19.1-ce`, `pgvector/pgvector:pg16`, `redis:7-alpine`, OpenWA `0.29.1`, adaptador `0.9.15`, `caddy:2`, `node:22-alpine` para o robô | `kit/versoes.json`, `references/atualizar.md` |
+| D19 | Contexto da empresa | decidido (o operador concordou com a proposta, 2026-11-07) e feito no ÉPICO 9, dentro da 1.0.0 sem tag. Nenhum treino de modelo: o robô lê, a cada mensagem, o conhecimento escrito, as consultas ao vivo e o histórico curto. Até 200.000 caracteres de conhecimento somados (`MAX_KNOWLEDGE_CHARS`), com a parte fixa separada para o cache do provedor; sugestões de pergunta e resposta tiradas das conversas que a equipe resolveu, só com aprovação de quem cuida do conhecimento; relatório das lacunas por assunto. A base de documentos com busca (trechos e pgvector no banco do projeto) fica para quando algum cliente precisar | `kit/base/shared/settings.mjs`, `kit/base/bot/src/prompt.mjs`, `kit/base/shared/report.mjs`, `references/contexto.md` |
+| D20 | Quem controla o contexto | decidido (operador, 2026-11-07: "em outros projetos preciso que o contexto seja controlado via superadmin", com a Atrupe de exemplo, que vai usar o app no suporte aos clientes da própria plataforma). Dois modelos: `plataforma` (uma conta, só a camada do superadmin, os clientes não editam nada) e `por-cliente` (as regras da plataforma valem acima das de cada cliente, que edita só os grupos que o superadmin liberar; o servidor descarta o resto e só oferece as consultas que o superadmin liberou) | `escolhas.json` (`modelo`), `kit/base/shared/settings.mjs` (`botConfig`, `applyClientEdits`, `knowledgeOwner`), `kit/modelos/next/lib/atendimento.ts` |
 
 ## 0.5 Convenções do repositório que este trabalho toca
 
@@ -78,13 +86,13 @@ Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina est
 - **Aceite:** `npm run validate whatsapp-support` passa sem erro.
 
 ### T1.2: a skill
-**Estado: ✅** `skills/whatsapp-support/SKILL.md`, seis passos e a regra que não quebra; casos em `tests/eval.json` (implantar, SSH recusado, clínica na rota não oficial, atualizar com conflito, conferir). Os casos não rodaram num projeto real.
+**Estado: ✅** `skills/whatsapp-support/SKILL.md`, seis passos e a regra que não quebra; seis casos em `tests/eval.json` (implantar, suporte da própria plataforma com o contexto do superadmin, SSH recusado, clínica na rota não oficial, atualizar com conflito, conferir). Os casos não rodaram num projeto real.
 - `skills/whatsapp-support/SKILL.md`: ler o projeto, propor a integração, instalar a base, adaptar telas e rotas, preparar a implantação com o caminho do projeto, conferir e atualizar. A regra que não quebra: nada em servidor.
 - **Aceite:** `validate` passa; o caso de `tests/eval.json` cobre "implantar o chatbot no projeto" e "atualizar o kit".
 
 ### T1.3: referências
-**Estado: ✅** as nove referências, `escolhas.exemplo.json` e `n-brand.json` (44 classes extraídas do código do 4.19.1); o `validate` confere os caminhos citados.
-- `references/`: `arquitetura.md`, `pre-requisitos.md`, `chatwoot.md`, `whatsapp.md`, `contratos.md`, `tema.md`, `enxugar.md`, `atualizar.md`, `seguranca.md`, `escolhas.exemplo.json`, `n-brand.json`.
+**Estado: ✅** as dez referências (`contexto.md` veio com o ÉPICO 9), `escolhas.exemplo.json` e `n-brand.json` (44 classes extraídas do código do 4.19.1); o `validate` confere os caminhos citados.
+- `references/`: `arquitetura.md`, `pre-requisitos.md`, `chatwoot.md`, `whatsapp.md`, `contratos.md`, `contexto.md`, `tema.md`, `enxugar.md`, `atualizar.md`, `seguranca.md`, `escolhas.exemplo.json`, `n-brand.json`.
 - **Aceite:** `validate` confere que cada arquivo citado existe no pacote.
 
 ### T1.4: README, guias e vitrine
@@ -147,6 +155,14 @@ Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina est
 - `kit/base/ui` (estado das telas, sem framework, testado), `kit/modelos/react` (componentes que usam só `primitives.tsx`) e `kit/modelos/next` (rotas do App Router que chamam `kit/server`).
 - **Aceite:** testes da lógica; os componentes compilam com `tsc` contra uma declaração mínima de React.
 
+### T4.4: quem entra no painel em cada modelo
+**Estado: ✅** antes, `enterPanel` conferia `isSupportStaff` só no modelo `plataforma`, e no `por-cliente` qualquer pessoa logada do cliente entrava (achado na conversa de 2026-11-07 sobre a equipe de cada cliente do ONE). Agora `canEnterPanel` (`kit/base/shared/settings.mjs`) decide: na plataforma, equipe de suporte e superadmin; em cada cliente, `isSupportStaff` ou `canConfigure`, e o superadmin não entra no painel dos clientes. A rota `entrar` recusa com 403 `not_support_staff`.
+- **Aceite:** teste "quem entra no painel" em `tests/kit.test.mjs`; `tsc --strict` dos modelos.
+
+### T4.5: tirar a pessoa do Chatwoot
+**Estado: ✅** `removeStaffUser` e `syncStaff` (`kit/base/server/provision.mjs`) sobre `DELETE /platform/api/v1/accounts/:id/account_users` (`destroy` em `app/controllers/platform/api/v1/account_users_controller.rb` do 4.19.1; o `Agents::DestroyJob` tira a pessoa das caixas e equipes e devolve as conversas dela à fila). No modelo de ligação: `removeFromPanel`, para o projeto chamar onde tira a permissão; `syncPanelStaff`, para uma rotina diária com `listPanelPeople`; e `enterPanel`, que tira quem perdeu a permissão e tenta entrar. Motivo: a sessão do Chatwoot dura até 2 meses (`token_lifespan = 2.months` em `config/initializers/devise_token_auth.rb`).
+- **Aceite:** testes "tirar da equipe" e "conferência da equipe" contra o Chatwoot falso: a pessoa sai da conta e do estado sem ser apagada; a conta de serviço e a de repasse nunca saem; a lista vazia não tira ninguém sem `allowEmpty`; quem o kit não pôs só aparece em `unknown`. Não rodou contra um Chatwoot real (ÉPICO 7).
+
 ## ÉPICO 5: tema, enxugar e acrescentar
 
 ### T5.1: tema gerado das escolhas
@@ -173,15 +189,48 @@ Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina est
 - Com número real, no teste do operador num projeto dele: QR do OpenWA, resposta do robô saindo pelo WhatsApp, passagem para a equipe.
 - **Aceite:** o relatório de `kit.mjs verify` e as capturas de `kit.mjs look`, guardados no projeto de teste.
 
+## ÉPICO 9: contexto em camadas, cache, aprender com a equipe e lacunas (D19, D20)
+
+### T9.1: camadas e permissões
+**Estado: ✅** `kit/base/shared/settings.mjs`: `defaultPlatformSettings`, `clientPermissions`, `editableGroups`, `applyClientEdits`, `botConfig` com `model` e `knowledgeOwner`. Na ligação de modelo (`kit/modelos/next/lib/atendimento.ts`), a pessoa traz `isSuperadmin`, `canConfigure` e `isSupportStaff`, e no modelo `plataforma` só a equipe de suporte e o superadmin entram no painel. A tela `RoboAtendimento` recebe o escopo.
+- **Aceite:** testes do modelo `plataforma` (a camada do cliente não entra) e do modelo `por-cliente` (regras da plataforma sempre, cliente só no liberado, consultas só entre as oferecidas); da plataforma desligada e do cliente que nunca salvou; do servidor que descarta grupo não liberado. `tsc --strict` dos modelos.
+
+### T9.2: texto fixo grande com cache
+**Estado: ✅** `buildSystemPrompt` devolve `{ stable, volatile }`: a data, o horário e o nome do contato ficam fora da parte fixa. Até 200.000 caracteres de conhecimento somados. Na Anthropic, a parte fixa vai com `cache_control` (`ai.cache_ttl`, 5 minutos ou 1 hora); na OpenAI e no Gemini, a parte fixa vai no começo do texto.
+- **Aceite:** testes de que a parte fixa é igual entre mensagens e do bloco com `cache_control`. Não houve medição de acerto de cache contra um provedor real.
+
+### T9.3: aprender com a equipe, com aprovação
+**Estado: ✅** ao receber `conversation_resolved` de uma conversa com `robo-passou`, o robô pede o histórico, limpa dado pessoal (`kit/base/bot/src/privacy.mjs`) e manda até 3 sugestões à rota `suggestions`. A tela `SugestoesConhecimento` e as rotas `sugestoes` aprovam, editam ou descartam; aprovar acrescenta a pergunta e a resposta à camada de quem cuida do conhecimento.
+- **Aceite:** testes do fluxo completo com IA falsa, e dos casos sem a etiqueta, sem resposta da equipe e com o aprendizado desligado. A qualidade das sugestões de uma IA real não foi medida.
+
+### T9.4: relatório das lacunas
+**Estado: ✅** a ação de passar para a equipe ganhou `category` e `topic`; cada passagem vai à rota `events` com o trecho limpo. `summarizeGaps` (`kit/base/shared/report.mjs`) agrupa por assunto; a tela é `LacunasRobo` e a rota é `lacunas`.
+- **Aceite:** testes do evento com trecho limpo, do relatório desligado que não envia nada e do agrupamento por assunto, por janela de dias e só do que o robô não sabia.
+
 ## ÉPICO 8: instalação para o usuário na CLI dos integrantes
 
 **Estado: ⬜** `packages/cli` só instala dentro da pasta de um projeto flyee e grava o `AGENTS.md` dele; a instalação para o usuário existe só no console do operador (`packages/module-tools/src/user-apps.ts`).
 **Bloqueia:** publicar o app para integrantes.
 - Fora desta entrega; precisa de decisão de contrato antes (o que a CLI grava em `~/.claude/skills` e como `update` encontra o app).
 
+## Backlog: o JuriChat como referência de mercado (2026-11-07)
+
+A sessão das páginas analisou o jurichat.com, atendimento por WhatsApp com IA e equipe para escritórios de advocacia (`modules/conversion-pages/references/modelos/jurichat-pagina-de-vendas.md`, item do `docs/PLANO-PAGINAS.md`, seção 6). Abaixo, cada recurso que a página mostra contra o código do Chatwoot 4.19.1 `-ce`. **Decisão do operador:** quais entram, e em que versão.
+
+| Recurso do JuriChat | Chatwoot `-ce` hoje | O que o kit acrescentaria |
+|---|---|---|
+| Consulta do processo pelo WhatsApp | não é do Chatwoot | ✅ já é o desenho do kit: uma consulta do projeto, como `consultar_pedido` no modelo, restrita à pessoa da conversa |
+| Fila do atendente pelo tempo de espera | ✅ ordem por `waiting_since` (`app/models/concerns/sort_handler.rb:22`) e filtro de não atendidas (`app/models/conversation.rb:95`) | nada, ou essa ordem como padrão de cada atendente |
+| Metas de primeira resposta e de atendimento, com "dentro da meta" | ⬜ as metas (SLA) moram só em `enterprise/` (`enterprise/app/models/sla_policy.rb`), que a imagem `-ce` não traz | metas na camada da plataforma (e na do cliente, se liberado) e a conta "dentro da meta" feita pelo projeto com os tempos dos relatórios |
+| Alerta de cliente sem resposta há mais de 1 hora | 🟡 o dado existe (`waiting_since`, não atendidas, contagem ao vivo em `app/controllers/api/v2/accounts/live_reports_controller.rb`), o alerta não. Automação com atraso aceita só condição de estado e de caixa (`app/models/automation_rule.rb:168`): não sabe se a pessoa já recebeu resposta | rotina periódica no projeto, porque o robô não tem estado nem agenda: conversa aberta com espera acima da meta ganha prioridade urgente, etiqueta e nota no Chatwoot, e o aviso vai pelo canal de avisos do projeto |
+| Visão do gestor (conversão, clientes por área, mensagens por dia, tempos contra a meta) | 🟡 os relatórios existem (por dia, atendente, caixa, etiqueta e equipe; primeira resposta, resolução, satisfação), mas só administrador vê (`app/policies/report_policy.rb`), e no kit nenhuma pessoa é administradora (D5, invariante 9) | tela do gestor no design system do projeto, lida pela conta de serviço na API de relatórios, para quem o projeto marcar como gestor; área do direito e conversão vêm de etiquetas que o robô põe na passagem para a equipe |
+| Integrações dentro da conversa (agenda com videochamada, contrato assinado pelo celular, lembrete de audiência) | 🟡 Dashboard Apps (`app/models/dashboard_app.rb`); o kit já cria o seu (`ensureDashboardApp`) | ações do projeto no painel lateral (agendar, enviar contrato); o lembrete semanas depois é mensagem ativa, que na API oficial exige modelo aprovado pela Meta e é cobrada |
+| Eventos para outros sistemas (`message.received`, `conversation.resolved`) | ✅ webhooks da conta (`message_created`, `conversation_status_changed` e outros) | nada novo; o projeto assina o próprio webhook pela conta de serviço |
+
 ## Onde é errado estar certo
 
 - **D7, regra do `validate`.** O operador aceitou criar uma regra própria para kit de desenvolvedor. A leitura do código mostrou que a 1.0 não precisa dela: o `validate` só recusa comandos de instalação de programa e frases que mandam a pessoa ao terminal (`validate.ts:37` e `:39`), e os textos do kit falam com a IA, que roda `docker compose`, `npm` e o próprio `kit.mjs`. A regra entra quando um texto do kit precisar de algo que o `validate` recusa.
+- **D19, versão.** A proposta era levar o contexto maior, as sugestões e as lacunas para uma 1.1. Eles entraram na própria 1.0.0, porque nenhuma 1.0.0 tem tag nem chegou à plataforma; a regra de versão imutável vale a partir da tag. Se o operador quiser a 1.0.0 como estava em a702826 e a 1.1.0 com o ÉPICO 9, o caminho é marcar a702826 com a tag da 1.0.0 e rodar `npm run apps -- bump whatsapp-support minor` sobre a árvore atual.
 - **D8, tipo.** A proposta anterior era `framework`. O `app-author` define `framework` como um modelo que cria uma pasta nova e nunca instala em projeto existente (`.claude/skills/app-author/SKILL.md`, seção 1); o kit entra num projeto que já existe e guarda estado (`kit.json`), por isso `workflow`.
 
 ## Riscos
@@ -200,4 +249,5 @@ Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina est
 - Nada rodou contra Chatwoot, OpenWA ou Meta reais; o ÉPICO 7 existe para isso.
 - Do Chatwoot foram lidos só os arquivos citados; a pasta `enterprise`, os modelos de e-mail e o app de celular não foram examinados. O app de celular do Chatwoot pede e-mail e senha, e as pessoas criadas pelo projeto não têm senha conhecida: na 1.0 o atendimento é pelo navegador.
 - O cadastro incorporado da Meta (Embedded Signup) não foi examinado.
+- O ÉPICO 9 rodou só contra provedores e projeto falsos: o acerto do cache, a qualidade das sugestões e a escolha de `category` e `topic` por uma IA real não foram medidos. A limpeza de dado pessoal cobre e-mail, CPF, CNPJ, número de processo, cartão e telefone por padrão de texto; um nome ou endereço escrito por extenso passa, e por isso nada entra no conhecimento sem aprovação.
 - As regras da Meta sobre IA vêm de fontes de imprensa e de fornecedores (memória `whatsapp-business-facts`), não da página da Meta.

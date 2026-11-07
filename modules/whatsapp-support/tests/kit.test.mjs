@@ -17,11 +17,24 @@ import {
   featureMap,
   NEVER_OFF,
   provisionAccount,
+  removeStaffUser,
   ssoUrl,
+  syncStaff,
   whatsappStatus,
 } from "../kit/base/server/provision.mjs";
 import { brPhoneVariants, contactPhone, phoneDigits, samePhone } from "../kit/base/shared/phone.mjs";
-import { botConfig, defaultSettings, validateSettings } from "../kit/base/shared/settings.mjs";
+import { summarizeGaps } from "../kit/base/shared/report.mjs";
+import {
+  applyClientEdits,
+  botConfig,
+  canEnterPanel,
+  clientPermissions,
+  defaultPlatformSettings,
+  defaultSettings,
+  editableGroups,
+  knowledgeOwner,
+  validateSettings,
+} from "../kit/base/shared/settings.mjs";
 import { signProjectRequest as sharedSign } from "../kit/base/shared/signature.mjs";
 import { connectReducer, initialConnectState, pollingDelay, validateOfficial } from "../kit/base/ui/connect.mjs";
 import { buildScale, parseHex, rgbToOklch } from "../scripts/lib/color.mjs";
@@ -120,6 +133,35 @@ test("instalar, editar a base e atualizar: recusa sem force e guarda a versão d
   }
 });
 
+test("status: base diferente com o mesmo número de versão ainda é atualização", () => {
+  const project = mkdtempSync(join(tmpdir(), "kit-teste-"));
+  try {
+    const dest = join(project, "atendimento");
+    install({ appDir: APP_DIR, dest, appVersion: "1.0.0", versions: {} });
+    const fresh = status({ appDir: APP_DIR, dest, appVersion: "1.0.0", versions: {} });
+    assert.equal(fresh.update_available, false);
+    assert.equal(fresh.base_changed, false);
+
+    // Um kit instalado de uma montagem anterior da mesma versão: a base gravada é outra.
+    const recordPath = join(dest, "kit.json");
+    const record = JSON.parse(readFileSync(recordPath, "utf8"));
+    record.base["bot/src/prompt.mjs"] = "0".repeat(64);
+    delete record.base["bot/src/privacy.mjs"];
+    writeFileSync(recordPath, JSON.stringify(record));
+    const older = status({ appDir: APP_DIR, dest, appVersion: "1.0.0", versions: {} });
+    assert.equal(older.update_available, true);
+    assert.equal(older.base_changed, true);
+    // Sem appDir, só o número de versão conta.
+    assert.equal(status({ dest, appVersion: "1.0.0", versions: {} }).update_available, false);
+
+    const updated = update({ appDir: APP_DIR, dest, appVersion: "1.0.0", versions: {} });
+    assert.equal(updated.updated, true);
+    assert.equal(status({ appDir: APP_DIR, dest, appVersion: "1.0.0", versions: {} }).update_available, false);
+  } finally {
+    rmSync(project, { recursive: true, force: true });
+  }
+});
+
 // ---------- configurações, telefones, assinatura ----------
 
 test("configurações: padrões válidos, erros por campo e montagem da configuração do robô", () => {
@@ -130,7 +172,8 @@ test("configurações: padrões válidos, erros por campo e montagem da configur
   for (const field of ["mode", "knowledge.0", "tools_enabled", "handoff.max_bot_turns", "hours.days.seg.0"]) assert.ok(fields.includes(field), field);
 
   const config = botConfig({
-    settings: { ...defaultSettings("Loja"), tools_enabled: ["consultar_pedido"] },
+    platform: defaultPlatformSettings("Plataforma"),
+    client: { ...defaultSettings("Loja"), tools_enabled: ["consultar_pedido"] },
     state: { bot_token: "t", bot_secret: "s" },
     tools: [{ name: "consultar_pedido", description: "d", input_schema: {}, run() {} }, { name: "outra", description: "", input_schema: {} }],
     ai: { provider: "anthropic" },
@@ -195,13 +238,15 @@ test("contrato: sem assinatura é 401; config, consulta e histórico respondem",
 function fakeServices() {
   const calls = [];
   const users = new Map();
+  const members = new Map();
   let nextId = 100;
   const fetchImpl = async (url, init = {}) => {
     const target = new URL(url);
     const method = init.method ?? "GET";
     const body = init.body ? JSON.parse(init.body) : null;
     const path = target.pathname;
-    calls.push({ host: target.host, method, path, body });
+    const query = Object.fromEntries(target.searchParams);
+    calls.push({ host: target.host, method, path, body, query });
     if (target.host === "chat.test") {
       if (method === "POST" && path === "/platform/api/v1/accounts") return json(200, { id: 3, name: body.name, features: body.features });
       if (method === "PATCH" && /^\/platform\/api\/v1\/accounts\/\d+$/.test(path)) return json(200, { id: 3 });
@@ -211,7 +256,18 @@ function fakeServices() {
       }
       if (method === "GET" && /^\/platform\/api\/v1\/users\/\d+$/.test(path)) return json(200, { id: Number(path.split("/").pop()), access_token: `token-${path.split("/").pop()}` });
       if (method === "PATCH" && /^\/platform\/api\/v1\/users\/\d+$/.test(path)) return json(200, {});
-      if (method === "POST" && path === "/platform/api/v1/accounts/3/account_users") return json(200, { user_id: body.user_id, role: body.role });
+      if (method === "POST" && path === "/platform/api/v1/accounts/3/account_users") {
+        members.set(Number(body.user_id), body.role);
+        return json(200, { user_id: body.user_id, role: body.role });
+      }
+      if (method === "GET" && path === "/platform/api/v1/accounts/3/account_users") {
+        return json(200, [...members].map(([user_id, role]) => ({ account_id: 3, user_id, role })));
+      }
+      if (method === "DELETE" && path === "/platform/api/v1/accounts/3/account_users") {
+        // Como o Chatwoot: find_by(...)&.destroy! e head :ok, mesmo sem a pessoa na conta.
+        members.delete(Number(query.user_id));
+        return new Response(null, { status: 200 });
+      }
       if (method === "GET" && /\/login$/.test(path)) return json(200, { url: "https://chat.test/app/login?sso_auth_token=abc" });
       if (method === "POST" && path === "/api/v1/accounts/3/agent_bots") return json(200, { id: 7, access_token: "bot-token", secret: "bot-secret" });
       if (method === "PATCH" && path.startsWith("/api/v1/accounts/3/agent_bots/")) return json(200, {});
@@ -285,6 +341,75 @@ test("equipe: sempre atendente, membro das caixas, com as preferências do paine
   assert.equal(profile.body.profile.ui_settings.color_scheme, "auto", "mantém o que a pessoa já tinha");
   assert.equal(profile.body.profile.ui_settings.is_macro_open, false);
   assert.match(await ssoUrl({ chatwootUrl: "https://chat.test", platformToken: "p", userId, fetchImpl }), /sso_auth_token/);
+});
+
+test("quem entra no painel: equipe e superadmin na plataforma; equipe e administrador em cada cliente", () => {
+  const nobody = { isSuperadmin: false, canConfigure: false, isSupportStaff: false };
+  assert.equal(canEnterPanel("plataforma", { ...nobody, isSupportStaff: true }), true);
+  assert.equal(canEnterPanel("plataforma", { ...nobody, isSuperadmin: true }), true);
+  assert.equal(canEnterPanel("plataforma", { ...nobody, canConfigure: true }), false, "o administrador de um cliente da plataforma não é a equipe dela");
+  assert.equal(canEnterPanel("por-cliente", { ...nobody, isSupportStaff: true }), true);
+  assert.equal(canEnterPanel("por-cliente", { ...nobody, canConfigure: true }), true);
+  assert.equal(canEnterPanel("por-cliente", { ...nobody, isSuperadmin: true }), false, "o superadmin não entra no painel dos clientes");
+  assert.equal(canEnterPanel("por-cliente", nobody), false);
+  assert.equal(canEnterPanel("por-cliente", null), false);
+});
+
+test("tirar da equipe: sai da conta e do estado, sem apagar a pessoa; serviço e repasse nunca saem", async () => {
+  const { calls, fetchImpl } = fakeServices();
+  const base = { chatwootUrl: "https://chat.test", platformToken: "p", fetchImpl };
+  let state = { account_id: 3, service_user_id: 1, service_token: "svc", relay_user_id: 2, bot_id: 7, inboxes: [{ id: 11, route: "oficial" }], staff: {} };
+  state = (await ensureStaffUser({ ...base, state, person: { key: "ana", email: "ana@cliente.test", name: "Ana" }, uiSettings: null })).state;
+  const anaId = state.staff.ana;
+
+  const result = await removeStaffUser({ ...base, state, personKey: "ana" });
+  assert.equal(result.removed, anaId);
+  assert.deepEqual(result.state.staff, {});
+  const removal = calls.find((call) => call.method === "DELETE");
+  assert.equal(removal.path, "/platform/api/v1/accounts/3/account_users");
+  assert.equal(removal.query.user_id, String(anaId));
+  assert.equal(calls.some((call) => call.method === "DELETE" && call.path.startsWith("/platform/api/v1/users")), false, "a pessoa continua no Chatwoot");
+
+  const again = await removeStaffUser({ ...base, state: result.state, personKey: "ana" });
+  assert.equal(again.removed, null, "tirar de novo não chama o Chatwoot");
+  assert.equal(calls.filter((call) => call.method === "DELETE").length, 1);
+
+  await assert.rejects(
+    removeStaffUser({ ...base, state: { ...state, staff: { robo: 1 } }, personKey: "robo" }),
+    (error) => error.code === "reserved_user",
+  );
+});
+
+test("conferência da equipe: tira só quem o kit pôs e saiu da lista; lista vazia não tira ninguém", async () => {
+  const { calls, fetchImpl } = fakeServices();
+  const base = { chatwootUrl: "https://chat.test", platformToken: "p", fetchImpl };
+  let state = { account_id: 3, service_user_id: 1, service_token: "svc", relay_user_id: 2, bot_id: 7, inboxes: [], staff: {} };
+  for (const [key, name] of [["ana", "Ana"], ["bia", "Bia"], ["caio", "Caio"]]) {
+    state = (await ensureStaffUser({ ...base, state, person: { key, email: `${key}@cliente.test`, name }, uiSettings: null })).state;
+  }
+  // Quem já estava na conta: a conta de serviço, a pessoa de repasse e alguém que o kit não pôs.
+  for (const [user_id, role] of [[1, "administrator"], [2, "agent"], [999, "agent"]]) {
+    await fetchImpl("https://chat.test/platform/api/v1/accounts/3/account_users", { method: "POST", body: JSON.stringify({ user_id, role }) });
+  }
+
+  const empty = await syncStaff({ ...base, state, keepKeys: [] });
+  assert.equal(empty.skipped, "empty_list");
+  assert.equal(calls.some((call) => call.method === "DELETE"), false);
+
+  const result = await syncStaff({ ...base, state, keepKeys: ["ana", "caio"] });
+  assert.deepEqual(result.removed, [{ key: "bia", user_id: state.staff.bia }]);
+  assert.deepEqual(Object.keys(result.state.staff).sort(), ["ana", "caio"]);
+  assert.deepEqual(result.unknown, [{ user_id: 999, role: "agent" }], "quem o kit não pôs só aparece, não sai");
+  const removedIds = calls.filter((call) => call.method === "DELETE").map((call) => Number(call.query.user_id));
+  assert.deepEqual(removedIds, [state.staff.bia]);
+
+  const cleared = await syncStaff({ ...base, state: result.state, keepKeys: [], allowEmpty: true });
+  assert.equal(cleared.removed.length, 2);
+  assert.deepEqual(cleared.state.staff, {});
+  assert.equal(cleared.state.service_user_id, 1);
+
+  await assert.rejects(syncStaff({ ...base, state, keepKeys: null }), (error) => error.code === "staff_list_invalid");
+  assert.equal((await syncStaff({ ...base, state: {}, keepKeys: [] })).skipped, "no_account");
 });
 
 test("rota oficial: caixa WhatsApp Cloud com o robô e o retorno para a Meta", async () => {
@@ -418,4 +543,119 @@ test("look: julga tema, cor, o que devia sumir e links do Chatwoot", () => {
 
 test("arquivo .env: aspas, comentários e export", () => {
   assert.deepEqual(parseDotenv('export A=1\nB="dois # nao"\nC=tres # comentario\n# D=4\nE=\'cinco\''), { A: "1", B: "dois # nao", C: "tres", E: "cinco" });
+});
+
+// ---------- contexto em camadas, controlado pela plataforma ----------
+
+const DECLARED = [
+  { name: "consultar_pedido", description: "pedido", input_schema: {} },
+  { name: "segunda_via", description: "boleto", input_schema: {} },
+];
+
+test("modelo plataforma (como um suporte da própria plataforma): só a camada do superadmin vale", () => {
+  const platform = { ...defaultPlatformSettings("Atrupe"), instructions: "Regras da Atrupe.", knowledge: [{ q: "Planos?", a: "Três planos." }], tools_enabled: ["segunda_via"] };
+  const client = { ...defaultSettings("Cliente X"), instructions: "Tentativa do cliente.", knowledge: [{ q: "x", a: "y" }], tools_enabled: ["consultar_pedido"], mode: "desligado" };
+  const config = botConfig({ model: "plataforma", platform, client, state: { bot_token: "t", bot_secret: "s" }, tools: DECLARED });
+  assert.equal(config.brand, "Atrupe");
+  assert.equal(config.instructions, "Regras da Atrupe.");
+  assert.equal(config.platform_instructions, "");
+  assert.deepEqual(config.knowledge, [{ q: "Planos?", a: "Três planos." }]);
+  assert.deepEqual(config.tools.map((tool) => tool.name), ["segunda_via"]);
+  assert.equal(config.mode, "auto");
+  assert.deepEqual(editableGroups("cliente", "plataforma", platform), [], "no modelo plataforma o cliente não edita nada");
+  assert.equal(knowledgeOwner("plataforma", platform), "plataforma");
+});
+
+test("modelo por cliente: regras da plataforma sempre, e o cliente só no que foi liberado", () => {
+  const platform = {
+    ...defaultPlatformSettings("ONE"),
+    mode: "sugestao",
+    instructions: "Pergunta jurídica vai para um advogado.",
+    knowledge: [{ q: "O que é o ONE?", a: "Sistema para escritórios." }],
+    client_permissions: { apresentacao: true, instrucoes: true, conhecimento: false, horario: true, mensagens: false, transferencia: false, consultas: true, modo: false },
+    tools_available: ["consultar_pedido"],
+    tools_enabled: [],
+  };
+  const client = { ...defaultSettings("Escritório Silva"), mode: "auto", instructions: "Atendemos de segunda a sexta.", knowledge: [{ q: "proibido", a: "não entra" }], tools_enabled: ["consultar_pedido", "segunda_via"] };
+  const config = botConfig({ model: "por-cliente", platform, client, state: {}, tools: DECLARED });
+  assert.equal(config.brand, "Escritório Silva");
+  assert.equal(config.platform_instructions, "Pergunta jurídica vai para um advogado.");
+  assert.equal(config.instructions, "Atendemos de segunda a sexta.");
+  assert.deepEqual(config.platform_knowledge.map((item) => item.q), ["O que é o ONE?"]);
+  assert.deepEqual(config.knowledge, [], "conhecimento do cliente não liberado não entra");
+  assert.equal(config.mode, "sugestao", "o modo fica com a plataforma quando não é liberado");
+  assert.deepEqual(config.tools.map((tool) => tool.name), ["consultar_pedido"], "o cliente só liga o que a plataforma oferece");
+  assert.equal(knowledgeOwner("por-cliente", platform), "plataforma", "sem permissão de conhecimento, quem aprova sugestões é o superadmin");
+});
+
+test("plataforma desligada desliga o robô de todos os clientes", () => {
+  const platform = { ...defaultPlatformSettings("P"), mode: "desligado", client_permissions: { ...defaultPlatformSettings().client_permissions, modo: true } };
+  const config = botConfig({ model: "por-cliente", platform, client: { ...defaultSettings("C"), mode: "auto" }, state: {}, tools: [] });
+  assert.equal(config.mode, "desligado");
+  assert.equal(config.enabled, false);
+});
+
+test("cliente que nunca salvou herda tudo da plataforma", () => {
+  const platform = { ...defaultPlatformSettings("P"), persona: "Você é a Bia.", hours: { timezone: "America/Manaus", days: { seg: [["09:00", "17:00"]] }, holidays: [] } };
+  const config = botConfig({ model: "por-cliente", platform, client: null, state: {}, tools: [], tenantName: "Loja Y" });
+  assert.equal(config.persona, "Você é a Bia.");
+  assert.equal(config.hours.timezone, "America/Manaus");
+  assert.equal(config.brand, "P", "sem camada do cliente, o nome vem da plataforma");
+});
+
+test("o servidor grava do cliente só os grupos liberados", () => {
+  const permissions = clientPermissions("por-cliente", { client_permissions: { conhecimento: true } });
+  const current = { ...defaultSettings("Loja"), instructions: "antigas" };
+  const next = applyClientEdits(current, { instructions: "novas", knowledge: [{ q: "a", a: "b" }], mode: "desligado" }, permissions);
+  assert.equal(next.instructions, "antigas");
+  assert.deepEqual(next.knowledge, [{ q: "a", a: "b" }]);
+  assert.equal(next.mode, "auto");
+  assert.deepEqual(editableGroups("cliente", "por-cliente", { client_permissions: { conhecimento: true } }), ["conhecimento"]);
+  assert.ok(editableGroups("plataforma", "por-cliente", null).includes("permissoes"));
+});
+
+test("validação da camada da plataforma: consultas oferecidas e permissões", () => {
+  const platform = { ...defaultPlatformSettings("P"), tools_available: ["nao_existe"], client_permissions: { conhecimento: "sim" } };
+  const fields = validateSettings(platform, { declaredTools: ["consultar_pedido"], scope: "plataforma" }).map((problem) => problem.field);
+  assert.ok(fields.includes("tools_available"));
+  assert.ok(fields.includes("client_permissions"));
+});
+
+test("relatório das lacunas: agrupa por assunto sem acento, conta e guarda exemplos", () => {
+  const now = Date.parse("2026-11-20T12:00:00Z");
+  const events = [
+    { kind: "handoff", category: "nao_sei", topic: "Troca de produto", excerpt: "Posso trocar?", at: "2026-11-19T10:00:00Z" },
+    { kind: "handoff", category: "nao_sei", topic: "troca de PRODUTO", excerpt: "Como troco?", at: "2026-11-18T10:00:00Z" },
+    { kind: "handoff", category: "pedido_da_pessoa", topic: "", excerpt: "atendente", at: "2026-11-18T09:00:00Z" },
+    { kind: "handoff", category: "nao_sei", topic: "frete", excerpt: "frete?", at: "2026-09-01T10:00:00Z" },
+  ];
+  const groups = summarizeGaps(events, { days: 30, now });
+  assert.equal(groups[0].count, 2);
+  assert.deepEqual(groups[0].examples, ["Posso trocar?", "Como troco?"]);
+  assert.equal(groups.some((group) => group.topic === "frete"), false, "fora da janela");
+  assert.deepEqual(summarizeGaps(events, { days: 30, now, onlyUnknown: true }).map((group) => group.count), [2]);
+});
+
+test("contrato: eventos e sugestões chegam ao projeto assinados; sem tratador, 404", async () => {
+  const secret = "segredo";
+  const saved = [];
+  const handlers = {
+    secret,
+    getConfig: async () => null,
+    runTool: async () => null,
+    getHistory: async () => [],
+    saveEvent: async (accountId, event) => saved.push(["evento", accountId, event.topic]),
+    saveSuggestions: async (accountId, payload) => saved.push(["sugestoes", accountId, payload.suggestions.length]),
+  };
+  const post = (route, body) => {
+    const raw = JSON.stringify(body);
+    const path = `/r/${route}`;
+    const headers = Object.fromEntries(Object.entries(sharedSign({ secret, method: "POST", pathWithQuery: path, body: raw })).map(([key, value]) => [key.toLowerCase(), value]));
+    return { method: "POST", pathWithQuery: path, route, query: {}, rawBody: raw, headers };
+  };
+  assert.equal((await handleBotRequest(post("events", { account_id: 3, topic: "frete" }), handlers)).status, 200);
+  assert.equal((await handleBotRequest(post("suggestions", { account_id: 3, suggestions: [{ q: "a", a: "b" }] }), handlers)).status, 200);
+  assert.deepEqual(saved, [["evento", 3, "frete"], ["sugestoes", 3, 1]]);
+  assert.equal((await handleBotRequest(post("events", { account_id: 3 }), { ...handlers, saveEvent: undefined })).status, 404);
+  assert.equal((await handleBotRequest(post("events", { topic: "sem conta" }), handlers)).status, 400);
 });

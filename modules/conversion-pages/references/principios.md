@@ -1,10 +1,12 @@
-# O que vale para toda página de oferta
+# O que vale para toda página que vende
 
-Este guia é para a IA. Vale para todos os tipos de página; o roteiro de cada tipo, em `tipos/`, diz o que muda.
+Este guia é para a IA. Vale para todos os tipos de página: as ofertas em volta da compra, a página de vendas, a de planos e a de API. O roteiro de cada tipo, em `tipos/`, diz o que muda.
 
 ## 1. Uma decisão por página
 
 A página pede uma coisa só: aceitar ou recusar esta oferta. Há um chamado principal, com o mesmo texto onde quer que apareça (no topo, no cartão da oferta, na barra fixa), e uma recusa visível. Links que levam para fora (menu, blog, outros produtos) saem da página de oferta. Um botão que só rola até a oferta, como `#oferta`, não compete com ela.
+
+Numa página de vendas, de planos ou de API, a regra vira um chamado principal e no máximo um secundário, como a demonstração e o teste, com o mesmo texto em toda a página. O menu leva às páginas derivadas, cada uma com o seu roteiro.
 
 ## 2. O preço sem surpresa
 
@@ -12,6 +14,7 @@ A página pede uma coisa só: aceitar ou recusar esta oferta. Há um chamado pri
 - Preço riscado só quando é o preço praticado de verdade, e a diferença, em reais ou em porcentagem, bate com a conta.
 - Numa assinatura, o valor depois do primeiro período, a periodicidade e como cancelar ficam na mesma tela.
 - Despesas extras, como frete e taxas, aparecem separadas antes do pagamento.
+- Os descontos, a economia em reais e a média mensal fecham com os preços que a página mostra. Nas páginas do Juridiq e do JuriChat, todas as contas de cada plano fecham.
 
 ## 3. O risco do lado de quem vende
 
@@ -33,6 +36,8 @@ A maior parte das compras acontece no celular. O chamado principal aparece na pr
 
 Use contador só com prazo real: ele termina na hora que diz e não recomeça quando a página recarrega. Estoque, vagas e últimas unidades, só quando forem verdade. Urgência falsa é publicidade enganosa (veja `lei.md`).
 
+Uma promoção escreve até quando vale, para quem vale e a que se aplica, com as mesmas palavras em todos os lugares da página. Um teste grátis diz quantos dias dura. Um aviso de "últimas vagas" sai da agenda real.
+
 ## 8. Recusar sem constrangimento
 
 A recusa é um link visível, com palavras neutras: "Pular oferta", "Não, obrigado", "Continuar sem". Frases que constrangem, como "não quero economizar" ou "prefiro pagar mais", afastam quem compraria depois e se aproximam da prática abusiva.
@@ -50,3 +55,15 @@ Defina isso antes de construir: quem já tem o produto, quem chegou por um camin
 ## 10. Medir cada peça
 
 Cada oferta tem a sua taxa de aceite, e cada posição de chamado tem a sua identificação (veja `medicao.md`). Sem isso não dá para saber se quem vende é a oferta, a página ou a barra fixa.
+
+## 11. Quem vende aparece
+
+O rodapé traz o nome da empresa, o CNPJ ou o CPF, o endereço e um contato, como pede o Decreto 7.962/2013, art. 2 (veja `lei.md`). O Juridiq mostra tudo isso; o JuriChat, do mesmo grupo, mostra endereço e contato, mas não o CNPJ.
+
+## 12. Nada cobre a página na chegada
+
+Uma janela de promoção abre depois que a pessoa mostra interesse, como ao passar da metade da página ou ao chegar aos preços, uma vez por visita, com uma recusa visível. No Juridiq, ela abre ao passar de 47% da página, e quem fica no topo não a vê. Uma janela que cobre a página inteira pode piorar o desempenho na busca, segundo a orientação do Google sobre janelas intrusivas, e afasta quem ainda nem leu o título.
+
+## 13. O número que todo mundo lê
+
+Um número contado com animação já está no HTML com o valor final. Sem isso, o buscador, o leitor de tela e quem pediu menos movimento leem "0+", como acontece na página do Juridiq.

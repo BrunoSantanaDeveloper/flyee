@@ -20,6 +20,12 @@ export function chatwootPlatform({ url, token, fetchImpl = fetch }) {
     updateUser: (id, fields) => call("PATCH", `users/${Number(id)}`, fields),
     accountUsers: (accountId) => call("GET", `accounts/${Number(accountId)}/account_users`),
     addAccountUser: (accountId, { user_id, role }) => call("POST", `accounts/${Number(accountId)}/account_users`, { user_id, role }),
+    /**
+     * Tira a pessoa da conta, sem apagá-la: ela pode estar na conta de outro cliente. O Chatwoot a tira das
+     * caixas e das equipes e devolve à fila as conversas atribuídas a ela (Agents::DestroyJob). Sem a pessoa
+     * na conta, a resposta também é 200.
+     */
+    removeAccountUser: (accountId, userId) => call("DELETE", `accounts/${Number(accountId)}/account_users?user_id=${Number(userId)}`),
     /** Link de entrada no painel: vale 5 minutos e uma vez só (app/models/concerns/sso_authenticatable.rb). */
     ssoLink: async (userId) => {
       const result = await call("GET", `users/${Number(userId)}/login`);

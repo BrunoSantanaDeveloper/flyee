@@ -41,7 +41,7 @@
         "Quem já tem o produto não vê a oferta",
         "A página de obrigado diz o que foi acrescentado"
       ],
-      "checks": ["cta_first_screen", "single_offer", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "renewal_shown", "guarantee_near_cta", "charge_clear", "sticky_cta_long_page", "proof_about_offer", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "checks": ["cta_first_screen", "single_offer", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "discount_math", "renewal_shown", "guarantee_near_cta", "charge_clear", "sticky_cta_long_page", "proof_about_offer", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
       "models": ["hostinger-agente-pos-compra"]
     },
     {
@@ -74,7 +74,7 @@
         "O recibo lista o item separado do principal",
         "Nenhum contador ou oferta única que não seja verdade"
       ],
-      "checks": ["no_prechecked", "bump_near_pay", "price_shown", "reference_price_true", "renewal_shown", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "checks": ["no_prechecked", "bump_near_pay", "price_shown", "reference_price_true", "discount_math", "renewal_shown", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
       "models": []
     },
     {
@@ -106,7 +106,7 @@
         "A oferta é diferente da recusada, não a mesma com outro título",
         "Depois dela não vem outra oferta"
       ],
-      "checks": ["cta_first_screen", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "renewal_shown", "guarantee_near_cta", "charge_clear", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "checks": ["cta_first_screen", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "discount_math", "renewal_shown", "guarantee_near_cta", "charge_clear", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
       "models": ["hostinger-agente-pos-compra"]
     },
     {
@@ -135,7 +135,7 @@
         "Quem comprou X também levou Y só com dado real da loja",
         "Os itens mudam conforme o que está no carrinho"
       ],
-      "checks": ["no_prechecked", "price_shown", "reference_price_true", "proof_about_offer", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "checks": ["no_prechecked", "price_shown", "reference_price_true", "discount_math", "proof_about_offer", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
       "models": []
     },
     {
@@ -167,6 +167,137 @@
       ],
       "checks": ["thank_you_basics", "cta_first_screen", "legal_lines", "video_autoplay_ok", "reduced_motion", "images_alt"],
       "models": ["hostinger-agente-pos-compra"]
+    },
+    {
+      "id": "landing",
+      "label": "Página de vendas",
+      "cta": "lead",
+      "asks": ["landing page", "LP", "página de vendas", "página inicial do produto", "home do produto", "página do produto", "página de demonstração"],
+      "where": "o endereço principal do produto, ou o destino das campanhas e dos links",
+      "file": "tipos/landing.md",
+      "facts": ["product.name", "product.what", "audience", "cta_text"],
+      "sections": [
+        "A faixa de cima, só com uma promoção de verdade: o que é, até quando e um chamado",
+        "O topo: para quem é e o resultado no título, uma frase com o que o produto faz, o chamado principal e o secundário, a linha de condições embaixo e uma prova curta",
+        "O produto funcionando: a tela real, um vídeo curto ou uma demonstração animada com dados de exemplo marcados como fictícios",
+        "A dor nas palavras do cliente, em três ou quatro cartões, e a frase que liga a dor à solução",
+        "Os recursos do dia a dia, um por bloco, com o resultado no título e a tela ao lado",
+        "A diferença: por que este produto e não uma alternativa genérica",
+        "A história de uso: um cliente de exemplo, do primeiro contato ao resultado, passo a passo",
+        "As integrações, com o que depende do plano escrito",
+        "A prova: depoimentos com nome, cargo, empresa e cidade, e os números do produto com a origem",
+        "Os planos, pelo roteiro de planos, ou um chamado para a página de planos",
+        "As perguntas frequentes com as objeções de compra: migração, tempo para começar, cancelamento, segurança dos dados, suporte",
+        "O último chamado e o rodapé com quem vende: empresa, CNPJ, endereço, contato, privacidade e termos"
+      ],
+      "mechanics": [
+        "Um chamado principal e no máximo um secundário, com o mesmo texto em toda a página",
+        "No celular, uma barra fixa com o chamado principal aparece quando o botão do topo sai da tela",
+        "Uma janela de promoção só abre depois que a pessoa mostra interesse, como ao passar da metade da página, uma vez por visita, com recusa visível",
+        "Conteúdo que troca sozinho tem botão de pausa e para com o pedido de menos movimento",
+        "Os números contados com animação já estão no HTML com o valor final",
+        "O menu leva às páginas derivadas: planos, API, contato"
+      ],
+      "events": ["page_view", "section_view", "cta_click", "demo_request", "trial_start", "pricing_view", "popup_view", "popup_accept", "popup_decline"],
+      "legal": [
+        "Quem vende, com CNPJ e endereço, as condições da oferta e as restrições dela (Decreto 7.962/2013, art. 2, I, II, V e VI)",
+        "O que a página promete sobre preço, prazo e condições entra no contrato (CDC, art. 30)",
+        "Preço riscado, desconto, contador e vagas só quando são verdade (CDC, art. 37, §1)"
+      ],
+      "manual": [
+        "Os números da página têm origem: clientes, horas economizadas, volume de uso",
+        "A duração da demonstração é a mesma no topo, nos chamados e na agenda",
+        "Os exemplos de código e as telas batem com o produto e com a documentação",
+        "As regras da promoção são as mesmas na faixa, na seção, na janela, nos planos e nas perguntas frequentes",
+        "Os depoimentos falam deste produto e vêm de clientes diferentes",
+        "O que depende do plano está escrito perto do recurso"
+      ],
+      "checks": ["cta_first_screen", "h1_present", "numbers_not_zero", "trial_terms", "promo_terms_shown", "discount_math", "reference_price_true", "countdown_real", "popup_dismissable", "popup_on_arrival", "sticky_cta_long_page", "cancel_terms_shown", "supplier_identified", "legal_lines", "video_autoplay_ok", "reduced_motion", "images_alt"],
+      "models": ["juridiq-pagina-de-vendas", "jurichat-pagina-de-vendas"]
+    },
+    {
+      "id": "planos",
+      "label": "Página de planos e preços",
+      "cta": "lead",
+      "asks": ["página de planos", "página de preços", "tabela de preços", "pricing", "comparação de planos", "seção de planos", "plano mensal e anual"],
+      "where": "o endereço de planos ou de preços, e a seção de planos dentro da página de vendas",
+      "file": "tipos/planos.md",
+      "facts": ["product.name", "offer.plans", "offer.recurrence", "offer.cancellation", "cta_text"],
+      "sections": [
+        "O título e uma linha com as condições gerais: o teste e quanto dura, se pede cartão, se há fidelidade",
+        "O seletor mensal ou anual, com o desconto do anual escrito nele",
+        "Os cartões dos planos, de três a quatro: o nome, para quem é, o preço com o período, o total do ano e a economia em reais, o chamado e de três a cinco itens que mudam de um plano para outro",
+        "O plano em destaque, com selo e contorno diferente",
+        "Uma saída para quem ainda não decidiu: a demonstração ou uma conversa",
+        "A tabela comparativa completa, com o cabeçalho dos planos grudado no topo durante a rolagem",
+        "O que fica de fora de todos os planos, como um produto vendido à parte, escrito na própria tabela",
+        "O plano sob medida, para quem precisa de mais",
+        "As perguntas frequentes da compra: fidelidade, cancelamento, troca de plano, formas de pagamento, migração, segurança",
+        "Uma prova curta e o último chamado"
+      ],
+      "mechanics": [
+        "O seletor troca todos os preços de uma vez; o período que abre marcado é uma decisão do negócio, registrada no plano",
+        "No anual: o preço por mês, o total do ano, a economia em reais e cada forma de pagamento com a sua conta",
+        "O preço riscado do anual é doze vezes o mensal que existe de verdade no seletor",
+        "Os cartões em ordem de preço, a mesma na tabela, com o destaque no plano que serve à maioria",
+        "Cada cartão tem o seu chamado, que leva ao cadastro com o plano e o período escolhidos",
+        "No celular, os cartões em coluna, com o plano em destaque visível sem rolar muito"
+      ],
+      "events": ["pricing_view", "billing_toggle", "plan_select", "plan_compare_view", "trial_start", "checkout_start", "demo_request"],
+      "legal": [
+        "O preço de cada plano, o período, a renovação e as restrições do desconto (Decreto 7.962/2013, art. 2, V e VI)",
+        "O preço publicado obriga quem vende e entra no contrato (CDC, art. 30)",
+        "As contas de desconto e de economia verdadeiras (CDC, art. 37, §1)",
+        "O arrependimento em 7 dias numa assinatura feita pela internet (CDC, art. 49)"
+      ],
+      "manual": [
+        "O seletor mensal mostra os preços que fazem a conta do anual",
+        "A renovação depois de um primeiro período com desconto está escrita",
+        "Os cartões, a promoção e as perguntas frequentes dizem a mesma coisa sobre o que é grátis e para quem",
+        "O chamado de cada plano leva ao cadastro com o plano escolhido",
+        "A tabela comparativa fica legível no celular"
+      ],
+      "checks": ["h1_present", "prices_first_screen", "plan_highlighted", "discount_math", "reference_price_true", "renewal_shown", "trial_terms", "cancel_terms_shown", "promo_terms_shown", "countdown_real", "popup_dismissable", "popup_on_arrival", "numbers_not_zero", "supplier_identified", "legal_lines", "reduced_motion", "images_alt"],
+      "models": ["juridiq-planos", "jurichat-pagina-de-vendas"]
+    },
+    {
+      "id": "api",
+      "label": "Página de API",
+      "cta": "lead",
+      "asks": ["página da API", "página para desenvolvedores", "página de integração", "API pública", "página do MCP", "página de webhooks"],
+      "where": "o endereço da API do produto, ligado à documentação e aos planos",
+      "file": "tipos/api.md",
+      "facts": ["product.name", "api.docs_url", "offer.price", "api.rate_limit", "cta_text"],
+      "sections": [
+        "O topo: o que a API permite em uma frase, o chamado para a documentação e o de ver os planos, e um console com uma chamada e a resposta",
+        "A ficha técnica: endereço base, protocolo, autenticação, formato, versão e o estado do serviço ligado a uma página de status",
+        "Os recursos expostos, um cartão por área, com o método e a rota",
+        "O que dá para automatizar, em casos de uso com o resultado",
+        "Os agentes de IA, quando há servidor MCP: o que o agente faz e uma conversa de exemplo com as ferramentas chamadas",
+        "Da chave à primeira resposta em três passos, com o exemplo pronto para copiar",
+        "Os planos da API: preço, limites de uso em número, o que inclui, o suporte e se exige outro plano",
+        "O último chamado, com a documentação"
+      ],
+      "mechanics": [
+        "Os exemplos de código têm uma aba por linguagem e um botão de copiar",
+        "Os exemplos batem com a documentação: a mesma rota, a mesma versão, a mesma resposta",
+        "O console do topo usa dados de exemplo e diz que são de exemplo",
+        "O chamado de começar leva à criação da chave"
+      ],
+      "events": ["docs_click", "code_copy", "api_plan_select", "api_key_created", "first_request"],
+      "legal": [
+        "O preço, o período e as condições da API, inclusive se ela exige outro plano (Decreto 7.962/2013, art. 2, V e VI)",
+        "Quem vende identificado (Decreto 7.962/2013, art. 2, I e II)",
+        "A política de privacidade diz que dados a API trata e onde eles ficam"
+      ],
+      "manual": [
+        "As rotas, a versão e os nomes dos exemplos são os da documentação",
+        "O estado do serviço vem de uma página de status real",
+        "Está escrito se a API exige a assinatura de outro plano",
+        "Os limites de uso e o que acontece quando passam estão na página e na documentação"
+      ],
+      "checks": ["h1_present", "docs_first_screen", "code_sample", "rate_limits_shown", "price_shown", "plan_highlighted", "cancel_terms_shown", "supplier_identified", "legal_lines", "popup_dismissable", "popup_on_arrival", "reduced_motion", "images_alt"],
+      "models": ["juridiq-api"]
     }
   ]
 }

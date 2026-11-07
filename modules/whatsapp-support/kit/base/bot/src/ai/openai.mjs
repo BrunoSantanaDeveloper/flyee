@@ -3,13 +3,15 @@
 // ("schema" com o esquema estrito, "object" para serviços que só aceitam json_object, "none" para nenhum).
 
 import { requestJson } from "../http.mjs";
+import { systemText } from "../prompt.mjs";
 import { AiError, providerKey } from "./errors.mjs";
 
 export async function generate({ ai, system, messages, schema, keys, fetchImpl, timeoutMs = 60000 }) {
   if (!ai.model) throw new AiError("ai_model_missing", "falta ai.model para este provedor");
   const key = providerKey(keys, ai.key_env || "OPENAI_API_KEY");
   if (!key && !ai.base_url) throw new AiError("ai_key_missing", "falta a chave da OpenAI no ambiente do robô");
-  const body = { model: ai.model, messages: [{ role: "system", content: system }, ...messages] };
+  // A parte fixa primeiro: o cache automático da OpenAI aproveita o prefixo igual entre pedidos.
+  const body = { model: ai.model, messages: [{ role: "system", content: systemText(system) }, ...messages] };
   if (ai.json === "schema") body.response_format = { type: "json_schema", json_schema: { name: "acao", strict: true, schema } };
   else if (ai.json === "object") body.response_format = { type: "json_object" };
   const headers = key ? { authorization: `Bearer ${key}` } : {};

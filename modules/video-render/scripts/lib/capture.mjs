@@ -872,35 +872,56 @@ export function fixedEdge(box, viewportHeight) {
 }
 
 /**
- * `above_fold.mobile` for each desktop call to action: the mobile call with the same text (no
- * case, no accents) in the same order of appearance; null when the phone has no such call, or
- * when there was no mobile reading at all.
+ * `above_fold.mobile` for each desktop call to action; null when the phone does not show it, or
+ * when there was no mobile reading at all. First the same element: the same path in the document
+ * and the same text (no case, no accents), which holds when the site hides and shows with CSS, so
+ * a menu button hidden on the phone does not take the place of the button of the same text in the
+ * page. Then, for what is left (a site that builds the phone page differently), the mobile call
+ * with the same text in the same order of appearance.
  */
 export function matchMobileCtas(desktop, mobile, viewportHeight) {
   const list = Array.isArray(desktop) ? desktop : [];
   if (!Array.isArray(mobile)) return list.map(() => null);
+  const result = list.map(() => null);
+  const paired = new Set();
+  const byPath = new Map();
+  mobile.forEach((cta, i) => {
+    if (cta?.path && !byPath.has(cta.path)) byPath.set(cta.path, i);
+  });
+  list.forEach((cta, index) => {
+    const i = cta?.path ? byPath.get(cta.path) : undefined;
+    if (i === undefined || paired.has(i) || foldedLine(mobile[i]?.text) !== foldedLine(cta?.text)) return;
+    paired.add(i);
+    result[index] = aboveFold(mobile[i], viewportHeight);
+  });
   const pools = new Map();
-  for (const cta of mobile) {
+  mobile.forEach((cta, i) => {
+    if (paired.has(i)) return;
     const key = foldedLine(cta?.text);
     if (!pools.has(key)) pools.set(key, []);
     pools.get(key).push(cta);
-  }
+  });
   const used = new Map();
-  return list.map((cta) => {
+  list.forEach((cta, index) => {
+    if (result[index] !== null) return;
     const key = foldedLine(cta?.text);
     const nth = used.get(key) ?? 0;
-    used.set(key, nth + 1);
     const match = pools.get(key)?.[nth];
-    return match ? aboveFold(match, viewportHeight) : null;
+    if (!match) return;
+    used.set(key, nth + 1);
+    result[index] = aboveFold(match, viewportHeight);
   });
+  return result;
 }
 
 /**
  * The fixed and sticky elements of one pass: those read at the top of the page, then those that
- * showed up only after the scroll to the end (`appeared_after_scroll`). Elements are matched by
- * the id the page reading gave them.
+ * showed up only after the scroll to the end. Elements are matched by the id the page reading gave
+ * them. `arrival` is the reading made on arrival, before the warm-up scroll: with it,
+ * `appeared_after_scroll` means "was not on screen when the page opened", so a window that a
+ * scroll opens during the warm-up is not taken for one that covers the page on arrival.
  */
-export function mergeFixed(top, end, { pass, viewportHeight, max = FIXED_PER_PASS } = {}) {
+export function mergeFixed(top, end, { pass, viewportHeight, max = FIXED_PER_PASS, arrival = null } = {}) {
   const describe = (item, appeared) => ({
     pass,
     position: item.position === "sticky" ? "sticky" : "fixed",
@@ -912,9 +933,21 @@ export function mergeFixed(top, end, { pass, viewportHeight, max = FIXED_PER_PAS
   });
   const first = Array.isArray(top) ? top : [];
   const seen = new Set(first.map((item) => item.id));
-  const list = first.map((item) => describe(item, false));
-  for (const item of Array.isArray(end) ? end : []) if (!seen.has(item.id)) list.push(describe(item, true));
+  const onArrival = Array.isArray(arrival) ? new Set(arrival.map((item) => item.id)) : null;
+  const appeared = (item, fallback) => (onArrival ? !onArrival.has(item.id) : fallback);
+  const list = first.map((item) => describe(item, appeared(item, false)));
+  for (const item of Array.isArray(end) ? end : []) if (!seen.has(item.id)) list.push(describe(item, appeared(item, true)));
   return list.slice(0, max);
+}
+
+/**
+ * The windows that a scroll opened during the warm-up and that were still open in the photos:
+ * read at the top after the warm-up, absent on arrival, covering most of the screen.
+ */
+export function windowsOpenedByWarmUp(top, arrival, viewportHeight) {
+  if (!Array.isArray(top) || !Array.isArray(arrival) || !viewportHeight) return [];
+  const onArrival = new Set(arrival.map((item) => item.id));
+  return top.filter((item) => !onArrival.has(item.id) && fixedEdge(item, viewportHeight) === "other" && Number(item.height) >= viewportHeight * 0.6);
 }
 
 /** The video service behind an iframe: youtube, vimeo or other. */
@@ -1012,8 +1045,8 @@ export function buildAnatomy({ desktop, mobile = null, viewports = {} }) {
   }));
 
   const fixed = [
-    ...mergeFixed(top.fixed, end.fixed, { pass: "desktop", viewportHeight: desktopSize.height }),
-    ...(mobile ? mergeFixed(mobile.top?.fixed, mobile.end?.fixed, { pass: "mobile", viewportHeight: mobileSize.height }) : []),
+    ...mergeFixed(top.fixed, end.fixed, { pass: "desktop", viewportHeight: desktopSize.height, arrival: desktop?.arrival ?? null }),
+    ...(mobile ? mergeFixed(mobile.top?.fixed, mobile.end?.fixed, { pass: "mobile", viewportHeight: mobileSize.height, arrival: mobile.arrival ?? null }) : []),
   ];
 
   const forms = (top.forms ?? []).map((item) => ({
@@ -1086,6 +1119,11 @@ export function finishAnatomy({ desktop = null, mobile = null, failure = null, r
     }
   }
   if (!anatomy) warnings.push(`A leitura da anatomia da página falhou (${reason}): o resto da captura está completo, e o campo anatomy de captura.json ficou nulo.`);
+  const opened = [
+    ...(windowsOpenedByWarmUp(desktop?.top?.fixed, desktop?.arrival, desktop?.top?.viewport?.height ?? viewports.desktop?.height).length ? ["computador"] : []),
+    ...(windowsOpenedByWarmUp(mobile?.top?.fixed, mobile?.arrival, mobile?.top?.viewport?.height ?? viewports.mobile?.height).length ? ["celular"] : []),
+  ];
+  if (opened.length) warnings.push(`Uma janela que abre com a rolagem estava aberta nas fotos do ${opened.join(" e do ")}: as fotos da tela mostram a janela por cima da página, e a anatomia a marca como aparecida depois da rolagem.`);
 
   const sections = desktop?.top?.sections;
   let text = null;
@@ -1833,8 +1871,21 @@ function anatomyInPage(options) {
     };
   });
 
+  // Where an element sits in the document: tag and position among its siblings, from the body down.
+  // A site that hides and shows with CSS keeps the same element, at the same path, on the phone.
+  const pathOf = (el) => {
+    const parts = [];
+    for (let node = el; node && node !== document.body && parts.length < 60; node = node.parentElement) {
+      let nth = 1;
+      for (let sibling = node.previousElementSibling; sibling; sibling = sibling.previousElementSibling) if (sibling.localName === node.localName) nth += 1;
+      parts.push(`${node.localName}:${nth}`);
+    }
+    return parts.reverse().join(">");
+  };
+
   attempt("ctas", () =>
     ctaRead(document, options.maxCtas).map(({ el, text }) => ({
+      path: pathOf(el),
       kind: kindOf(el),
       text,
       href: el.localName === "a" ? abs(el.getAttribute("href")) : null,
@@ -1848,7 +1899,7 @@ function anatomyInPage(options) {
   attempt("cta_positions", () =>
     ctaRead(document, options.maxCtas).map(({ el, text }) => {
       const box = boxOf(el);
-      return { text, y: box.y, height: box.height };
+      return { path: pathOf(el), text, y: box.y, height: box.height };
     }));
 
   // Fixed or sticky elements on screen now: bars (half the width or more) or anything holding a call.
@@ -2441,6 +2492,16 @@ async function readAnatomyDesktop(page) {
 }
 
 /** The mobile reading: where each call to action sits at the top, and the fixed elements at the top and at the end. */
+/** The fixed elements on arrival, before the warm-up scroll; null when the reading fails. */
+async function readArrival(page) {
+  try {
+    const read = await readAnatomy(page, ["fixed"], { timeoutMs: 20000 });
+    return Array.isArray(read?.fixed) ? read.fixed : null;
+  } catch {
+    return null;
+  }
+}
+
 async function readAnatomyMobile(page) {
   await page.evaluate(SCROLL_TOP, { awaitPromise: false });
   await sleep(150);
@@ -2604,6 +2665,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
 
     cookieBanner = await dismissCookies(page);
     if (cookieBanner.dismissed) onProgress(`Aviso de cookies fechado ("${cookieBanner.button}")`);
+    const arrivalDesktop = await readArrival(page);
     state = await warmUp(page);
     await waitForNetworkQuiet(network, { timeoutMs: 1500 });
 
@@ -2621,7 +2683,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
 
     onProgress("Lendo a anatomia da página: seções, chamados, barras fixas, caixas, preços, vídeos e movimento…");
     try {
-      anatomyReads.desktop = await readAnatomyDesktop(page);
+      anatomyReads.desktop = { ...(await readAnatomyDesktop(page)), arrival: arrivalDesktop };
     } catch (error) {
       anatomyFailure = error?.message ?? String(error);
     }
@@ -2646,6 +2708,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     }
     await waitForNetworkQuiet(network);
     mobileCookieBanner = await dismissCookies(page);
+    const arrivalMobile = await readArrival(page);
     const mobileState = await warmUp(page);
     await waitForNetworkQuiet(network, { timeoutMs: 1500 });
 
@@ -2659,7 +2722,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     layout.mobile = mobileLayout(positions, { fullHeight: mobileFull.height, viewportHeight: MOBILE_HEIGHT });
     if (anatomyReads.desktop && !anatomyFailure) {
       try {
-        anatomyReads.mobile = await readAnatomyMobile(page);
+        anatomyReads.mobile = { ...(await readAnatomyMobile(page)), arrival: arrivalMobile };
       } catch (error) {
         anatomyFailure = error?.message ?? String(error);
       }

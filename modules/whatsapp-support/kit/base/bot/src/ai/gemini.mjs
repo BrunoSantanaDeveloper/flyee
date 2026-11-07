@@ -2,6 +2,7 @@
 // aceita additionalProperties, então o esquema vai sem esse campo.
 
 import { requestJson } from "../http.mjs";
+import { systemText } from "../prompt.mjs";
 import { AiError, providerKey } from "./errors.mjs";
 
 export function geminiSchema(schema) {
@@ -20,7 +21,7 @@ export async function generate({ ai, system, messages, schema, keys, fetchImpl, 
   const key = providerKey(keys, ai.key_env || "GEMINI_API_KEY");
   if (!key) throw new AiError("ai_key_missing", "falta a chave do Gemini no ambiente do robô");
   const body = {
-    systemInstruction: { parts: [{ text: system }] },
+    systemInstruction: { parts: [{ text: systemText(system) }] },
     contents: messages.map((message) => ({ role: message.role === "assistant" ? "model" : "user", parts: [{ text: message.content }] })),
     generationConfig: { responseMimeType: "application/json", responseSchema: geminiSchema(schema) },
   };

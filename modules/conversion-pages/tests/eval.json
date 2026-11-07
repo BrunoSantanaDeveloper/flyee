@@ -19,10 +19,37 @@
       "rubric": "Captura a página com audit e aponta a caixa do order bump que já vem marcada como atenção, com o motivo (item sem pedido não obriga a pagar) e a correção (caixa desmarcada). Corrige no código quando o integrante pede e roda audit de novo. Fala só do que está em atenção e não conferido."
     },
     {
-      "name": "página de anúncio encaminhada",
+      "name": "página de anúncio construída como página de vendas",
       "prompt": "Faça a página de destino da minha campanha de Meta Ads da mentoria.",
-      "assertions": [],
-      "rubric": "Reconhece que é a página de destino de um anúncio pago e usa a skill ad-landing-page do app de criativos quando instalada; sem ela, segue os princípios do app e diz que a conferência entre o anúncio e a página ficou de fora. Não cria uma página de upsell nem de order bump."
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/pagina.json" }
+      ],
+      "rubric": "Reconhece uma página de vendas que recebe anúncio e cria a página com o tipo landing. Usa a skill ad-landing-page do app de criativos para o briefing da campanha e para conferir a continuidade entre o anúncio e a página quando ela está instalada; sem ela, diz que essa conferência ficou de fora. Não cria uma página de upsell nem de order bump."
+    },
+    {
+      "name": "página de planos com mensal e anual",
+      "prompt": "Monte a página de planos do sistema com três planos, mensal e anual com 20% de desconto no anual, e a tabela comparativa.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/pagina.json" },
+        { "kind": "file_exists", "path": "paginas/*/plano.md" }
+      ],
+      "rubric": "Reconhece o tipo planos e lê o roteiro e os modelos do Juridiq e do JuriChat. Pergunta, numa mensagem só e com sugestões, os preços mensais, o plano em destaque, qual período abre marcado, a duração do teste e como cancelar, sem inventar nenhum deles. O plano tem o seletor com o desconto escrito, o total do ano e a economia em reais com a conta certa, o riscado igual a doze vezes o mensal, a tabela comparativa com o cabeçalho grudado e as perguntas de fidelidade e cancelamento."
+    },
+    {
+      "name": "página de vendas conferida",
+      "prompt": "Revise a página de vendas que está rodando em localhost:3000 antes de eu ligar a promoção de fim de ano.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/conferencia.json" }
+      ],
+      "rubric": "Cria a página com o tipo landing, roda audit e fala só do que está em atenção ou não conferido: por exemplo, a janela de promoção que cobre a página na chegada, a promoção sem data de fim, o teste sem a duração, uma conta de desconto que não fecha ou a falta do CNPJ no rodapé. Propõe a correção de cada um e não inventa o prazo da promoção nem a duração do teste."
+    },
+    {
+      "name": "página da API",
+      "prompt": "Faça a página da nossa API para desenvolvedores, com os planos e o link da documentação.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/plano.md" }
+      ],
+      "rubric": "Reconhece o tipo api e lê o roteiro e o modelo do Juridiq. Pergunta o endereço da documentação, os preços e os limites de uso em número, e se a API exige outro plano. O plano tem a documentação no topo, o console com dados marcados como de exemplo, a ficha técnica, os três passos até a primeira resposta e os planos com os limites. Os exemplos de código seguem as rotas da documentação do projeto."
     }
   ]
 }

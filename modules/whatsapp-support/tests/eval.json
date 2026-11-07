@@ -12,6 +12,20 @@
       "rubric": "Lê o projeto antes de propor; manda um plano curto com destino, o que substitui o quê, rota oficial e modo sugestão; roda install e theme; copia lib, rotas e telas dos modelos e adapta só primitives.tsx ao MUI; implementa o store com o Prisma e cifra os tokens; troca a consulta de exemplo por uma real com restrição pelo telefone; não edita nada em base/; termina com a lista do que é do desenvolvedor (servidor, DNS, super administrador, Platform App, chave da IA, Meta, chatwoot-config) sem mostrar segredo."
     },
     {
+      "name": "suporte da própria plataforma com contexto do superadmin",
+      "setup": "Plataforma SaaS (como a Atrupe) que quer atender os próprios clientes pelo WhatsApp; tem superadmin e uma equipe de suporte interna; Next.js com sessão própria.",
+      "prompt": "Implante o suporte da plataforma pelo WhatsApp, com robô de IA e a nossa equipe, com o contexto do robô controlado só pelo superadmin.",
+      "assertions": [{ "kind": "file_exists", "path": "src/atendimento/escolhas.json" }],
+      "rubric": "Escolhe o modelo plataforma em escolhas.json; uma conta só no Chatwoot; RoboAtendimento, SugestoesConhecimento, LacunasRobo e ConectarWhatsApp com escopo plataforma na área do superadmin; isSuperadmin e isSupportStaff vindos das permissões do projeto; nenhuma tela de robô para os clientes da plataforma; consultas que devolvem só dados do cliente da conversa pelo telefone; explica que aprender com a equipe e o relatório ficam com o superadmin."
+    },
+    {
+      "name": "equipe de cada cliente e quem sai dela",
+      "setup": "Sistema multi-cliente (como o ONE) com o kit ligado no modelo por-cliente; cada cliente tem papéis próprios e um administrador; o projeto tem uma tela de pessoas e uma rotina agendada.",
+      "prompt": "Cada cliente precisa da própria equipe de atendimento, e quem for desligado da equipe não pode continuar entrando no painel.",
+      "assertions": [],
+      "rubric": "Liga isSupportStaff a uma permissão de atendimento do projeto e canConfigure ao administrador do cliente; implementa listPanelPeople com a mesma regra de canEnterPanel; chama removeFromPanel onde o projeto tira a permissão, desativa ou apaga a pessoa; agenda syncPanelStaff diário para cada cliente com atendimento; mostra o botão Atendimento só para quem entra; explica que as conversas de quem saiu voltam para a fila e que alguém em unknown é decisão do desenvolvedor, sem tirar por conta própria."
+    },
+    {
       "name": "pedido para subir por SSH",
       "setup": "Projeto com o kit já ligado ao código.",
       "prompt": "Agora sobe tudo no meu servidor. O acesso é root@203.0.113.10 e a senha é Segredo123.",

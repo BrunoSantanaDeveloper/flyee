@@ -20,6 +20,20 @@
     "reduced_motion": { "label": "A regra de menos movimento", "weight": "acesso", "fix": "Acrescente a regra prefers-reduced-motion: vídeo sem começar sozinho, animações paradas, transições desligadas." },
     "legal_lines": { "label": "As linhas legais", "weight": "lei", "fix": "Inclua os links da política de privacidade e dos termos, e o caminho do arrependimento ou do reembolso." },
     "thank_you_basics": { "label": "Confirmação, próximo passo e ajuda", "weight": "venda", "fix": "Confirme o pedido, diga o que acontece agora e onde pedir ajuda." },
-    "images_alt": { "label": "Imagens com texto alternativo", "weight": "acesso", "fix": "Descreva no atributo alt cada imagem que informa algo; imagem decorativa leva alt vazio." }
+    "images_alt": { "label": "Imagens com texto alternativo", "weight": "acesso", "fix": "Descreva no atributo alt cada imagem que informa algo; imagem decorativa leva alt vazio." },
+    "h1_present": { "label": "Um título principal (h1)", "weight": "acesso", "fix": "Marque o título principal da página como h1, uma vez só: é por ele que o buscador e o leitor de tela entendem a página." },
+    "numbers_not_zero": { "label": "Números que não começam em zero", "weight": "acesso", "fix": "Escreva no HTML o número final e anime a partir dele só quando a seção entra na tela; com menos movimento pedido, mostre o número final parado." },
+    "trial_terms": { "label": "A duração do teste grátis", "weight": "lei", "fix": "Diga perto de cada chamado de teste quantos dias ele dura, se pede cartão e o que acontece no fim, com as mesmas palavras em toda a página." },
+    "promo_terms_shown": { "label": "A data e as regras da promoção", "weight": "lei", "fix": "Escreva perto da oferta até quando ela vale, para quem vale e a que se aplica (por exemplo, só no primeiro ano do plano anual), com as mesmas palavras em toda a página." },
+    "discount_math": { "label": "As contas de desconto batem", "weight": "lei", "fix": "Refaça a conta: o desconto, a economia e a média mensal saem do preço riscado e do preço que vai ser cobrado, arredondados para centavos." },
+    "popup_dismissable": { "label": "A janela tem saída", "weight": "confianca", "fix": "Ponha na janela uma recusa com palavras neutras, como Agora não, e dê ao botão de fechar o nome Fechar." },
+    "popup_on_arrival": { "label": "Nenhuma janela cobre a página na chegada", "weight": "venda", "fix": "Abra a janela só depois que a pessoa mostra interesse, por exemplo ao passar da metade da página ou ao chegar aos preços, e uma vez por visita." },
+    "supplier_identified": { "label": "Quem vende identificado", "weight": "lei", "fix": "Mostre no rodapé o nome da empresa, o CNPJ (ou o CPF), o endereço e um contato." },
+    "cancel_terms_shown": { "label": "Como cancelar e se há fidelidade", "weight": "confianca", "fix": "Diga perto dos preços ou nas perguntas frequentes como cancelar, se há fidelidade ou multa e o que acontece no fim do período." },
+    "plan_highlighted": { "label": "Um plano em destaque", "weight": "venda", "fix": "Destaque o plano que serve à maioria, com um selo como Recomendado e um contorno diferente." },
+    "prices_first_screen": { "label": "Os preços na primeira tela", "weight": "venda", "fix": "Leve os cartões dos planos para o começo da página: o título, o seletor mensal ou anual e os preços, sem uma abertura longa antes." },
+    "docs_first_screen": { "label": "A documentação na primeira tela", "weight": "venda", "fix": "Ponha no topo um chamado para a documentação, ao lado do chamado de começar." },
+    "code_sample": { "label": "Um exemplo de chamada", "weight": "venda", "fix": "Mostre um exemplo pronto para copiar, com a autenticação e a resposta, nas linguagens que o público usa." },
+    "rate_limits_shown": { "label": "Os limites de uso em número", "weight": "confianca", "fix": "Escreva os limites de uso de cada plano em número (requisições por minuto, por dia ou por mês) e o que acontece quando passam." }
   }
 }

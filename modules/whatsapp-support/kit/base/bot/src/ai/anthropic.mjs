@@ -10,13 +10,25 @@ const API_VERSION = "2026-10-21";
 const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 const FALLBACK_MODELS = new Set(["claude-fable-5-1", "claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"]);
 
+/**
+ * A parte fixa vai num bloco com cache_control (o mesmo texto em toda mensagem da conta: lido do cache,
+ * custa uma fração da entrada); a parte variável vem num segundo bloco, depois do ponto de cache.
+ */
+export function systemBlocks(system, ttl = "5m") {
+  if (typeof system === "string") return system;
+  const cache = ttl === "1h" ? { type: "ephemeral", ttl: "1h" } : { type: "ephemeral" };
+  const blocks = [{ type: "text", text: system.stable, cache_control: cache }];
+  if (system.volatile) blocks.push({ type: "text", text: system.volatile });
+  return blocks;
+}
+
 export async function generate({ ai, system, messages, schema, keys, fetchImpl, timeoutMs = 60000 }) {
   const key = providerKey(keys, ai.key_env || "ANTHROPIC_API_KEY");
   if (!key) throw new AiError("ai_key_missing", "falta a chave da Anthropic no ambiente do robô");
   const model = ai.model || DEFAULT_MODEL;
   const outputConfig = { format: { type: "json_schema", schema } };
   if (ai.effort) outputConfig.effort = ai.effort;
-  const body = { model, max_tokens: ai.max_tokens, system, messages, output_config: outputConfig };
+  const body = { model, max_tokens: ai.max_tokens, system: systemBlocks(system, ai.cache_ttl), messages, output_config: outputConfig };
   const headers = { "x-api-key": key, "anthropic-version": API_VERSION };
   if (ai.fallbacks && FALLBACK_MODELS.has(model)) {
     body.fallbacks = "default";

@@ -3,6 +3,8 @@
 //   POST <base>/tools/<nome>                  uma consulta declarada pelo projeto, que aplica a restrição
 //   GET  <base>/history?account_id=&conversation_id=&limit=   as últimas mensagens, quando o robô reinicia
 //   POST <base>/generate                      a próxima ação, quando o provedor de IA é o próprio projeto
+//   POST <base>/events                        cada passagem para a equipe (relatório das lacunas)
+//   POST <base>/suggestions                   sugestões de conhecimento de uma conversa resolvida
 
 import { requestJson } from "./http.mjs";
 import { signProjectRequest } from "./signature.mjs";
@@ -34,5 +36,9 @@ export function projectClient({ baseUrl, secret, fetchImpl = fetch, timeoutMs = 
     history: (accountId, conversationId, limit = 20) =>
       call("GET", "history", { query: { account_id: accountId, conversation_id: conversationId, limit } }),
     generate: (payload, { timeout = 60000 } = {}) => call("POST", "generate", { body: payload, timeout }),
+    /** Uma passagem para a equipe, para o relatório das lacunas. */
+    event: (payload) => call("POST", "events", { body: payload }),
+    /** Perguntas e respostas sugeridas a partir de uma conversa resolvida, para alguém aprovar. */
+    suggestions: (payload) => call("POST", "suggestions", { body: payload }),
   };
 }

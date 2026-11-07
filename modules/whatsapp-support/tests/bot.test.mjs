@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { createBot } from "../kit/base/bot/src/bot.mjs";
-import { generate as anthropicGenerate } from "../kit/base/bot/src/ai/anthropic.mjs";
+import { generate as anthropicGenerate, systemBlocks } from "../kit/base/bot/src/ai/anthropic.mjs";
+import { scrub } from "../kit/base/bot/src/privacy.mjs";
 import { generate as geminiGenerate, geminiSchema } from "../kit/base/bot/src/ai/gemini.mjs";
 import { generate as openaiGenerate } from "../kit/base/bot/src/ai/openai.mjs";
 import { waitFor } from "../kit/base/bot/src/http.mjs";
@@ -77,6 +78,7 @@ function world({ config = baseConfig(), aiReplies = [], toolResult = { ok: true,
       if (target.pathname.endsWith("/history")) return json(200, { messages: history });
       if (target.pathname.includes("/tools/")) return json(200, toolResult);
       if (target.pathname.endsWith("/generate")) return json(200, JSON.parse(replies.shift() ?? "{}"));
+      if (target.pathname.endsWith("/events") || target.pathname.endsWith("/suggestions")) return json(200, { ok: true });
       return json(404, {});
     }
     if (target.host === "chatwoot.test") {
@@ -120,7 +122,7 @@ function fakeProviderConfig(overrides = {}) {
 
 const reply = (text) => JSON.stringify({ action: "reply", text, tool: "", input: "", reason: "" });
 const lookup = (tool, input) => JSON.stringify({ action: "lookup", text: "", tool, input: JSON.stringify(input), reason: "" });
-const handoff = (reason, text = "") => JSON.stringify({ action: "handoff", text, tool: "", input: "", reason });
+const handoff = (reason, text = "", category = "nao_sei", topic = "") => JSON.stringify({ action: "handoff", text, tool: "", input: "", reason, category, topic });
 
 test("assinatura do Chatwoot: válida, errada, vencida e sem cabeçalho", () => {
   const raw = '{"a":1}';
@@ -378,13 +380,19 @@ test("configuração: tokens obrigatórios e padrões preenchidos", () => {
   assert.equal(config.handoff.max_bot_turns, 8);
 });
 
-test("prompt: regras fixas, conhecimento e protocolo; transcrição começa no cliente", () => {
+test("prompt: parte fixa com regras, conhecimento e protocolo; data e nome só na parte variável", () => {
   const config = normalizeConfig(baseConfig());
-  const prompt = buildSystemPrompt(config, { now: new Date(NOW), contactName: "Maria" });
-  assert.match(prompt, /assistente virtual de atendimento de Loja Exemplo/);
-  assert.match(prompt, /Pergunta: Qual o prazo\?/);
-  assert.match(prompt, /consultar_pedido/);
-  assert.match(prompt, /Nome da pessoa no WhatsApp: Maria/);
+  const { stable, volatile } = buildSystemPrompt(config, { now: new Date(NOW), contactName: "Maria" });
+  assert.match(stable, /assistente virtual de atendimento de Loja Exemplo/);
+  assert.match(stable, /Pergunta: Qual o prazo\?/);
+  assert.match(stable, /consultar_pedido/);
+  assert.match(stable, /category: em handoff/);
+  assert.doesNotMatch(stable, /Agora:|Maria/, "o que muda a cada mensagem fica fora da parte que vai para o cache");
+  assert.match(volatile, /Agora: 2026-11-09 11:00/);
+  assert.match(volatile, /Nome da pessoa no WhatsApp: Maria/);
+  const again = buildSystemPrompt(config, { now: new Date(NOW + 3600000), contactName: "João" });
+  assert.equal(again.stable, stable, "a parte fixa é igual entre mensagens");
+  const prompt = `${stable}\n${volatile}`;
   assert.doesNotMatch(prompt, /—|–/);
   assert.deepEqual(toMessages([{ role: "equipe", text: "Olá" }, { role: "cliente", text: "Oi" }]), [{ role: "user", content: "Oi" }]);
 });
@@ -427,4 +435,123 @@ test("fila: conversas diferentes andam em paralelo, a mesma em ordem", async () 
   queue.push("b", 1);
   await queue.idle();
   assert.deepEqual(order.sort(), ["a:2", "b:1"]);
+});
+
+// ---------- camadas, cache, relatório e aprendizado ----------
+
+test("prompt: regras da plataforma vêm antes e valem acima das da empresa", () => {
+  const config = normalizeConfig(baseConfig({
+    platform_instructions: "Nunca dê parecer jurídico; passe para um advogado.",
+    platform_knowledge: [{ q: "Quem é a plataforma?", a: "Um sistema para escritórios." }],
+  }));
+  const { stable } = buildSystemPrompt(config, { now: new Date(NOW) });
+  assert.match(stable, /9\. As regras e o conhecimento da plataforma valem acima/);
+  const rules = stable.indexOf("Regras da plataforma:");
+  const company = stable.indexOf("Instruções de Loja Exemplo:");
+  assert.ok(rules > 0 && company > rules);
+  assert.ok(stable.indexOf("Conhecimento da plataforma:") < stable.indexOf("Conhecimento de Loja Exemplo:"));
+  const plain = buildSystemPrompt(normalizeConfig(baseConfig()), { now: new Date(NOW) }).stable;
+  assert.doesNotMatch(plain, /Regras da plataforma|9\. As regras/);
+});
+
+test("Anthropic: a parte fixa vai num bloco com cache e a variável depois", () => {
+  assert.deepEqual(systemBlocks({ stable: "fixo", volatile: "agora" }), [
+    { type: "text", text: "fixo", cache_control: { type: "ephemeral" } },
+    { type: "text", text: "agora" },
+  ]);
+  assert.deepEqual(systemBlocks({ stable: "fixo", volatile: "" }, "1h")[0].cache_control, { type: "ephemeral", ttl: "1h" });
+  assert.equal(systemBlocks("texto"), "texto");
+});
+
+test("OpenAI: parte fixa no começo da mensagem de sistema, para o cache por prefixo", async () => {
+  let seen;
+  const fetchImpl = async (_url, init) => {
+    seen = JSON.parse(init.body);
+    return new Response(JSON.stringify({ choices: [{ message: { content: reply("ok") }, finish_reason: "stop" }] }), { status: 200 });
+  };
+  const ai = normalizeConfig(baseConfig({ ai: { provider: "openai", model: "m" } })).ai;
+  await openaiGenerate({ ai, system: { stable: "FIXO", volatile: "AGORA" }, messages: [{ role: "user", content: "oi" }], schema: ACTION_SCHEMA, keys: { OPENAI_API_KEY: "k" }, fetchImpl });
+  assert.equal(seen.messages[0].content, "FIXO\n\nAGORA");
+});
+
+test("limpeza: tira e-mail, telefone, CPF, CNPJ, processo e cartão; mantém o resto", () => {
+  const text = "Sou a Ana, ana@exemplo.com, (11) 99999-0000, CPF 123.456.789-09, CNPJ 12.345.678/0001-90, processo 0001234-56.2024.8.26.0100, cartão 4111 1111 1111 1111, pedido de 3 itens";
+  const clean = scrub(text, 1000);
+  for (const leaked of ["ana@exemplo.com", "99999-0000", "123.456.789-09", "12.345.678/0001-90", "0001234-56.2024.8.26.0100", "4111 1111"]) {
+    assert.ok(!clean.includes(leaked), `vazou ${leaked}`);
+  }
+  assert.match(clean, /Sou a Ana/);
+  assert.match(clean, /pedido de 3 itens/);
+  assert.equal(scrub("a".repeat(500), 10), `${"a".repeat(10)}...`);
+});
+
+test("passagem decidida pela IA vai para o relatório com categoria, assunto e trecho limpo", async () => {
+  const { calls, fetchImpl } = world({
+    config: fakeProviderConfig({ report: { enabled: true } }),
+    aiReplies: [handoff("não sei a política de troca", "", "nao_sei", "troca de produto")],
+  });
+  const bot = makeBot(fetchImpl);
+  const raw = JSON.stringify(incoming({ content: "Posso trocar? Meu telefone é 11 98888-7777" }));
+  await bot.receive({ rawBody: raw, headers: chatwootHeaders(raw) });
+  await bot.idle();
+  const event = calls.project.find((call) => call.path.endsWith("/events"));
+  assert.ok(event?.signed);
+  assert.equal(event.body.category, "nao_sei");
+  assert.equal(event.body.topic, "troca de produto");
+  assert.doesNotMatch(event.body.excerpt, /98888/);
+  assert.equal(event.body.account_id, 3);
+});
+
+test("relatório desligado: nenhuma passagem vai para o sistema", async () => {
+  const { calls, fetchImpl } = world({ config: fakeProviderConfig(), aiReplies: [] });
+  const bot = makeBot(fetchImpl);
+  const raw = JSON.stringify(incoming({ content: "quero falar com um atendente" }));
+  await bot.receive({ rawBody: raw, headers: chatwootHeaders(raw) });
+  await bot.idle();
+  assert.equal(calls.project.some((call) => call.path.endsWith("/events")), false);
+});
+
+function resolved({ labels = ["robo-passou"], id = 7 } = {}) {
+  return { event: "conversation_resolved", id, status: "resolved", labels, account: { id: 3, name: "Cliente" }, inbox_id: 5, meta: {}, messages: [] };
+}
+
+test("conversa passada e resolvida pela equipe vira sugestão de conhecimento, sem dado pessoal", async () => {
+  const { calls, fetchImpl } = world({
+    config: fakeProviderConfig({ learning: { enabled: true } }),
+    history: [
+      { role: "cliente", text: "Vocês entregam no sábado? meu email é ana@exemplo.com" },
+      { role: "robo", text: "Vou chamar alguém da equipe." },
+      { role: "equipe", text: "Entregamos aos sábados até as 14h, sem custo extra." },
+    ],
+    aiReplies: [JSON.stringify({ suggestions: [{ q: "Vocês entregam no sábado?", a: "Sim, aos sábados até as 14h, sem custo extra. Dúvidas: ana@exemplo.com", why: "pergunta comum" }] })],
+  });
+  const bot = makeBot(fetchImpl);
+  const raw = JSON.stringify(resolved());
+  assert.equal((await bot.receive({ rawBody: raw, headers: chatwootHeaders(raw) })).body.queued, true);
+  await bot.idle();
+  const transcript = calls.ai[0].body.messages.at(-1).content;
+  assert.match(transcript, /Equipe: Entregamos aos sábados/);
+  assert.doesNotMatch(transcript, /ana@exemplo\.com/, "a conversa vai para a IA já sem dado pessoal");
+  const sent = calls.project.find((call) => call.path.endsWith("/suggestions"));
+  assert.ok(sent?.signed);
+  assert.equal(sent.body.suggestions.length, 1);
+  assert.doesNotMatch(sent.body.suggestions[0].a, /ana@exemplo\.com/);
+  assert.equal(calls.chatwoot.length, 0, "aprender não mexe na conversa");
+});
+
+test("sem etiqueta do robô, sem resposta da equipe ou com o aprendizado desligado, não há sugestão", async () => {
+  const cases = [
+    { config: fakeProviderConfig({ learning: { enabled: true } }), payload: resolved({ labels: ["vip"] }), history: [] },
+    { config: fakeProviderConfig({ learning: { enabled: true } }), payload: resolved(), history: [{ role: "cliente", text: "oi" }, { role: "robo", text: "olá" }] },
+    { config: fakeProviderConfig(), payload: resolved(), history: [{ role: "equipe", text: "resposta" }] },
+  ];
+  for (const item of cases) {
+    const { calls, fetchImpl } = world({ config: item.config, history: item.history, aiReplies: [JSON.stringify({ suggestions: [{ q: "x", a: "y", why: "z" }] })] });
+    const bot = makeBot(fetchImpl);
+    const raw = JSON.stringify(item.payload);
+    await bot.receive({ rawBody: raw, headers: chatwootHeaders(raw) });
+    await bot.idle();
+    assert.equal(calls.ai.length, 0);
+    assert.equal(calls.project.some((call) => call.path.endsWith("/suggestions")), false);
+  }
 });

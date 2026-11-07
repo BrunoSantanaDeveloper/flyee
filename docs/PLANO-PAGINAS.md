@@ -1,21 +1,34 @@
 # Páginas que vendem: especificação
 
-**Objetivo:** quando o operador (ou um integrante) pedir à IA uma página de um tipo conhecido (order bump, upsell, downsell, cross-sell, página de obrigado), a IA segue o roteiro de mercado daquele tipo e os modelos reais analisados, constrói a página e a confere pela captura. O repertório cresce a cada modelo que o operador traz.
+**Objetivo:** quando o operador (ou um integrante) pedir à IA uma página de um tipo conhecido (página de vendas, planos e preços, página de API, order bump, upsell, downsell, cross-sell, página de obrigado), a IA segue o roteiro de mercado daquele tipo e os modelos reais analisados, constrói a página e a confere pela captura. O repertório cresce a cada modelo que o operador traz.
 
-> Conferido contra o código em 2026-11-07 (main em 848b820, com as mudanças do espelho do Codex ainda sem commit). Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
+> Conferido contra o código em 2026-11-07. A primeira rodada (Hostinger) está em a702826; a segunda (Juridiq, ÉPICO 5) está na árvore, sem commit. Nada tem tag. Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
 
-## Estado da implementação (2026-11-07, nada com commit nem tag)
+## Estado da implementação (2026-11-07)
 
 | Tarefa | Estado | Evidência |
 |---|---|---|
-| T1.1 a T1.4 | ✅ | `video-render` 1.1.0. A leitura fica em `readAnatomyDesktop` e `readAnatomyMobile` (`scripts/lib/capture.mjs`). `references/interface.md` §5 descreve `anatomy`, `texto.md`, `input_kind` e `anatomy_counts`. Testes em `tests/anatomy.test.mjs` (13) e `tests/fixtures/oferta/`. ZIP sha256 `855bd60c…` |
-| T2.1 a T2.6 | ✅ | `conversion-pages` 1.0.0. São 19 regras em `scripts/lib/checks.mjs` e 14 testes em `tests/pages.test.mjs`, um deles com a captura real. `tests/eval.json` tem 3 casos. ZIP sha256 `413b4ff3…` |
+| T1.1 a T1.4 | ✅ | `video-render` 1.1.0, em a702826. A leitura fica em `readAnatomyDesktop` e `readAnatomyMobile` (`scripts/lib/capture.mjs`). `references/interface.md` §5 descreve `anatomy`, `texto.md`, `input_kind` e `anatomy_counts`. Testes em `tests/anatomy.test.mjs` e `tests/fixtures/oferta/` |
+| T2.1 a T2.6 | ✅ | `conversion-pages` 1.0.0, em a702826: 19 regras, 14 testes, 3 casos de avaliação. É a candidata à versão de entrada (D7, D14) |
+| T5.1 a T5.6 | ✅ | A rodada do Juridiq, na árvore e sem commit: `conversion-pages` 1.1.0 (ZIP sha256 `1ceb78d1…`, 30 arquivos) e o `video-render` 1.1.0 corrigido no lugar, ainda sem tag (ZIP sha256 `f40eb58c…`). Detalhes no ÉPICO 5 |
+| ⚠️ `appeared_after_scroll` | corrigido | `video-render/references/interface.md` dizia "só apareceu depois da rolagem". A captura rola a página para aquecer antes de ler, e uma janela que abre pela rolagem saía como presente na chegada. Agora há uma leitura na chegada, antes do aquecimento (T5.4) |
+| ⚠️ `above_fold.mobile` | corrigido | A interface dizia "pelo mesmo texto na mesma ordem". Um botão do menu escondido no celular tomava o par do botão de mesmo texto da página (no JuriChat, "Comece grátis" saía como ausente no celular). Agora o pareamento é primeiro pelo mesmo elemento (T5.4) |
 | T3.1 | ✅ | O código está em `packages/module-tools/src/user-apps.ts` e `cli.ts`, com 12 testes em `test/user-apps.test.ts`. A instalação real foi feita: `~/.flyee/user-apps` e as pontes `conversion-pages` e `video-render` em `~/.claude/skills/`. Logo depois do `link --user`, a sessão do Claude Code em andamento passou a listar as duas skills; skills pessoais valem em qualquer pasta. Rodando `check` de dentro do flyee-club, o projeto é o flyee-club e o motor é o 1.1.0 |
 | T3.2, T4.3 | ✅ | Duas linhas em `.claude/rules/apps.md`. `harness:check` passa, e as regras ocupam 27.343 bytes dos 32.768 |
 | T4.1 | ✅ | `modules/conversion-pages/.dev/INTAKE.md` |
 | T4.2 | ✅ | `C:\AppsProjects\flyee-workspace\pesquisa-paginas\hostinger-agente-2026-11-07\` (11 MB, com `LEIAME.txt`), sem o carrinho e sem as respostas da API |
 
-**Verificação que rodou:**
+**Verificação da segunda rodada (ÉPICO 5):**
+- `npm run validate`: 13 apps válidos;
+- `npm run test:apps`: 695 testes, 693 passam, 2 opcionais pulados, nenhum falha. Entre eles:
+  - 108 do `video-render`;
+  - 23 do `conversion-pages`, com duas capturas reais pelo motor;
+- `npm run apps -- catalog --check` e `npm run harness:check`: passam;
+- a conferência real nas quatro páginas do Juridiq e do JuriChat (T5.6).
+
+Não rodou: o `ci:verify` completo (a CLI não mudou), macOS e Linux, e um pedido real de página de vendas, de planos ou de API numa sessão aberta num projeto de código.
+
+**Verificação da primeira rodada:**
 - `npm run validate`: 12 apps válidos;
 - `npm run test:apps`: 618 testes, 616 passam, 2 opcionais pulados, nenhum falha;
 - testes do `module-tools`: 67 passam;
@@ -65,6 +78,11 @@
 | D7 | Versão de entrada (a grátis) | Aberta. Decide-se na publicação, que é clique do operador. | console da plataforma |
 | D8 | Versão do `video-render` | 1.1.0. A interface v1 só ganha campos (`anatomy`, `texto.md`, entrada `.mhtml`); nada muda de nome nem some. | manifesto e `references/interface.md` do `video-render` |
 | D9 | Vocabulário da conferência | `ok`, `atencao`, `nao_conferido`, o mesmo do `ad-landing-page`. O que a captura não trouxe nunca é reprovado. | `modules/conversion-pages/scripts/lib/check.mjs` |
+| D10 | Tipos da segunda rodada | `landing` (página de vendas), `planos` (planos e preços) e `api` (página de API), todos com `"cta": "lead"`: o chamado principal pede o próximo passo (agendar, testar, começar), não uma compra. O operador pediu "esta LP e páginas derivadas" como modelos em 2026-11-07; elas não cabiam nos cinco tipos da 1.0. | `references/tipos.json` |
+| D11 | Divisão com o `ad-landing-page` | A página de vendas que recebe anúncio é construída e conferida aqui, como `landing`. O briefing a partir da campanha e a continuidade entre o anúncio e a página continuam no `ad-landing-page`, que não constrói página. Antes, a skill mandava toda página de anúncio para lá. | `skills/conversion-pages/SKILL.md`, Passo 0 |
+| D12 | Os modelos da família Juridiq | Quatro entradas, uma por página, ligadas pelo tipo: `juridiq-pagina-de-vendas` (landing), `juridiq-planos` (planos), `juridiq-api` (api) e `jurichat-pagina-de-vendas` (landing e planos). Fonte e data em cada uma, como D2. | `references/modelos.json` |
+| D13 | O `video-render` 1.1.0 sem tag | Corrigido no lugar, sem versão nova: a leitura na chegada e o pareamento por elemento. A forma da anatomia não muda (o `path` fica só nas leituras internas). | `modules/video-render/scripts/lib/capture.mjs` |
+| D14 | A versão do `conversion-pages` | 1.1.0, pelo procedimento de entrada (modelo ou tipo novo sobe a versão menor). A 1.0.0 fica em a702826, com os cinco tipos de oferta, e é a candidata natural à versão de entrada; a decisão continua aberta em D7. | manifesto; console da plataforma |
 
 ## 0.5 Convenções do repositório que este trabalho toca
 
@@ -235,6 +253,75 @@ O procedimento fica em `modules/conversion-pages/.dev/INTAKE.md`:
 - Uma linha em `.claude/rules/apps.md`: todo modelo novo deste app termina com a lista do que os outros apps ganham.
 - **Aceite:** a linha está no `AGENTS.md` gerado, e `harness:check` passa.
 
+## ÉPICO 5: o modelo do Juridiq e as páginas derivadas (2026-11-07)
+
+O operador trouxe quatro endereços: juridiq.com.br, juridiq.com.br/api, juridiq.com.br/plans e jurichat.com. Foram vistos durante a promoção de Black Friday das duas marcas.
+
+### T5.1: a captura e o bruto
+
+**Estado: ✅.**
+- **Onde:** `C:\AppsProjects\flyee-workspace\pesquisa-paginas\juridiq-2026-11-07\`, com uma pasta por página: `captura.json`, `texto.md`, as fotos e as rolagens do computador e do celular.
+- **A sonda:** em `sonda/`, um navegador por CDP, sem clicar em compra nem marcar demonstração. Ela mede:
+  - quando a janela abre, por profundidade ou por tempo;
+  - a barra do celular;
+  - a digitação, o radar e a contagem dos números;
+  - o seletor mensal;
+  - a agenda;
+  - o pedido de menos movimento.
+- **As fotos:** 48 telas, das seções e do celular.
+
+- **Aceite:** a pasta existe com um `LEIAME.txt`, e nada dela está no repositório.
+
+### T5.2: os três tipos
+
+**Estado: ✅.** `references/tipos.json` ganhou `landing`, `planos` e `api`. Os roteiros estão em `references/tipos/landing.md`, `planos.md` e `api.md`. `discount_math` entrou também nos quatro tipos de oferta que têm preço riscado.
+- **Aceite:** o teste de coerência de `tests/pages.test.mjs` passa, e `types` lista os oito tipos.
+
+### T5.3: os catorze itens novos da conferência
+
+**Estado: ✅.** Os itens novos, em `references/checks.json` e `scripts/lib/checks.mjs`:
+- `h1_present`, `numbers_not_zero`, `trial_terms`, `promo_terms_shown`, `discount_math`;
+- `popup_dismissable`, `popup_on_arrival`;
+- `supplier_identified`, `cancel_terms_shown`, `plan_highlighted`, `prices_first_screen`;
+- para a página de API, `docs_first_screen`, `code_sample` e `rate_limits_shown`.
+
+O que mudou no motor da conferência:
+- **Modo `lead`:** o chamado principal pode ser agendar, testar ou começar. Botões lado a lado ficam na mesma faixa, e entre eles vence o que o celular mostra.
+- **O texto inteiro:** a conferência lê o `texto.md` da captura, então o rodapé entra mesmo numa seção longa.
+- **A barra fixa:** deixa de contar o botão do menu e as janelas que cobrem a tela.
+
+- **Aceite:** 23 testes em `tests/pages.test.mjs`, nove deles novos. Um roda a captura real da página `video-render/tests/fixtures/janela/` como `landing` e confere três coisas: a janela aparece depois da rolagem, tem saída, e o botão principal está na primeira tela.
+
+### T5.4: as duas correções do `video-render` 1.1.0
+
+**Estado: ✅.**
+- **A leitura na chegada.** `readArrival` lê as barras e as janelas antes do aquecimento, no computador e no celular. `mergeFixed` usa essa leitura para `appeared_after_scroll`. Quando uma janela que abre com a rolagem sai nas fotos, a resposta avisa em `warnings`.
+- **O pareamento por elemento.** Cada chamado leva o caminho dele no documento, e `matchMobileCtas` pareia primeiro pelo mesmo caminho com o mesmo texto. O pareamento pelo texto, na ordem, fica para o que sobrar.
+- **Aceite:** 108 testes do `video-render` passam, 3 deles novos. Um captura de verdade a página `tests/fixtures/janela/`, que tem uma janela que abre aos 40% da rolagem e um botão do menu escondido no celular.
+
+### T5.5: os modelos
+
+**Estado: ✅.** `references/modelos/juridiq-pagina-de-vendas.md`, `juridiq-planos.md`, `juridiq-api.md` e `jurichat-pagina-de-vendas.md`, e as quatro entradas em `modelos.json` (D12). Os princípios, o movimento, a medição e a lei passaram a valer para toda página que vende. A lei ganhou os arts. 30 e 35 do CDC e os incisos do art. 2 do Decreto 7.962/2013, conferidos no planalto.gov.br em 2026-11-07. Duas fontes técnicas entraram e foram conferidas no mesmo dia:
+- a orientação do Google sobre janelas intrusivas;
+- o critério 2.2.2 do WCAG 2.2, de pausar, parar e esconder.
+
+- **Aceite:** `npm run validate conversion-pages` passa, o que inclui a regra de texto em cada arquivo distribuído.
+
+### T5.6: a versão e a instalação
+
+**Estado: ✅.** `npm run apps -- bump conversion-pages minor`, o changelog nos dois idiomas, `pack` dos dois apps e `link conversion-pages --user`.
+
+**A conferência real.** Rodou pelo `audit` do app nas quatro páginas, num projeto de teste e com o motor corrigido:
+
+| Página | Tipo | Resultado | Em atenção |
+|---|---|---|---|
+| inicial | `landing` | 14 ok, 2 atenção | o teste sem duração; os números "0+" |
+| planos | `planos` | 13 ok, 2 atenção | o teste sem duração; a falta de `h1` |
+| api | `api` | 11 ok, 2 atenção | os limites de uso; o preço partido "R$ 98" e ",90" (um falso aviso, ver o backlog) |
+| jurichat | `landing` | 9 ok, 4 atenção | sem CNPJ; sem caminho de arrependimento; sem regra de cancelamento; sem barra fixa no celular |
+
+A janela da página inicial saiu `ok` em `popup_on_arrival`. O botão principal do JuriChat saiu "Comece grátis", o mesmo que a página mostra em azul.
+
 ## 5. Riscos
 
 | Risco | Primeiro sinal |
@@ -245,9 +332,23 @@ O procedimento fica em `modules/conversion-pages/.dev/INTAKE.md`:
 | A página salva traz dado pessoal (nome, e-mail, pedido) | fica no projeto do integrante; no caso do operador, na pasta de trabalho, nunca no repositório |
 | Um artigo de lei citado muda | `lei.md` traz a data da conferência; a próxima versão confere de novo |
 
-## 6. Backlog: as outras melhorias (D3)
+## 6. Backlog: o que os outros apps ganham
 
-Ficam registradas para não se perderem, todas tiradas do modelo da Hostinger:
+### Do modelo do Juridiq (2026-11-07)
+
+| App | O que ganharia | Evidência de que hoje não tem |
+|---|---|---|
+| `video-render` | ler o preço partido em elementos ("R$ 98" e ",90") como um preço só; tirar as fotos do topo sem a janela que abre com a rolagem; registrar os cookies gravados antes do consentimento, para uma conferência de LGPD | a conferência da API do Juridiq achou só "R$ 98"; `desktop.png` da página inicial saiu coberta pela janela, e agora o aviso diz isso; a captura não lê cookies |
+| `ad-creatives` (`ad-landing-page`) | chamar o `audit` deste app como `landing` quando ele estiver instalado, em vez de repetir itens. Assim a página do anúncio ganha as contas de desconto, a promoção com data, o teste com duração, quem vende e a janela na chegada | `skills/ad-landing-page/SKILL.md`: a conferência própria olha o chamado, as palavras do anúncio, preço, prazo e linhas legais; este app ainda não tem `references/interface.md` para ser chamado |
+| `whatsapp-support` | o JuriChat é uma referência de mercado do que esse kit monta. Conferido contra o Chatwoot 4.19.1 `-ce` pela sessão do kit, em 2026-11-07: <ul><li>a fila pelo tempo de espera e os webhooks já existem;</li><li>as metas de tempo de resposta são só da versão Enterprise;</li><li>o alerta de cliente sem resposta pediria uma rotina periódica no projeto;</li><li>a visão do gestor pediria uma tela própria, porque os relatórios só aparecem para administrador;</li><li>as integrações dentro da conversa usam os Dashboard Apps que o kit já cria.</li></ul>Quais entram é decisão do operador | `docs/PLANO-ATENDIMENTO.md`, seção "Backlog: o JuriChat como referência de mercado", com a linha do código do Chatwoot de cada item |
+| `video-studio` | uma variação do roteiro `passos` em forma de conversa (as mensagens surgindo e as integrações dentro dela) e o roteiro da pergunta digitada com o resultado do produto, tirados das demonstrações do JuriChat e do Juridiq | `references/roteiros.json`: `lancamento`, `interface`, `oferta`, `lista`, `passos` |
+| `ads-insights` | os eventos da página de vendas, dos planos e da API no plano de medição: pedido de demonstração, início do teste, plano e período escolhidos, a janela vista, aceita e recusada | grep por `demo_request`, `trial_start`, `plan_select` e `billing_toggle` em `modules/ads-insights`: zero |
+| `media-plan` | a conversão do teste em pagante como premissa, com origem, e o efeito do PIX à vista contra o cartão parcelado no caixa do primeiro mês | o anual e o Pix já estão em `references/oferta.md:10` e `lancamento.md:15`; grep por teste grátis, trial e período de teste em `modules/media-plan`: zero |
+| `contact-base` | a régua do teste (início, meio, véspera do fim) e a da promoção com as mesmas regras escritas da página (até quando, para quem); o lembrete da demonstração marcada | `references/` traz a régua do plano e a repermissão, sem régua de teste nem de demonstração |
+
+### Do modelo da Hostinger (D3)
+
+Ficam registradas para não se perderem:
 
 | App | O que ganharia | Evidência de que hoje não tem |
 |---|---|---|
@@ -263,3 +364,12 @@ Ficam registradas para não se perderem, todas tiradas do modelo da Hostinger:
 - **Codex:** a pasta de skills do usuário não foi conferida.
 - **Outros sistemas:** a captura e a instalação para o usuário rodam só no Windows nesta rodada.
 - **A plataforma:** a publicação, a marca de versão de entrada e a página do app no flyee.club não fazem parte deste plano.
+- **Na rodada do Juridiq, ficaram sem ver:**
+  - a documentação da API, que fica num endereço à parte;
+  - as páginas de cadastro e de pagamento;
+  - se a janela da promoção volta depois de "Agora não" na mesma visita;
+  - se o JuriChat grava cookies antes do aceite;
+  - a origem dos números das páginas (escritórios, processos, horas economizadas);
+  - o Safari do iPhone.
+
+  Os depoimentos e a promessa de criptografia foram lidos como estão, sem verificação.

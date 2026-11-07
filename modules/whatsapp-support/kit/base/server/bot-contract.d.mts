@@ -33,6 +33,24 @@ export interface ProjectTool {
   run(call: ToolCall): Promise<unknown>;
 }
 
+export interface GapEventPayload {
+  kind: "handoff";
+  account_id: number;
+  conversation_id: number;
+  category: string;
+  topic: string;
+  reason: string;
+  excerpt: string;
+  at: string;
+}
+
+export interface SuggestionsPayload {
+  account_id: number;
+  conversation_id: number;
+  suggestions: Array<{ q: string; a: string; why: string }>;
+  at: string;
+}
+
 export function handleBotRequest(
   request: BotRequest,
   handlers: {
@@ -41,7 +59,11 @@ export function handleBotRequest(
     getConfig(accountId: number): Promise<Record<string, unknown> | null>;
     runTool(name: string, payload: unknown): Promise<unknown>;
     getHistory(accountId: number, conversationId: number, limit: number): Promise<Array<{ role: string; text: string; at: string }>>;
-    generate?(payload: unknown): Promise<Record<string, unknown>>;
+    generate?(payload: { purpose: "acao" | "sugestoes"; [key: string]: unknown }): Promise<Record<string, unknown>>;
+    /** Uma passagem para a equipe, para o relatório das lacunas. */
+    saveEvent?(accountId: number, event: GapEventPayload): Promise<void>;
+    /** Sugestões de conhecimento de uma conversa resolvida, para a camada dona do conhecimento aprovar. */
+    saveSuggestions?(accountId: number, payload: SuggestionsPayload): Promise<void>;
   },
 ): Promise<{ status: number; body: unknown }>;
 

@@ -85,16 +85,26 @@ On 2026-10-30 the operator asked that title and thumbnail sell, not only say wha
   - the lint warnings `title_descriptive` and `titles_same_trigger`;
   - a tenth critique criterion, packaging strength.
 
-On 2026-11-07 the operator asked for page-type expertise in their own code projects, growing from page models they bring. The work is specified in `docs/PLANO-PAGINAS.md` (decisions D1 to D9). It is not yet committed or tagged:
-- `conversion-pages` 1.0.0 (workflow · vender):
+On 2026-11-07 the operator asked for page-type expertise in their own code projects, growing from page models they bring. The work is specified in `docs/PLANO-PAGINAS.md` (decisions D1 to D14). The first round is in a702826; the second (ÉPICO 5) is not yet committed, and nothing is tagged:
+- `conversion-pages` 1.0.0 (workflow · vender), on a702826, the candidate entry version:
   - the playbooks of order bump, upsell, downsell, cross-sell and thank-you page;
   - the first model, Hostinger's post-purchase agent offer, as our analysis only; the raw capture is in `flyee-workspace/pesquisa-paginas/`;
   - `audit`, which checks the finished page with 19 rules over the capture: ok, atencao or nao_conferido.
-- `video-render` 1.1.0: `capture` writes the page `anatomy` and `texto.md` and accepts saved `.mhtml` pages.
-- The console's `link --user` installs an app for the operator's code repos without touching them; `conversion-pages` is installed that way. New models enter through `modules/conversion-pages/.dev/INTAKE.md`, and each one ends with the cross-app check.
-- Six other apps' improvements from the first model are in the plan's backlog.
+- `conversion-pages` 1.1.0 adds:
+  - the sales page (`landing`), plans and pricing (`planos`) and API page (`api`) types, whose main call asks for the next step (`"cta": "lead"`);
+  - the Juridiq and JuriChat models, seen during their Black Friday;
+  - fourteen more checks, among them the discount math, the seller's CNPJ, the trial length, the promotion's end date and a window that covers the page on arrival.
 
-The same day the operator asked for WhatsApp support with AI and humans as a catalog kit for code projects, replacing the test WhatsApp of ONE and Orkestree. The spec is `docs/PLANO-ATENDIMENTO.md` (decisions D1 to D18, invariants, ÉPICOs 1 to 8). It is not yet committed or tagged:
+  A sales page that receives an ad is built here; the ad-to-page continuity stays with `ad-landing-page` (D11).
+- `video-render` 1.1.0: `capture` writes the page `anatomy` and `texto.md` and accepts saved `.mhtml` pages. Still untagged, it was fixed in place (D13):
+  - fixed bars and windows are read on arrival, before the warm-up scroll, so `appeared_after_scroll` is true for a window a scroll opens;
+  - mobile calls pair by the same element before the same text, so a menu button the phone hides no longer takes the page button's place.
+- The console's `link --user` installs an app for the operator's code repos without touching them; `conversion-pages` is installed that way. New models enter through `modules/conversion-pages/.dev/INTAKE.md`, and each one ends with the cross-app check.
+- What other apps gain from both models is in the plan's backlog (section 6).
+
+The same day the operator asked for WhatsApp support with AI and humans as a catalog kit for code projects, replacing the test WhatsApp of ONE and Orkestree. The spec is `docs/PLANO-ATENDIMENTO.md` (decisions D1 to D20, invariants, ÉPICOs 1 to 9). The first round is in a702826; the second (ÉPICO 9) is not yet committed, and nothing is tagged:
 - `whatsapp-support` 1.0.0 (workflow · construir) never runs anything on a server: the project's AI installs `kit/base` (stateless bot with four AI providers, provisioning and SSO through Chatwoot's Platform API, official and OpenWA routes, the `apply-config.rb` that writes brand and theme into InstallationConfig) and adapts `kit/modelos` (Next.js routes, React screens over `primitives.tsx`, deployment files) into the project.
-- `scripts/kit.mjs` installs and updates the base by file hash (an edited base file stops the update), builds the panel theme for `DASHBOARD_SCRIPTS` from `escolhas.json`, and checks by HTTP (`verify`) and in a headless browser through SSO (`look`).
+- `scripts/kit.mjs` installs and updates the base by file hash (an edited base file stops the update, and `status` sees a changed base even under the same version), builds the panel theme for `DASHBOARD_SCRIPTS` from `escolhas.json`, and checks by HTTP (`verify`) and in a headless browser through SSO (`look`).
+- The bot's context comes in layers the project's super admin controls (D20): the `plataforma` model, where the system supports its own customers (as Atrupe will) and only the super admin edits, and `por-cliente`, where the platform's rules stand above each customer's and the customer edits only the groups the super admin allows. Up to 200,000 characters of knowledge with the fixed part apart for the provider's cache, suggestions learned from conversations the team resolved (personal data scrubbed, approval required) and a gaps report by topic (D19). No model is trained.
+- Only the people `canEnterPanel` accepts enter the panel: the support team, plus in `por-cliente` the customer's admin, never the platform super admin. Leaving the team takes the person out of the Chatwoot account (`removeFromPanel`, a daily `syncPanelStaff`), because a Chatwoot session lasts two months. Chatwoot's reports are admin-only, so no customer of the kit sees them; the plan's JuriChat comparison lists what a manager screen, response goals and a no-answer alert would add, left for after the operator's real test.
 - Chatwoot 4.19.1 `-ce`, OpenWA 0.29.1 and `chatwoot-adapter` 0.9.15 are pinned in `kit/versoes.json`. Nothing ran against real Chatwoot, OpenWA or Meta yet (ÉPICO 7); the entry version (D10) and the members' CLI user install (ÉPICO 8) are open. Installed for the operator with `link --user`.

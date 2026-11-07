@@ -88,8 +88,16 @@ export function install({ appDir, dest, appVersion, versions, now = new Date() }
   return { base: baseFiles.length, modelos: copiedModels.length, escolhas: createdChoices, gitignore };
 }
 
-/** O que mudou na base desde a instalação ou a última atualização. */
-export function status({ dest, appVersion, versions }) {
+function sameTree(a, b) {
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => b[key] === a[key]);
+}
+
+/**
+ * O que mudou na base desde a instalação ou a última atualização. Com appDir, compara também a base
+ * gravada com a do kit: uma base diferente com o mesmo número de versão ainda é atualização.
+ */
+export function status({ appDir, dest, appVersion, versions }) {
   const record = readJson(join(dest, KIT_FILE));
   if (!record) throw new AppError("not_installed", `Não há kit instalado em ${dest}.`, "Rode install com a pasta de destino escolhida.");
   const modified = [];
@@ -102,10 +110,12 @@ export function status({ dest, appVersion, versions }) {
   const pinned = Object.entries(versions ?? {})
     .filter(([key, value]) => record.versions?.[key] !== value)
     .map(([key, value]) => ({ name: key, installed: record.versions?.[key] ?? null, kit: value }));
+  const baseChanged = appDir ? !sameTree(record.base ?? {}, hashTree(join(appDir, "kit", "base"))) : false;
   return {
     installed: record.version,
     available: appVersion,
-    update_available: record.version !== appVersion,
+    update_available: record.version !== appVersion || baseChanged,
+    base_changed: baseChanged,
     modified,
     missing,
     versions_changed: pinned,

@@ -1,6 +1,6 @@
-# Movimento e mídia nas páginas de oferta
+# Movimento e mídia nas páginas que vendem
 
-Este guia é para a IA. Numa página de oferta, o movimento tem duas funções: mostrar o produto funcionando e levar o olho até a decisão. Todo o resto fica parado.
+Este guia é para a IA. Numa página que vende, o movimento tem duas funções: mostrar o produto funcionando e levar o olho até a decisão. Todo o resto fica parado. As seções de 1 a 5 vêm da oferta da Hostinger; a seção 6, das páginas de vendas do Juridiq e do JuriChat.
 
 ## 1. A demonstração em vídeo
 
@@ -36,7 +36,7 @@ Num acordeão de recursos, cada item aberto mostra um vídeo de 5 s. A conversa 
 | Depoimentos | uma faixa rola sozinha, uma volta a cada 65 s, só no computador | `@keyframes` com `translateX`, e a lista repetida duas vezes para não ter emenda |
 | Barra fixa | sobe do pé da tela em 0,25 s | aparece quando o cartão da oferta sai da tela pelo topo |
 
-Nenhuma seção precisa entrar com animação ao rolar a página. O modelo não usa, e a página fica mais rápida.
+Numa página de oferta, nenhuma seção precisa entrar com animação ao rolar a página. O modelo não usa, e a página fica mais rápida.
 
 ## 4. Menos movimento
 
@@ -53,3 +53,23 @@ Toda página com animação ou vídeo que começa sozinho traz essa regra.
 - Movimento sem função: contador piscando, botão tremendo, confete.
 - Vídeo com som que começa sozinho.
 - Animação de entrada que atrasa o preço e o botão.
+
+## 6. Nas páginas de vendas
+
+O Juridiq e o JuriChat mostram o produto funcionando sem nenhum vídeo: tudo é feito com animações da própria página. O que foi medido e vale levar:
+
+| Elemento | Movimento | Como fazer certo |
+|---|---|---|
+| Letreiro da promoção | corre sem parar, uma volta a cada 40 s a 50 s | parar com o pedido de menos movimento, como os modelos fazem, e ter um botão de pausa |
+| Contador | atualiza a cada segundo | só com prazo real, o mesmo escrito na regra da promoção |
+| Radar de monitoramento | o ponteiro dá a volta em cerca de 1,5 s, e o cartão troca a cada 9 s | o Juridiq tem um botão de pausa para a troca automática e marca os dados como fictícios |
+| Digitação de exemplo | cada pergunta é digitada em cerca de 1,5 s, fica 2 s parada e é apagada em meio segundo | um texto escondido lista todas as perguntas para o leitor de tela, como no Juridiq |
+| Números da prova | contam do zero até o valor em cerca de 2 s quando a seção aparece | o valor final já escrito no HTML, e parado com menos movimento; o Juridiq mostra "0+" antes da contagem e conta mesmo com menos movimento |
+| História de uso | a conversa fica presa ao lado, a 80 px do topo, e as mensagens surgem conforme cada passo entra na tela | as mensagens surgem no ritmo da rolagem, nunca sozinhas; com menos movimento, a conversa aparece inteira |
+| Pontos de "ao vivo" | um ponto pulsa ao lado de "respondendo agora" | um só, perto do produto; nunca no preço nem no botão |
+
+Regras que valem para todas:
+
+- **O que se mexe sozinho por mais de 5 s, junto de outro conteúdo, tem como pausar, parar ou esconder.** É o critério 2.2.2 das diretrizes de acessibilidade do W3C (WCAG 2.2, nível A). O letreiro e a troca automática de cartões entram nessa regra.
+- **Uma entrada ao rolar** cabe quando conta uma história, como a conversa do JuriChat. Nunca atrasa o preço nem o botão.
+- **A janela da promoção não é movimento de enfeite:** ela segue o princípio 12 de `principios.md`.

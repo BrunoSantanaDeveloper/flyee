@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema Exemplo: página de vendas com janela na rolagem</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, sans-serif; color: #111827; }
+  header { position: sticky; top: 0; z-index: 10; background: #FFFFFF; border-bottom: 1px solid #E5E7EB; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+  section { min-height: 900px; padding: 64px 24px; border-bottom: 1px solid #E5E7EB; }
+  .botao { display: inline-block; background: #0F62FE; color: #FFFFFF; padding: 14px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 0; }
+  .janela { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; }
+  .janela.aberta { display: flex; }
+  .caixa { background: #FFFFFF; padding: 32px; border-radius: 12px; width: min(520px, 92vw); text-align: center; }
+  .recusa { display: block; margin-top: 16px; background: none; border: 0; color: #6B7280; text-decoration: underline; cursor: pointer; }
+  footer { padding: 32px 24px; }
+  @media (max-width: 600px) { header .botao { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <strong>Sistema Exemplo</strong>
+  <a class="botao" href="#agendar">Agendar demonstração</a>
+</header>
+<section>
+  <h1>O seu escritório em um só lugar</h1>
+  <p>O Sistema Exemplo organiza prazos, clientes e cobranças.</p>
+  <a class="botao" href="/agendar">Agendar demonstração</a>
+</section>
+<section><h2>Prazos que se organizam sozinhos</h2><p>Cada intimação vira um prazo com aviso antes do vencimento.</p></section>
+<section><h2>Cobranças sem planilha</h2><p>Honorários e despesas num painel só.</p></section>
+<section><h2>Planos</h2><p>Plano Essencial por R$ 99,90 por mês.</p></section>
+<footer>Sistema Exemplo Ltda. · Política de Privacidade · Termos de Uso</footer>
+<div class="janela" id="janela" role="dialog" aria-modal="true" aria-label="Oferta de fim de ano">
+  <div class="caixa">
+    <h2>Oferta de fim de ano</h2>
+    <p>30% de desconto no plano anual, válida até 31/12.</p>
+    <a class="botao" href="/planos">Ver a oferta</a>
+    <button class="recusa" type="button" id="recusar">Agora não</button>
+  </div>
+</div>
+<script>
+  // Opens once, when the visitor passes 40% of the page, as many sales pages do.
+  var janela = document.getElementById("janela");
+  var aberta = false;
+  window.addEventListener("scroll", function () {
+    var rolavel = document.documentElement.scrollHeight - innerHeight;
+    if (!aberta && rolavel > 0 && scrollY / rolavel >= 0.4) { aberta = true; janela.classList.add("aberta"); }
+  }, { passive: true });
+  document.getElementById("recusar").addEventListener("click", function () { janela.classList.remove("aberta"); });
+</script>
+</body>
+</html>

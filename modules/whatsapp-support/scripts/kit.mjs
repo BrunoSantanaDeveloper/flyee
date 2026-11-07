@@ -96,7 +96,7 @@ async function main(argv) {
     const dest = destination(positionals, { required: false });
     const targets = dest ? [dest] : findInstalls(ROOT).map((path) => join(ROOT, path));
     if (!targets.length) throw new AppError("not_installed", "O kit não está instalado neste projeto.", "Rode install com a pasta de destino escolhida.");
-    const reports = targets.map((target) => ({ dest: rel(target), ...status({ dest: target, appVersion: APP_VERSION, versions: VERSIONS }) }));
+    const reports = targets.map((target) => ({ dest: rel(target), ...status({ appDir: APP_DIR, dest: target, appVersion: APP_VERSION, versions: VERSIONS }) }));
     return emit({ ...base, installs: reports }, reports.flatMap((report) => [
       `${report.dest}: instalado ${report.installed}, kit ${report.available}${report.update_available ? " (há atualização)" : ""}.`,
       report.modified.length ? `Arquivos da base editados pelo projeto: ${report.modified.join(", ")}` : "Nenhum arquivo da base editado.",

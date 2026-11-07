@@ -2,7 +2,7 @@
 // Páginas que vendem: the member's AI runs this script from the project root.
 // Only JSON goes to stdout (with --json); progress goes to stderr. Every result carries `next_step`.
 
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -215,7 +215,15 @@ async function cmdAudit(name, values) {
     capture = readJson(captureFile);
     if (!capture) throw new AppError("capture_failed", "A captura terminou sem o arquivo captura.json.", "Tente de novo; se repetir, atualize o Motor de vídeo.");
   }
-  const result = audit({ type, capture, facts, definitions: CHECKS });
+  // texto.md carries the whole page text, footer included; the anatomy keeps at most 4,000 characters per section.
+  const textFile = join(dirname(captureFile), typeof capture.files?.text === "string" ? capture.files.text : "texto.md");
+  let text = null;
+  try {
+    if (existsSync(textFile)) text = readFileSync(textFile, "utf8");
+  } catch {
+    text = null;
+  }
+  const result = audit({ type, capture, facts, definitions: CHECKS, text });
   const report = {
     format_version: 1,
     page: name,

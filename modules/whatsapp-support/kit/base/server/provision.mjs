@@ -119,6 +119,52 @@ export async function ensureStaffUser({ chatwootUrl, platformToken, state, perso
   return { state: next, userId };
 }
 
+/**
+ * Tira uma pessoa da equipe da conta: ela sai da conta no Chatwoot e do estado. Chame quando o projeto tira
+ * a permissão de atendimento ou desativa a pessoa: a sessão do Chatwoot dura até 2 meses, e quem saiu da
+ * equipe continuaria abrindo o painel num navegador em que já entrou. A conta de serviço e a pessoa de
+ * repasse nunca saem por aqui.
+ */
+export async function removeStaffUser({ chatwootUrl, platformToken, state, personKey, fetchImpl = fetch }) {
+  const userId = state?.staff?.[personKey];
+  if (!userId) return { state, removed: null };
+  if (userId === state.service_user_id || userId === state.relay_user_id) {
+    throw new ProvisionError("reserved_user", "Esta pessoa é a conta de serviço ou a de repasse.", "Confira a chave da pessoa no estado do atendimento.");
+  }
+  await chatwootPlatform({ url: chatwootUrl, token: platformToken, fetchImpl }).removeAccountUser(state.account_id, userId);
+  const staff = { ...state.staff };
+  delete staff[personKey];
+  return { state: { ...state, staff }, removed: userId };
+}
+
+/**
+ * Confere a equipe da conta com a lista do projeto (keepKeys: as chaves de quem ainda pode atender) e tira
+ * quem o kit pôs e não está mais na lista. Quem está na conta sem ter sido posto pelo kit só volta em
+ * unknown, para alguém decidir. Lista vazia com gente na equipe não tira ninguém (skipped: "empty_list"),
+ * porque costuma ser falha na leitura da lista; para esvaziar a equipe de propósito, passe allowEmpty.
+ */
+export async function syncStaff({ chatwootUrl, platformToken, state, keepKeys, allowEmpty = false, fetchImpl = fetch }) {
+  if (!Array.isArray(keepKeys)) throw new ProvisionError("staff_list_invalid", "A lista de quem atende precisa ser uma lista de chaves.", "Passe as chaves das pessoas que ainda podem atender neste cliente.");
+  if (!state?.account_id) return { state, removed: [], unknown: [], skipped: "no_account" };
+  const keep = new Set(keepKeys.map(String));
+  const current = Object.keys(state.staff ?? {});
+  if (!keep.size && current.length && !allowEmpty) return { state, removed: [], unknown: [], skipped: "empty_list" };
+  let next = state;
+  const removed = [];
+  for (const key of current) {
+    if (keep.has(key)) continue;
+    const result = await removeStaffUser({ chatwootUrl, platformToken, state: next, personKey: key, fetchImpl });
+    next = result.state;
+    if (result.removed) removed.push({ key, user_id: result.removed });
+  }
+  const members = (await chatwootPlatform({ url: chatwootUrl, token: platformToken, fetchImpl }).accountUsers(next.account_id)) ?? [];
+  const known = new Set([next.service_user_id, next.relay_user_id, ...Object.values(next.staff ?? {})].filter(Boolean).map(Number));
+  const unknown = (Array.isArray(members) ? members : [])
+    .filter((member) => !known.has(Number(member.user_id)))
+    .map((member) => ({ user_id: Number(member.user_id), role: member.role ?? null }));
+  return { state: next, removed, unknown, skipped: null };
+}
+
 /** O link que leva a pessoa já logada ao painel: o projeto chama isto quando ela clica em "Atendimento". */
 export async function ssoUrl({ chatwootUrl, platformToken, userId, fetchImpl = fetch }) {
   const url = await chatwootPlatform({ url: chatwootUrl, token: platformToken, fetchImpl }).ssoLink(userId);

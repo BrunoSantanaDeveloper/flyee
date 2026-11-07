@@ -15,6 +15,12 @@ Material do operador; nunca é distribuído. É o procedimento para cada página
   - Abra um navegador sem janela, com perfil temporário, e registre o que a página baixa pelo CDP (domínio Network).
   - O dicionário de textos e o código da tela dão os textos, a ordem das seções, a regra de exibição e a mídia.
   - Nunca clique em botão de compra. Não guarde respostas da API com dados do pedido do operador.
+- **O que só acontece com o tempo ou com a rolagem:** a anatomia lê o estado da página, não o comportamento. Quando uma janela abre, se volta depois de dispensada, a contagem dos números, a digitação, a troca automática, a barra do celular e o que muda com menos movimento pedem a sonda.
+  - Use as de `C:\AppsProjects\flyee-workspace\pesquisa-paginas\juridiq-2026-11-07\sonda\`, trocando os textos que elas procuram.
+  - Elas rolam em passos e leem o texto e as animações a cada passo.
+  - Separe profundidade de tempo: role rápido e devagar e veja se a janela abre na mesma altura.
+  - Nunca clique em compra nem marque agenda.
+- **Confira o que a foto mostra contra a sonda.** A captura rola a página antes de fotografar: uma janela que abre com a rolagem sai na foto do topo. A foto sozinha já levou a um relato errado ("a janela cobre a página na chegada").
 - **Vídeos:**
   - baixe os arquivos;
   - meça o movimento pela diferença entre quadros, em janelas de 0,25 s, ignorando o pulso do quadro-chave (quadro 250 no padrão do x264);

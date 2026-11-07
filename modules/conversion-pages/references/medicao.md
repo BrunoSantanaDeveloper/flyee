@@ -1,6 +1,6 @@
-# A medição das páginas de oferta
+# A medição das páginas que vendem
 
-Este guia é para a IA. Sem medir cada oferta, não dá para saber o que vende.
+Este guia é para a IA. Sem medir cada oferta e cada chamado, não dá para saber o que vende.
 
 ## 1. Os eventos
 
@@ -11,8 +11,11 @@ Este guia é para a IA. Sem medir cada oferta, não dá para saber o que vende.
 | Downsell | `downsell_view`, `downsell_accept`, `downsell_decline` |
 | Cross-sell | `cross_sell_view`, `cross_sell_add`, com a posição: produto, carrinho ou obrigado |
 | Obrigado | `purchase` com valor, moeda e a identificação do pedido; `activation_click` |
+| Página de vendas | `page_view`, `section_view`, `cta_click` com a posição do chamado, `demo_request`, `trial_start`, `pricing_view`; a janela da promoção com `popup_view`, `popup_accept` e `popup_decline` |
+| Planos | `pricing_view`, `billing_toggle` com o período escolhido, `plan_select` com o plano e o período, `plan_compare_view`, `trial_start`, `checkout_start`, `demo_request` |
+| API | `docs_click`, `code_copy` com a linguagem, `api_plan_select`, `api_key_created`, `first_request` |
 
-Cada evento leva a identificação do pedido. Nunca leva o nome ou o e-mail da pessoa.
+Cada evento de compra leva a identificação do pedido. Nenhum evento leva o nome, o e-mail ou o telefone da pessoa.
 
 ## 2. Uma identificação por posição de chamado
 
@@ -29,6 +32,9 @@ Registrar quando cada seção entra na tela mostra até onde as pessoas leem ant
 - **Aceite do downsell:** aceites divididos pelas recusas do upsell.
 - **Receita por pedido:** o total pago no pedido, já com o que foi acrescentado.
 - **Estornos e arrependimentos das ofertas,** contados separados dos do produto principal.
+- **Da visita ao pedido de demonstração e da visita ao teste,** cada um pelo chamado que levou até ele (o do topo, o da barra fixa, o da janela).
+- **A escolha do anual contra o mensal** e a escolha de cada plano, contadas pelo período que a pessoa deixou marcado no seletor.
+- **A janela da promoção:** aceites e recusas divididos pelas vezes que ela apareceu.
 
 As taxas vêm dos números do próprio negócio. Este app não traz taxas de mercado: um número sem fonte não serve para decidir.
 

@@ -32,12 +32,14 @@ import {
   pageText,
   priceContext,
   SECTION_TEXT_MAX,
+  windowsOpenedByWarmUp,
 } from "../scripts/lib/capture.mjs";
 import { checkTools, findBrowser } from "../scripts/lib/tools.mjs";
 import { fileUrl } from "../scripts/lib/util.mjs";
 
 const SCRIPT = fileURLToPath(new URL("../scripts/render.mjs", import.meta.url));
 const OFFER = fileURLToPath(new URL("./fixtures/oferta/index.html", import.meta.url));
+const WINDOW_PAGE = fileURLToPath(new URL("./fixtures/janela/index.html", import.meta.url));
 const OUT_ROOT = process.env.FLYEE_TEST_OUT ? resolve(process.env.FLYEE_TEST_OUT) : join(tmpdir(), "flyee-video-render-tests", "anatomy");
 const browser = findBrowser();
 const noBrowser = browser ? false : "no browser (Edge, Chrome or Chromium) on this machine";
@@ -118,6 +120,21 @@ test("matchMobileCtas pairs each desktop call with the mobile one of the same te
   assert.deepEqual(matchMobileCtas([], [], 844), []);
 });
 
+test("matchMobileCtas pairs the same element first, so a menu button hidden on the phone does not take the place of the page's button", () => {
+  const desktop = [
+    { path: "header:1>a:1", text: "Comece grátis" },
+    { path: "main:1>section:1>a:1", text: "Comece grátis" },
+    { path: "main:1>section:1>a:2", text: "Agendar uma demonstração" },
+  ];
+  const mobile = [
+    { path: "main:1>section:1>a:1", text: "Comece grátis", y: 560, height: 48 },
+    { path: "main:1>section:1>a:2", text: "Agendar uma demonstração", y: 620, height: 48 },
+  ];
+  assert.deepEqual(matchMobileCtas(desktop, mobile, 844), [null, true, true]);
+  const rebuilt = mobile.map(({ path, ...rest }) => ({ ...rest, path: `div:1>${path}` }));
+  assert.deepEqual(matchMobileCtas(desktop, rebuilt, 844), [true, null, true], "a phone page built differently falls back to the text in order");
+});
+
 test("mergeFixed keeps what was on screen at the top and marks what showed up only after the scroll", () => {
   const strip = { id: 1, position: "sticky", top: 0, bottom: 37, height: 37, text: "Oferta disponível só nesta página", ctas: [] };
   const bar = { id: 7, position: "fixed", top: 832, bottom: 900, height: 68, text: "Guia por R$ 19,99 Quero o guia", ctas: ["Quero o guia"] };
@@ -130,6 +147,17 @@ test("mergeFixed keeps what was on screen at the top and marks what showed up on
   assert.equal(hides[0].text.length, 280);
   const many = Array.from({ length: 15 }, (_, i) => ({ id: i + 1, position: "fixed", top: 0, bottom: 40, height: 40, text: "", ctas: [] }));
   assert.equal(mergeFixed(many, [], { pass: "desktop", viewportHeight: 900 }).length, 10, "ten per pass, twenty in all");
+});
+
+test("with the arrival reading, a window opened by the warm-up scroll counts as appeared after the scroll", () => {
+  const header = { id: 1, position: "sticky", top: 0, bottom: 60, height: 60, text: "Sistema Exemplo Agendar demonstração", ctas: ["Agendar demonstração"] };
+  const modal = { id: 9, position: "fixed", top: 0, bottom: 900, height: 900, text: "Oferta de fim de ano Ver a oferta Agora não", ctas: ["Ver a oferta", "Agora não"] };
+  const merged = mergeFixed([header, modal], [header, modal], { pass: "desktop", viewportHeight: 900, arrival: [header] });
+  assert.deepEqual(merged.map((f) => [f.edge, f.appeared_after_scroll]), [["top", false], ["other", true]]);
+  assert.equal(mergeFixed([header, modal], [], { pass: "desktop", viewportHeight: 900 })[1].appeared_after_scroll, false, "without the arrival reading, the old rule stands");
+  assert.deepEqual(windowsOpenedByWarmUp([header, modal], [header], 900).map((f) => f.id), [9]);
+  assert.deepEqual(windowsOpenedByWarmUp([header, modal], [header, modal], 900), [], "a window open on arrival was not opened by the warm-up");
+  assert.deepEqual(windowsOpenedByWarmUp([header, modal], null, 900), [], "no arrival reading, no claim");
 });
 
 test("inputKind, normalizeUrl for pages saved as .mhtml or .mht, and iframeProvider", () => {
@@ -390,6 +418,21 @@ test("captureSite reads the anatomy of an offer page and writes texto.md", { ski
 // ---------------------------------------------------------------------------------------------
 // A page saved by the browser, through the command
 // ---------------------------------------------------------------------------------------------
+
+test("captureSite: a window that opens halfway down the page is read as appeared after the scroll, on both sizes", { skip: noBrowser, timeout: 240000 }, async () => {
+  const dir = fresh("janela");
+  const capture = await captureSite({ url: WINDOW_PAGE, outDir: dir, tools, scrollSeconds: 0, assets: false });
+  const windows = capture.anatomy.fixed.filter((f) => f.edge === "other" && f.ctas.includes("Agora não"));
+  assert.deepEqual(windows.map((f) => [f.pass, f.appeared_after_scroll]).sort(), [["desktop", true], ["mobile", true]], JSON.stringify(capture.anatomy.fixed));
+  const header = capture.anatomy.fixed.find((f) => f.pass === "desktop" && f.edge === "top");
+  assert.ok(header && header.appeared_after_scroll === false, "the header was there on arrival");
+  // the header's button is hidden on the phone: it must not take the place of the page's button
+  const [menuButton, pageButton] = capture.anatomy.ctas.filter((c) => c.text === "Agendar demonstração");
+  assert.equal(menuButton.in_fixed, true);
+  assert.deepEqual(menuButton.above_fold, { desktop: true, mobile: null });
+  assert.deepEqual(pageButton.above_fold, { desktop: true, mobile: true });
+  assert.ok(capture.warnings.some((w) => /Uma janela que abre com a rolagem estava aberta nas fotos/.test(w)), capture.warnings.join(" | "));
+});
 
 test("a page the browser saved as .mhtml goes through the command with input_kind mhtml and the same headings", { skip: noBrowser, timeout: 240000 }, async () => {
   const dir = fresh("oferta-mhtml");

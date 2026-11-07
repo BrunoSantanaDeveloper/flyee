@@ -24,7 +24,7 @@ Nunca desligue: `api_and_webhooks` (sem ela, toda chamada por token falha, robô
 
 O exemplo de escolhas.json já desliga campanhas, central de ajuda, empresas e os canais que não são WhatsApp. Respostas prontas, macros e o gravador de voz costumam ajudar a equipe; desligue só se o cliente pedir.
 
-**Papel de atendente.** Tira quase toda a área de configurações. Atendente só vê conversas das caixas de que é membro.
+**Papel de atendente.** Tira quase toda a área de configurações. Atendente só vê conversas das caixas de que é membro e não abre os relatórios do Chatwoot, que são só de administrador (`app/policies/report_policy.rb`). Como a equipe é sempre atendente, ninguém do cliente vê esses relatórios no painel: não os prometa ao cliente.
 
 **Nome da instalação, `DISABLE_USER_PROFILE_UPDATE` e `LOGOUT_REDIRECT_LINK`.** Gravados pelo `apply-config.rb` (chatwoot.md).
 

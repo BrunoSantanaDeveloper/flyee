@@ -15,6 +15,66 @@
         "segunda oferta só para quem recusou",
         "regra de exibição: quem já tem ou veio de afiliado não vê"
       ]
+    },
+    {
+      "id": "juridiq-pagina-de-vendas",
+      "title": "Juridiq: a página de vendas de um software jurídico",
+      "source": "Juridiq",
+      "seen_on": "2026-11-07",
+      "types": ["landing"],
+      "file": "modelos/juridiq-pagina-de-vendas.md",
+      "highlights": [
+        "demonstração e teste no topo, com a linha de condições embaixo",
+        "a janela da promoção abre na metade da página, nunca na chegada, com recusa visível",
+        "barra fixa no celular quando o botão do topo sai da tela",
+        "demonstrações animadas com a etiqueta de exemplo fictício e botão de pausa",
+        "perguntas frequentes com as objeções de quem troca de sistema"
+      ]
+    },
+    {
+      "id": "juridiq-planos",
+      "title": "Juridiq: a página de planos com mensal e anual",
+      "source": "Juridiq",
+      "seen_on": "2026-11-07",
+      "types": ["planos"],
+      "file": "modelos/juridiq-planos.md",
+      "highlights": [
+        "anual aberto por padrão, com o riscado igual a doze vezes o mensal",
+        "por plano: média mensal, total no cartão, economia em reais e PIX, cada um com a sua conta",
+        "quatro planos do mais caro ao mais barato, com o segundo em destaque",
+        "tabela comparativa com o cabeçalho grudado e o que fica de fora escrito",
+        "agenda de demonstração embutida que separa cliente de quem ainda não é"
+      ]
+    },
+    {
+      "id": "juridiq-api",
+      "title": "Juridiq: a página da API e do servidor MCP",
+      "source": "Juridiq",
+      "seen_on": "2026-11-07",
+      "types": ["api"],
+      "file": "modelos/juridiq-api.md",
+      "highlights": [
+        "a documentação como chamado principal, com um console no topo",
+        "a ficha técnica: endereço, autenticação, formato e versão",
+        "um agente de IA chamando as ferramentas numa conversa de exemplo",
+        "da chave à primeira resposta em três passos",
+        "dois planos por escritório, com o de agentes em destaque"
+      ]
+    },
+    {
+      "id": "jurichat-pagina-de-vendas",
+      "title": "JuriChat: a página de vendas do atendimento por WhatsApp",
+      "source": "JuriChat",
+      "seen_on": "2026-11-07",
+      "types": ["landing", "planos"],
+      "file": "modelos/jurichat-pagina-de-vendas.md",
+      "highlights": [
+        "as dores do dia a dia em quatro cartões antes da solução",
+        "a história de uma cliente em quatro passos, numa conversa presa na tela",
+        "os painéis do atendente e do gestor com números de exemplo",
+        "o que depende do plano escrito junto do recurso",
+        "o teste em destaque no topo e os 7 dias escritos nos planos"
+      ]
     }
   ]
 }

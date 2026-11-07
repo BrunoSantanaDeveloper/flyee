@@ -1,5 +1,6 @@
 {
   "kit": "whatsapp-support",
+  "modelo": "por-cliente",
   "marca": {
     "nome": "Nome do sistema",
     "cor_principal": "#0B5FFF",

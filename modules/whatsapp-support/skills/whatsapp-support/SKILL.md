@@ -19,7 +19,8 @@ Você está num projeto de código (um sistema que o desenvolvedor mantém). Est
 Leia antes de propor qualquer coisa:
 
 - framework e linguagem do servidor, sessão e login, banco e ORM;
-- o que é um cliente no projeto (empresa, escritório, loja): cada cliente vira uma conta no Chatwoot;
+- quem atende quem: o sistema atende os próprios clientes, como um suporte da plataforma (modelo `plataforma`, uma conta no Chatwoot), ou cada cliente do sistema atende os clientes dele (modelo `por-cliente`, uma conta por cliente);
+- quem é o superadmin do sistema e quem administra cada cliente;
 - o design system: biblioteca de componentes e o arquivo de tokens (cores, fonte);
 - código de WhatsApp que já existe e será substituído;
 - camada de IA que já existe, com regras de aprovação ou auditoria;
@@ -27,7 +28,7 @@ Leia antes de propor qualquer coisa:
 
 Depois, mande ao desenvolvedor um plano curto: onde o kit vai ficar, o que substitui o quê, a rota de conexão e o modo do robô sugeridos, e a lista do que só ele faz. Pergunte só o que não deu para descobrir, até quatro perguntas numa mensagem, cada uma com a sua sugestão.
 
-Para decidir a rota, leia [references/whatsapp.md](../../references/whatsapp.md). Atividade regulada (saúde, jurídico, financeiro) usa a API oficial. Projeto em que toda resposta de IA passa por aprovação humana começa no modo sugestão, ou usa o provedor `project` para gerar a resposta pela IA do próprio projeto.
+Para decidir o modelo e quem controla o contexto do robô, leia [references/contexto.md](../../references/contexto.md). O superadmin sempre controla a camada da plataforma; no modelo `por-cliente`, ele decide o que cada cliente pode mudar no robô dele. Para decidir a rota, leia [references/whatsapp.md](../../references/whatsapp.md). Atividade regulada (saúde, jurídico, financeiro) usa a API oficial. Projeto em que toda resposta de IA passa por aprovação humana começa no modo sugestão, ou usa o provedor `project` para gerar a resposta pela IA do próprio projeto.
 
 ## Passo 2: instalar a base
 
@@ -43,17 +44,21 @@ Ele cria `<destino>/base/`, `<destino>/modelos/`, `<destino>/escolhas.json`, `<d
 
 Siga [references/contratos.md](../../references/contratos.md) e [references/arquitetura.md](../../references/arquitetura.md).
 
-- **Servidor.** Copie `modelos/next/lib/atendimento.ts` para o código do projeto e implemente o `store` com o banco e a sessão do projeto: o estado de cada cliente (com os tokens cifrados), as configurações do robô, a conta do Chatwoot de cada cliente e a pessoa logada. Ajuste os caminhos de import para onde a base ficou.
+- **Servidor.** Copie `modelos/next/lib/atendimento.ts` para o código do projeto e implemente o `store` com o banco e a sessão do projeto: o estado de cada cliente (com os tokens cifrados), a camada da plataforma (uma só), a camada de cada cliente, as sugestões pendentes, as passagens para a equipe, a conta do Chatwoot de cada cliente, a lista de quem atende em cada cliente (`listPanelPeople`) e a pessoa logada, com `isSuperadmin`, `canConfigure` e `isSupportStaff` vindos das permissões do projeto. Ajuste os caminhos de import para onde a base ficou.
+- **Equipe.** Entra no painel só quem passa em `canEnterPanel` (equipe de atendimento e, no `por-cliente`, quem administra o cliente). Chame `removeFromPanel` no ponto em que o projeto tira a permissão de atendimento, desativa ou apaga uma pessoa, e rode `syncPanelStaff` numa rotina diária do projeto para cada cliente: a sessão do Chatwoot dura até 2 meses, e quem saiu da equipe precisa sair da conta. Se a rotina devolver alguém em `unknown`, conte ao desenvolvedor em vez de tirar.
 - **Rotas.** Copie `modelos/next/app/api/atendimento/` para o app. Em outro framework ou linguagem, porte as mesmas rotas usando `base/server/*.mjs` ou os contratos.
 - **Consultas do robô.** Troque o exemplo `consultar_pedido` pelas consultas reais. Cada uma devolve só dados da pessoa da conversa e é o projeto que confere quem ela é ([references/seguranca.md](../../references/seguranca.md)).
-- **Telas.** Copie `modelos/react/`. Adapte só `primitives.tsx` aos componentes do design system; as telas usam apenas ele. Ponha "Robô de atendimento" e "Conectar WhatsApp" na área de configurações do cliente e o botão "Atendimento" na navegação. Com o modo moldura, use `PainelAtendimento` numa página do projeto.
+- **Telas.** Copie `modelos/react/`. Adapte só `primitives.tsx` aos componentes do design system; as telas usam apenas ele.
+  - Na área do superadmin: `RoboAtendimento` com `escopo="plataforma"`, `SugestoesConhecimento` e `LacunasRobo` com o mesmo escopo e, no modelo `plataforma`, `ConectarWhatsApp`.
+  - No modelo `por-cliente`, na área de configurações de cada cliente: `RoboAtendimento`, `SugestoesConhecimento` e `LacunasRobo` com `escopo="cliente"` (mostram só o que a plataforma liberou) e `ConectarWhatsApp`.
+  - O botão "Atendimento" na navegação de quem passa em `canEnterPanel`. Com o modo moldura, `PainelAtendimento` numa página do projeto.
 - **IA.** Ajuste `defaultAi`. Com uma camada de IA própria e regra de aprovação, prefira o modo sugestão ou o provedor `project`.
 
 Rode o typecheck e os testes do projeto depois de ligar.
 
 ## Passo 4: tema e enxugar o painel
 
-Preencha `<destino>/escolhas.json` a partir dos tokens do design system: nome, cor principal (e a do modo escuro, se for outra), fonte, logos, endereços, funções desligadas, o que esconder, links soltos e se o painel abre na moldura. Regras em [references/tema.md](../../references/tema.md) e [references/enxugar.md](../../references/enxugar.md). Depois gere:
+Preencha `<destino>/escolhas.json`: o `modelo` (`plataforma` ou `por-cliente`) e, a partir dos tokens do design system, nome, cor principal (e a do modo escuro, se for outra), fonte, logos, endereços, funções desligadas, o que esconder, links soltos e se o painel abre na moldura. Regras em [references/tema.md](../../references/tema.md) e [references/enxugar.md](../../references/enxugar.md). Depois gere:
 
 ```
 node .flyee/modules/whatsapp-support/scripts/kit.mjs theme <destino> --json

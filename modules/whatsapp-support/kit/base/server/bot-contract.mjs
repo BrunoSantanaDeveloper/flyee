@@ -5,7 +5,9 @@
 //   GET  config?account_id=                       a configuração da conta (botConfig de shared/settings.mjs)
 //   POST tools/<nome>                              { account_id, conversation_id, inbox_id, contact, input }
 //   GET  history?account_id=&conversation_id=&limit=   { messages: [{ role, text, at }] }
-//   POST generate                                  a ação, quando o provedor de IA é o próprio projeto
+//   POST generate                                  a ação (ou as sugestões), quando o provedor de IA é o próprio projeto
+//   POST events                                    { kind: "handoff", account_id, conversation_id, category, topic, reason, excerpt, at }
+//   POST suggestions                               { account_id, conversation_id, suggestions: [{ q, a, why }], at }
 
 import { verifyProjectRequest } from "../shared/signature.mjs";
 
@@ -20,7 +22,8 @@ function header(headers, name) {
  * request: { method, pathWithQuery, route, query, rawBody, headers }
  *   pathWithQuery: o caminho completo pedido, com a query, exatamente como chegou (é o que foi assinado);
  *   route: o trecho depois da base das rotas do robô ("config", "tools/consultar_pedido", "history", "generate").
- * handlers: { secret, getConfig(accountId), runTool(name, payload), getHistory(accountId, conversationId, limit), generate?(payload) }
+ * handlers: { secret, getConfig(accountId), runTool(name, payload), getHistory(accountId, conversationId, limit),
+ *   generate?(payload), saveEvent?(accountId, event), saveSuggestions?(accountId, payload) }
  */
 export async function handleBotRequest(request, handlers) {
   const method = String(request.method ?? "GET").toUpperCase();
@@ -64,6 +67,20 @@ export async function handleBotRequest(request, handlers) {
     if (method === "POST" && route === "generate" && handlers.generate) {
       const payload = JSON.parse(request.rawBody || "{}");
       return { status: 200, body: await handlers.generate(payload) };
+    }
+    if (method === "POST" && (route === "events" || route === "suggestions")) {
+      const handler = route === "events" ? handlers.saveEvent : handlers.saveSuggestions;
+      if (!handler) return { status: 404, body: { ok: false, code: "not_enabled" } };
+      let payload;
+      try {
+        payload = JSON.parse(request.rawBody || "{}");
+      } catch {
+        return { status: 400, body: { ok: false, code: "bad_json" } };
+      }
+      const payloadAccount = Number(payload?.account_id);
+      if (!Number.isInteger(payloadAccount)) return { status: 400, body: { ok: false, code: "account_id_missing" } };
+      await handler(payloadAccount, payload);
+      return { status: 200, body: { ok: true } };
     }
     return { status: 404, body: { ok: false, code: "not_found" } };
   } catch (error) {

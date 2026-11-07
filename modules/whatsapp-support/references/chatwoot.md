@@ -32,6 +32,8 @@ Autentica com o token do Platform App (`Authorization: Bearer` ou `api_access_to
 - `POST /platform/api/v1/users`: devolve a pessoa que já existe com o mesmo e-mail.
 - `GET /platform/api/v1/users/:id`: traz o `access_token` da pessoa.
 - `POST /platform/api/v1/accounts/:id/account_users` com `user_id` e `role` (`administrator` ou `agent`); chamar de novo troca o papel.
+- `GET /platform/api/v1/accounts/:id/account_users`: quem está na conta, com o papel.
+- `DELETE /platform/api/v1/accounts/:id/account_users?user_id=`: tira a pessoa da conta, sem apagá-la (ela pode estar na conta de outro cliente). O Chatwoot a tira das caixas e das equipes e devolve à fila as conversas atribuídas a ela (`Agents::DestroyJob`). Responde 200 mesmo se ela já não estava.
 - `GET /platform/api/v1/users/:id/login`: o link de entrada. O token dele vale 5 minutos e deixa de valer no primeiro uso (`app/models/concerns/sso_authenticatable.rb`); peça na hora de abrir o painel.
 
 O token do Platform App não acessa a API das contas. Por isso o kit cria em cada conta uma conta de serviço administradora e usa o token dela para caixas, robô e webhooks.
@@ -51,7 +53,9 @@ As funções (`config/features.yml`) se ligam e desligam por conta na API de pla
 
 ## Papéis
 
-A edição comunitária tem só administrador e atendente; papel sob medida é pago (`enterprise/app/models/custom_role.rb`). A equipe do cliente é atendente: não vê configurações de caixa, robô e webhooks. Atendente só vê conversas das caixas de que é membro, por isso o kit põe cada pessoa em todas as caixas da conta.
+A edição comunitária tem só administrador e atendente; papel sob medida é pago (`enterprise/app/models/custom_role.rb`). A equipe do cliente é atendente: não vê configurações de caixa, robô e webhooks. Atendente só vê conversas das caixas de que é membro, por isso o kit põe cada pessoa em todas as caixas da conta. Cada conta é separada: quem está numa conta não vê nada de outra. A mesma pessoa (o mesmo e-mail) em dois clientes entra nas duas contas e alterna entre elas no painel.
+
+A sessão do painel dura até 2 meses (`token_lifespan` em `config/initializers/devise_token_auth.rb`). Por isso quem sai da equipe precisa sair da conta: sem isso, continua abrindo o painel num navegador em que já entrou.
 
 ## Painel dentro do sistema
 

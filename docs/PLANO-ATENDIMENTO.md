@@ -12,7 +12,7 @@ O app `whatsapp-support` 1.0.0 foi construído em 2026-11-07 em duas rodadas e g
 
 - ⚠️ A primeira rodada (até o ÉPICO 8) entrou no commit a702826 às 13:46, junto com `conversion-pages` e `video-render` 1.1.0, por um commit que esta sessão não fez. A versão antiga deste parágrafo dizia "sem commit".
 - ⚠️ A segunda rodada (ÉPICO 9: contexto em camadas, cache, sugestões e lacunas, D19 e D20, e a equipe de cada cliente) entrou no commit 9b986bd, também feito fora desta sessão. Este parágrafo dizia que ela estava sem commit. Continua como 1.0.0, porque nenhuma 1.0.0 tem tag nem chegou à plataforma.
-- A terceira rodada (ÉPICO 10: a conferência do número) entrou no commit da CLI 1.2.6, em 2026-11-08, ainda como 1.0.0.
+- A terceira rodada (ÉPICO 10: a conferência do número) entrou no commit 9ddcf2a, em 2026-11-08, ainda como 1.0.0.
 - Um projeto que instalou o kit da primeira rodada vê a atualização: `kit.mjs status` compara a base gravada com a do kit (`base_changed`), além do número de versão.
 - Na mesma tarde, a pedido do operador, a equipe de cada cliente: quem entra no painel (T4.4) e a saída de quem deixa a equipe (T4.5).
 - ⚠️ O `README.md` dizia que os relatórios do Chatwoot vinham prontos para o cliente; só administrador os vê (`app/policies/report_policy.rb`), e no kit a equipe é sempre atendente. A frase saiu, e `references/enxugar.md` avisa para não prometer os relatórios.

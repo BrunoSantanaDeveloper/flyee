@@ -85,7 +85,7 @@ On 2026-10-30 the operator asked that title and thumbnail sell, not only say wha
   - the lint warnings `title_descriptive` and `titles_same_trigger`;
   - a tenth critique criterion, packaging strength.
 
-On 2026-11-07 the operator asked for page-type expertise in their own code projects, growing from page models they bring. The work is specified in `docs/PLANO-PAGINAS.md` (decisions D1 to D14). The first round is in a702826; the second (ÉPICO 5) in 9b986bd and e859313; nothing is tagged:
+On 2026-11-07 the operator asked for page-type expertise in their own code projects, growing from page models they bring. The work is specified in `docs/PLANO-PAGINAS.md` (decisions D1 to D14). The first round is in a702826; the second (ÉPICO 5) in 9b986bd and e859313; the third (ÉPICO 6) in 4cc2280, where `video-render@1.1.0` (05fc2c85…, run 42508183476) and `conversion-pages@1.1.0` (a19a4665…, run 42508231516) are tagged and reached the platform as drafts, each with the platform's SHA-256 equal to the pack's; publishing and the entry version (D7) stay the operator's clicks:
 - `conversion-pages` 1.0.0 (workflow · vender), on a702826, the candidate entry version:
   - the playbooks of order bump, upsell, downsell, cross-sell and thank-you page;
   - the first model, Hostinger's post-purchase agent offer, as our analysis only; the raw capture is in `flyee-workspace/pesquisa-paginas/`;
@@ -101,11 +101,11 @@ On 2026-11-07 the operator asked for page-type expertise in their own code proje
   - mobile calls pair by the same element before the same text, so a menu button the phone hides no longer takes the page button's place.
 - The console's `link --user` installs an app for the operator's code repos without touching them; `conversion-pages` is installed that way. New models enter through `modules/conversion-pages/.dev/INTAKE.md`, and each one ends with the cross-app check.
 - What other apps gain from both models is in the plan's backlog (section 6).
-- On 2026-11-08 a third round (ÉPICO 6, D15 to D20, uncommitted, both apps changed in place) came from the operator's review of the Stageshow skill and six design repositories (MIT, credited in `modules/conversion-pages/NOTICE.txt`; their React kit, icons and logos were left out):
+- On 2026-11-08 a third round (ÉPICO 6, D15 to D20, committed in 4cc2280, both apps changed in place before their tags) came from the operator's review of the Stageshow skill and six design repositories (MIT, credited in `modules/conversion-pages/NOTICE.txt`; their React kit, icons and logos were left out):
   - `references/demonstracao.md`: the product demo uses the project's real components with fixed data first, then the real screen, then a replica, and shows only what the product does today;
   - `references/vicios.md`: what an AI repeats unasked. Invented data leaves the page; the rest warns unless `visual.chosen` names it;
   - thirteen more checks, among them the origin of every number (`claims_have_origin`), the filmed demo and the finished page's phone width, text size, touch targets, contrast, buttons and images;
-  - `video-render` reads `anatomy.quality`, films part of a running page with `film` (real time, desktop, phone and reduced motion), and pins `prefers-reduced-motion: no-preference`, which fixes the Windows CI failure of `anatomy.test.mjs`.
+  - `video-render` reads `anatomy.quality`, films part of a running page with `film` (real time, desktop, phone and reduced motion), and pins `prefers-reduced-motion: no-preference`, which fixed the Windows CI failure of `anatomy.test.mjs` (the CI of 4cc2280 passed on Linux and Windows).
 
 The same day the operator asked for WhatsApp support with AI and humans as a catalog kit for code projects, replacing the test WhatsApp of ONE and Orkestree. The spec is `docs/PLANO-ATENDIMENTO.md` (decisions D1 to D22, invariants, ÉPICOs 1 to 10). The first round is in a702826, the second (ÉPICO 9) in 9b986bd; the third (ÉPICO 10, 2026-11-08) in 9ddcf2a; nothing is tagged:
 - `whatsapp-support` 1.0.0 (workflow · construir) never runs anything on a server: the project's AI installs `kit/base` (stateless bot with four AI providers, provisioning and SSO through Chatwoot's Platform API, official and OpenWA routes, the `apply-config.rb` that writes brand and theme into InstallationConfig) and adapts `kit/modelos` (Next.js routes, React screens over `primitives.tsx`, deployment files) into the project.

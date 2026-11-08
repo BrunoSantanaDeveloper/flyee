@@ -2,7 +2,7 @@
 
 **Objetivo:** quando o operador (ou um integrante) pedir à IA uma página de um tipo conhecido (página de vendas, planos e preços, página de API, order bump, upsell, downsell, cross-sell, página de obrigado), a IA segue o roteiro de mercado daquele tipo e os modelos reais analisados, constrói a página e a confere pela captura. O repertório cresce a cada modelo que o operador traz.
 
-> Conferido contra o código em 2026-11-07. A primeira rodada (Hostinger) está em a702826; a segunda (Juridiq, ÉPICO 5) está em 9b986bd e e859313. Nada tem tag. Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
+> Conferido contra o código em 2026-11-08. A primeira rodada (Hostinger) está em a702826; a segunda (Juridiq, ÉPICO 5) está em 9b986bd e e859313; a terceira (ÉPICO 6) está em 4cc2280. As tags `video-render@1.1.0` e `conversion-pages@1.1.0` apontam para 4cc2280 e chegaram à plataforma como rascunho, com o SHA-256 da plataforma igual ao do pack. Publicar e marcar a versão de entrada (D7) continuam sendo cliques do operador. Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
 
 ## Estado da implementação (2026-11-07)
 
@@ -11,8 +11,8 @@
 | T1.1 a T1.4 | ✅ | `video-render` 1.1.0, em a702826. A leitura fica em `readAnatomyDesktop` e `readAnatomyMobile` (`scripts/lib/capture.mjs`). `references/interface.md` §5 descreve `anatomy`, `texto.md`, `input_kind` e `anatomy_counts`. Testes em `tests/anatomy.test.mjs` e `tests/fixtures/oferta/` |
 | T2.1 a T2.6 | ✅ | `conversion-pages` 1.0.0, em a702826: 19 regras, 14 testes, 3 casos de avaliação. É a candidata à versão de entrada (D7, D14) |
 | T5.1 a T5.6 | ✅ | A rodada do Juridiq, em 9b986bd e e859313, com o `video-render` 1.1.0 corrigido no lugar. Detalhes no ÉPICO 5 |
-| T6.1 a T6.7 | ✅ | A rodada da demonstração e das medições (2026-11-08), na árvore e sem commit: `conversion-pages` 1.1.0 e `video-render` 1.1.0, os dois ainda sem tag, corrigidos no lugar (D16). Detalhes no ÉPICO 6 |
-| ⚠️ CI do Windows | corrigido | `anatomy.test.mjs` falhava no Windows do GitHub desde a702826: o Windows Server desliga as animações do sistema, o navegador responde `prefers-reduced-motion: reduce`, e a página do teste para a animação. A captura e o render passam a fixar `no-preference` (T6.6) |
+| T6.1 a T6.7 | ✅ | A rodada da demonstração e das medições (2026-11-08), commitada em 4cc2280 junto com o som do motor: `conversion-pages` 1.1.0 e `video-render` 1.1.0, corrigidos no lugar antes das tags (D16). Detalhes no ÉPICO 6 |
+| ⚠️ CI do Windows | corrigido | `anatomy.test.mjs` falhava no Windows do GitHub desde a702826: o Windows Server desliga as animações do sistema, o navegador responde `prefers-reduced-motion: reduce`, e a página do teste para a animação. A captura e o render passam a fixar `no-preference` (T6.6). A CI de 4cc2280 passou no Linux e no Windows (run 42508159600) |
 | ⚠️ `appeared_after_scroll` | corrigido | `video-render/references/interface.md` dizia "só apareceu depois da rolagem". A captura rola a página para aquecer antes de ler, e uma janela que abre pela rolagem saía como presente na chegada. Agora há uma leitura na chegada, antes do aquecimento (T5.4) |
 | ⚠️ `above_fold.mobile` | corrigido | A interface dizia "pelo mesmo texto na mesma ordem". Um botão do menu escondido no celular tomava o par do botão de mesmo texto da página (no JuriChat, "Comece grátis" saía como ausente no celular). Agora o pareamento é primeiro pelo mesmo elemento (T5.4) |
 | T3.1 | ✅ | O código está em `packages/module-tools/src/user-apps.ts` e `cli.ts`, com 12 testes em `test/user-apps.test.ts`. A instalação real foi feita: `~/.flyee/user-apps` e as pontes `conversion-pages` e `video-render` em `~/.claude/skills/`. Logo depois do `link --user`, a sessão do Claude Code em andamento passou a listar as duas skills; skills pessoais valem em qualquer pasta. Rodando `check` de dentro do flyee-club, o projeto é o flyee-club e o motor é o 1.1.0 |
@@ -386,14 +386,15 @@ O operador trouxe dois vídeos e pediu a análise do que serviria aos apps de p�
 - `node --test` nos testes do `conversion-pages`: 39 passam;
 - no `video-render`, `tests/quality.test.mjs` e `tests/anatomy.test.mjs`: 30 passam;
 - os testes do `module-tools`: 75 passam, entre eles a regra de texto sobre todo texto de integrante;
-- `npm run apps -- catalog --check` e `npm run harness:check`: passam.
-
+- `npm run apps -- catalog --check` e `npm run harness:check`: passam;
 - o `video-render` foi empacotado pela sessão que mexia no som do motor, depois da parte dela: ZIP sha256 `05fc2c85…`, 35 arquivos, `validate` passa. Ela rodou os testes de som, synth, audio, core e runner, 55 de 55;
-- `npm run apps -- link conversion-pages --user` reinstalou os dois apps, e as cópias instaladas são iguais à fonte. Rodando `check` da pasta do ONE, o projeto é o ONE, o motor é o 1.1.0 com a leitura completa e a página `home` aparece com a conferência antiga (5 ok, 2 em atenção).
+- `npm run apps -- link conversion-pages --user` reinstalou os dois apps, e as cópias instaladas são iguais à fonte. Rodando `check` da pasta do ONE, o projeto é o ONE, o motor é o 1.1.0 com a leitura completa e a página `home` aparece com a conferência antiga (5 ok, 2 em atenção);
+- a suíte do motor em duas partes: 81 testes no navegador (`anatomy`, `capture`, `accept` e `quality`) sobre o estado final, e os 55 de som pela outra sessão;
+- o commit 4cc2280 levou exatamente o estado empacotado: o stage estava igual à árvore nesses caminhos, e nenhum arquivo mudou depois dos dois pacotes;
+- a CI de 4cc2280 passou inteira, Linux e Windows (run 42508159600);
+- as tags, uma por vez: `video-render@1.1.0` (run 42508183476) e `conversion-pages@1.1.0` (run 42508231516). O log de cada uma diz "Platform sha256 …, the same as the pack", com `05fc2c85…` e `a19a4665…`.
 
 **O que não rodou:**
-- a suíte inteira do motor de uma vez só: cada sessão rodou a parte que mexeu;
-- o `ci:verify` completo e a CI do Windows no GitHub, que confirmaria a correção do teste da anatomia;
 - a revisão da landing do ONE com o app novo, que é o próximo pedido do operador numa sessão do ONE.
 
 ### Fora de cobertura desta rodada

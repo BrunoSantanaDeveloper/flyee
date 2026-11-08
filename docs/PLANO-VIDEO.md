@@ -29,6 +29,27 @@ Prova feita em 2026-10-10: uma página de rascunho em CSS 3D (painel inclinado, 
 
 Fica fora, por enquanto: filmar ao vivo o app React do próprio integrante dentro do código dele. Seria um app `tool` separado (mexe no código do integrante, exige o servidor de desenvolvimento rodando, só serve a quem tem app React) que entregaria tomadas ao Estúdio.
 
+### 1.3 Feito em 2026-11-08: o som acompanha o corte
+
+Pedido pelo operador ("sim, siga já com as correções") depois do estudo da seção 7, linha de 2026-11-08. Auditado contra o código sobre d2275ae com as mudanças ainda fora de commit. Legenda: ✅ existe e foi conferido · 🟡 parcial · ⬜ não existe · ⚠️ correção.
+
+| # | Defeito medido | Estado e onde mudou | Aceite que roda |
+|---|---|---|---|
+| S1 | O `whoosh` começa no `t` e só chega ao máximo depois do corte | ✅ Campo opcional `anchor: "peak"` nas duas listas do `sfx`. Na de eventos, o motor mede o trecho mais alto do som gerado e começa antes dele (`video-render/scripts/lib/audio/synth.mjs`, `loudestAt` e o marcador `swell` de `whoosh`, `swish` e `riser`). Na de deixas, usa a fração da forma (`lib/audio/sfx.mjs:78`). O padrão continua `start`, porque o `motion-carousel` conta com ele (`motion-carousel/references/sound.md:69`). O `video-studio` põe `peak` em todo `whoosh` e `swish` que o roteiro não marcou (`scripts/lib/roteiro.mjs`, `eventsFile`); o `ad-creatives`, nos `whoosh` dos cortes (`scripts/lib/pieces.mjs`, `eventsOf`) | `node --test modules/video-render/tests/sound.test.mjs`: com `peak`, o máximo cai a até 1 quadro do `t`, com 3 sementes, `direction: "out"`, `pitch` e `length` diferentes conferidos à parte; sem `anchor`, o som ainda começa no `t`; um `impact` com `peak` sai idêntico |
+| S2 | O guia promete que a música cede sob cada `impact` (`video-render/references/som.md`, tabela da mixagem), e o `mix` só abaixava sob a voz | ✅ Segundo compressor na música, com os efeitos como chave: limiar 0,1, que deixa passar `tick` e `click`, ataque de 5 ms e volta em 250 ms (`lib/ffmpeg.mjs`, `mixAudio`). `--sfx-duck <dB>`, padrão 8 e `0` desliga, e `settings.sfx_duck` na resposta (`commands/audio.mjs`) | `sound.test.mjs`: sob o impacto a música cai 3 dB ou mais, sob o tique no máximo 1 dB, e volta a no máximo 1 dB do nível de antes; com `--sfx-duck 0`, nada muda |
+| S3 | O ponto alto da trilha cai por fórmula (45% ou 60% dos compassos), e ninguém pedia onde (`references/motion.md:22` quer imagem e ponto alto juntos) | ✅ `music --drop-at <s>` leva o ponto alto ao início de compasso mais perto e avisa quando moveu ou quando a peça não tem arco (`lib/audio/music.mjs:156` e `:521`). O `video-studio` pede o começo do primeiro papel da lista `peak` de cada roteiro (`references/roteiros.json`: prova ou fechamento no lançamento, preço ou fechamento na oferta, resultado ou fechamento no passo a passo, fechamento na lista e na interface), só na trilha composta e só quando a ajuda do motor cita `--drop-at`. O `ad-creatives` pede o corte para a última cena, onde o impacto já cai | `sound.test.mjs`: todo estilo compõe com o pico pedido, o pico é mais alto que o trecho anterior e a mesma entrada dá a mesma música; `video-studio/tests/studio.test.mjs`, "--drop-at goes to the Motor only when its help offers it"; `ad-creatives/tests/commands.test.mjs`, o `preview --refresh` com um motor que aceita a opção |
+| S4 | Achado ao medir S2: a mesma mixagem saía diferente a cada rodada (4 resultados em 10, ffmpeg 9.0.2) e às vezes perdia até meio segundo do fim da música | ✅ O `sidechaincompress` termina quando qualquer entrada termina, e qual termina primeiro variava. As duas entradas de cada compressor agora recebem silêncio no fim (`apad`) e o resultado é cortado na duração (`yieldUnder` em `lib/ffmpeg.mjs`). Vale também para a voz: uma voz mais curta não corta mais a música | `sound.test.mjs`: 5 mixagens dos mesmos arquivos com o mesmo SHA-256; com música de 10 s e voz de 6 s, a saída tem 10 s e a música volta depois da voz. Medição avulsa: 10 de 10 iguais em cada um dos quatro casos (efeitos do mesmo tamanho, efeitos curtos, voz curta, voz curta e efeitos) |
+
+Versões: `video-render` 1.1.0, ainda sem tag, recebeu as quatro (o `changelog` é dividido com o trabalho de páginas). `video-studio` 1.1.2 e `ad-creatives` 1.2.2 vieram por `apps bump`, porque 1.1.1 e 1.2.1 têm tag. Com um motor anterior, os dois apps continuam funcionando como antes: o motor ignora `anchor`, e `--drop-at` só vai quando a ajuda dele o cita.
+
+- ⚠️ **O atraso medido no estudo estava subestimado.** A conta de 1,16 s para um `whoosh` em 1,00 s (5 quadros) foi medida na lista de deixas. Na lista de eventos, a que o Estúdio e os anúncios usam, o máximo vinha 0,27 s depois do `t`, uns 8 quadros, porque a varredura do filtro sobe e a energia cresce até perto do fim do som. Por isso a âncora é medida no som gerado, não calculada pela metade da duração.
+- ⚠️ **`motion-carousel/references/sound.md:69` diz que o `whoosh` atinge o máximo no meio da duração.** Isso vale para a lista de deixas. Na de eventos, que o carrossel usa, o máximo vem perto do fim. O texto não foi mudado porque o `motion-carousel` 1.1.4 tem tag: corrigir na próxima versão dele, e decidir ali se o carrossel passa a usar `anchor: "peak"`.
+- 🟡 **A T12.1 de `docs/PLANO-ANUNCIOS-FALA.md` (a voz mais curta corta a peça) foi atacada pela S4 só no `mixAudio`.** O aceite dela (vídeo de 10 s com 300 quadros e nenhuma janela de 0,5 s abaixo de −40 dB depois da voz) não foi rodado com vídeo. A T12.2, o último quadro perdido, não foi tocada.
+
+**O que rodou:** os testes do motor que tocam o som (`audio`, `synth`, `sound`, `core` e `runner`, 55 de 55), todos os do `video-studio` (98 de 99), do `ad-creatives` (72 de 73) e do `motion-carousel` (63 de 63), e o teste de integração do Estúdio com o motor real (`STUDIO_TEST_REAL=1`, do pedido ao vídeo final em 5 min 54 s). Os dois testes pulados são as integrações com o motor real, que só rodam quando pedidas; a do `ad-creatives` não rodou.
+
+**O que não foi verificado:** ninguém ouviu o resultado. Todos os aceites medem o arquivo (pico por janela de 10 ms, nível de um tom de 8 kHz pelo algoritmo de Goertzel, SHA-256). A curva da cessão (8 dB, 250 ms) é um ponto de partida e não foi ajustada de ouvido.
+
 ## 2. Proposto em 2026-10-10 (aguarda o sim do operador)
 
 Origem: o vídeo "CLAUDE OPUS 5.5 = VÍDEOS DE R$100K" (Mateus Dias, 17:53) e a skill `yt-ddiasmatt-animation` que ele distribui na descrição. O fluxo dele é o da nossa edição de gravações: uma skill corta a gravação (decupagem) e outra anima por cima do vídeo falado. Tamanho: P pequeno, M médio, G grande.
@@ -65,6 +86,22 @@ Origem: o vídeo "CLAUDE OPUS 5.5 = VÍDEOS DE R$100K" (Mateus Dias, 17:53) e a 
 | P | **Atos** | Roteiro e página divididos em atos, um arquivo por ato, com prévia e conferência por ato. Onde a ferramenta do integrante tiver subagentes, um por ato com um briefing comum; onde não tiver, um ato por vez. | `video-studio` | M |
 | Q | **Conferências novas** | Fala intacta (transcrever o vídeo final e comparar com o esperado), quadros do corte iguais aos originais, tela final do YouTube livre nos últimos ~20 s. | `accept` e a tabela das redes | M |
 
+### 2.4 Proposto em 2026-11-08 (aguarda o sim do operador)
+
+Origem: o estudo de 2026-11-08 (seção 7). Os repositórios foram lidos como texto, nunca executados. Tudo é Node e ffmpeg, sem dependência nova, menos a voz (X). Nenhum item foi construído. Estado de todos: ⬜.
+
+| # | O que | Como funciona | Onde entra | Tam. |
+|---|---|---|---|---|
+| R | **Revisão por alfinete no quadro** | Uma página de revisão em que o integrante clica num ponto de um quadro; o clique vira (tempo, x, y) e é ligado à cena do roteiro e à caixa de `window.boxes` daquele ponto, e o pedido de mudança já sai endereçado | `video-render` (página) e `video-studio` (aplicar o pedido) | M |
+| S | **Revisor de contexto limpo** | Quem confere a prévia é uma leitura nova, sem o histórico de quem fez o vídeo, em vez da nota que o autor dá a si mesmo | `video-studio` (skill) | P |
+| T | **Conferências como aviso** | Quadro vazio ou chapado, cortes declarados contra cortes renderizados, tempo de leitura de cada texto na tela, contraste do texto medido nos pixels e movimento por segundo. Avisam e não reprovam até serem calibradas nos nossos filmes verticais | `accept` | P–M |
+| U | **Mapa de movimento de uma referência** | Medir onde e quanto se mexe num vídeo de referência e comparar com o render, sem copiar pixels. A mesma necessidade aparece no `docs/PLANO-PAGINAS.md:448` | `video-analysis` | M |
+| V | **Três direções como quadros** | Antes da prévia, três caminhos visuais em quadros parados, para o integrante escolher um | `video-studio` | P–M |
+| W | **Palavras da narração presas ao roteiro** | Alinhar a transcrição ao texto que já se conhece e expor o tempo de cada palavra à página (`Motion.cue`) | `video-render` (biblioteca) e o motor de transcrição da D36 de `docs/PLANO-ANUNCIOS-FALA.md`, que os repositórios estudados não superam | P |
+| X | **Narração local em português** | Kokoro com a voz `pf_dora` ou Piper com `faber` (CC0), rodando na máquina. Nenhuma das duas foi ouvida: primeiro o teste de escuta (seção 3) | app novo ou `video-render` | M–G |
+| Y | **Cursor roteirizado e gravação real do produto** | Um cursor com semente na biblioteca das páginas cobre a maior parte das demonstrações e continua determinístico (P). A gravação do produto rodando já existe em parte: o comando `film` do motor, feito para as páginas em 2026-11-08, fotografa um trecho em tempo real e não é determinístico | `video-render` (`motion.js`) | P |
+| Z | **`Motion.follow` e `Motion.flow`** | Regras para um elemento seguir outro e para entradas que se sobrepõem sem disputar o mesmo instante | `video-render` (`motion.js`) | P |
+
 ## 3. Testar antes de prometer
 
 **Recorte de pessoa** (palavras atrás de quem fala, fundo trocado pela grade da marca; no vídeo em 00:01, 00:33 e 13:30) e **elementos presos às mãos** (13:03). O vídeo diz que a máscara usa "Remotion"; a skill enviada não mostra como é feito, e só o `SKILL.md` veio, sem as referências nem os scripts.
@@ -73,12 +110,16 @@ Caminhos a medir: um modelo de segmentação rodando dentro do navegador do moto
 
 Os elementos junto às mãos podem começar sem rastreamento: a IA lê os quadros com a grade de coordenadas (item F) e posiciona à mão nos poucos segundos da cena.
 
+**Narração local em português** (item X): ouvir Kokoro `pf_dora` e Piper `faber` lendo três textos reais de anúncio antes de qualquer código. Medir também o tamanho do modelo baixado, o tempo por minuto de fala nesta máquina e se a mesma entrada dá o mesmo áudio. O motor Kokoro do `argo` recusa as vozes `pf_*`, então o caminho não pode ser o dele.
+
 ## 4. O que não adotamos
 
 - **Depender de um modelo e de um nível de esforço.** Ele só chega a bom resultado com o modelo mais caro em esforço alto. No Estúdio a qualidade fica nos roteiros, nos modelos de página e nas conferências, para funcionar com a IA que o integrante tiver.
 - **Remotion.** Licença paga acima de três pessoas; decisão de 2026-10-07.
 - **Uma skill escrita à mão por canal**, com caminhos fixos da máquina do autor, Python e shell de macOS. Nossos apps são Node, Windows primeiro, e a identidade do canal é dado da marca (itens I e J), não código.
 - **Transcrição paga obrigatória.** O modo sem chave vem primeiro; a chave é opcional.
+- **CLIProxyAPI** (`router-for-me/CLIProxyAPI`), recusado para o produto e para qualquer texto de integrante. Ele usa os logins de assinatura fora dos programas a que pertencem: tem um disfarce de Claude Code (`config.example.yaml:486`), se apresenta como o Codex (`Originator: codex_cli_rs` em `internal/api/server_routes.go:447`) e alterna grupos de contas (README, linhas 134 a 140). Isso contraria a regra de cada pessoa usar a própria IA com o próprio login. A cláusula correspondente dos termos da OpenAI não foi lida.
+- **Os modelos do `earshot`** (torch, 1,1 GB), **o GSAP** (a licença dele cita ferramentas de animação sem código), **o HyperFrames**, **o fluxo do `take-one`** (só macOS, e o próprio texto fala em 1 a 2 horas e 0,4 a 0,7 milhão de tokens por sessão), **a clonagem e o `--assets` do `reanimate`** e **as trilhas do Mixkit** (as nossas são originais).
 
 ## 5. Ordem sugerida
 
@@ -95,13 +136,18 @@ Os elementos junto às mãos podem começar sem rastreamento: a IA lê os quadro
 
 O `accept`, os comandos de áudio e a tabela das redes do `video-render` foram escritos na sessão que fez o `motion-carousel`. Enquanto as duas sessões estiverem ativas, mudança nesses arquivos é combinada antes (D, E, F, G e Q tocam neles).
 
+Desde 2026-11-08 a captura, o navegador e o comando `film` são do trabalho de páginas (`docs/PLANO-PAGINAS.md`), e o som (seção 1.3) foi mexido por esta frente. O `changelog` de uma versão sem tag do motor é dividido: cada frente relê e só acrescenta frases, e quem mexe por último empacota e passa o SHA-256 para o `docs/PLANO-PAGINAS.md`.
+
 ## 7. O que foi estudado
 
 | Fonte | O que veio dela | Quando |
 |---|---|---|
 | Felipe Borges (dois vídeos, o repositório `showreel-interface`, as páginas do Notion) e o artigo do 0xMovez | a base da 1.0: página como função do tempo, renderização quadro a quadro, briefing completo, prévia antes do final | 2026-10-06 e 07 |
 | Flute (`webprodigies-org/flute`, MIT, 0.1.2) | câmera 3D, foco por profundidade, camadas; o método de exportar é o mesmo do nosso motor, sem som | 2026-10-10 |
-| Mateus Dias, vídeo `61u9wOT-Cds` e a skill `yt-ddiasmatt-animation` | a seção 2 inteira | 2026-10-10 |
+| Mateus Dias, vídeo `61u9wOT-Cds` e a skill `yt-ddiasmatt-animation` | as seções 2.1 a 2.3 | 2026-10-10 |
+| AI LABS, vídeos `p565AqELA8M` e `oTWUyW_bR-g`, e os repositórios `huashu-motion`, `rossark-motion-skill`, `take-one`, `reanimate`, `argo`, `explainroo`, `video-director`, `earshot` e `CLIProxyAPI` | os três defeitos de som da seção 1.3, a seção 2.4 e o que foi recusado na seção 4 | 2026-11-08 |
+
+Os dois vídeos de 2026-11-08 foram lidos só pela análise de imagem e som do `video-analysis`, porque o YouTube recusou as legendas (HTTP 429). As análises ficam em `C:\AppsProjects\flyee-workspace\video-analyses\yt-p565AqELA8M\` e `yt-oTWUyW_bR-g\` (`descriptions/flyee-avaliacao.md`). Os repositórios não foram executados, e as licenças só foram lidas onde a seção 4 cita.
 
 As análises do último ficam fora do repositório, em `C:\AppsProjects\flyee-workspace\video-analyses\yt-61u9wOT-Cds\`: `descriptions/estudio-conteudo.md`, `descriptions/estudio-edicao.md`, `transcript.md` e `skill-do-video.md`. A descrição automática atribui a renderização ao Remotion; a fala (14:39) diz que só a máscara usa essa ferramenta, e a skill descreve um motor próprio de página capturada.
 

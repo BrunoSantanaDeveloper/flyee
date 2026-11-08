@@ -58,7 +58,7 @@ const rel = (path) => displayPath(ROOT, path);
  * `argSpec` ({ flags, options }), `commands` ({ name: { summary, help, run(positionals, values, ctx), text(result) } })
  * and, optionally, `help` (a block for the help text). A missing file is skipped.
  */
-const EXTRA_GROUPS = ["audio", "capture", "accept"];
+const EXTRA_GROUPS = ["audio", "capture", "accept", "film"];
 
 async function loadExtras() {
   const groups = [];

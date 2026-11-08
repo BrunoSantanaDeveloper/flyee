@@ -1,6 +1,6 @@
 {
   "format_version": 1,
-  "note": "Os roteiros do Estúdio de vídeo: as cenas de cada um, quantos compassos cada cena pode durar e o que cada cena precisa (as lacunas). `bars` é [mínimo, máximo] em compassos (múltiplos de 0.25); `repeat` é [mínimo, máximo] de cenas daquele papel; uma lacuna com `?` é opcional.",
+  "note": "Os roteiros do Estúdio de vídeo: as cenas de cada um, quantos compassos cada cena pode durar e o que cada cena precisa (as lacunas). `bars` é [mínimo, máximo] em compassos (múltiplos de 0.25); `repeat` é [mínimo, máximo] de cenas daquele papel; uma lacuna com `?` é opcional. `peak` são os papéis em que a maior mudança do vídeo pode acontecer, em ordem: a trilha composta põe o ponto alto no começo do primeiro deles que o roteiro tiver.",
   "templates": {
     "lancamento": {
       "label": "Lançamento",
@@ -8,6 +8,7 @@
       "objectives": ["apresentar", "lancar", "portfolio"],
       "default_style": "interface-narra",
       "music_style": "energetic",
+      "peak": ["prova", "fechamento"],
       "scenes": [
         { "role": "gancho", "label": "Gancho", "bars": [1, 2], "slots": ["text", "emphasis?"] },
         { "role": "produto", "label": "O produto aparece", "bars": [1, 2], "slots": ["screen?", "text?"] },
@@ -22,6 +23,7 @@
       "objectives": ["explicar", "apresentar", "lancar"],
       "default_style": "interface-que-se-transforma",
       "music_style": "clean",
+      "peak": ["fechamento"],
       "scenes": [
         { "role": "abertura", "label": "Logo", "bars": [0.5, 1], "slots": ["text?", "logo?", "emphasis?"] },
         { "role": "estado", "label": "Estado da interface", "repeat": [4, 10], "bars": [0.5, 1], "slots": ["kind", "text", "value?", "detail?"] },
@@ -35,6 +37,7 @@
       "objectives": ["vender"],
       "default_style": "vitrine",
       "music_style": "energetic",
+      "peak": ["preco", "fechamento"],
       "scenes": [
         { "role": "gancho", "label": "Gancho", "bars": [1, 2], "slots": ["text", "emphasis?"] },
         { "role": "produto", "label": "O produto", "bars": [1, 2], "slots": ["image?", "screen?", "text"] },
@@ -49,6 +52,7 @@
       "objectives": ["explicar"],
       "default_style": "tipografia-cinetica",
       "music_style": "clean",
+      "peak": ["fechamento"],
       "scenes": [
         { "role": "gancho", "label": "Gancho", "bars": [1, 2], "slots": ["text", "emphasis?"] },
         { "role": "item", "label": "Item", "repeat": [3, 5], "bars": [1, 2], "slots": ["text", "detail?", "emphasis?"] },
@@ -61,6 +65,7 @@
       "objectives": ["explicar"],
       "default_style": "limpo",
       "music_style": "clean",
+      "peak": ["resultado", "fechamento"],
       "scenes": [
         { "role": "gancho", "label": "Gancho", "bars": [1, 2], "slots": ["text", "emphasis?"] },
         { "role": "passo", "label": "Passo", "repeat": [2, 5], "bars": [1, 2], "slots": ["text", "detail?", "emphasis?"] },

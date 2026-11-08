@@ -16,6 +16,7 @@ const ROOT = projectRoot(SCRIPTS_DIR);
 const INTERFACE_VERSION = 1;
 const ENGINE_MIN = "1.1.0";
 const CAPTURE_TIMEOUT_MS = 5 * 60 * 1000;
+const FILM_TIMEOUT_MS = 4 * 60 * 1000;
 const APP = { name: "conversion-pages", version: readJson(join(APP_DIR, "flyee.module.json"))?.version ?? "0.0.0" };
 const TYPES = readJson(join(APP_DIR, "references", "tipos.json"));
 const CHECKS = readJson(join(APP_DIR, "references", "checks.json"));
@@ -186,11 +187,31 @@ function isFilePath(text) {
   return /\.(?:html?|mhtml?|mht)$/i.test(text) && !/^[a-z][a-z0-9+.-]*:\/\//i.test(text);
 }
 
+/**
+ * Films the scene the page marks, through the Video engine. A film that fails never fails the audit:
+ * the item comes back not checked, with the reason.
+ */
+async function filmScene(url, selector, dir) {
+  const engine = findEngine(ROOT, APP_DIR);
+  if (!engine) return { error: "A cena não foi filmada: o Motor de vídeo não está instalado." };
+  const outDir = join(dir, "filme");
+  progress(`Filmando a cena ${selector} com o Motor de vídeo ${engine.version ?? ""}.`);
+  try {
+    const run = await runNode(engine.script, ["film", url, "--select", selector, "--out", outDir, "--json"], { cwd: ROOT, timeoutMs: FILM_TIMEOUT_MS, label: "A filmagem da cena" });
+    const answer = parseAnswer(run.stdout);
+    if (!answer || answer.ok === false) return { error: `A cena não foi filmada: ${answer?.error?.message ?? "o Motor de vídeo não respondeu."}` };
+    return { ...answer, sheets: (answer.passes ? Object.values(answer.passes) : []).map((pass) => pass.sheet).filter(Boolean).map((sheet) => toPosix(ROOT, join(outDir, sheet))) };
+  } catch (error) {
+    return { error: `A cena não foi filmada: ${error.message}` };
+  }
+}
+
 async function cmdAudit(name, values) {
   const dir = findPage(name, values.dir);
   const { facts, type } = readFacts(dir);
   let capture;
   let captureFile;
+  let film = null;
   if (values.capture) {
     captureFile = isAbsolute(values.capture) ? values.capture : resolve(ROOT, values.capture);
     if (!existsSync(captureFile)) throw new AppError("capture_missing", `Não achei a captura ${values.capture}.`, "Passe o caminho de um captura.json do Motor de vídeo, ou use --url.");
@@ -214,6 +235,7 @@ async function cmdAudit(name, values) {
     captureFile = join(outDir, "captura.json");
     capture = readJson(captureFile);
     if (!capture) throw new AppError("capture_failed", "A captura terminou sem o arquivo captura.json.", "Tente de novo; se repetir, atualize o Motor de vídeo.");
+    if (facts.demo?.selector && capture.input_kind !== "mhtml") film = await filmScene(url, facts.demo.selector, dir);
   }
   // texto.md carries the whole page text, footer included; the anatomy keeps at most 4,000 characters per section.
   const textFile = join(dirname(captureFile), typeof capture.files?.text === "string" ? capture.files.text : "texto.md");
@@ -223,7 +245,7 @@ async function cmdAudit(name, values) {
   } catch {
     text = null;
   }
-  const result = audit({ type, capture, facts, definitions: CHECKS, text });
+  const result = audit({ type, capture, facts, definitions: CHECKS, text, film });
   const report = {
     format_version: 1,
     page: name,
@@ -234,8 +256,13 @@ async function cmdAudit(name, values) {
     full_reading: result.anatomy,
     summary: result.summary,
     items: result.items,
+    film: film ? { sheets: film.sheets ?? [], error: film.error ?? null } : null,
   };
   writeJson(join(dir, "conferencia.json"), report);
+  // The photos of the whole page, so whoever built it looks at it before delivering.
+  const shots = capture.files ?? {};
+  const photos = [shots.desktop_full, shots.mobile_full].filter(Boolean).map((file) => toPosix(ROOT, join(dirname(captureFile), file)));
+  const look = film?.sheets?.length ? "Abra as folhas de film.sheets e as fotos de files.photos e responda às perguntas de Conferir olhando em references/demonstracao.md." : "Abra as fotos de files.photos e leia a página pronta, no computador e no celular.";
   return {
     ok: true,
     page: name,
@@ -244,12 +271,13 @@ async function cmdAudit(name, values) {
     summary: result.summary,
     items: result.items.map(({ id, status, detail }) => ({ id, status, detail })),
     say: result.say,
-    files: { audit: toPosix(ROOT, join(dir, "conferencia.json")), capture: toPosix(ROOT, captureFile) },
+    film: film ? { sheets: film.sheets ?? [], mode: film.mode ?? null, error: film.error ?? null } : null,
+    files: { audit: toPosix(ROOT, join(dir, "conferencia.json")), capture: toPosix(ROOT, captureFile), photos },
     next_step: !result.anatomy
       ? "A captura veio sem a leitura completa: atualize o Motor de vídeo com npx --yes flyee@latest update video-render --yes --json e rode audit de novo."
       : result.summary.atencao
-        ? "Corrija na página o que está em atenção, lendo também a lista de conferir à mão do plano, e rode audit de novo."
-        : "Nada em atenção. Confira à mão os itens do plano e entregue o resumo em três linhas.",
+        ? `Corrija na página o que está em atenção, lendo também a lista de conferir à mão do plano, e rode audit de novo. ${look}`
+        : `Nada em atenção. ${look} Confira à mão os itens do plano e entregue o resumo em três linhas.`,
   };
 }
 

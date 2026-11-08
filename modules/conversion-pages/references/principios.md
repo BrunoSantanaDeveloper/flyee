@@ -26,7 +26,9 @@ Depoimento, número ou demonstração precisam ser sobre o produto da oferta. Um
 
 ## 5. Mostrar o produto funcionando
 
-Uma demonstração curta do produto em uso vale mais do que a lista de recursos. Ela mostra o pedido, o resultado e a prova, em vídeo sem som, em loop, com a capa no idioma da página (veja `movimento.md`).
+Uma demonstração curta do produto em uso vale mais do que a lista de recursos. Ela mostra o pedido, o resultado e a prova, em vídeo sem som ou animada na própria página, em loop, com a capa no idioma da página (veja `movimento.md`).
+
+Sempre que possível, ela usa o produto de verdade: os componentes reais do projeto com dados fixos, depois a tela real, e uma réplica simplificada só quando não há código nem tela. Mostra só o que o produto faz hoje, e o que for inventado para a cena leva a etiqueta "Exemplo fictício". O guia está em `demonstracao.md`.
 
 ## 6. O celular vem primeiro
 
@@ -67,3 +69,17 @@ Uma janela de promoção abre depois que a pessoa mostra interesse, como ao pass
 ## 13. O número que todo mundo lê
 
 Um número contado com animação já está no HTML com o valor final. Sem isso, o buscador, o leitor de tela e quem pediu menos movimento leem "0+", como acontece na página do Juridiq.
+
+## 14. Nada inventado
+
+Número de uso, escassez, ano de fundação, nome de cliente e depoimento vêm do projeto ou do integrante, com a origem registrada em `pagina.json` (`claims`). Sem origem, saem da página. A IA preenche o vazio com o que parece provável, e o que a página afirma obriga quem vende (veja `lei.md`).
+
+## 15. A página tem a cara deste produto
+
+O plano traz a direção visual em uma frase, que diga o que torna a página deste produto, e as cores e as letras da marca. Os padrões que a IA repete sem ninguém pedir estão em `vicios.md`: o que ficar deles é escolha registrada.
+
+Página sem esses vícios fica menos genérica, e só isso. Nenhum dos materiais usados aqui mede venda: quem diz se a página vende é a medição do próprio projeto.
+
+## 16. Olhar a página pronta
+
+Quem constrói sem ver entrega defeitos que só aparecem na tela: um texto cortado, uma lista por cima de uma imagem, uma barra que cobre o botão. Antes de entregar, abra as fotos e as folhas de quadros que a conferência grava, no computador e no celular.

@@ -206,11 +206,12 @@ export async function measureLoudness(ffmpegPath, file) {
 
 /**
  * Mixes music, effects and voice under a silent video (or into an audio file when
- * `video` is null): music ducks under the voice, the result is normalized to the
- * target loudness and true peak, and fades out at the end when asked. `musicOffset`
- * (seconds) starts the music later in its own file.
+ * `video` is null): music ducks under the voice and yields for a moment under a loud
+ * effect (`sfxDuckDb`, 0 turns it off), the result is normalized to the target loudness
+ * and true peak, and fades out at the end when asked. `musicOffset` (seconds) starts the
+ * music later in its own file.
  */
-export async function mixAudio(ffmpegPath, { video = null, out, music = null, musicGainDb = 0, musicOffset = 0, sfx = null, sfxGainDb = 0, voice = null, voiceGainDb = 0, duckDb = 10, lufs = -14, truePeak = -1, fadeOut = 0, duration = null }) {
+export async function mixAudio(ffmpegPath, { video = null, out, music = null, musicGainDb = 0, musicOffset = 0, sfx = null, sfxGainDb = 0, sfxDuckDb = 8, voice = null, voiceGainDb = 0, duckDb = 10, lufs = -14, truePeak = -1, fadeOut = 0, duration = null }) {
   const inputs = [];
   const labels = [];
   let chains = [];
@@ -222,6 +223,13 @@ export async function mixAudio(ffmpegPath, { video = null, out, music = null, mu
   const trim = duration ? `,atrim=0:${duration}` : "";
   // the music may start later in its file (one slice of a track per slide): cut before the gain
   const offset = musicOffset > 0 ? `atrim=start=${musicOffset},asetpts=PTS-STARTPTS,` : "";
+  // sidechaincompress ends as soon as either input ends and throws away what it still holds, and
+  // which input ends first changes from run to run: a short key cut the piece, and the music lost
+  // up to half a second of its end at random. So neither input ends: both are padded with silence
+  // and the result is cut to the length. With no known length there is no cut, so no padding.
+  const yieldUnder = (main, key, settings, out) => (duration
+    ? [`[${main}]apad[${main}_long]`, `[${key}]apad[${key}_long]`, `[${main}_long][${key}_long]sidechaincompress=${settings},atrim=0:${duration}[${out}]`]
+    : [`[${main}][${key}]sidechaincompress=${settings}[${out}]`]);
   if (voice) {
     const i = add(voice);
     chains.push(`[${i}:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=${voiceGainDb}dB${trim}[voice]`);
@@ -233,7 +241,7 @@ export async function mixAudio(ffmpegPath, { video = null, out, music = null, mu
       // the voice drives a compressor on the music: speech stays in front
       chains.push(`[${i}:a]aformat=sample_rates=48000:channel_layouts=stereo,${offset}volume=${musicGainDb}dB${trim}${fade}[musicraw]`);
       chains.push(`[voice]asplit=2[voice_mix][voice_key]`);
-      chains.push(`[musicraw][voice_key]sidechaincompress=threshold=0.05:ratio=${Math.max(2, Math.round(duckDb / 2))}:attack=20:release=400:makeup=1[music]`);
+      chains.push(...yieldUnder("musicraw", "voice_key", `threshold=0.05:ratio=${Math.max(2, Math.round(duckDb / 2))}:attack=20:release=400:makeup=1`, "music"));
       labels.push("[voice_mix]", "[music]");
     } else {
       chains.push(`[${i}:a]aformat=sample_rates=48000:channel_layouts=stereo,${offset}volume=${musicGainDb}dB${trim}${fade}[music]`);
@@ -242,7 +250,14 @@ export async function mixAudio(ffmpegPath, { video = null, out, music = null, mu
   } else if (voice) labels.push("[voice]");
   if (sfx) {
     const i = add(sfx);
-    chains.push(`[${i}:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=${sfxGainDb}dB${trim}[sfx]`);
+    chains.push(`[${i}:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=${sfxGainDb}dB${trim}[sfx_raw]`);
+    if (music && sfxDuckDb > 0) {
+      // loud effects drive a second compressor on the music, so an impact is what sounds; the
+      // threshold lets ticks and clicks through
+      chains.push(`[sfx_raw]asplit=2[sfx][sfx_key]`);
+      chains.push(...yieldUnder("music", "sfx_key", `threshold=0.1:ratio=${Math.max(2, Math.round(sfxDuckDb / 2))}:attack=5:release=250:makeup=1`, "music_yielded"));
+      labels[labels.indexOf("[music]")] = "[music_yielded]";
+    } else chains.push(`[sfx_raw]anull[sfx]`);
     labels.push("[sfx]");
   }
   if (!labels.length) throw new AppError("usage", "Informe pelo menos uma fonte de áudio (--music, --sfx ou --voice).");

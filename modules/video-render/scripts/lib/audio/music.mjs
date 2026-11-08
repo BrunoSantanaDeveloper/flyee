@@ -150,8 +150,10 @@ const BASS_STEPS = { clean: "x.......x.......", energetic: "x.x.x.x.x.x.x.x.", w
  * Whole-bar sections for a duration. Without a loop the piece ends with a hit on
  * the last downbeat that still leaves a tail (≥ 0.5 s) before `duration`; with a
  * loop the grid fills the whole duration and the last bar leads back to the first.
+ * `dropAt` (seconds) takes the drop to the nearest bar, so the music peaks on the film's
+ * biggest moment; without it the drop lands by proportion.
  */
-export function planSections({ duration, bpm, arc = "auto", loop = false }) {
+export function planSections({ duration, bpm, arc = "auto", loop = false, dropAt = null }) {
   const beatLen = 60 / bpm;
   const barLen = beatLen * BEATS_PER_BAR;
   const bars = loop ? Math.max(1, Math.round(duration / barLen)) : Math.floor((duration - 0.5) / barLen);
@@ -164,7 +166,16 @@ export function planSections({ duration, bpm, arc = "auto", loop = false }) {
   };
   let drop = null;
   if (arc === "flat") push("bed", 0, bars);
-  else if (bars <= 4) {
+  else if (Number.isFinite(dropAt) && bars >= 2) {
+    const dropBar = clamp(Math.round(dropAt / barLen), 1, bars - 1);
+    const intro = Math.floor(dropBar / 2);
+    const outro = Math.min(bars > 10 ? Math.max(1, Math.round(bars * 0.12)) : 1, bars - dropBar - 1);
+    push("intro", 0, intro);
+    push("build", intro, dropBar);
+    push("drop", dropBar, bars - outro);
+    push("outro", bars - outro, bars);
+    drop = at(dropBar);
+  } else if (bars <= 4) {
     push("build", 0, bars);
     drop = hitTime;
   } else {
@@ -450,7 +461,7 @@ function makeMotif(rng, key, density) {
  * key ("auto", "C", "Am"…), loop. Returns interleaved stereo samples at 48 kHz,
  * the beat grid (beats.json content) and what was chosen.
  */
-export function synthesizeMusic({ duration, bpm = 120, style = "clean", seed = 1, arc = "auto", key = "auto", loop = false } = {}) {
+export function synthesizeMusic({ duration, bpm = 120, style = "clean", seed = 1, arc = "auto", key = "auto", loop = false, dropAt = null } = {}) {
   if (!(duration >= 1 && duration <= 600)) throw new AppError("usage", `Duração inválida: ${duration}.`, "Use entre 1 e 600 segundos.");
   if (!(bpm >= 40 && bpm <= 220)) throw new AppError("usage", `BPM inválido: ${bpm}.`, "Use entre 40 e 220.");
   if (!STYLES[style]) throw new AppError("usage", `Estilo desconhecido: ${style}.`, `Estilos: ${STYLE_NAMES.join(", ")}.`);
@@ -460,7 +471,7 @@ export function synthesizeMusic({ duration, bpm = 120, style = "clean", seed = 1
   const theKey = parseKey(key) ?? keyOf(Math.floor(rng() * 12), rng() < profile.minorChance ? "minor" : "major");
   const progressions = profile[theKey.mode];
   const progression = progressions[Math.floor(rng() * progressions.length)];
-  const plan = planSections({ duration, bpm, arc, loop });
+  const plan = planSections({ duration, bpm, arc, loop, dropAt });
   const { beatLen, barLen, hitTime } = plan;
   const stepLen = beatLen / 4;
   const frames = Math.round(duration * RATE);
@@ -507,6 +518,11 @@ export function synthesizeMusic({ duration, bpm = 120, style = "clean", seed = 1
   const buildBars = musical.find((section) => section.name === "build")?.bars ?? 0;
   const dropTime = plan.drop;
   const warnings = [];
+  if (Number.isFinite(dropAt)) {
+    const moved = dropTime === null ? null : Math.abs(dropTime - dropAt);
+    if (moved === null) warnings.push(`Uma trilha sem arco não tem pico: o pedido de pico em ${String(dropAt).replace(".", ",")} s não foi usado.`);
+    else if (moved > 0.02) warnings.push(`O pico pedido em ${String(dropAt).replace(".", ",")} s caiu em ${String(round(dropTime, 2)).replace(".", ",")} s, o início de compasso que cabe mais perto.`);
+  }
 
   for (const section of musical) {
     const role = roleOf(section);

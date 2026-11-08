@@ -18,12 +18,14 @@
   "min_core": ">=1.3.0",
   "entry": "skills/conversion-pages/SKILL.md",
   "files": [
+    "NOTICE.txt",
     "README.md",
     "guides/en/abrir-o-capo.md",
     "guides/en/usar.md",
     "guides/pt-BR/abrir-o-capo.md",
     "guides/pt-BR/usar.md",
     "references/checks.json",
+    "references/demonstracao.md",
     "references/lei.md",
     "references/medicao.md",
     "references/modelos.json",
@@ -43,6 +45,7 @@
     "references/tipos/order-bump.md",
     "references/tipos/planos.md",
     "references/tipos/upsell.md",
+    "references/vicios.md",
     "scripts/lib/checks.mjs",
     "scripts/lib/plan.mjs",
     "scripts/lib/util.mjs",
@@ -109,8 +112,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Três tipos novos de página: a página de vendas, a de planos e preços e a página de API, cada uma com o seu roteiro e com os modelos do Juridiq e do JuriChat, analisados com o movimento medido. A conferência ganha catorze itens: as contas de desconto, economia e média mensal, quem vende identificado, a duração do período de teste, a data e as regras da promoção, o cancelamento, a janela de promoção com saída e sem cobrir a página na chegada, o plano em destaque, os preços na primeira tela, os números animados que não começam em zero, o título principal e, na página de API, a documentação, o exemplo de chamada e os limites de uso. A barra fixa deixa de contar o botão do menu e as janelas. Os modelos descrevem o visual em palavras, e um pedido no estilo de um modelo usa a análise do app, na marca do projeto, sem abrir o site original nem copiar texto ou imagem de outra empresa.",
-    "en": "Three new page types: the sales page, the plans and pricing page and the API page, each with its playbook and with the Juridiq and JuriChat models, analysed with their motion measured. The check gains fourteen items: the discount, savings and monthly average math, the seller identified, the trial length, the promotion's end date and rules, cancellation, a promotion window with a way out that does not cover the page on arrival, a highlighted plan, prices on the first screen, animated numbers that do not start at zero, the main heading and, on the API page, the documentation, a request example and the usage limits. The sticky bar no longer counts a menu button or a window. The models describe their look in words, and a request in the style of a model uses the app's analysis, in the project's brand, without opening the original site or copying another company's text or images."
+    "pt-BR": "Três tipos novos de página: a página de vendas, a de planos e preços e a página de API, cada uma com o seu roteiro e com os modelos do Juridiq e do JuriChat, analisados com o movimento medido. A conferência ganha catorze itens: as contas de desconto, economia e média mensal, quem vende identificado, a duração do período de teste, a data e as regras da promoção, o cancelamento, a janela de promoção com saída e sem cobrir a página na chegada, o plano em destaque, os preços na primeira tela, os números animados que não começam em zero, o título principal e, na página de API, a documentação, o exemplo de chamada e os limites de uso. A barra fixa deixa de contar o botão do menu e as janelas. Os modelos descrevem o visual em palavras, e um pedido no estilo de um modelo usa a análise do app, na marca do projeto, sem abrir o site original nem copiar texto ou imagem de outra empresa. O guia da demonstração põe o produto de verdade na página: os componentes do projeto com dados fixos, a tela real ou uma réplica, só com o que ele faz hoje, com a etiqueta nos dados de exemplo. Entram as regras da grade de recursos, a lista dos padrões que a IA repete e a direção visual no plano. A conferência pede a origem de cada número e de cada urgência, aponta dado de exemplo esquecido e chamados com muitos textos, confere a marca, filma a demonstração no computador, no celular e com menos movimento, e mede a página pronta: a largura do celular, o texto, o toque, o contraste, os botões e as imagens.",
+    "en": "Three new page types: the sales page, the plans and pricing page and the API page, each with its playbook and with the Juridiq and JuriChat models, analysed with their motion measured. The check gains fourteen items: the discount, savings and monthly average math, the seller identified, the trial length, the promotion's end date and rules, cancellation, a promotion window with a way out that does not cover the page on arrival, a highlighted plan, prices on the first screen, animated numbers that do not start at zero, the main heading and, on the API page, the documentation, a request example and the usage limits. The sticky bar no longer counts a menu button or a window. The models describe their look in words, and a request in the style of a model uses the app's analysis, in the project's brand, without opening the original site or copying another company's text or images. The demo guide puts the real product on the page: the project's components with fixed data, the real screen or a replica, only with what it does today, and a label on sample data. It adds the feature grid rules, the list of patterns AI repeats and the visual direction in the plan. The check asks for the origin of every number and urgency claim, points out leftover sample data and calls to action under many names, checks the brand, films the demo on desktop, on a phone and with less motion, and measures the finished page: the phone's width, text, touch, contrast, buttons and images."
   },
   "license": "member"
 }

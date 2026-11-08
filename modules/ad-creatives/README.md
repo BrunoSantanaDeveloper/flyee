@@ -78,6 +78,7 @@ Tudo fica em `anuncios/` dentro do seu projeto, uma pasta por campanha:
 
 ## O que há de novo
 
+- 1.2.2: o whoosh de cada corte soa mais alto no próprio corte, e a trilha tem o ponto alto no corte para a oferta, com o Motor de vídeo atualizado.
 - 1.2.1: a sua IA procura os concorrentes antes de perguntar, e um sim aceita a lista dela.
 - 1.2.0: o briefing lê o plano aprovado e diz o que veio dele; a matriz da primeira leva (3 a 4 ângulos, 8 a 12 peças); a skill da página de destino, com o briefing e a conferência pela captura do site; os anúncios de texto da Busca do Google conferidos; o guia da política da Meta; as peças de feed conferidas na zona de anúncio do feed quando o Motor de vídeo a tem; a rodada seguinte a partir da leitura do app de medição, com os resultados próprios na evidência e os nomes terminando em v2; a sequência da data alvo com as quatro peças datadas pelo plano.
 - 1.1.1: numa sessão do Claude Code na nuvem, a coleta usa a chave do Apify guardada como segredo de rede do ambiente, que a sessão usa sem ver, e o app explica esse caminho quando a chave falta.

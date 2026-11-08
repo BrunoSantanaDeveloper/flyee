@@ -114,7 +114,8 @@ If a file already has the name the engine is about to write, it is replaced; the
 
 - "Capture my brand's website without recording the scroll" or "without downloading the logo".
 - "Capture it with the phone at 430 px wide." The phone goes from 280 to 1080 px (390 by default); the desktop, from 800 to 3840 px (1440 by default).
-- "Capture this offer page" or "capture the page I saved from the browser". The capture reads the whole page: the sections, the buttons and whether they show on the first desktop and phone screen, the fixed bars, the checkboxes that come already checked, struck-through prices, videos, animations and countdown timers, and it keeps the page's whole text. A page that only opens after a login goes in as a page saved from the browser (.mhtml); there the timers stand still, because the page's own scripts do not run.
+- "Capture this offer page" or "capture the page I saved from the browser". The capture reads the whole page: the sections, the buttons and whether they show on the first desktop and phone screen, the fixed bars, the checkboxes that come already checked, struck-through prices, videos, animations and countdown timers, and it keeps the page's whole text. A page that only opens after a login goes in as a page saved from the browser (.mhtml); there the timers stand still, because the page's own scripts do not run. The capture also measures the finished page: what passes the phone's width, small text, buttons that are hard to tap, contrast, text that does not fit its button and heavy images.
+- "Film this page's demo." Your AI photographs the part you ask for with the page running, on desktop, on a phone and with less motion, and looks at the sheets of frames. It is a real-time recording: it shows the page as it runs, changes nothing, and does not see what happens between two frames.
 
 ## The checks
 

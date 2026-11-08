@@ -270,7 +270,7 @@ function readings() {
 test("buildAnatomy assembles the documented shape from the page readings", () => {
   const { desktop, mobile } = readings();
   const anatomy = buildAnatomy({ desktop, mobile });
-  assert.deepEqual(Object.keys(anatomy), ["format_version", "viewports", "sections", "ctas", "fixed", "forms", "prices", "media", "motion", "countdowns"]);
+  assert.deepEqual(Object.keys(anatomy), ["format_version", "viewports", "sections", "ctas", "fixed", "forms", "prices", "media", "motion", "countdowns", "quality"]);
   assert.equal(anatomy.format_version, 1);
   assert.deepEqual(anatomy.viewports, { desktop: { width: 1440, height: 900 }, mobile: { width: 390, height: 844 } });
   assert.deepEqual(Object.keys(anatomy.sections[0]), ["index", "heading", "y", "height", "text", "words"]);

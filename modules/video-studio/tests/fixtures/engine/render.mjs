@@ -5,6 +5,7 @@
 //
 // How the tests steer it:
 //   fake.json (in the module folder): { "networks": true }   → `accept` takes --networks and help says so
+//                                     { "dropAt": true }     → `music` takes --drop-at and help says so
 //                                     { "render": false, "install": { "ffmpeg": "…" } } → what `check` reports
 //   capture of an address with "bloqueado", "fora-do-ar", "estacionado", "nao-e-endereco" or "captura-quebrada" fails like the real one;
 //   with "em-breve" it succeeds with a "coming soon" placeholder
@@ -28,6 +29,7 @@ const OPTIONS = new Set([
   "style", "seed", "key", "arc", "bpm", "bars", "events", "event", "music", "music-offset", "music-gain", "sfx", "sfx-gain", "voice", "fade-out", "tp", "video",
   "safe", "margin", "min-text", "mobile", "desktop", "scroll",
   ...(SETTINGS.networks ? ["networks"] : []),
+  ...(SETTINGS.dropAt ? ["drop-at"] : []),
 ]);
 const SFX_TYPES = ["kick", "thump", "impact", "click", "tick", "pop", "whoosh", "swish", "riser", "ding", "shutter", "pluck", "blip"];
 const MUSIC_STYLES = ["clean", "energetic", "warm", "minimal", "cinematic", "playful"];
@@ -133,6 +135,7 @@ switch (command) {
       "  --beats <beats.json> | --bpm <n>  --video <video.mp4>  --loop",
     ];
     if (SETTINGS.networks) lines.push("  --networks reels,tiktok,shorts    Confere pela zona segura de cada rede.");
+    if (SETTINGS.dropAt) lines.push("  --drop-at <s>                     O ponto alto no início de compasso mais perto.");
     done({ text: lines.join("\n") });
     break;
   }
@@ -228,11 +231,12 @@ switch (command) {
       if (values.loop ? t >= duration - 1e-6 : t > hit + 1e-6) break;
       beats.push(t);
     }
-    const grid = { format_version: 1, source: "synthesized", bpm, offset: 0, duration, beats, downbeats: beats.filter((_, index) => index % 4 === 0), hits: [round(hit)], sections: [{ name: "intro", start: 0, end: round(duration) }], drop: null };
-    write(out, `RIFF fake music ${style} ${bpm} ${duration} ${values.seed ?? 1}`);
+    const drop = values["drop-at"] !== undefined ? round(Math.round(Number(values["drop-at"]) / (beat * 4)) * beat * 4) : null;
+    const grid = { format_version: 1, source: "synthesized", bpm, offset: 0, duration, beats, downbeats: beats.filter((_, index) => index % 4 === 0), hits: drop === null ? [round(hit)] : [drop, round(hit)], sections: [{ name: "intro", start: 0, end: round(duration) }], drop };
+    write(out, `RIFF fake music ${style} ${bpm} ${duration} ${values.seed ?? 1}${drop === null ? "" : ` drop ${drop}`}`);
     const beatsFile = out.replace(/\.wav$/i, ".beats.json");
     write(beatsFile, JSON.stringify(grid, null, 2));
-    done({ file: rel(resolve(out)), beats_file: rel(resolve(beatsFile)), bpm, duration, style, seed: Number(values.seed ?? 1), key: "Am", arc: values.arc ?? "auto", loop: Boolean(values.loop), progression: "i-VI-III-VII", sections: grid.sections, drop: null, hits: grid.hits, beat_count: beats.length, peak_dbfs: -3, warnings: [] });
+    done({ file: rel(resolve(out)), beats_file: rel(resolve(beatsFile)), bpm, duration, style, seed: Number(values.seed ?? 1), key: "Am", arc: values.arc ?? "auto", loop: Boolean(values.loop), progression: "i-VI-III-VII", sections: grid.sections, drop, hits: grid.hits, beat_count: beats.length, peak_dbfs: -3, warnings: [] });
     break;
   }
   case "synth": {

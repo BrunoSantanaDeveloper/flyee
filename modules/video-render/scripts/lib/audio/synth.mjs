@@ -647,7 +647,11 @@ export function blip({ length = 0.06, pitch = 1 } = {}) {
   return normalize(out);
 }
 
-/** The effect types of `sfx`: default length (s), level (dB) and the generator. `length` and `pitch` come from the event. */
+/**
+ * The effect types of `sfx`: default length (s), level (dB) and the generator. `length` and
+ * `pitch` come from the event. `swell` marks the sounds that grow into their loudest moment;
+ * `anchor: "peak"` on such an event puts that moment on its `t`. The others peak at once.
+ */
 export const SFX_TYPES = {
   kick: { length: 0.35, level: -4, make: (rng, o) => kick({ from: 180 * o.pitch, to: 50 * o.pitch, decay: o.length, rng }) },
   thump: { length: 0.5, level: -4, make: (rng, o) => kick({ from: 95 * o.pitch, to: 38 * o.pitch, decay: o.length, sweep: 0.08, click: 0.1, rng }) },
@@ -655,9 +659,9 @@ export const SFX_TYPES = {
   click: { length: 0.004, level: -12, make: (rng, o) => click({ rng, length: o.length, freq: 3200 * o.pitch }) },
   tick: { length: 0.003, level: -15, make: (rng, o) => click({ rng, length: o.length, freq: 6500 * o.pitch, q: 2 }) },
   pop: { length: 0.08, level: -9, make: (rng, o) => pop({ length: o.length, pitch: o.pitch }) },
-  whoosh: { length: 0.35, level: -7, make: (rng, o) => whoosh({ rng, length: o.length, pitch: o.pitch, direction: o.direction }) },
-  swish: { length: 0.15, level: -10, make: (rng, o) => whoosh({ rng, length: o.length, pitch: 1.6 * o.pitch, direction: o.direction, q: 2.5 }) },
-  riser: { length: 1, level: -7, make: (rng, o) => riser({ rng, length: o.length, pitch: o.pitch }) },
+  whoosh: { length: 0.35, level: -7, swell: true, make: (rng, o) => whoosh({ rng, length: o.length, pitch: o.pitch, direction: o.direction }) },
+  swish: { length: 0.15, level: -10, swell: true, make: (rng, o) => whoosh({ rng, length: o.length, pitch: 1.6 * o.pitch, direction: o.direction, q: 2.5 }) },
+  riser: { length: 1, level: -7, swell: true, make: (rng, o) => riser({ rng, length: o.length, pitch: o.pitch }) },
   ding: { length: 1.2, level: -9, make: (rng, o) => ding({ length: o.length, pitch: o.pitch }) },
   shutter: { length: 0.09, level: -9, make: (rng, o) => shutter({ rng, length: o.length, pitch: o.pitch }) },
   pluck: { length: 0.5, level: -9, make: (rng, o) => pluck(440 * o.pitch, o.length, rng, { bright: 0.6, decay: o.length }) },
@@ -666,9 +670,28 @@ export const SFX_TYPES = {
 export const SFX_ALIASES = { swoosh: "swish" };
 export const SFX_TYPE_NAMES = Object.keys(SFX_TYPES);
 
+/** The sample at the middle of a sound's loudest 20 ms: measured, because the sweep moves it with pitch and direction. */
+function loudestAt(mono) {
+  const size = Math.min(mono.length, Math.round(0.02 * RATE));
+  let energy = 0;
+  let best = -1;
+  let at = 0;
+  for (let i = 0; i < mono.length; i++) {
+    energy += mono[i] * mono[i];
+    if (i >= size) energy -= mono[i - size] * mono[i - size];
+    if (i >= size - 1 && energy > best) {
+      best = energy;
+      at = i - Math.floor(size / 2);
+    }
+  }
+  return at;
+}
+
 /**
- * Places validated events ({ t, type, gain_db, pan, length, pitch, direction }) on a stereo
- * timeline. Duration = `duration` or the end of the last event; the peak is capped at −1 dBFS.
+ * Places validated events ({ t, type, gain_db, pan, length, pitch, direction, anchor }) on a
+ * stereo timeline. A sound starts on its `t` unless `anchor` is "peak", which brings it forward
+ * so its loudest moment lands there. Duration = `duration` or the end of the last event; the
+ * peak is capped at −1 dBFS.
  */
 export function synthesizeSfx(events, { duration = null, seed = 1 } = {}) {
   const rng = seededRandom(seed);
@@ -682,7 +705,9 @@ export function synthesizeSfx(events, { duration = null, seed = 1 } = {}) {
   const bus = new Bus(frames(total));
   for (const event of prepared) {
     const sound = event.type.make(rng, { length: event.length, pitch: event.pitch ?? 1, direction: event.direction ?? "in" });
-    bus.add(sound, frames(event.t), { gain: dbToGain(event.type.level + (event.gain_db ?? 0)), pan: event.pan ?? 0 });
+    const lead = event.anchor === "peak" && event.type.swell ? loudestAt(sound) : 0;
+    // Math.round, not frames(): a start before the file is negative, and Bus.add cuts it
+    bus.add(sound, Math.round(event.t * RATE) - lead, { gain: dbToGain(event.type.level + (event.gain_db ?? 0)), pan: event.pan ?? 0 });
   }
   const cap = dbToGain(-1);
   const top = Math.max(peak(bus.L), peak(bus.R));

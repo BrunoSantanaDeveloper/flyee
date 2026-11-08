@@ -41,7 +41,7 @@ Os eventos são `bump_view` quando a caixa aparece, `bump_add` e `bump_remove` a
 
 ## O que a conferência olha
 
-`no_prechecked`, `bump_near_pay`, `price_shown`, `reference_price_true`, `renewal_shown`, `countdown_real`, `video_autoplay_ok`, `reduced_motion`, `legal_lines`, `images_alt`.
+`no_prechecked`, `bump_near_pay`, `price_shown`, `reference_price_true`, `discount_math`, `renewal_shown`, `countdown_real`, `placeholder_data`, `video_autoplay_ok`, `reduced_motion`, `legal_lines`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

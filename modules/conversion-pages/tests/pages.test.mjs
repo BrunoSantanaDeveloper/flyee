@@ -28,6 +28,17 @@ const upsellFacts = {
   decline_text: "Pular oferta",
   offer: { price: "R$ 24,99", reference_price: "R$ 49,99", recurrence: "mensal", renewal_price: "R$ 49,99", guarantee_days: 30, deadline: null },
   payment: { one_click: true, provider: null },
+  visual: { direction: "A oferta no visual do painel da Hostinger", chosen: [] },
+  demo: { ...newFacts({ name: "x", type: "upsell", today: "2026-11-07" }).demo, kind: "tela" },
+};
+
+/** The checks of the first rounds, whose fixtures have no measurements of the finished page. */
+const FROM_MEASUREMENTS = new Set(["claims_have_origin", "placeholder_data", "demo_honest", "demo_film", "ai_defaults", "off_brand", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light"]);
+const firstRounds = (result) => {
+  const items = result.items.filter((item) => !FROM_MEASUREMENTS.has(item.id));
+  const summary = { ok: 0, atencao: 0, nao_conferido: 0 };
+  for (const item of items) summary[item.status] += 1;
+  return { items, summary };
 };
 
 test("references agree with each other and with the code", () => {
@@ -79,9 +90,12 @@ test("a Hostinger-like upsell: only the testimonials need attention", () => {
     assert.equal(status(result, id), "ok", id);
   }
   assert.equal(status(result, "countdown_real"), "skipped");
-  assert.deepEqual(result.summary, { ok: 14, atencao: 1, nao_conferido: 0 });
-  assert.equal(result.items[0].id, "proof_about_offer");
-  assert.equal(result.say.length, 1);
+  const first = firstRounds(result);
+  assert.deepEqual(first.summary, { ok: 14, atencao: 1, nao_conferido: 0 });
+  assert.equal(first.items.find((item) => item.status === "atencao").id, "proof_about_offer");
+  // Statements of fact come first among what needs attention, because the law weighs more.
+  assert.equal(status(result, "placeholder_data"), "ok");
+  assert.ok(result.say.some((line) => /A prova fala do produto/.test(line)));
 });
 
 test("the upsell audit without facts asks for them instead of failing", () => {
@@ -132,6 +146,12 @@ test("a capture without the full reading is never a failure", () => {
   assert.equal(result.anatomy, false);
   assert.equal(result.summary.atencao, 0);
   assert.equal(result.summary.nao_conferido, type("upsell").checks.length);
+});
+
+test("the checks that need the plan's facts ask for them", () => {
+  const capture = read(join(here, "fixtures", "captura-upsell.json"));
+  const result = audit({ type: type("upsell"), capture, facts: newFacts({ name: "x", type: "upsell", today: "2026-11-08" }), definitions: CHECKS });
+  assert.equal(status(result, "off_brand"), "nao_conferido");
 });
 
 test("plano.md lists the facts still open and the checks of the type", () => {
@@ -330,7 +350,7 @@ test("the new types plan their own facts", () => {
   for (const key of ["audience", "secondary_cta_text"]) assert.ok(key in facts, key);
   for (const key of ["plans", "recommended_plan", "trial_days", "cancellation"]) assert.ok(key in facts.offer, key);
   assert.deepEqual(Object.keys(facts.api), ["docs_url", "rate_limit"]);
-  assert.deepEqual(missingFacts(facts, type("planos")), ["product.name", "offer.plans", "offer.recurrence", "offer.cancellation", "cta_text"]);
+  assert.deepEqual(missingFacts(facts, type("planos")), ["product.name", "offer.plans", "offer.recurrence", "offer.cancellation", "cta_text", "visual.direction"]);
   const plan = renderPlan({ facts, type: type("planos"), checks: CHECKS, models: MODELS.models.filter((m) => m.types.includes("planos")), today: "2026-11-07" });
   assert.match(plan, /O seletor mensal ou anual/);
   assert.match(plan, /Juridiq: a página de planos/);
@@ -373,7 +393,7 @@ test("the command creates a page, plans it and audits a saved capture", () => {
     assert.equal(run("plan", "upsell-agente").missing.length, 0);
     const result = run("audit", "upsell-agente", "--capture", join(here, "fixtures", "captura-upsell.json"));
     assert.equal(result.ok, true);
-    assert.deepEqual(result.summary, { ok: 14, atencao: 1, nao_conferido: 0 });
+    assert.deepEqual(firstRounds(result).summary, { ok: 14, atencao: 1, nao_conferido: 0 });
     assert.ok(existsSync(join(project, "paginas", "upsell-agente", "conferencia.json")));
     assert.equal(run("new", "upsell-agente", "--type", "upsell").error.code, "page_exists");
     assert.equal(run("audit", "nao-existe").error.code, "page_not_found");

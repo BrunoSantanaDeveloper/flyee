@@ -44,6 +44,7 @@
 - O nome do plano diz para quem ele é: o advogado sozinho, a sociedade pequena, o escritório estruturado.
 - Os itens do cartão são os que decidem a escolha (usuários, volume, o recurso que só aquele plano tem), não a lista inteira.
 - A mesma palavra para a mesma coisa em todos os cartões e na tabela.
+- Leia `../vicios.md` antes de escrever: três cartões iguais só quando os planos pesam igual, e número de uso só com origem.
 - Revise com a skill `texto-natural` antes de entregar, sem acrescentar fato, número ou promessa.
 
 ## Movimento e mídia
@@ -69,7 +70,7 @@ Os detalhes estão em `../lei.md`.
 
 ## O que a conferência olha
 
-`h1_present`, `prices_first_screen`, `plan_highlighted`, `discount_math`, `reference_price_true`, `renewal_shown`, `trial_terms`, `cancel_terms_shown`, `promo_terms_shown`, `countdown_real`, `popup_dismissable`, `popup_on_arrival`, `numbers_not_zero`, `supplier_identified`, `legal_lines`, `reduced_motion`, `images_alt`.
+`h1_present`, `prices_first_screen`, `plan_highlighted`, `discount_math`, `reference_price_true`, `renewal_shown`, `trial_terms`, `cancel_terms_shown`, `promo_terms_shown`, `countdown_real`, `popup_dismissable`, `popup_on_arrival`, `numbers_not_zero`, `claims_have_origin`, `placeholder_data`, `supplier_identified`, `legal_lines`, `ai_defaults`, `off_brand`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

@@ -17,7 +17,7 @@ export const argSpec = {
   flags: ["loop"],
   options: [
     "style", "seed", "key", "arc", "beats-out", "cues", "bpm", "bpm-min", "bpm-max", "music", "music-gain", "sfx", "sfx-gain", "voice", "voice-gain", "duck", "lufs", "tp", "fade-out", "video",
-    "bars", "beats-per-bar", "intro-bars", "gain", "events", "event", "music-offset", "peak", "min-bpm", "max-bpm",
+    "bars", "beats-per-bar", "intro-bars", "gain", "events", "event", "music-offset", "peak", "min-bpm", "max-bpm", "sfx-duck", "drop-at",
   ],
 };
 
@@ -93,7 +93,7 @@ function parseEventList(text) {
   });
 }
 
-/** Validates events ({ t, type, gain_db, pan, length, pitch, direction }) from a file or the command line. */
+/** Validates events ({ t, type, gain_db, pan, length, pitch, direction, anchor }) from a file or the command line. */
 function normalizeEvents(input) {
   const list = Array.isArray(input) ? input : Array.isArray(input?.events) ? input.events : Array.isArray(input?.cues) ? input.cues : null;
   if (!list) throw usage("O arquivo de eventos precisa ter a chave events com uma lista.", 'Exemplo: { "duration": 6, "events": [{ "t": 0.5, "type": "whoosh" }] }.');
@@ -112,8 +112,11 @@ function normalizeEvents(input) {
     };
     const direction = event.direction ?? "in";
     if (!["in", "out"].includes(direction)) throw usage(`A direction do evento ${index + 1} precisa ser in ou out.`);
+    const anchor = event.anchor ?? "start";
+    if (!["start", "peak"].includes(anchor)) throw usage(`O anchor do evento ${index + 1} precisa ser start ou peak.`, "start: o som começa no t (o padrão). peak: o momento mais forte do som cai no t.");
     return {
       t,
+      anchor,
       type,
       gain_db: num(event.gain_db ?? event.gain, "gain_db", -40, 12, 0),
       pan: num(event.pan, "pan", -1, 1, 0),
@@ -229,6 +232,7 @@ export const commands = {
       "  --bpm <n> --style <estilo>     Andamento (padrão: 120) e estilo: " + STYLE_NAMES.join(", ") + " (padrão: clean).",
       "  --seed <n> --key <tom>         Variação (mesma seed, mesma música) e tom (C, Am, F#m…; padrão: auto).",
       "  --arc auto|flat --loop         Arco com virada e pancada final (auto) ou cama constante (flat); --loop fecha no início.",
+      "  --drop-at <s>                  Leva o pico da trilha ao início de compasso mais perto desse instante (o maior momento do filme).",
     ].join("\n"),
     async run(positionals, values, ctx) {
       if (positionals.length) throw usage("O comando music não recebe arquivo de entrada.", "Use music --out trilha.wav --duration 12.");
@@ -244,6 +248,7 @@ export const commands = {
         key: values.key ?? "auto",
         arc: values.arc ?? "auto",
         loop: Boolean(values.loop),
+        dropAt: values["drop-at"] !== undefined ? parseTime(values["drop-at"]) : null,
       };
       const extraWarnings = [];
       // an arc needs room: two whole bars and the tail before the final hit; anything shorter becomes a flat bed
@@ -288,6 +293,7 @@ export const commands = {
     help: [
       "  sfx <cues.json> --out <wav>    cues.json: [{ \"t\": 0.5, \"type\": \"click\", \"gain\": -3, \"pitch\": 0, \"pan\": 0, \"duration\": 1 }].",
       "  --cues \"0.5:click,1.2:whoosh\" A mesma lista, em linha. --duration <s> fixa o tamanho do arquivo.",
+      "  anchor (nas duas listas)       start: o som começa no t (padrão). peak: o momento mais forte cai no t (whoosh no corte, riser que termina no t).",
       "  --events <events.json>         Outra forma: { \"duration\": 6, \"events\": [{ \"t\": 0.5, \"type\": \"whoosh\", \"gain_db\": -6, \"pan\": -0.3, \"length\": 0.35, \"pitch\": 1, \"direction\": \"in\" }] }.",
       "  --event whoosh@0.5,impact@2    Eventos em linha (tipo@segundos); --seed <n> varia o ruído. Tipos: " + SFX_TYPE_NAMES.join(", ") + ".",
       "  Tipos: " + CUE_TYPES.map((cue) => cue.type).join(", ") + ".",
@@ -306,7 +312,7 @@ export const commands = {
       writeWav(out, sfx.samples, { rate: sfx.rate, channels: 2 });
       return {
         file: ctx.rel(out),
-        cues: sfx.cues.map((cue) => ({ t: round(cue.t, 3), type: cue.type, gain: cue.gain, pitch: cue.pitch, pan: cue.pan, duration: cue.duration, count: cue.count })),
+        cues: sfx.cues.map((cue) => ({ t: round(cue.t, 3), type: cue.type, anchor: cue.anchor, gain: cue.gain, pitch: cue.pitch, pan: cue.pan, duration: cue.duration, count: cue.count })),
         types: CUE_TYPES.map((cue) => cue.type),
         duration: round(sfx.duration, 3),
         // measured on the written file, after the soft limiter of the WAV writer
@@ -375,6 +381,7 @@ export const commands = {
     help: [
       "  mix --out <arquivo> [--video <video mudo>]   Com --video, a saída é o vídeo com som; sem, um .wav.",
       "  --music <wav> --music-gain -6  --sfx <wav> --sfx-gain 0  --voice <wav> --voice-gain 0 --duck 10",
+      "  --sfx-duck 8                   Quanto a música cede sob um efeito forte, como o impact (0 desliga).",
       "  --music-offset <s>             Começa a música a partir desse instante dela (uma fatia da trilha por slide); --peak vale como --tp.",
       "  --lufs -14 --tp -1             Volume integrado e pico real finais. --fade-out <s> encerra a música suavemente.",
       "  --duration <s>                 Corta as fontes nesse tamanho (padrão: a duração do vídeo, ou da fonte mais longa).",
@@ -393,6 +400,7 @@ export const commands = {
         sfx_gain: gainOption(values, "sfx-gain"),
         voice_gain: gainOption(values, "voice-gain"),
         duck: parseNumber(values.duck, { name: "duck", min: 0, max: 30, fallback: 10 }),
+        sfx_duck: parseNumber(values["sfx-duck"], { name: "sfx-duck", min: 0, max: 30, fallback: 8 }),
         lufs: parseNumber(values.lufs, { name: "lufs", min: -30, max: -8, fallback: -14 }),
         tp: parseNumber(values.tp ?? values.peak, { name: "tp", min: -6, max: 0, fallback: -1 }),
         music_offset: parseNumber(values["music-offset"], { name: "music-offset", min: 0, max: 36000, fallback: 0 }),
@@ -427,6 +435,7 @@ export const commands = {
           musicOffset: settings.music_offset,
           sfx,
           sfxGainDb: settings.sfx_gain,
+          sfxDuckDb: settings.sfx_duck,
           voice,
           voiceGainDb: settings.voice_gain,
           duckDb: settings.duck,

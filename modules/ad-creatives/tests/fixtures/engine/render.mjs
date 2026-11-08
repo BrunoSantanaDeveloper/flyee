@@ -7,6 +7,7 @@
 // How the tests steer it:
 //   fake.json (in the module folder): { "networks": "old" }  → `networks` has no ads_meta (an outdated Motor)
 //                                     { "render": false }    → what `check` reports
+//                                     { "dropAt": true }     → `music` takes --drop-at and help says so
 //   a page with QUEBRA fails to render; SEM_CAPA or FORA_DA_ZONA fail a check; SEM_CAIXAS has no window.boxes
 //   capture of an address with "bloqueado" fails like the real one; with "sem-logo" brings no logo
 
@@ -26,6 +27,7 @@ const OPTIONS = new Set([
   "out", "fps", "sub", "format", "scale", "start", "end", "times", "every", "beats", "sheet", "cols", "tile-width", "duration", "name",
   "style", "seed", "key", "arc", "bpm", "bars", "events", "event", "music", "music-offset", "music-gain", "sfx", "sfx-gain", "voice", "fade-out", "tp", "video",
   "safe", "margin", "min-text", "mobile", "desktop", "scroll", "networks", "page",
+  ...(SETTINGS.dropAt ? ["drop-at"] : []),
 ]);
 const SIZES = { "9:16": [1080, 1920], "4:5": [1080, 1350], "1:1": [1080, 1080], "16:9": [1920, 1080], "3:4": [1080, 1440] };
 const SFX_TYPES = ["kick", "thump", "impact", "click", "tick", "pop", "whoosh", "swish", "riser", "ding", "shutter", "pluck", "blip"];
@@ -119,7 +121,7 @@ process.stderr.write(`Motor de teste: ${command}\n`);
 
 switch (command) {
   case "help":
-    done({ text: ["Motor de vídeo (de teste).", "Comandos: check, networks, capture, music, sfx, preview, render, frames, mix, accept, probe, help.", "Opções de accept", "  --format 9:16|4:5|1:1  --safe instagram-carousel|instagram-feed|networks|margin|none", "  --beats <beats.json> | --bpm <n>  --video <video.mp4>  --networks reels,ads_meta"].join("\n") });
+    done({ text: ["Motor de vídeo (de teste).", "Comandos: check, networks, capture, music, sfx, preview, render, frames, mix, accept, probe, help.", "Opções de accept", "  --format 9:16|4:5|1:1  --safe instagram-carousel|instagram-feed|networks|margin|none", "  --beats <beats.json> | --bpm <n>  --video <video.mp4>  --networks reels,ads_meta", ...(SETTINGS.dropAt ? ["  --drop-at <s>  O ponto alto no início de compasso mais perto."] : [])].join("\n") });
     break;
   case "check":
     done({
@@ -176,9 +178,10 @@ switch (command) {
     const beat = 60 / bpm;
     const beats = [];
     for (let k = 0; k * beat < duration - 0.5; k++) beats.push(round(k * beat));
-    write(out, `RIFF fake music ${style} ${bpm} ${duration} ${values.seed ?? 1}`);
-    write(out.replace(/\.wav$/i, ".beats.json"), JSON.stringify({ format_version: 1, source: "synthesized", bpm, offset: 0, duration, beats }, null, 2));
-    done({ file: rel(resolve(out)), bpm, duration, style, seed: Number(values.seed ?? 1), warnings: [] });
+    const drop = values["drop-at"] !== undefined ? round(Math.round(Number(values["drop-at"]) / (beat * 4)) * beat * 4) : null;
+    write(out, `RIFF fake music ${style} ${bpm} ${duration} ${values.seed ?? 1}${drop === null ? "" : ` drop ${drop}`}`);
+    write(out.replace(/\.wav$/i, ".beats.json"), JSON.stringify({ format_version: 1, source: "synthesized", bpm, offset: 0, duration, beats, drop }, null, 2));
+    done({ file: rel(resolve(out)), bpm, duration, style, seed: Number(values.seed ?? 1), drop, warnings: [] });
     break;
   }
   case "sfx": {

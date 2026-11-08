@@ -1,6 +1,6 @@
 # Motor de vídeo para outros apps
 
-Este guia é para a IA que executa outro app do flyee.club e precisa transformar uma página animada em vídeo, gerar trilha e efeitos, mixar o som, medir as batidas de uma música, capturar o site de uma marca ou conferir uma peça antes de publicar. Use o Motor em vez de chamar o ffmpeg ou o navegador por conta própria: ele garante o mesmo quadro para o mesmo instante, devolve o que mediu e falha com códigos estáveis.
+Este guia é para a IA que executa outro app do flyee.club e precisa transformar uma página animada em vídeo, gerar trilha e efeitos, mixar o som, medir as batidas de uma música, capturar o site de uma marca, medir e filmar uma página pronta ou conferir uma peça antes de publicar. Use o Motor em vez de chamar o ffmpeg ou o navegador por conta própria: ele garante o mesmo quadro para o mesmo instante, devolve o que mediu e falha com códigos estáveis.
 
 Versão da interface: **1**. Os comandos partem da raiz do projeto (a pasta que contém `.flyee/`) e todos aceitam `--json`: só o JSON vai para o stdout; o progresso vai para o stderr.
 
@@ -208,7 +208,7 @@ Devolve `file`, `beats_file`, `bpm`, `bars`, `beats_per_bar`, `beat_s` (segundos
 node .flyee/modules/video-render/scripts/render.mjs music --out <trilha.wav> --duration 15 --bpm 120 --style energetic --seed 3 --json
 ```
 
-Compõe uma peça para a duração pedida e grava a grade ao lado (`<trilha>.beats.json`, ou onde `--beats-out` disser). Sem `--loop`, a pancada final cai no último tempo 1 que ainda deixa pelo menos 0,5 s antes do fim, e a cauda morre antes de `--duration`. Com mais de 4 compassos, as seções são `intro`, `build`, `drop` e `outro`, mais a cauda (`tail`), e o ponto alto (`drop`) cai perto de 45% dos compassos numa peça curta e de 60% numa longa, com uma subida que termina nele e uma pancada. Com até 4 compassos, há só `build` e `tail`, e o `drop` é a própria pancada final. `--arc flat` troca o arco por uma cama constante (`bed`) com uma pancada final mais leve. `--loop` tira a pancada final e a cauda: os compassos enchem a duração e o último leva de volta ao primeiro (dê uma duração de compassos inteiros, como 8 s a 120 BPM). Sempre 4 tempos por compasso; WAV de 48 kHz, estéreo, com pico em −3 dBFS.
+Compõe uma peça para a duração pedida e grava a grade ao lado (`<trilha>.beats.json`, ou onde `--beats-out` disser). Sem `--loop`, a pancada final cai no último tempo 1 que ainda deixa pelo menos 0,5 s antes do fim, e a cauda morre antes de `--duration`. Com mais de 4 compassos, as seções são `intro`, `build`, `drop` e `outro`, mais a cauda (`tail`), e o ponto alto (`drop`) cai perto de 45% dos compassos numa peça curta e de 60% numa longa, com uma subida que termina nele e uma pancada. `--drop-at` põe o ponto alto onde o filme tem a maior mudança: ele cai no início de compasso mais perto do instante pedido, e a resposta avisa quando precisou mover ou quando a peça não tem ponto alto (`--arc flat`). Com até 4 compassos, há só `build` e `tail`, e o `drop` é a própria pancada final. `--arc flat` troca o arco por uma cama constante (`bed`) com uma pancada final mais leve. `--loop` tira a pancada final e a cauda: os compassos enchem a duração e o último leva de volta ao primeiro (dê uma duração de compassos inteiros, como 8 s a 120 BPM). Sempre 4 tempos por compasso; WAV de 48 kHz, estéreo, com pico em −3 dBFS.
 
 | Opção | Para quê |
 |---|---|
@@ -219,6 +219,7 @@ Compõe uma peça para a duração pedida e grava a grade ao lado (`<trilha>.bea
 | `--seed <n>` | a semente (padrão 1): a mesma semente, a mesma música |
 | `--key <tom>` | `C`, `Am`, `F#m`, `Bb`, `Ebm`… ou `auto` (padrão: o tom sai da semente) |
 | `--arc auto\|flat` | com arco (padrão) ou cama constante |
+| `--drop-at <s>` | o instante da maior mudança do filme: o ponto alto cai no início de compasso mais perto dele (padrão: a posição de 45% ou 60%) |
 | `--loop` | o fim leva ao começo, para vídeos em repetição |
 | `--beats-out <json>` | onde gravar a grade (padrão `<trilha>.beats.json`) |
 
@@ -235,7 +236,9 @@ Devolve `file`, `beats_file`, `bpm`, `duration`, `style`, `seed`, `key` (o tom u
 
 ### `sfx`: efeitos nos instantes certos
 
-O `sfx` aceita duas listas, com campos e tipos diferentes; use uma ou outra numa chamada. Nas duas, cada som **começa** no seu `t`: um `riser` cresce de `t` até `t` mais a duração dele, então, para terminar num drop em `T`, ponha o `riser` em `T` menos a duração (com o padrão de 1 s, `T − 1`).
+O `sfx` aceita duas listas, com campos e tipos diferentes; use uma ou outra numa chamada. Nas duas, cada som **começa** no seu `t`, a menos que peça outra âncora: um `riser` cresce de `t` até `t` mais a duração dele, então, para terminar num drop em `T`, ponha o `riser` em `T` menos a duração (com o padrão de 1 s, `T − 1`).
+
+O `whoosh`, o `swoosh` (`swish` na lista de eventos) e o `riser` crescem até o momento mais alto, e o ouvido marca o corte por esse momento, não pelo começo do som. Começando no `t`, o mais alto de um `whoosh` chega depois do corte: cerca de 0,16 s na lista de deixas e 0,27 s na de eventos, de 5 a 8 quadros a 30 fps. Com `"anchor": "peak"`, o som começa antes, e o momento mais alto cai no `t`; num `riser`, é o fim dele que cai no `t`, então `{ "t": T, "type": "riser", "anchor": "peak" }` termina no drop sem conta. Ponha `anchor: "peak"` nos sons de passagem que marcam um corte. Os outros tipos chegam ao máximo logo no começo, e neles a âncora não muda nada. Um som que precisaria começar antes de 0 perde só o começo.
 
 **Lista de deixas** (`cues`): um arquivo como argumento, ou `--cues` em linha.
 
@@ -254,6 +257,7 @@ node .flyee/modules/video-render/scripts/render.mjs sfx --cues "0.5:click,1.2:wh
 | `pitch` | semitons, de −24 a 24 (padrão 0) |
 | `pan` | de −1 (esquerda) a 1 (direita); no `whoosh` e no `swoosh`, o som atravessa de `−pan` até `pan` |
 | `duration` | de 0,05 a 30 s: quanto duram o `riser` (padrão 1 s), o `typing` (padrão 0,08 s por tecla), o `whoosh` (0,32 s) e o `swoosh` (0,2 s) |
+| `anchor` | `start` (padrão: o som começa no `t`) ou `peak` (o momento mais alto do `whoosh` e do `swoosh` cai no `t`, e o `riser` termina nele) |
 | `count`, `text` | só no `typing`: quantas teclas (1 a 400), ou o tamanho de `text` |
 
 | `type` | O som |
@@ -271,7 +275,7 @@ node .flyee/modules/video-render/scripts/render.mjs sfx --cues "0.5:click,1.2:wh
 | `success` | duas notas de sino em acorde maior |
 | `notify` | um toque suave de aviso |
 
-`--duration <s>` fixa o tamanho do arquivo e corta o que passar dele; sem ela, o arquivo termina 0,3 s depois do fim do último som. Uma lista inválida dá `cues_invalid`. Devolve `file`, `cues[]` (cada deixa como foi usada: `t`, `type`, `gain`, `pitch`, `pan`, `duration`, `count`), `types[]` (todos os tipos desta lista), `duration` e `peak_dbfs` (medido antes do limitador suave aplicado ao gravar; pode passar um pouco de 0).
+`--duration <s>` fixa o tamanho do arquivo e corta o que passar dele; sem ela, o arquivo termina 0,3 s depois do fim do último som. Uma lista inválida dá `cues_invalid`. Devolve `file`, `cues[]` (cada deixa como foi usada: `t`, `type`, `anchor`, `gain`, `pitch`, `pan`, `duration`, `count`), `types[]` (todos os tipos desta lista), `duration` e `peak_dbfs` (medido antes do limitador suave aplicado ao gravar; pode passar um pouco de 0).
 
 **Lista de eventos** (`events`): um arquivo em `--events`, ou `--event` em linha.
 
@@ -291,6 +295,7 @@ node .flyee/modules/video-render/scripts/render.mjs sfx --out <efeitos.wav> --ev
 | `length` | a duração do som, de 0,001 a 30 s (padrão: a do tipo) |
 | `pitch` | multiplica as frequências, de 0,1 a 8 (padrão 1) |
 | `direction` | `in` (padrão: a varredura do `whoosh` e do `swish` sobe) ou `out` (desce) |
+| `anchor` | `start` (padrão: o som começa no `t`) ou `peak` (o momento mais alto do `whoosh` e do `swish` cai no `t`, medido no som gerado, com a direção e o tamanho dele; o `riser` termina no `t`) |
 
 | `type` | O som | Duração | Nível |
 |---|---|---|---|
@@ -327,7 +332,7 @@ node .flyee/modules/video-render/scripts/render.mjs mix --video <video.mp4> --mu
 node .flyee/modules/video-render/scripts/render.mjs mix --music <trilha.wav> --voice <voz.wav> --duck 10 --duration 15 --out <mixagem.wav> --json
 ```
 
-Mistura música, efeitos e voz, leva o resultado ao volume e ao pico pedidos e mede o arquivo gravado. Com `--video` (o vídeo mudo do render), a imagem é copiada como está e o som vai por baixo dela; sem `--video`, a saída é um arquivo de áudio. Pelo menos uma fonte é obrigatória.
+Mistura música, efeitos e voz, leva o resultado ao volume e ao pico pedidos e mede o arquivo gravado. Sob um efeito alto (um `impact`, uma pancada) a música cede por um instante e volta em cerca de um quarto de segundo, para o efeito soar; estalos e tiques passam sem mexer nela. Os mesmos arquivos dão sempre a mesma mixagem, e uma voz ou uma faixa de efeitos mais curta não encurta a música. Com `--video` (o vídeo mudo do render), a imagem é copiada como está e o som vai por baixo dela; sem `--video`, a saída é um arquivo de áudio. Pelo menos uma fonte é obrigatória.
 
 | Opção | Para quê |
 |---|---|
@@ -336,6 +341,7 @@ Mistura música, efeitos e voz, leva o resultado ao volume e ao pico pedidos e m
 | `--music <arquivo>`, `--music-gain <dB>` | a trilha e o ganho dela antes da normalização, de −60 a 24 (padrão 0) |
 | `--music-offset <s>` | o instante da trilha em que a mixagem começa (padrão 0): um slide que começa depois de 3 compassos de uma trilha a 120 BPM usa `6` |
 | `--sfx <arquivo>`, `--sfx-gain <dB>` | os efeitos e o ganho deles (padrão 0) |
+| `--sfx-duck <dB>` | quanto a música cede sob um efeito alto, de 0 a 30 (padrão 8; `0` desliga) |
 | `--voice <arquivo>`, `--voice-gain <dB>` | a voz e o ganho dela (padrão 0); com voz, a música abaixa sob ela |
 | `--duck <dB>` | quanto a música cede à voz, de 0 a 30 (padrão 10) |
 | `--lufs <n>` | o volume integrado final, de −30 a −8 (padrão −14, o das redes) |
@@ -343,7 +349,7 @@ Mistura música, efeitos e voz, leva o resultado ao volume e ao pico pedidos e m
 | `--fade-out <s>` | encerra a música suavemente nos últimos segundos, de 0 a 10 (padrão 0, sem fade); num loop, deixe 0 |
 | `--duration <s>` | corta as fontes nesse tamanho (padrão: a duração do vídeo, senão a da fonte mais longa) |
 
-Devolve `file`, `duration` (a do arquivo gravado), `loudness` (`integrated_lufs`, `true_peak_dbtp`, `range_lu` e `threshold`, medidos no arquivo gravado), `inputs` (`video`, `music`, `sfx`, `voice`), `sources` (`music`, `music_offset`, `music_gain_db`, `sfx`, `sfx_gain_db`, `voice`, `voice_gain_db`), `settings` (`music_gain`, `sfx_gain`, `voice_gain`, `duck`, `lufs`, `tp`, `music_offset`, `fade_out`) e `warnings` (a música acaba antes do fim quando `music-offset` mais a duração passam do tamanho dela; o pico real limitou o volume abaixo do alvo; o pico do arquivo gravado ficou acima de `--tp`).
+Devolve `file`, `duration` (a do arquivo gravado), `loudness` (`integrated_lufs`, `true_peak_dbtp`, `range_lu` e `threshold`, medidos no arquivo gravado), `inputs` (`video`, `music`, `sfx`, `voice`), `sources` (`music`, `music_offset`, `music_gain_db`, `sfx`, `sfx_gain_db`, `voice`, `voice_gain_db`), `settings` (`music_gain`, `sfx_gain`, `sfx_duck`, `voice_gain`, `duck`, `lufs`, `tp`, `music_offset`, `fade_out`) e `warnings` (a música acaba antes do fim quando `music-offset` mais a duração passam do tamanho dela; o pico real limitou o volume abaixo do alvo; o pico do arquivo gravado ficou acima de `--tp`).
 
 ### `loudness`: medir um arquivo
 
@@ -359,7 +365,7 @@ Devolve `file`, `integrated_lufs`, `true_peak_dbtp`, `range_lu` e `threshold` do
 node .flyee/modules/video-render/scripts/render.mjs capture <endereço> --json
 ```
 
-Abre o site no navegador sem janela em tamanho de computador e de celular, fecha o aviso de cookies quando acha um, fotografa a tela e a página inteira, grava a rolagem, lê a marca e a anatomia da página e guarda tudo numa pasta com `captura.json` e `texto.md`. Aceita `https://www.exemplo.com.br`, `exemplo.com.br` (vira https), `localhost:3000` ou `127.0.0.1` (http), o caminho de um arquivo `.html` e o de uma página salva pelo navegador (`.mhtml` ou `.mht`). A página salva é o caminho para uma página que só abre com login: o integrante salva a página no navegador como página da web em arquivo único e você captura o arquivo. É o único comando do Motor que vai à internet: além de abrir o site, baixa só imagens (o logo, os ícones e a imagem de compartilhamento, até 10 MB cada) e nunca roda nada do site fora do navegador. No render, a internet só entra quando a própria página carrega algo de fora (uma fonte da web, por exemplo).
+Abre o site no navegador sem janela em tamanho de computador e de celular, fecha o aviso de cookies quando acha um, fotografa a tela e a página inteira, grava a rolagem, lê a marca e a anatomia da página e guarda tudo numa pasta com `captura.json` e `texto.md`. Aceita `https://www.exemplo.com.br`, `exemplo.com.br` (vira https), `localhost:3000` ou `127.0.0.1` (http), o caminho de um arquivo `.html` e o de uma página salva pelo navegador (`.mhtml` ou `.mht`). A página salva é o caminho para uma página que só abre com login: o integrante salva a página no navegador como página da web em arquivo único e você captura o arquivo. Junto com `film`, é o único comando do Motor que vai à internet: além de abrir o site, baixa só imagens (o logo, os ícones e a imagem de compartilhamento, até 10 MB cada) e nunca roda nada do site fora do navegador. No render, a internet só entra quando a própria página carrega algo de fora (uma fonte da web, por exemplo).
 
 | Opção | Para quê |
 |---|---|
@@ -419,12 +425,57 @@ As posições (`y`, `x`, `width`, `height`) são px CSS da página inteira no co
 | `motion.running[]` | até 200 animações rodando no fim da leitura do computador: `kind` (`css-animation`, `css-transition` ou `web-animation`), `name` (o nome da animação, a propriedade da transição ou `null`), `duration_ms`, `iterations` (um número, ou `"infinite"`) e `target` (a tag com a primeira classe, como `a.btn`) |
 | `motion` (o resto) | `keyframes` (os nomes dos `@keyframes`), `transitions` (quantas regras declaram transição), `reduced_motion_rules` (quantas regras `@media (prefers-reduced-motion)` existem: zero quer dizer que a página não respeita quem pede menos movimento), `smooth_scroll` (rolagem suave na página), `scroll_snap` (quantos elementos encaixam na rolagem) e `stylesheets_unread` (folhas de estilo de outro domínio que o navegador não deixa ler: o que elas declaram fica fora das contagens) |
 | `countdowns[]` | os relógios de contagem regressiva: textos como 00:12:34, 12:34 ou 2d 14h 33m que mudaram entre duas leituras feitas com 1,2 s de intervalo. Cada um traz `text` (o da segunda leitura) e `section`. Um horário fixo, como "das 08:00 às 18:00", não muda e fica de fora |
+| `quality` | as medições da página pronta, na tabela abaixo: `desktop` e `mobile`. Cada leitura é separada: a que falha fica `null`, com o motivo em `errors`, e o resto da anatomia continua valendo. `null` quer dizer que não foi medido, nunca que a página está boa |
+
+As medições da página pronta:
+
+| Campo | O que é |
+|---|---|
+| `quality.mobile.overflow` | o que passa da largura do celular: `viewport_width` (a largura pedida), `inner_width` e `scroll_width` (as que a página ocupou), `cut` (quantos elementos passam da largura, fora os que estão numa caixa que rola ou corta, como um carrossel) e `offenders[]`, até 5, com `tag`, `text`, `right` e `width` |
+| `quality.mobile.small_text` | o texto abaixo de 12 px: `total_chars`, `small_chars`, `share`, `min_px`, `samples[]` (até 5, com `text` e `px`) e `key[]` (os preços e os botões entre eles). A medida de 12 px e a linha de 40% do texto são as da auditoria de legibilidade do Lighthouse, retirada na versão 13, conferida em 2026-11-08 |
+| `quality.mobile.tap_targets` | os alvos de toque abaixo de 24 por 24 px, pelo critério 2.5.8 do WCAG 2.2, com as exceções de link no meio de uma frase e de espaço em volta: `checked`, `small`, `undersized` (os que ficam perto de outro alvo) e `samples[]`, até 6, com `text`, `width` e `height` |
+| `quality.mobile.controls`, `quality.desktop.controls` | os botões em que o texto não cabe: `checked` e `problems[]`, até 8, com `text`, `reason` (`cortado`, `vaza` ou `colado`), `width` e `height` |
+| `quality.mobile.images` | `count`, `heavy[]` (imagens de 500 KB ou mais) e `oversized[]` (servidas com o dobro ou mais da largura que aparecem, a partir de 100 KB; desenho em vetor fica de fora). Cada uma traz `src`, `natural_width`, `shown_width`, `oversize` e `bytes` (ou `null` quando a rede não disse). As medidas de peso são critério deste app, não regra de mercado |
+| `quality.mobile.weight` | o que o celular baixou: `total_bytes` e `by_type` (como `Image`, `Script`, `Font`) |
+| `quality.desktop.contrast` | o contraste do texto, pelo critério 1.4.3 do WCAG 2.2 (4,5 para 1, ou 3 para 1 em texto a partir de 24 px, ou de 18,66 px em negrito): `checked` (pares medidos), `failing[]` (até 10, o título e os botões primeiro, com `role`, `text`, `ratio`, `required`, `color`, `background` e `font_px`) e `unknown` (quantos não deu para medir, por motivo: `imagem`, `degrade`, `opacidade`, `coberto`, `cor`). Cada par é lido onde está na tela. O fundo vindo de um pseudo-elemento não entra na conta |
+| `quality.desktop.demos[]` | as cenas marcadas com `data-demo` na página, até 10: `name`, `x`, `y`, `width`, `height`, `section`, `headings` (quantos títulos h1 a h6 há dentro), `has_name` (tem texto alternativo) e `label_near` (a cena ou o bloco em volta dizem que os dados são de exemplo) |
+| `quality.desktop.defaults` | padrões visuais repetidos: `counts` e `found` (até 4 exemplos) de `gradient_text`, `glass`, `glow`, `blobs`, `equal_cards` (três blocos iguais lado a lado, sem preço) e `status_dots`, e `mono_share` (a parte do texto em letra monoespaçada, fora de código). São sinais para a IA confrontar com o que o plano escolheu, nunca um veredito |
 
 Numa página salva (`input_kind: "mhtml"`), o navegador não roda os scripts da página: os relógios ficam parados (`countdowns` vem vazio) e o que só aparece com JavaScript, como uma barra que surge depois da rolagem, não aparece. Diga isso ao conferir uma página salva, em vez de concluir que a página não tem relógio ou barra.
 
 `texto.md` (em `files.text`) traz o texto da página na ordem: o que vem antes do primeiro título, depois cada seção com `## título` e o texto dela, até 60.000 caracteres; quando a página tem mais, a última linha diz que o texto foi cortado. É o texto da página como ela está, sem revisão: use-o para ler e citar a página, nunca como texto pronto para publicar.
 
 Use só o que a captura trouxe. O que ela não encontrou (um logo, uma cor de destaque), peça ao integrante como arquivo, em vez de inventar. Um site que barra o navegador dá `site_blocked` e deixa `bloqueio.png` na pasta: peça as telas ao integrante. Um endereço sem site publicado (domínio estacionado no provedor, página padrão do servidor) dá `site_placeholder` e deixa `sem-site.png`: nada dele é da marca. Uma página provisória ("em breve") é capturada, com aviso e com `placeholder` no `captura.json`: confirme com o integrante que o logo e as cores são dele.
+
+### Filmar uma parte da página: `film`
+
+```
+node .flyee/modules/video-render/scripts/render.mjs film <endereço> --select "[data-demo]" --out <pasta> --json
+```
+
+Abre a página num navegador sem janela e fotografa o elemento em intervalos fixos, em três passadas: no computador (1440 px), no celular (390 px) e no celular com o pedido de menos movimento. Cada passada vira uma folha de quadros, para você abrir e olhar. É uma gravação em tempo real da página como ela roda: não mexe em nada nela, serve para qualquer página e não prova o que acontece entre dois quadros. Para um filme quadro a quadro de uma página feita para o Motor, use `frames` ou `render`. Precisa só do navegador.
+
+| Opção | Para quê |
+|---|---|
+| `--select <seletor>` | o elemento filmado; sem ele, a primeira tela |
+| `--every <s>` | segundos entre dois quadros, de 0,25 a 10 (padrão 1) |
+| `--count <n>` | quadros no computador e no celular, de 1 a 60 (padrão 16). Com menos movimento, até 3 |
+| `--out <pasta>` | onde gravar (padrão `filmes/<site>/` na raiz do projeto) |
+| `--browser <caminho>` | outro navegador |
+
+Devolve `url`, `select`, `mode` (`real_time`), `every_s`, `dir`, `film_file` (`<dir>/filme.json`, com o mesmo conteúdo), `sheets[]` (os caminhos das folhas), `passes`, `elapsed_s` e `warnings`.
+
+| `passes.desktop`, `.mobile`, `.reduced` | O que é |
+|---|---|
+| `found`, `visible` | o elemento existe na página; aparece nesse tamanho |
+| `frames`, `files[]`, `sheet` | quantos quadros, os arquivos deles e a folha, relativos a `dir`; `sheet` é `null` quando a cena não aparece |
+| `changes`, `distinct` | quantas vezes um quadro mudou em relação ao anterior; quantos quadros diferentes há |
+| `longest_still_s` | o maior tempo em que nada mudou, medido entre quadros |
+| `returns_to_first_at_s` | quando a cena voltou a ser igual ao primeiro quadro, ou `null` |
+| `size` | `width`, `height` e `cropped` (a cena é maior que a tela, e os quadros mostram só a parte visível) |
+| `late`, `page_errors` | quadros que saíram atrasados; erros de JavaScript da página |
+
+Com menos movimento, uma cena correta tem `changes: 0`. Uma página salva não roda script: `film` responde `film_saved_page`. Um seletor que não existe em nenhum tamanho responde `film_target_missing`; quando falta só num tamanho, a passada vem com `visible: false` e `warnings` avisa.
 
 ## 6. Conferir: `accept` e `networks`
 
@@ -550,6 +601,7 @@ Em erro, `ok` é `false` e vem `error` com `code`, `message` e `fix`. Mostre `me
 | `invalid_url` | o endereço do `capture` não é válido, ou o arquivo `.html` ou a página salva `.mhtml` não existe: confira com o integrante |
 | `site_unreachable` | o site não abriu ou respondeu com erro sem conteúdo: confira o endereço e a conexão e tente de novo |
 | `site_blocked` | o site barrou o navegador (`bloqueio.png` mostra o que ele devolveu): peça as telas ao integrante ou outro endereço do mesmo site |
+| `film_target_missing`, `film_saved_page` | o seletor não existe na página, ou a página é uma página salva, que não roda script: confira o seletor, ou filme o endereço |
 | `site_placeholder` | o endereço ainda não tem o site da marca: domínio estacionado ou página padrão do servidor (`sem-site.png` mostra o que veio). Peça outro endereço da marca, ou o logo e duas ou três imagens |
 | `capture_failed` | a captura falhou no meio: tente de novo; se repetir, com `--scroll 0` ou `--no-assets` |
 | `unknown_network` | uma rede de `--networks` não está na tabela: `networks` lista os `id` e os apelidos |

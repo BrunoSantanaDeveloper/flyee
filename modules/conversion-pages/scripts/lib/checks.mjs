@@ -47,6 +47,96 @@ const RATE_LIMIT = /\d[\d.,]*\s*(?:mil\s+)?(?:requisi[çc][õo]es|chamadas|reque
 const ZERO_COUNTER = /(?:^|\n)[ \t]*0 ?(?:\+|h|k|x|mil\+?)[ \t]*(?=\n|$)/;
 const POSITION_BAND = 24;
 
+// What the page states as a fact: usage numbers, ratings, scarcity and founding years. A price, a date,
+// a discount or a plan's limit ("10.000 créditos por mês", "Você + 9 usuários") has its own check or is
+// the product itself. Each claim must have an origin in pagina.json (claims).
+const SCALE = String.raw`(?:\s?(?:mi|mil|milh[õo]es|bi|bilh[õo]es|k|M)(?![\p{L}\p{N}]))?`;
+const BIG = String.raw`(?:\d{1,3}(?:\.\d{3})+|\d{3,}|\d{1,3}(?:,\d{1,2})?\s?(?:mi|mil|milh[õo]es|bi|bilh[õo]es)(?![\p{L}\p{N}]))`;
+const PEOPLE = String.raw`(?:clientes|usu[áa]rios|escrit[óo]rios|empresas|pessoas|alunos|advogad[oa]s|lojas|neg[óo]cios|profissionais|downloads|avalia[çc][õo]es|instala[çc][õo]es|customers|users|companies|teams|businesses)`;
+// `offer` says where to look for the words of an offer condition: "near" is the line and the ones
+// around it (a badge breaks "40%" and "OFF no PIX" over two lines), "line" is the line alone.
+const CLAIM_PATTERNS = [
+  // "+1.500" and "1.500+": the plus written against the number says "more than". With a space, it adds.
+  { re: new RegExp(String.raw`(?<![\d.,\p{L}])\+\d[\d.,]*${SCALE}`, "gu"), offer: "line" },
+  { re: new RegExp(String.raw`(?<![\d.,])\d[\d.,]*${SCALE}\+`, "gu"), offer: "line" },
+  { re: new RegExp(String.raw`(?<![\p{L}\p{N}])(?:mais de|over|more than)\s+\d[\d.,]*${SCALE}`, "giu"), offer: "line" },
+  // Percentages under 100: "100%" is an intensifier ("100% online"), not a measurement.
+  { re: /(?<![\d.,/])\d{1,2}(?:[.,]\d{1,3})?\s?%/gu, offer: "near" },
+  { re: /(?<![\p{L}\d.,])\d{1,3}(?:,\d)?\s?x(?![\p{L}\d])/giu, offer: "near" },
+  // A big number of people or businesses, unless it is a plan's limit ("até 1.000 clientes").
+  { re: new RegExp(String.raw`(?<![\d.,/])${BIG}\s+${PEOPLE}(?![\p{L}])`, "giu"), limit: true },
+  { re: /(?<![\d.,])\d,\d\s?(?:\/\s?5|de 5|estrelas|stars)/giu },
+  { re: /(?<![\p{L}\p{N}])(?:[úu]ltimas? (?:vagas?|unidades?)|vagas limitadas|(?:s[óo]|apenas|restam?) \d+ (?:vagas?|unidades?|lugares?|hor[áa]rios?)|\d+ pessoas? (?:vendo|comprando|online)|only \d+ left|\d+ people (?:viewing|watching))(?![\p{L}\p{N}])/giu },
+  { re: /(?<![\p{L}\p{N}])(?:desde|since|fundad[ao] em|estd\.?)\s+(?:19|20)\d{2}(?!\d)/giu },
+];
+/** A percentage or a multiple in these words, on its line or the next one, is a condition of the offer: `discount_math` and the plans read those. */
+const CLAIM_NOT = /desconto|off(?![\p{L}])|economi|juros|parcel|cart[ãa]o|pix|sem custo|por cento do|imposto|taxa de|anual|mensal|no plano|na assinatura|primeiro (?:m[êe]s|ano)/iu;
+const LIMIT_BEFORE = /(?:at[ée]|up to|limite de|m[áa]ximo de)\s*$/iu;
+/** Lines the page must not read claims from: an address, a registration number or a telephone. */
+const CLAIM_LINE_NOT = /cnpj|cep|cpf|telefone|whatsapp|\(\d{2}\)|\+\d{2}\s?\(?\d{2}\)?\s?\d{4,5}/iu;
+
+const PLACEHOLDER = edge("lorem ipsum|dolor sit amet|john doe|jane doe|jane smith|fulano de tal|ciclano|beltrano|acme(?: inc| corp)?|empresa x|seu nome aqui|your name here|exemplo@|@example\\.com|example\\.com|placeholder");
+const FILLER_VERBS = edge("revolucione|revolucionar|eleve|elevate|turbine|turbinar|potencialize|potencializar|desbloqueie|desbloquear|unleash|supercharge|seamless|empower|next-?gen|game-?changing|(?:leve|levar) (?:\\p{L}+ )?ao pr[óo]ximo n[íi]vel|sem esfor[çc]o");
+const SECTION_NUMBER = /^[ \t]*0\d{1,2}[ \t]*(?:[/·.:][ \t]*)?\p{L}/mu;
+const SCROLL_CUE = /^[ \t]*(?:role(?: para (?:baixo|ver|continuar))?|deslize(?: para (?:baixo|ver))?|scroll(?: down| to explore)?)[ \t]*$/imu;
+const MONO_SHARE = 0.25;
+const NO_MEASURE = "A captura não trouxe esta medição: atualize o Motor de vídeo e rode audit de novo.";
+const GENERIC_FONT = /^(?:system-ui|ui-sans-serif|ui-serif|ui-monospace|sans-serif|serif|monospace|arial|helvetica|times new roman|-apple-system|blinkmacsystemfont|segoe ui|roboto)$/i;
+
+const kb = (bytes) => `${Math.round((bytes ?? 0) / 1024)} KB`;
+const quoted = (list, size = 40) => list.map((text) => `"${clip(text, size)}"`).join(", ");
+const percent = (share) => `${Math.round(share * 100)}%`;
+
+/** The numbers, scarcity and years the page states, each once, with the line it came from. */
+export function findClaims(text) {
+  const found = new Map();
+  const lines = String(text ?? "").split("\n");
+  lines.forEach((line, index) => {
+    if (CLAIM_LINE_NOT.test(line)) return;
+    // One claim per stretch of text: "+10.000 clientes" is "+10.000", not that and "10.000 clientes".
+    const taken = [];
+    for (const { re, limit, offer } of CLAIM_PATTERNS) {
+      for (const match of line.matchAll(re)) {
+        const start = match.index;
+        const end = start + match[0].length;
+        if (taken.some(([from, to]) => start < to && end > from)) continue;
+        const before = line.slice(0, start);
+        if (/R\$\s*$/.test(before)) continue;
+        const around = line.slice(Math.max(0, start - 30), end + 30);
+        if (offer === "line" && CLAIM_NOT.test(around)) continue;
+        if (offer === "near" && CLAIM_NOT.test(`${lines[index - 1] ?? ""} ${around} ${lines[index + 1] ?? ""}`)) continue;
+        if (limit && LIMIT_BEFORE.test(before)) continue;
+        taken.push([start, end]);
+        const claim = match[0].trim();
+        // "0+" is a counter read before its animation, which numbers_not_zero already points at.
+        if (/^\+?0+\s?\+?$/.test(claim)) continue;
+        if (!found.has(fold(claim))) found.set(fold(claim), claim);
+      }
+    }
+  });
+  return [...found.values()];
+}
+
+/** Whether a stated claim is among the ones pagina.json gives an origin for. */
+export function claimHasOrigin(claim, claims) {
+  const wanted = fold(claim).replace(/\s+/g, "");
+  return (Array.isArray(claims) ? claims : []).some((entry) => String(entry?.origin ?? "").trim() && fold(entry?.text ?? "").replace(/\s+/g, "").includes(wanted));
+}
+
+function rgbFromHex(hex) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(String(hex ?? "").trim());
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : null;
+}
+
+/** White, black and grays go with any brand: only a color with a hue can be off it. */
+function isNeutral(rgb) {
+  const max = Math.max(...rgb);
+  const min = Math.min(...rgb);
+  return max - min <= 24 || max <= 30 || min >= 240;
+}
+
+const near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) <= 40;
+
 const brl = (value) => `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const STATUS_ORDER = { atencao: 0, nao_conferido: 1, ok: 2 };
@@ -453,6 +543,180 @@ const RULES = {
     if (RATE_LIMIT.test(text)) return ["ok", "Os limites de uso aparecem em número."];
     return ["atencao", "Os limites de uso não aparecem em número, como requisições por minuto ou por mês."];
   },
+
+  // ----- what the page states, and what the finished page measures -----
+
+  claims_have_origin({ text, facts }) {
+    const stated = findClaims(text);
+    if (!stated.length) return null;
+    const open = stated.filter((claim) => !claimHasOrigin(claim, facts?.claims));
+    if (!open.length) return ["ok", stated.length === 1 ? "O número da página tem a origem registrada." : `Os ${stated.length} números e urgências da página têm a origem registrada.`];
+    return ["atencao", `Sem origem registrada em pagina.json: ${quoted(open.slice(0, 6), 30)}${open.length > 6 ? ` e mais ${open.length - 6}` : ""}.`];
+  },
+
+  placeholder_data({ text, facts }) {
+    const match = PLACEHOLDER.exec(text);
+    if (!match) return ["ok", "Nenhum dado de exemplo esquecido no texto da página."];
+    if (facts?.product?.name && fold(facts.product.name).includes(fold(match[0]))) return ["ok", "Nenhum dado de exemplo esquecido no texto da página."];
+    return ["atencao", `A página traz "${clip(match[0], 30)}", que parece dado de exemplo esquecido.`];
+  },
+
+  demo_honest({ anatomy, facts }) {
+    const demo = facts?.demo ?? {};
+    const demos = anatomy.quality?.desktop?.demos;
+    if (!Array.isArray(demos)) return demo.kind ? ["nao_conferido", NO_MEASURE] : null;
+    if (!demos.length) return demo.kind ? ["atencao", "O plano registra uma demonstração, e nenhum elemento da página está marcado com data-demo."] : null;
+    const problems = [];
+    if (demos.some((scene) => scene.headings > 0)) problems.push("há título (h1 a h6) dentro da cena, e ele entra no sumário da página");
+    if (demos.some((scene) => !scene.has_name)) problems.push("a cena não tem um texto alternativo");
+    if (demo.sample_data === true && demos.some((scene) => !scene.label_near)) problems.push("os dados são de exemplo, e não há etiqueta perto da cena");
+    if (demo.sample_data !== true && demo.sample_data !== false) problems.push("pagina.json não diz se os dados da cena são inventados (demo.sample_data)");
+    if (problems.length) return ["atencao", `${problems.join("; ")}.`];
+    return ["ok", demo.sample_data ? "A cena está marcada, com texto alternativo e a etiqueta de exemplo." : "A cena está marcada e com texto alternativo."];
+  },
+
+  demo_film({ facts, film, context }) {
+    const demo = facts?.demo ?? {};
+    if (!demo.kind && !demo.selector) return null;
+    if (!demo.selector) return ["nao_conferido", "A cena não foi filmada: registre o seletor dela em pagina.json (demo.selector)."];
+    if (context.savedPage) return ["nao_conferido", "Numa página salva, a cena não roda: filme o endereço da página."];
+    if (!film?.passes) return ["nao_conferido", film?.error ?? "A cena não foi filmada nesta conferência."];
+    const { desktop, mobile, reduced } = film.passes;
+    const problems = [];
+    if (mobile && !mobile.visible) problems.push("a cena não aparece no celular");
+    if (desktop && !desktop.visible) problems.push("a cena não aparece no computador");
+    if (reduced?.visible && reduced.changes > 0) problems.push("com o pedido de menos movimento, a cena continua se mexendo");
+    if (demo.animated !== false && desktop?.visible && desktop.changes === 0) problems.push(`a cena não se mexeu nos ${desktop.frames} quadros filmados`);
+    if (problems.length) return ["atencao", `${problems.join("; ")}.`];
+    return ["ok", "A cena foi filmada no computador e no celular, e fica parada com menos movimento. Abra as folhas de quadros para ler o resto."];
+  },
+
+  ai_defaults({ anatomy, facts, text }) {
+    const defaults = anatomy.quality?.desktop?.defaults;
+    if (!defaults) return ["nao_conferido", NO_MEASURE];
+    const chosen = new Set((Array.isArray(facts?.visual?.chosen) ? facts.visual.chosen : []).map((name) => String(name).trim()));
+    const counts = defaults.counts ?? {};
+    const found = defaults.found ?? {};
+    const infinite = (anatomy.motion?.running ?? []).filter((animation) => animation.iterations === "infinite").length;
+    const filler = FILLER_VERBS.exec(text);
+    const seen = [
+      ["texto_degrade", "título com degradê", counts.gradient_text, found.gradient_text],
+      ["vidro", "painel de vidro", counts.glass, found.glass],
+      ["brilho", "brilho colorido", counts.glow, found.glow],
+      ["mancha_desfocada", "mancha desfocada", counts.blobs, null],
+      ["tres_cartoes_iguais", "três cartões iguais", counts.equal_cards, found.equal_cards],
+      ["ponto_de_status", "ponto de status", counts.status_dots, found.status_dots],
+      ["movimento_sem_fim", "animação sem fim", infinite - (counts.status_dots ?? 0), null],
+      ["tudo_mono", "letra monoespaçada fora de código", (defaults.mono_share ?? 0) >= MONO_SHARE ? 1 : 0, null],
+      ["numero_na_secao", "número antes do título da seção", SECTION_NUMBER.test(text) ? 1 : 0, [SECTION_NUMBER.exec(text)?.[0]?.trim()].filter(Boolean)],
+      ["aviso_de_rolagem", "aviso de rolagem", SCROLL_CUE.test(text) ? 1 : 0, null],
+      ["verbos_de_enchimento", "verbo de enchimento", filler ? 1 : 0, filler ? [filler[0]] : null],
+    ].filter(([name, , count]) => count > 0 && !chosen.has(name));
+    if (!seen.length) return ["ok", chosen.size ? "Só aparecem os padrões escolhidos de propósito." : "Nenhum vício visível na página pronta."];
+    const list = seen.map(([name, label, , examples]) => `${label} (${name})${examples?.length ? `: "${clip(examples[0], 40)}"` : ""}`);
+    return ["atencao", `Apareceram, sem estarem escolhidos: ${list.join("; ")}.`];
+  },
+
+  cta_consistent({ anatomy, pageUrl }) {
+    const priced = new Set((anatomy.prices ?? []).map((price) => price.section).filter(Number.isInteger));
+    const labels = new Map();
+    for (const cta of anatomy.ctas ?? []) {
+      const label = String(cta.text ?? "").trim();
+      if (!label || cta.in_fixed && MENU.test(label)) continue;
+      if (MENU.test(label) || DECLINE.test(label) || DOCS.test(label) || priced.has(cta.section) || !(ACCEPT.test(label) || LEAD.test(label))) continue;
+      if (isAnchorOnly(cta.href, pageUrl) && labels.has(fold(label))) continue;
+      labels.set(fold(label), label);
+    }
+    if (labels.size <= 2) return ["ok", labels.size ? `Os chamados da página têm ${labels.size === 1 ? "um texto" : "dois textos"}.` : "A página não tem chamados com o mesmo pedido."];
+    return ["atencao", `A página pede a mesma coisa com ${labels.size} textos: ${quoted([...labels.values()].slice(0, 5))}.`];
+  },
+
+  off_brand({ capture, facts }) {
+    const colors = (Array.isArray(facts?.brand?.colors) ? facts.brand.colors : []).map(rgbFromHex).filter(Boolean);
+    const fonts = (Array.isArray(facts?.brand?.fonts) ? facts.brand.fonts : []).map((font) => fold(font)).filter(Boolean);
+    if (!colors.length && !fonts.length) return ["nao_conferido", "Registre as cores e as letras da marca em pagina.json (brand)."];
+    const page = capture?.brand;
+    if (!page) return ["nao_conferido", NO_MEASURE];
+    const problems = [];
+    if (colors.length) {
+      const painted = (page.colors?.palette ?? []).filter((entry) => (entry.share ?? 0) >= 0.03).map((entry) => entry.hex);
+      const used = [...new Set([page.colors?.primary, ...painted].filter(Boolean))];
+      const off = used.filter((hex) => {
+        const rgb = rgbFromHex(hex);
+        return rgb && !isNeutral(rgb) && !colors.some((color) => near(rgb, color));
+      });
+      if (off.length) problems.push(`as cores ${off.slice(0, 4).join(", ")} não estão na marca`);
+    }
+    if (fonts.length) {
+      const used = [...new Set([page.fonts?.headline, page.fonts?.body].filter(Boolean))];
+      const off = used.filter((font) => !GENERIC_FONT.test(String(font).trim()) && !fonts.some((known) => fold(font).includes(known) || known.includes(fold(font))));
+      if (off.length) problems.push(`a letra ${off.join(", ")} não está na marca`);
+    }
+    if (problems.length) return ["atencao", `Na página, ${problems.join(" e ")}.`];
+    return ["ok", "As cores com matiz e as letras da página estão na marca."];
+  },
+
+  mobile_fits({ anatomy }) {
+    const overflow = anatomy.quality?.mobile?.overflow;
+    if (!overflow) return ["nao_conferido", NO_MEASURE];
+    const width = overflow.viewport_width;
+    const first = overflow.offenders?.[0];
+    if (overflow.cut > 0 && first) return ["atencao", `No celular, "${clip(first.text || first.tag, 50)}" vai até ${first.right} px numa tela de ${width} px${overflow.cut > 1 ? `, e mais ${overflow.cut - 1} elementos passam da largura` : ""}.`];
+    if (overflow.scroll_width > width + 1 || overflow.inner_width > width + 1) return ["atencao", `No celular, a página tem ${Math.max(overflow.scroll_width, overflow.inner_width)} px de largura numa tela de ${width} px e rola de lado.`];
+    return ["ok", "Nada passa da largura do celular."];
+  },
+
+  text_legible({ anatomy }) {
+    const small = anatomy.quality?.mobile?.small_text;
+    if (!small) return ["nao_conferido", NO_MEASURE];
+    if (!small.total_chars) return ["nao_conferido", "A leitura do celular não achou texto para medir."];
+    if (small.key?.length) return ["atencao", `No celular, "${clip(small.key[0].text, 50)}" aparece com ${small.key[0].px} px: preço ou botão abaixo de 12 px.`];
+    if ((small.share ?? 0) >= 0.4) return ["atencao", `No celular, ${percent(small.share)} do texto fica abaixo de 12 px, como "${clip(small.samples?.[0]?.text, 50)}".`];
+    return ["ok", small.small_chars ? `No celular, ${percent(small.share)} do texto fica abaixo de 12 px, e nenhum preço ou botão.` : "No celular, todo o texto tem 12 px ou mais."];
+  },
+
+  tap_targets({ anatomy }) {
+    const targets = anatomy.quality?.mobile?.tap_targets;
+    if (!targets) return ["nao_conferido", NO_MEASURE];
+    if (!targets.undersized) return ["ok", `Os ${targets.checked} alvos de toque têm ao menos 24 px, ou espaço em volta.`];
+    const first = targets.samples?.[0];
+    const named = first?.text ? `"${clip(first.text, 40)}"` : "um botão sem nome, que o leitor de tela também não anuncia";
+    return ["atencao", `${targets.undersized === 1 ? "Um alvo de toque tem" : `${targets.undersized} alvos de toque têm`} menos de 24 px e fica${targets.undersized === 1 ? "" : "m"} perto de outro, como ${named} (${first?.width} por ${first?.height} px).`];
+  },
+
+  contrast_ok({ anatomy }) {
+    const contrast = anatomy.quality?.desktop?.contrast;
+    if (!contrast) return ["nao_conferido", NO_MEASURE];
+    const unknown = Object.values(contrast.unknown ?? {}).reduce((sum, count) => sum + count, 0);
+    if (!contrast.checked) return ["nao_conferido", "Nenhum par de texto e fundo pôde ser medido: confira nas fotos."];
+    const first = contrast.failing?.[0];
+    if (first) return ["atencao", `"${clip(first.text, 50)}" tem contraste de ${String(first.ratio).replace(".", ",")} para 1 (${first.color} sobre ${first.background}), e o mínimo é ${String(first.required).replace(".", ",")} para 1${contrast.failing.length > 1 ? `. Mais ${contrast.failing.length - 1} pares ficam abaixo` : ""}.`];
+    return ["ok", `Os ${contrast.checked} pares de texto e fundo medidos passam${unknown ? `. ${unknown} ficaram de fora por estarem sobre imagem ou degradê: olhe nas fotos` : ""}.`];
+  },
+
+  controls_fit({ anatomy }) {
+    const desktop = anatomy.quality?.desktop?.controls;
+    const mobile = anatomy.quality?.mobile?.controls;
+    if (!desktop && !mobile) return ["nao_conferido", NO_MEASURE];
+    const words = { cortado: "é cortado", vaza: "passa do botão", colado: "encosta num lado do botão" };
+    const seen = new Map();
+    for (const [where, read] of [["no celular", mobile], ["no computador", desktop]]) {
+      for (const problem of read?.problems ?? []) if (!seen.has(problem.text)) seen.set(problem.text, { ...problem, where });
+    }
+    if (!seen.size) return ["ok", "O texto cabe em todos os botões, no computador e no celular."];
+    const first = [...seen.values()][0];
+    return ["atencao", `O texto "${clip(first.text, 40)}" ${words[first.reason] ?? "não cabe"} ${first.where}${seen.size > 1 ? `, e mais ${seen.size - 1} botões têm o mesmo problema` : ""}.`];
+  },
+
+  images_light({ anatomy }) {
+    const images = anatomy.quality?.mobile?.images;
+    if (!images) return ["nao_conferido", NO_MEASURE];
+    if (!images.count) return null;
+    const name = (src) => clip(String(src ?? "").split(/[?#]/)[0].split("/").pop() || "uma imagem", 40);
+    if (images.heavy?.length) return ["atencao", `No celular, ${name(images.heavy[0].src)} pesa ${kb(images.heavy[0].bytes)}${images.heavy.length > 1 ? `, e mais ${images.heavy.length - 1} imagens passam de 500 KB` : ""}.`];
+    if (images.oversized?.length) return ["atencao", `No celular, ${name(images.oversized[0].src)} tem ${images.oversized[0].natural_width} px e aparece com ${images.oversized[0].shown_width} px${images.oversized.length > 1 ? `, e mais ${images.oversized.length - 1} imagens vêm maiores do que aparecem` : ""}.`];
+    return ["ok", "As imagens vêm no tamanho em que aparecem e pesam menos de 500 KB."];
+  },
 };
 
 export const RULE_IDS = Object.keys(RULES);
@@ -460,10 +724,10 @@ export const RULE_IDS = Object.keys(RULES);
 /**
  * Evaluates the checks of one page type. `capture` is captura.json; `facts` is pagina.json;
  * `definitions` is references/checks.json; `text` is texto.md of the capture (the whole page text,
- * footer included), else the text of the anatomy's sections is used. Returns the items, the
- * summary and the lines to say.
+ * footer included), else the text of the anatomy's sections is used; `film` is filme.json of the
+ * Video engine, when the scene was filmed. Returns the items, the summary and the lines to say.
  */
-export function audit({ type, capture, facts, definitions, text = null }) {
+export function audit({ type, capture, facts, definitions, text = null, film = null }) {
   const anatomy = capture?.anatomy ?? null;
   const weights = definitions.weights ?? [];
   const context = {
@@ -482,7 +746,7 @@ export function audit({ type, capture, facts, definitions, text = null }) {
     if (!definition || !rule) continue;
     let outcome;
     if (!anatomy) outcome = ["nao_conferido", "A captura não trouxe a leitura completa da página: ela vem no Motor de vídeo 1.1.0 ou mais novo."];
-    else outcome = rule({ anatomy, facts: facts ?? {}, context, pageUrl, text: fullText });
+    else outcome = rule({ anatomy, capture, facts: facts ?? {}, context, pageUrl, text: fullText, film });
     if (!outcome) continue;
     const [status, detail] = outcome;
     items.push({ id, label: definition.label, weight: definition.weight, status, detail, fix: status === "ok" ? null : definition.fix });

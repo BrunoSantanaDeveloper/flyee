@@ -28,7 +28,7 @@ Os eventos são `cross_sell_view` e `cross_sell_add`, com o item e a posição (
 
 ## O que a conferência olha
 
-`no_prechecked`, `price_shown`, `reference_price_true`, `proof_about_offer`, `countdown_real`, `video_autoplay_ok`, `reduced_motion`, `legal_lines`, `images_alt`.
+`no_prechecked`, `price_shown`, `reference_price_true`, `discount_math`, `proof_about_offer`, `claims_have_origin`, `placeholder_data`, `countdown_real`, `video_autoplay_ok`, `reduced_motion`, `legal_lines`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

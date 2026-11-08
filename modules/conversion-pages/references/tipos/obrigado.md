@@ -28,7 +28,7 @@ O evento `purchase` sai com valor, moeda e uma identificação única do pedido,
 
 ## O que a conferência olha
 
-`thank_you_basics`, `cta_first_screen`, `legal_lines`, `video_autoplay_ok`, `reduced_motion`, `images_alt`.
+`thank_you_basics`, `cta_first_screen`, `legal_lines`, `placeholder_data`, `video_autoplay_ok`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

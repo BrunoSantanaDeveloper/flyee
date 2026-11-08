@@ -53,9 +53,11 @@ export const engineArgs = {
   check: () => ["check"],
   help: () => ["help"],
   capture: ({ url, out }) => ["capture", url, "--out", out],
-  music: ({ out, duration, bpm, style, seed, arc = "auto", loop = false }) => [
+  music: ({ out, duration, bpm, style, seed, arc = "auto", loop = false, dropAt = null }) => [
     "music", "--out", out, "--duration", text(duration), "--bpm", text(bpm), "--style", style, "--seed", text(seed), "--arc", arc,
     ...(loop ? ["--loop"] : []),
+    // the Motor 1.1.0 and later: the peak on the film's biggest change (ask engineSupports first)
+    ...(dropAt !== null && dropAt !== undefined ? ["--drop-at", text(dropAt)] : []),
   ],
   synth: ({ out, bpm, bars, style, seed }) => ["synth", "--out", out, "--bpm", text(bpm), "--bars", text(bars), "--style", style, "--seed", text(seed)],
   beats: ({ input, out }) => ["beats", input, "--out", out],

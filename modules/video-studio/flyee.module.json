@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "video-studio",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -104,8 +104,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Quando o Motor de vídeo ainda não está no projeto, a sua IA diz numa frase que vai instalá-lo e instala na hora, sem pedir confirmação.",
-    "en": "When the Video engine is not in the project yet, your AI says in one sentence that it will install it and installs it right away, without asking for confirmation."
+    "pt-BR": "O som acompanha melhor a imagem. O whoosh de cada corte agora soa mais alto no instante do corte, e não um pouco depois. A trilha composta põe o ponto alto na maior mudança do vídeo: a prova no lançamento, o preço na oferta, o resultado no passo a passo, ou a assinatura. Isso vale com o Motor de vídeo atualizado; com um mais antigo, o som sai como antes.",
+    "en": "The sound follows the picture more closely. Each cut's whoosh is now loudest on the cut itself, not a little after it. The composed track puts its peak on the video's biggest change: the proof in a launch, the price in an offer, the result in a step by step, or the signature. This works with the updated Video engine; with an older one, the sound comes out as before."
   },
   "license": "member"
 }

@@ -39,7 +39,7 @@ import {
   writeBriefing,
   writeState,
 } from "./lib/project.mjs";
-import { assetTargets, beatGrid, draftRoteiro, eventsFile, FORMAT, LIMITS, MUSIC_STYLES, onScreenTexts, sceneSummary, solveTiming as localSolveTiming, STYLE_IDS, SYNTH_FOR, SYNTH_STYLES, timeline, trimWords, validateRoteiro } from "./lib/roteiro.mjs";
+import { assetTargets, beatGrid, draftRoteiro, dropMoment, eventsFile, FORMAT, LIMITS, MUSIC_STYLES, onScreenTexts, sceneSummary, solveTiming as localSolveTiming, STYLE_IDS, SYNTH_FOR, SYNTH_STYLES, timeline, trimWords, validateRoteiro } from "./lib/roteiro.mjs";
 import { AppError, displayPath, ensureDir, isDir, isFile, MAC, parseArgs, progress, projectRoot, readJson, removeDir, requireJson, resolveInput, round, sha256File, toPosix, usage, WINDOWS, writeFileAtomic, writeJson } from "./lib/util.mjs";
 
 const SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
@@ -906,7 +906,7 @@ async function buildCommand(positionals, values) {
 // The sound, shared by preview and final
 // ---------------------------------------------------------------------------
 
-async function ensureMusic(ctx, engine, roteiro, { refresh, warnings }) {
+async function ensureMusic(ctx, engine, roteiro, { refresh, warnings, templates = null }) {
   const { state, paths, dir } = ctx;
   const music = roteiro.music;
   const times = timeline(roteiro);
@@ -934,7 +934,9 @@ async function ensureMusic(ctx, engine, roteiro, { refresh, warnings }) {
   const synth = music.mode === "synth";
   const style = synth ? (SYNTH_STYLES.includes(music.style) && !MUSIC_STYLES.includes(music.style) ? music.style : (SYNTH_FOR[music.style] ?? "clean")) : music.style;
   const bars = Math.max(1, Math.ceil(times.bars - 1e-6));
-  const hash = hashJson({ mode: music.mode, style, seed: music.seed, bpm: roteiro.bpm, duration: times.duration, bars: synth ? bars : null, loop: Boolean(roteiro.loop), engine: engine.version });
+  // a composed track puts its peak on the film's biggest change; a loop has no peak to place
+  const dropAt = synth ? null : dropMoment(roteiro, templates);
+  const hash = hashJson({ mode: music.mode, style, seed: music.seed, bpm: roteiro.bpm, duration: times.duration, bars: synth ? bars : null, loop: Boolean(roteiro.loop), engine: engine.version, ...(dropAt !== null ? { drop_at: dropAt } : {}) });
   const fresh = !refresh && previous?.hash === hash && isFile(paths.music);
   let result = null;
   if (!fresh) {
@@ -944,7 +946,9 @@ async function ensureMusic(ctx, engine, roteiro, { refresh, warnings }) {
       if (bars !== times.bars) warnings.push(`A trilha em loop tem ${bars} compassos inteiros e o vídeo ${decimal(times.bars, 2)}: ela é cortada no fim do vídeo.`);
     } else {
       progress(`Trilha: compondo ${decimal(times.duration)} s a ${roteiro.bpm} BPM (${style}, semente ${music.seed})`);
-      result = await engineCall(engine, engineArgs.music({ out: rel(paths.music), duration: times.duration, bpm: roteiro.bpm, style, seed: music.seed, arc: "auto", loop: Boolean(roteiro.loop) }));
+      // a Motor older than 1.1.0 does not take --drop-at: its peak stays where its own formula puts it
+      const peak = dropAt !== null && (await engineSupports(engine, "--drop-at", { root: ROOT })) ? dropAt : null;
+      result = await engineCall(engine, engineArgs.music({ out: rel(paths.music), duration: times.duration, bpm: roteiro.bpm, style, seed: music.seed, arc: "auto", loop: Boolean(roteiro.loop), dropAt: peak }));
     }
     for (const warning of result.warnings ?? []) warnings.push(`Trilha: ${warning}`);
     if (!isFile(paths.music)) throw new AppError("video_render_failed", `O Motor de vídeo não gravou a trilha em ${rel(paths.music)}.`, "Rode de novo com --refresh; se repetir, mostre esta mensagem ao integrante.");
@@ -1100,7 +1104,7 @@ async function previewCommand(positionals, values) {
   const { state, paths } = ctx;
   const times = timeline(roteiro);
   for (const name of ["render", "previa"]) ensureDir(paths[name]);
-  const music = await ensureMusic(ctx, engine, roteiro, { refresh, warnings });
+  const music = await ensureMusic(ctx, engine, roteiro, { refresh, warnings, templates });
   const effects = await ensureEffects(ctx, engine, roteiro, { refresh, warnings });
   const content = contentHash(paths.dir, { engineVersion: engine.version });
   const previous = state.preview ?? {};
@@ -1257,7 +1261,7 @@ async function finalCommand(positionals, values) {
   const { state, paths } = ctx;
   const times = timeline(roteiro);
   for (const name of ["render", "entrega"]) ensureDir(paths[name]);
-  const music = await ensureMusic(ctx, engine, roteiro, { refresh: false, warnings });
+  const music = await ensureMusic(ctx, engine, roteiro, { refresh: false, warnings, templates });
   const effects = await ensureEffects(ctx, engine, roteiro, { refresh: false, warnings });
 
   progress(`Final: renderizando ${rel(paths.page)} em ${FORMAT.width}×${FORMAT.height} com desfoque de movimento (${decimal(times.duration)} s)`);

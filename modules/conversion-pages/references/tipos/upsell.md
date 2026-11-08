@@ -53,13 +53,14 @@ A barra fixa com o preço e o botão aparece quando o cartão da oferta sai da t
 - A frase de apoio diz o que é, para quem é e quanto custa, nessa ordem.
 - O botão diz a ação, como "Adicionar ao meu pedido", e não algo genérico como "Comprar".
 - A recusa usa palavras neutras.
+- Leia `../vicios.md` antes de escrever: número, nome e escassez precisam de origem.
 - Antes de entregar, revise o texto com a skill `texto-natural`, mantendo a voz da marca e sem acrescentar fato, número ou promessa.
 
 ## Movimento e mídia
 
-Veja `../movimento.md`. Em resumo:
+Veja `../movimento.md` e `../demonstracao.md`. Em resumo:
 
-- a demonstração do topo é um vídeo sem som, em loop, com a capa no idioma da página;
+- a demonstração do topo é um vídeo sem som, em loop, com a capa no idioma da página. Ela mostra o produto oferecido de verdade, só com o que ele faz hoje;
 - os itens que abrem ao toque abrem em 0,3 s;
 - a barra fixa sobe em 0,25 s;
 - com menos movimento pedido no sistema, nada se mexe sozinho.
@@ -82,7 +83,7 @@ Os detalhes estão em `../lei.md`.
 
 ## O que a conferência olha
 
-`cta_first_screen`, `single_offer`, `decline_visible`, `decline_honest`, `price_shown`, `reference_price_true`, `renewal_shown`, `guarantee_near_cta`, `charge_clear`, `sticky_cta_long_page`, `proof_about_offer`, `countdown_real`, `video_autoplay_ok`, `reduced_motion`, `legal_lines`, `images_alt`.
+`cta_first_screen`, `single_offer`, `decline_visible`, `decline_honest`, `price_shown`, `reference_price_true`, `discount_math`, `renewal_shown`, `guarantee_near_cta`, `charge_clear`, `sticky_cta_long_page`, `proof_about_offer`, `claims_have_origin`, `placeholder_data`, `countdown_real`, `demo_honest`, `demo_film`, `ai_defaults`, `off_brand`, `video_autoplay_ok`, `reduced_motion`, `legal_lines`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

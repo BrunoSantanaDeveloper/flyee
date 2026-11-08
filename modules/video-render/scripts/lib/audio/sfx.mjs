@@ -59,8 +59,11 @@ export function normalizeCues(input) {
       return n;
     };
     const count = cue.count !== undefined ? num(cue.count, "count", null, 1, 400) : typeof cue.text === "string" ? clamp(cue.text.length, 1, 400) : null;
+    const anchor = cue.anchor ?? "start";
+    if (!["start", "peak"].includes(anchor)) throw new AppError("cues_invalid", `Valor inválido de anchor na cue ${index + 1}: ${cue.anchor}.`, "Use start (o som começa no t, o padrão) ou peak (o momento mais forte do som cai no t).");
     return {
       t,
+      anchor,
       type: cue.type,
       gain: num(cue.gain, "gain", 0, -60, 12),
       pitch: num(cue.pitch, "pitch", 0, -24, 24),
@@ -70,6 +73,9 @@ export function normalizeCues(input) {
     };
   });
 }
+
+/** Where a sound's loudest moment falls, as a fraction of its length; the others peak at once. */
+const PEAK_AT = { whoosh: 0.5, swoosh: 0.5, riser: 1 };
 
 /** The length in seconds a cue occupies, used to size the output when no duration is given. */
 export function cueLength(cue) {
@@ -205,6 +211,8 @@ function render(cue, rng) {
  * Renders cues onto a stereo timeline. `duration` fixes the length (cues past it
  * are cut); without it the file ends 0.3 s after the last cue. Overlapping cues
  * sum; the level is kept clip-safe by the soft limiter when the file is written.
+ * A cue starts on its `t` unless `anchor` is "peak", which brings it forward so its
+ * loudest moment lands there; what would start before the file is cut.
  */
 export function synthesizeSfx(cues, { duration = null, seed = 1 } = {}) {
   const list = normalizeCues(cues);
@@ -215,13 +223,15 @@ export function synthesizeSfx(cues, { duration = null, seed = 1 } = {}) {
     const rng = seededRandom(seed * 101 + index * 17 + cue.type.length);
     const mono = render(cue, rng);
     const gain = dbToGain(cue.gain) * 0.8;
-    const start = Math.round(cue.t * RATE);
+    const lead = cue.anchor === "peak" ? cueLength(cue) * (PEAK_AT[cue.type] ?? 0) : 0;
+    const start = Math.round((cue.t - lead) * RATE);
     if (cue.type === "whoosh" || cue.type === "swoosh") {
       // a moving pan: the sound travels from -pan to +pan across its length
       const from = -cue.pan;
       const to = cue.pan;
       for (let i = 0; i < mono.length; i++) {
         const j = start + i;
+        if (j < 0) continue;
         if (j >= frames) break;
         const pan = from + (to - from) * (i / mono.length);
         const angle = ((pan + 1) * Math.PI) / 4;

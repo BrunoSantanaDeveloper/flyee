@@ -35,6 +35,7 @@
     "scripts/commands/accept.mjs",
     "scripts/commands/audio.mjs",
     "scripts/commands/capture.mjs",
+    "scripts/commands/film.mjs",
     "scripts/lib/accept.mjs",
     "scripts/lib/audio/beats.mjs",
     "scripts/lib/audio/music.mjs",
@@ -45,6 +46,7 @@
     "scripts/lib/browser.mjs",
     "scripts/lib/capture.mjs",
     "scripts/lib/ffmpeg.mjs",
+    "scripts/lib/film.mjs",
     "scripts/lib/networks.mjs",
     "scripts/lib/renderer.mjs",
     "scripts/lib/tools.mjs",
@@ -136,8 +138,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "A captura agora lê a página inteira, para conferir páginas de oferta. Ela traz as seções com o texto de cada uma e todos os botões e links de ação, com a posição e se aparecem na primeira tela do computador e do celular. Traz também as barras fixas, inclusive as que só surgem depois da rolagem, as caixas e opções que já vêm marcadas, com o preço, os preços riscados, os atributos dos vídeos, as animações rodando, o suporte a movimento reduzido e os relógios de contagem regressiva. O texto inteiro da página fica em texto.md, por seção. E dá para capturar uma página salva pelo navegador (.mhtml), o caminho para páginas que só abrem com login.",
-    "en": "The capture now reads the whole page, to check offer pages. It brings the sections with their text and every action button and link, with its position and whether it shows on the first desktop and phone screen. It also brings the fixed bars, including those that only appear after scrolling, the checkboxes and options that come already checked, with their price, struck-through prices, video attributes, running animations, reduced-motion support and countdown timers. The page's whole text goes to texto.md, by section. And it can capture a page saved from the browser (.mhtml), the way into pages that only open after a login."
+    "pt-BR": "A captura agora lê a página inteira, para conferir páginas de oferta. Ela traz as seções com o texto de cada uma e todos os botões e links de ação, com a posição e se aparecem na primeira tela do computador e do celular. Traz também as barras fixas, inclusive as que só surgem depois da rolagem, as caixas e opções que já vêm marcadas, com o preço, os preços riscados, os atributos dos vídeos, as animações rodando, o suporte a movimento reduzido e os relógios de contagem regressiva. O texto inteiro da página fica em texto.md, por seção. E dá para capturar uma página salva pelo navegador (.mhtml), o caminho para páginas que só abrem com login. A captura também mede a página pronta: o que passa da largura do celular, o texto pequeno, os botões difíceis de tocar, o contraste, o texto que não cabe nos botões e as imagens pesadas, e lê as cenas marcadas e os padrões visuais repetidos. O comando film fotografa uma parte de uma página rodando, no computador, no celular e com menos movimento, e monta uma folha de quadros de cada. Um computador configurado com menos movimento deixa de mudar o que o render e a captura mostram. No som, um whoosh pode ter o momento mais alto no corte (anchor peak), e não um pouco depois, e um riser assim termina no instante pedido. A trilha composta aceita o instante do ponto alto (--drop-at), para ele cair na maior mudança do filme. Sob um impacto, a música cede por um instante e volta (--sfx-duck). E a mixagem sai igual toda vez com os mesmos arquivos, sem perder o fim da música quando a voz ou os efeitos são mais curtos.",
+    "en": "The capture now reads the whole page, to check offer pages. It brings the sections with their text and every action button and link, with its position and whether it shows on the first desktop and phone screen. It also brings the fixed bars, including those that only appear after scrolling, the checkboxes and options that come already checked, with their price, struck-through prices, video attributes, running animations, reduced-motion support and countdown timers. The page's whole text goes to texto.md, by section. And it can capture a page saved from the browser (.mhtml), the way into pages that only open after a login. The capture also measures the finished page: what passes the phone's width, small text, buttons that are hard to tap, contrast, text that does not fit its button and heavy images, and it reads the marked scenes and repeated visual patterns. The film command photographs part of a running page, on desktop, on a phone and with less motion, and builds a sheet of frames for each. A computer set to reduce motion no longer changes what a render and a capture show. In the sound, a whoosh can have its loudest moment on the cut (anchor peak) instead of a little after it, and a riser set that way ends on the time asked. The composed track takes the time of its peak (--drop-at), so it lands on the film's biggest change. Under an impact, the music yields for a moment and comes back (--sfx-duck). And the mix comes out the same every time from the same files, without losing the end of the music when the voice or the effects are shorter."
   },
   "license": "member"
 }

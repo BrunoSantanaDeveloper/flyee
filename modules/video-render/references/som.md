@@ -6,11 +6,11 @@ Metade do soco é o som. Neste método a música vem **antes** da animação: a 
 
 Nunca anime antes de ter a grade. Três caminhos:
 
-- **Trilha original com arco, para um filme que começa e termina.** `music --out <pasta>/trilha.wav --duration 15 --bpm 120 --style energetic --beats-out <pasta>/beats.json --json` compõe uma trilha com a duração do filme, o andamento e o caráter pedidos (`clean`, `energetic`, `warm`, `minimal`, `cinematic`, `playful`), com arco (`--arc auto`: introdução, crescimento, ponto alto e uma pancada final no último tempo forte; `--arc flat` é uma cama constante). Devolve `file`, `beats_file`, `bpm`, `duration`, `style`, `sections` e `drop`, e grava o `beats.json` exato, porque uma trilha gerada conhece a própria grade. A mesma `--seed` dá a mesma trilha: anote-a nas notas da entrega para poder refazer. É o caminho padrão de um Reels: sem licença a resolver, drop onde o filme pede.
+- **Trilha original com arco, para um filme que começa e termina.** `music --out <pasta>/trilha.wav --duration 15 --bpm 120 --style energetic --beats-out <pasta>/beats.json --json` compõe uma trilha com a duração do filme, o andamento e o caráter pedidos (`clean`, `energetic`, `warm`, `minimal`, `cinematic`, `playful`), com arco (`--arc auto`: introdução, crescimento, ponto alto e uma pancada final no último tempo forte; `--arc flat` é uma cama constante). Devolve `file`, `beats_file`, `bpm`, `duration`, `style`, `sections` e `drop`, e grava o `beats.json` exato, porque uma trilha gerada conhece a própria grade. `--drop-at <s>` põe o ponto alto no início de compasso mais perto do instante da maior mudança do filme. A mesma `--seed` dá a mesma trilha: anote-a nas notas da entrega para poder refazer. É o caminho padrão de um Reels: sem licença a resolver, drop onde o filme pede.
 - **Trilha em loop, para o que se repete.** `synth --out <pasta>/trilha.wav --bpm 120 --bars 8 --style clean --json` gera exatamente `bars` compassos que emendam sem clique (`clean`, `noir`, `upbeat`, `lofi`, `pulse`; `--intro-bars 1` deixa o primeiro compasso mais leve; `--beats-per-bar 3` para compasso ternário). É o caminho de slides de carrossel e de qualquer vídeo que roda em repetição; o `beats.json` vem ao lado, com a batida 0 em `t = 0`.
 - **Música do integrante.** `beats <áudio> --out <pasta>/beats.json --json` mede qualquer áudio e devolve `bpm`, `offset`, `confidence`, `beats`, `downbeats` e `hits`. Com `confidence` abaixo de 0,5, não confie na grade: pergunte o BPM ao integrante ou escolha outra música. Só entra música licenciada para o uso (seção 8).
 
-Escolha pela medição, não pelo gosto. Uma trilha boa para filme curto tem **arco** (intro mais baixa → entrada → cheio → uma parada → final), **bumbo legível** (graves alternando forte e fraco a cada tempo: é o que torna a grade confiável) e **fim limpo** (cauda curta). Uma trilha chapada, sem arco, reprova: o filme precisa de silêncio e rajada também no som. Entre duas trilhas geradas, fique com a que tem o `drop` perto de onde o filme precisa da maior mudança de enquadramento.
+Escolha pela medição, não pelo gosto. Uma trilha boa para filme curto tem **arco** (intro mais baixa → entrada → cheio → uma parada → final), **bumbo legível** (graves alternando forte e fraco a cada tempo: é o que torna a grade confiável) e **fim limpo** (cauda curta). Uma trilha chapada, sem arco, reprova: o filme precisa de silêncio e rajada também no som. Numa trilha gerada, peça o `drop` no instante da maior mudança de enquadramento (`--drop-at`), e a resposta avisa se precisou mover; numa música medida, fique com a que tem o ponto alto perto dele.
 
 ## 2. O `beats.json`
 
@@ -61,11 +61,11 @@ Corte que cai entre dois quadros tropeça. A 30 fps, estes andamentos dão tempo
 | Evento visual | Onde na grade | Som |
 |---|---|---|
 | palavras do gancho | colcheias ou semínimas da intro | `typing` (ou um `tick` por palavra) |
-| sair da tela de texto (T1 de `motion.md`) | o tempo 1 da entrada da bateria | `whoosh` |
+| sair da tela de texto (T1 de `motion.md`) | o tempo 1 da entrada da bateria | `whoosh` com o pico no corte |
 | nascer da etiqueta (T2) | 1 tempo antes da rajada | `click`, e `tick` a cada passo do caça-níquel |
-| **a maior mudança de enquadramento** (T3) | **o drop** | `riser` terminando no drop + `impact` |
+| **a maior mudança de enquadramento** (T3) | **o drop**, pedido com `--drop-at` | `riser` terminando no drop + `impact` |
 | cortes da rajada | tempos e `hits`; durações 1, 1, ½, ½, 1, 2 tempos | nada extra: a música corta |
-| troca de mundo (T4, T6) | o tempo 1 de um compasso | `whoosh` |
+| troca de mundo (T4, T6) | o tempo 1 de um compasso | `whoosh` com o pico no corte |
 | cartão que pousa, tela que vira cartão | o tempo em que assenta | `thump` |
 | a frase antes do soco (T8) | a parada da música (ou crie uma, segurando) | silêncio |
 | **soco final** | o tempo 1 depois da parada | `impact` + `click` |
@@ -76,15 +76,15 @@ Segure 1 a 2 tempos de quase-parada antes do drop e antes do soco. O soco cai a 
 
 ## 5. Efeitos: o `cues.json`
 
-`sfx <cues.json> --out <pasta>/efeitos.wav --duration 15 --json` sintetiza os efeitos de uma lista de deixas e grava uma faixa só de efeitos, do tamanho do filme (`--cues "0.5:click,1.2:whoosh"` é a mesma lista em linha). Cada deixa marca o instante do evento visual, e o som é alinhado a ele. O `sfx` também aceita a forma de eventos (`--events eventos.json` ou `--event tipo@tempo`), com sons de interface como `shutter`, `pluck` e `blip`; os campos dela estão em `interface.md`.
+`sfx <cues.json> --out <pasta>/efeitos.wav --duration 15 --json` sintetiza os efeitos de uma lista de deixas e grava uma faixa só de efeitos, do tamanho do filme (`--cues "0.5:click,1.2:whoosh"` é a mesma lista em linha). Cada deixa marca o instante do evento visual, e o som começa nele. Os sons de passagem (`whoosh`, `swoosh`, `riser`) crescem até o momento mais alto, e é por esse momento que o ouvido marca o corte: com `"anchor": "peak"`, o som começa antes e o mais alto cai no instante da deixa (sem ela, o pico de um `whoosh` chega de 5 a 8 quadros depois do corte; os números estão em `interface.md`). O `sfx` também aceita a forma de eventos (`--events eventos.json` ou `--event tipo@tempo`), com sons de interface como `shutter`, `pluck` e `blip`; os campos dela estão em `interface.md`.
 
 ```json
 [
   { "t": 0.5, "type": "typing", "gain": -4 },
-  { "t": 2.0, "type": "whoosh", "pan": -0.4 },
+  { "t": 2.0, "type": "whoosh", "pan": -0.4, "anchor": "peak" },
   { "t": 2.5, "type": "click" },
   { "t": 2.6, "type": "tick", "gain": -6 },
-  { "t": 3.0, "type": "riser", "duration": 1 },
+  { "t": 4.0, "type": "riser", "duration": 1, "anchor": "peak" },
   { "t": 4.0, "type": "impact" },
   { "t": 13.5, "type": "success", "pan": 0.2 }
 ]
@@ -96,12 +96,13 @@ Segure 1 a 2 tempos de quase-parada antes do drop e antes do soco. O soco cai a 
 | `type` | um dos tipos abaixo |
 | `gain` | opcional, em dB; negativo abaixa, positivo sobe; sem ele, o nível padrão do tipo |
 | `pan` | opcional, de -1 (esquerda) a 1 (direita); acompanha a posição do elemento na tela |
+| `anchor` | opcional: `peak` põe o momento mais alto do `whoosh` e do `swoosh` no `t` e termina o `riser` nele; sem ela, o som começa no `t` |
 
 | `type` | Quando | Nível |
 |---|---|---|
 | `impact` | o drop e o soco final; no máximo três num filme de 15 s | o mais alto |
-| `riser` | a subida antes do drop: começa no `t` e dura `duration` (padrão 1 s; na forma de eventos, `length`), então, para terminar no drop, use `t = drop − duração` | abaixo do `impact` |
-| `whoosh` | todo chicote, zoom e passagem rápida de um elemento grande (T1, T4, T6, T7) | 4 a 6 dB abaixo do `impact` |
+| `riser` | a subida antes do drop, que dura `duration` (padrão 1 s; na forma de eventos, `length`): com `anchor: "peak"`, ponha o `t` do drop; sem ela, o som começa no `t`, então use `t = drop − duração` | abaixo do `impact` |
+| `whoosh` | todo chicote, zoom e passagem rápida de um elemento grande (T1, T4, T6, T7), com `anchor: "peak"` no corte | 4 a 6 dB abaixo do `impact` |
 | `thump` | um cartão que pousa, uma tela que assenta: peso sem estrondo | 4 a 6 dB abaixo do `impact` |
 | `click` | toda etiqueta ou botão apertado, toda troca de estado | 6 a 8 dB abaixo |
 | `success` | confirmações: a marca de certo, o botão que vira "feito", o fecho | 6 a 8 dB abaixo |
@@ -112,7 +113,7 @@ Segure 1 a 2 tempos de quase-parada antes do drop e antes do soco. O soco cai a 
 | `typing` | texto digitado letra a letra, palavras do gancho que se montam | 8 a 10 dB abaixo |
 | `tick` | cada passo de um contador que rola, de um caça-níquel, de uma lista que passa | o mais baixo, 12 dB abaixo |
 
-Regras: uma deixa por gesto visível e nenhum som sem imagem que o justifique; `tick` e `click` nunca na mesma deixa; `riser` sempre terminando num `impact` (o `t` do riser é o do impact menos a `duration`); um filme de 15 s tem entre 8 e 25 deixas. Ajuste os níveis ouvindo a mixagem, não a faixa de efeitos sozinha.
+Regras: uma deixa por gesto visível e nenhum som sem imagem que o justifique; `tick` e `click` nunca na mesma deixa; `riser` sempre terminando num `impact` (com `anchor: "peak"`, o mesmo `t` do impact; sem ela, o do impact menos a `duration`); um filme de 15 s tem entre 8 e 25 deixas. Ajuste os níveis ouvindo a mixagem, não a faixa de efeitos sozinha.
 
 ## 6. Mixagem
 
@@ -122,7 +123,7 @@ Regras: uma deixa por gesto visível e nenhum som sem imagem que o justifique; `
 |---|---|
 | Volume integrado | −14 LUFS (o `accept` aceita 1,5 LU de folga) |
 | Pico real | −1 dBTP |
-| Música | parte em `--music-gain -3`; sob cada `impact` ela cede por um instante, e o impacto é que soa |
+| Música | parte em `--music-gain -3`; sob cada `impact` ela cede por um instante (`--sfx-duck`, padrão 8 dB) e volta em cerca de um quarto de segundo, e o impacto é que soa; estalos e tiques não mexem nela |
 | Efeitos | de 6 a 12 dB abaixo dos picos da música: comece em `--sfx-gain -6` e ajuste ouvindo |
 | Voz | sempre por cima: a música abaixa sob a voz (`--duck`, padrão 10 dB) e volta quando ela para |
 | Fade-out | `--fade-out` só quando a peça não é um loop; o fade é curto (meio segundo é o teto). Um loop termina seco, com a trilha feita com `music --loop` |

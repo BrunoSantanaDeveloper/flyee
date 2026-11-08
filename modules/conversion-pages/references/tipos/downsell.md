@@ -35,7 +35,7 @@ As mesmas do upsell (`upsell.md`).
 
 ## O que a conferência olha
 
-`cta_first_screen`, `decline_visible`, `decline_honest`, `price_shown`, `reference_price_true`, `renewal_shown`, `guarantee_near_cta`, `charge_clear`, `countdown_real`, `video_autoplay_ok`, `reduced_motion`, `legal_lines`, `images_alt`.
+`cta_first_screen`, `decline_visible`, `decline_honest`, `price_shown`, `reference_price_true`, `discount_math`, `renewal_shown`, `guarantee_near_cta`, `charge_clear`, `claims_have_origin`, `placeholder_data`, `countdown_real`, `video_autoplay_ok`, `reduced_motion`, `legal_lines`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

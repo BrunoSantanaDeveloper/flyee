@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema Exemplo: uma cena para filmar</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, sans-serif; color: #111827; background: #FFFFFF; }
+  section { padding: 40px 24px; }
+  .espaco { height: 1200px; }
+  .cena { width: min(520px, 100%); padding: 24px; background: #111827; color: #F9FAFB; border-radius: 12px; }
+  .barra { height: 16px; width: 10%; background: #0F62FE; border-radius: 8px; margin-top: 16px; }
+  .so-computador { display: block; }
+  @media (max-width: 600px) { .so-computador { display: none; } }
+</style>
+</head>
+<body>
+<section>
+  <h1>O seu escritório em um só lugar</h1>
+  <div class="espaco"></div>
+</section>
+<section>
+  <div class="cena" data-demo="topo" role="img" aria-label="Um prazo sendo criado">
+    <div id="estado">Parado</div>
+    <div class="barra" id="barra"></div>
+  </div>
+  <p>Exemplo fictício.</p>
+  <div class="so-computador" id="so-computador">Esta parte só existe no computador.</div>
+</section>
+<script>
+  var calmo = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var estado = document.getElementById("estado");
+  var barra = document.getElementById("barra");
+  if (calmo) {
+    estado.textContent = "Prazo criado";
+    barra.style.width = "100%";
+  } else {
+    var passo = 0;
+    setInterval(function () {
+      passo = (passo + 1) % 10;
+      estado.textContent = "Passo " + passo;
+      barra.style.width = (passo + 1) * 10 + "%";
+    }, 200);
+  }
+</script>
+</body>
+</html>

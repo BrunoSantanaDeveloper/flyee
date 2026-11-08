@@ -17,7 +17,7 @@ import { brl, learningBudget } from "./lib/budget.mjs";
 import { ADS_DIR, addJournal, BRIEF_FIELDS, briefingTemplate, campaignSlug, checkBriefing, hostOf, layout, parseMoney, readJournal, readState, requireCampaign, writeState } from "./lib/campaign.mjs";
 import { approvalContent, checkConcepts, CONFIDENCE_LABELS, confidenceChanges, ENABLED_PLACEMENTS, PLACEMENTS, TEMPLATES } from "./lib/concepts.mjs";
 import { checkCopy } from "./lib/copy.mjs";
-import { CAPTURE_ERRORS, engineArgs, findVideoRender, INSTALL_VIDEO_RENDER, INSTALL_VIDEO_RENDER_FIX, requireVideoRender, runEngine } from "./lib/engine.mjs";
+import { CAPTURE_ERRORS, engineArgs, engineSupports, findVideoRender, INSTALL_VIDEO_RENDER, INSTALL_VIDEO_RENDER_FIX, requireVideoRender, runEngine } from "./lib/engine.mjs";
 import { adCardsToItems, applyTags, declaredToItems, mergeItems, readEvidence, readingKind, summarize } from "./lib/evidence.mjs";
 import { copyFile, dirsIn, ensureDir, filesIn, hashJson, isFile, removeDir, sha256File } from "./lib/files.mjs";
 import { campaignLinks, linksMarkdown } from "./lib/links.mjs";
@@ -26,7 +26,7 @@ import { auditPage, pageBriefMarkdown } from "./lib/page.mjs";
 import { commentsToItems, instagramPostsToItems, partnerApps, partnerKind } from "./lib/partners.mjs";
 import { applyPlanToBriefing, briefFromPlan, findPlan } from "./lib/plan.mjs";
 import { checkSearch, searchMarkdown } from "./lib/search.mjs";
-import { beatGrid, checkPiece, checkPoster, draftPiece, eventsOf, FONT_FILE, fontWeight, IMAGE_FILE, imageSize, imageTarget, pageHtml, paletteFrom, posterOf, screenTexts } from "./lib/pieces.mjs";
+import { beatGrid, checkPiece, checkPoster, draftPiece, dropOf, eventsOf, FONT_FILE, fontWeight, IMAGE_FILE, imageSize, imageTarget, pageHtml, paletteFrom, posterOf, screenTexts } from "./lib/pieces.mjs";
 import { conceptsMarkdown, evidenceMarkdown, launchMarkdown, textsMarkdown } from "./lib/report.mjs";
 import { proposeNextRound, reportToOwnResults, roundMarkdown } from "./lib/round.mjs";
 import { sequenceMarkdown, targetSequence } from "./lib/sequence.mjs";
@@ -886,10 +886,13 @@ async function ensureAudio(ctx, key, piece, engine, paths, { refresh, warnings }
   ensureDir(paths.audio);
   writeJson(paths.grid, beatGrid(piece));
   const entry = ctx.state.pieces[key];
-  const musicHash = hashJson({ style: piece.music.style, seed: piece.music.seed, bpm: piece.bpm, duration: piece.duration, engine: engine.version });
+  const dropAt = dropOf(piece);
+  const musicHash = hashJson({ style: piece.music.style, seed: piece.music.seed, bpm: piece.bpm, duration: piece.duration, engine: engine.version, ...(dropAt !== null ? { drop_at: dropAt } : {}) });
   if (refresh || entry.audio?.music !== musicHash || !isFile(paths.music)) {
     progress(`Trilha: ${piece.duration} s a ${piece.bpm} BPM (${piece.music.style}, semente ${piece.music.seed})`);
-    const result = await engineCall(engine, engineArgs.music({ out: rel(paths.music), duration: piece.duration, bpm: piece.bpm, style: piece.music.style, seed: piece.music.seed, arc: "auto", loop: false }));
+    // a Motor older than 1.1.0 does not take --drop-at: its peak stays where its own formula puts it
+    const peak = dropAt !== null && (await engineSupports(engine, "--drop-at", { root: ROOT })) ? dropAt : null;
+    const result = await engineCall(engine, engineArgs.music({ out: rel(paths.music), duration: piece.duration, bpm: piece.bpm, style: piece.music.style, seed: piece.music.seed, arc: "auto", loop: false, dropAt: peak }));
     for (const warning of result.warnings ?? []) warnings.push(`Trilha: ${warning}`);
   }
   const events = eventsOf(piece);

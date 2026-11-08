@@ -43,6 +43,7 @@ node .flyee/modules/video-render/scripts/render.mjs check --json
   ```
   node .flyee/modules/video-render/scripts/render.mjs capture https://www.exemplo.com.br --json
   ```
+- Uma parte de uma página rodando, como uma demonstração: `film <endereço> --select <seletor> --json` fotografa em tempo real, no computador, no celular e com menos movimento, e monta uma folha de quadros de cada. Abra as folhas e olhe.
 - Vários formatos (9:16, 4:5, 3:4, 1:1, 16:9) saem da mesma página: veja `../../references/formatos.md`.
 
 ## Passo 2: o som, antes de animar
@@ -130,6 +131,7 @@ Siga `../../references/interface.md`, o mesmo guia que o outro app lê, e devolv
 | `unknown_network` | a rede não existe na tabela: `networks --json` lista os nomes e os apelidos |
 | `networks_table_invalid` | a tabela das redes do app está corrompida: repasse `message` e `fix` ao integrante |
 | `site_blocked`, `site_unreachable`, `invalid_url`, `capture_failed` | o site barrou o navegador ou não abre: peça as telas ao integrante ou outro endereço |
+| `film_target_missing`, `film_saved_page` | o seletor não existe na página, ou a página está salva e não roda script: confira o seletor, ou filme o endereço |
 | `ffmpeg_failed`, `browser_failed`, `browser_exited`, `browser_protocol`, `unexpected` | tente de novo uma vez; se repetir, repasse `message` e `fix` |
 | `tool_timeout` | o ffmpeg travou e foi encerrado ao passar do tempo limite: tente de novo uma vez; se travar de novo, divida o trabalho (um trecho mais curto, menos quadros por vez) |
 | `usage` | uma opção ou um valor errado: `fix` e `help --json` mostram o certo |

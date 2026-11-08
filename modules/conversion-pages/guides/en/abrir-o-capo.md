@@ -19,9 +19,24 @@ Real models come with it, analysed one by one. Each model records the source, th
 
 1. **The type:** your AI recognises the type from your request. A sales page that receives a paid ad is built here, and the continuity between the ad and the page belongs to the ad creatives app.
 2. **The facts:** one file per page holds the product, who it is for, the price, the plans, the trial period, the regular price when one is struck through, the renewal, the guarantee, the deadline, the button texts and how to cancel.
-3. **The plan:** the sections in order, the mechanics, the measurement events, the legal lines and a list to check by reading the code.
+3. **The plan:** the visual direction, the demo, the sections in order, the mechanics, the measurement events, the legal lines, the origin of each number and a list to check by reading the code.
 4. **The build:** in your project's code, with the components and the look it already has.
 5. **The check:** the finished page opens in a windowless browser, on desktop and on mobile. Each item of the type comes back ok, attention or not checked.
+6. **The look:** your AI opens the page's photos and the demo's sheets of frames, and fixes the largest fault it sees first, in up to two rounds.
+
+## The demo
+
+The page shows the product in use in a short scene. The image comes, in this order, from the real components of your project with fixed data, from the real screen, or from a simplified replica when there is neither code nor screen. The scene shows only what the product does today, and whatever is invented for it carries the label "Exemplo fictício" (fictional example).
+
+The guide holds the measures: 3 to 5 moments in 10 to 16 seconds, few real strings of text, a design of its own for the phone and a cover that tells the story alone. The feature grid has similar rules: one tile leads, and not every tile is a screen.
+
+If your project has a design manual, the manual decides the look.
+
+## The patterns AI repeats
+
+The app carries a list of what shows up when an AI writes with nobody asking: a round number with no origin, invented scarcity, a founding year worn as a badge, three equal cards, a gradient heading, glow, blurred blobs, verbs that fit any product. Invented data leaves the page. The rest becomes a warning with a question, and whatever is a choice stays recorded in the plan.
+
+Removing these patterns makes the page less generic, and nothing more. What says whether it sells is your project's own measurement.
 
 ## The check items
 
@@ -49,7 +64,17 @@ Real models come with it, analysed one by one. Each model records the source, th
 | API page | the documentation on the first screen, a request example and the usage limits in numbers |
 | video and motion | autoplay video is muted and has a cover image; the reduced motion rule is there |
 | legal lines | privacy, terms and how to withdraw |
-| images | alternative text on images |
+| images | alternative text on images; on a phone, images up to 500 KB and at the size they appear |
+| numbers and urgency | each with its origin recorded, and no sample data left behind |
+| demo | marked, with alternative text, no heading inside and the example label; filmed on desktop, on a phone and still with less motion |
+| AI patterns | those visible on the finished page, except the ones the plan chose |
+| calls to action | at most two texts for the same request |
+| brand | the page's colors with a hue and its fonts are in the recorded brand |
+| phone width | nothing passes the screen's width |
+| legible text | prices and buttons at 12 px or more, and under 40% of the text below that |
+| touch | targets of 24 by 24 px, or with room around them (WCAG 2.2) |
+| contrast | 4.5 to 1, or 3 to 1 for large text (WCAG 2.2); text over an image you check in the photos |
+| buttons | the text fits, neither cut nor touching one side |
 
 Anything the capture cannot read comes back as not checked, never as a failure.
 

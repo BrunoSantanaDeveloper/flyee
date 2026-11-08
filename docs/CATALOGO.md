@@ -6,7 +6,7 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
-| [Criativos para anúncios](#ad-creatives) | 1.2.1 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
+| [Criativos para anúncios](#ad-creatives) | 1.2.2 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
 | [Medição e leitura de resultados](#ads-insights) | 1.0.1 | tool | escalar | — | — |
 | [Base de contatos e CRM](#contact-base) | 1.2.0 | workflow | vender | — | — |
 | [Páginas que vendem](#conversion-pages) | 1.1.0 | workflow | vender | `video-render` | — |
@@ -15,14 +15,14 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | [Carrossel animado](#motion-carousel) | 1.1.4 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.2 | tool | planejar | — | `ad-creatives`, `instagram-research`, `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.1.0 | tool | divulgar | — | `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio` |
-| [Estúdio de vídeo](#video-studio) | 1.1.1 | workflow | divulgar | `video-render` | — |
+| [Estúdio de vídeo](#video-studio) | 1.1.2 | workflow | divulgar | `video-render` | — |
 | [Atendimento no WhatsApp com IA e equipe](#whatsapp-support) | 1.0.0 | workflow | construir | — | — |
 | [Pesquisa no YouTube](#youtube-research) | 1.2.0 | tool | planejar | — | `ad-creatives`, `youtube-script` |
 | [Roteiro para YouTube](#youtube-script) | 1.3.0 | workflow | divulgar | `video-analysis`, `youtube-research` | — |
 
 ## ad-creatives
 
-**Criativos para anúncios** (Ad creatives) · versão 1.2.1 · workflow · trilha divulgar · testado em `claude_code`
+**Criativos para anúncios** (Ad creatives) · versão 1.2.2 · workflow · trilha divulgar · testado em `claude_code`
 
 > Prepara os criativos da sua campanha de tráfego pago na Meta (Instagram e Facebook): pesquisa os anúncios dos concorrentes, propõe três conceitos com a evidência de cada um e entrega os vídeos e as imagens conferidos, os textos dos anúncios e a conta da verba.
 
@@ -281,7 +281,7 @@ Transforma uma página animada em vídeo pronto para publicar. A sua IA escreve 
 
 - Guia: `modules/video-render/references/interface.md`, interface v1
 - Entrada: `node .flyee/modules/video-render/scripts/render.mjs <comando> --json`
-- Comandos nos exemplos: `accept`, `beats`, `capture`, `check`, `frames`, `help`, `loudness`, `mix`, `music`, `networks`, `open`, `preview`, `probe`, `render`, `scaffold`, `sfx`, `sheet`, `synth`
+- Comandos nos exemplos: `accept`, `beats`, `capture`, `check`, `film`, `frames`, `help`, `loudness`, `mix`, `music`, `networks`, `open`, `preview`, `probe`, `render`, `scaffold`, `sfx`, `sheet`, `synth`
 
 **Usa** — · **Usado por** `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio`
 
@@ -300,7 +300,7 @@ Transforma uma página animada em vídeo pronto para publicar. A sua IA escreve 
 
 ## video-studio
 
-**Estúdio de vídeo** (Video studio) · versão 1.1.1 · workflow · trilha divulgar · testado em `claude_code`
+**Estúdio de vídeo** (Video studio) · versão 1.1.2 · workflow · trilha divulgar · testado em `claude_code`
 
 > Cria vídeos animados para Reels, TikTok e Shorts a partir do seu pedido: pergunta o que falta, usa o logo, as cores e as telas reais da sua marca, compõe a trilha na batida, mostra uma prévia e entrega o vídeo conferido para as redes.
 

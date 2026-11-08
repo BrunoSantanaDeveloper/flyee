@@ -16,7 +16,7 @@ import { adName, checkConcepts, confidenceOf } from "../scripts/lib/concepts.mjs
 import { checkCopy, forbiddenIn, personalIn, promiseIn } from "../scripts/lib/copy.mjs";
 import { adCardsToItems, applyTags, datesIn, declaredToItems, mergeItems, parseCount, parseMetric, parseRunDates, parseVariations, readEvidence, summarize } from "../scripts/lib/evidence.mjs";
 import { campaignLinks, competitorLink, keywordUrl } from "../scripts/lib/links.mjs";
-import { beatGrid, checkPiece, checkPoster, draftPiece, eventsOf, listParts, pageHtml, paletteFrom, contrast, posterOf, screenTexts, sentences } from "../scripts/lib/pieces.mjs";
+import { beatGrid, checkPiece, checkPoster, draftPiece, dropOf, eventsOf, listParts, pageHtml, paletteFrom, contrast, posterOf, screenTexts, sentences } from "../scripts/lib/pieces.mjs";
 import { BRIEFING, COLLECTED_AT, concepts as conceptsFixture, READING_AGENDA, READING_DECLARED, READING_NORTE, TAGS } from "./fixtures/campanha.mjs";
 
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -414,6 +414,10 @@ describe("pieces and their pages", () => {
     assert.equal(grid.beats[29], 14.5);
     const events = eventsOf(piece);
     assert.deepEqual(events.events.filter((event) => ["whoosh", "impact"].includes(event.type)).map((event) => [event.t, event.type]), [[4, "whoosh"], [7, "whoosh"], [12, "impact"]]);
+    assert.ok(events.events.filter((event) => event.type === "whoosh").every((event) => event.anchor === "peak"), "a whoosh is heard at its loudest moment, so that moment goes on the cut");
+    assert.ok(events.events.filter((event) => event.type !== "whoosh").every((event) => event.anchor === undefined));
+    assert.equal(dropOf(piece), 12, "the music's peak on the cut into the offer, where the impact lands");
+    assert.equal(dropOf({ ...piece, scenes: piece.scenes.slice(0, 1) }), null, "one scene, no cut to put it on");
     assert.ok(events.events.filter((event) => event.type === "pop").length >= 4);
     const hostile = structuredClone(piece);
     hostile.title = "</script><script>alert(1)</script>";

@@ -1,6 +1,6 @@
 {
   "format_version": 1,
-  "checked_on": "2026-11-07",
+  "checked_on": "2026-11-08",
   "types": [
     {
       "id": "upsell",
@@ -8,11 +8,12 @@
       "asks": ["oferta depois da compra", "oferta pós-compra", "oferta de um clique", "upgrade depois de pagar"],
       "where": "logo depois do pagamento confirmado, antes da página de obrigado",
       "file": "tipos/upsell.md",
-      "facts": ["product.name", "main_purchase", "offer.price", "cta_text", "decline_text", "payment.one_click"],
+      "demo": true,
+      "facts": ["product.name", "main_purchase", "offer.price", "cta_text", "decline_text", "payment.one_click", "visual.direction", "demo.kind"],
       "sections": [
         "O progresso do pedido: Pedido recebido, Sua oferta, Pedido concluído",
         "A faixa da oferta: para quem acabou de comprar",
-        "O topo: o resultado no título, o que é e quanto custa, a garantia, a demonstração do produto em uso",
+        "O topo: o resultado no título, o que é e quanto custa, a garantia, a demonstração do produto em uso, só com o que ele faz hoje",
         "O cartão da oferta: o que inclui; o preço normal riscado, o preço de agora e a renovação; o botão, a nota do pagamento, a garantia e a recusa",
         "A comparação com a alternativa que a pessoa já conhece",
         "O que dá para fazer, com demonstrações curtas",
@@ -39,9 +40,10 @@
         "Os números que a página promete aparecem na página: itens, especialistas, recursos",
         "A capa e os textos dos vídeos estão no idioma da página",
         "Quem já tem o produto não vê a oferta",
+        "A demonstração mostra só o que o produto faz hoje, e os dados inventados para ela levam a etiqueta",
         "A página de obrigado diz o que foi acrescentado"
       ],
-      "checks": ["cta_first_screen", "single_offer", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "discount_math", "renewal_shown", "guarantee_near_cta", "charge_clear", "sticky_cta_long_page", "proof_about_offer", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "checks": ["cta_first_screen", "single_offer", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "discount_math", "renewal_shown", "guarantee_near_cta", "charge_clear", "sticky_cta_long_page", "proof_about_offer", "claims_have_origin", "placeholder_data", "countdown_real", "demo_honest", "demo_film", "ai_defaults", "off_brand", "video_autoplay_ok", "reduced_motion", "legal_lines", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["hostinger-agente-pos-compra"]
     },
     {
@@ -74,7 +76,7 @@
         "O recibo lista o item separado do principal",
         "Nenhum contador ou oferta única que não seja verdade"
       ],
-      "checks": ["no_prechecked", "bump_near_pay", "price_shown", "reference_price_true", "discount_math", "renewal_shown", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "checks": ["no_prechecked", "bump_near_pay", "price_shown", "reference_price_true", "discount_math", "renewal_shown", "countdown_real", "placeholder_data", "video_autoplay_ok", "reduced_motion", "legal_lines", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": []
     },
     {
@@ -106,7 +108,7 @@
         "A oferta é diferente da recusada, não a mesma com outro título",
         "Depois dela não vem outra oferta"
       ],
-      "checks": ["cta_first_screen", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "discount_math", "renewal_shown", "guarantee_near_cta", "charge_clear", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "checks": ["cta_first_screen", "decline_visible", "decline_honest", "price_shown", "reference_price_true", "discount_math", "renewal_shown", "guarantee_near_cta", "charge_clear", "claims_have_origin", "placeholder_data", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["hostinger-agente-pos-compra"]
     },
     {
@@ -135,7 +137,7 @@
         "Quem comprou X também levou Y só com dado real da loja",
         "Os itens mudam conforme o que está no carrinho"
       ],
-      "checks": ["no_prechecked", "price_shown", "reference_price_true", "discount_math", "proof_about_offer", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "images_alt"],
+      "checks": ["no_prechecked", "price_shown", "reference_price_true", "discount_math", "proof_about_offer", "claims_have_origin", "placeholder_data", "countdown_real", "video_autoplay_ok", "reduced_motion", "legal_lines", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": []
     },
     {
@@ -165,7 +167,7 @@
         "O evento de compra sai uma vez, com a identificação do pedido",
         "O que foi acrescentado aparece na confirmação"
       ],
-      "checks": ["thank_you_basics", "cta_first_screen", "legal_lines", "video_autoplay_ok", "reduced_motion", "images_alt"],
+      "checks": ["thank_you_basics", "cta_first_screen", "legal_lines", "placeholder_data", "video_autoplay_ok", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["hostinger-agente-pos-compra"]
     },
     {
@@ -175,13 +177,14 @@
       "asks": ["landing page", "LP", "página de vendas", "página inicial do produto", "home do produto", "página do produto", "página de demonstração"],
       "where": "o endereço principal do produto, ou o destino das campanhas e dos links",
       "file": "tipos/landing.md",
-      "facts": ["product.name", "product.what", "audience", "cta_text"],
+      "demo": true,
+      "facts": ["product.name", "product.what", "audience", "cta_text", "visual.direction", "demo.kind"],
       "sections": [
         "A faixa de cima, só com uma promoção de verdade: o que é, até quando e um chamado",
-        "O topo: para quem é e o resultado no título, uma frase com o que o produto faz, o chamado principal e o secundário, a linha de condições embaixo e uma prova curta",
-        "O produto funcionando: a tela real, um vídeo curto ou uma demonstração animada com dados de exemplo marcados como fictícios",
+        "O topo: para quem é e o resultado no título, uma frase com o que o produto faz, o chamado principal e o secundário, a linha de condições embaixo, uma prova curta e o produto, de verdade, embaixo ou ao lado",
+        "O produto funcionando: os componentes reais com dados fixos, a tela real, um vídeo curto ou uma réplica simplificada, nessa ordem, só com o que ele faz hoje e com os dados de exemplo marcados como fictícios",
         "A dor nas palavras do cliente, em três ou quatro cartões, e a frase que liga a dor à solução",
-        "Os recursos do dia a dia, um por bloco, com o resultado no título e a tela ao lado",
+        "Os recursos do dia a dia, um por bloco, com o resultado no título e a tela ao lado; numa grade, um bloco lidera e nem todo bloco é tela",
         "A diferença: por que este produto e não uma alternativa genérica",
         "A história de uso: um cliente de exemplo, do primeiro contato ao resultado, passo a passo",
         "As integrações, com o que depende do plano escrito",
@@ -206,13 +209,15 @@
       ],
       "manual": [
         "Os números da página têm origem: clientes, horas economizadas, volume de uso",
+        "A demonstração mostra só o que o produto faz hoje, e os dados inventados para ela levam a etiqueta",
+        "A página tem a cara deste produto: a direção visual do plano aparece nela, e nenhum vício da lista ficou sem ser escolha",
         "A duração da demonstração é a mesma no topo, nos chamados e na agenda",
         "Os exemplos de código e as telas batem com o produto e com a documentação",
         "As regras da promoção são as mesmas na faixa, na seção, na janela, nos planos e nas perguntas frequentes",
         "Os depoimentos falam deste produto e vêm de clientes diferentes",
         "O que depende do plano está escrito perto do recurso"
       ],
-      "checks": ["cta_first_screen", "h1_present", "numbers_not_zero", "trial_terms", "promo_terms_shown", "discount_math", "reference_price_true", "countdown_real", "popup_dismissable", "popup_on_arrival", "sticky_cta_long_page", "cancel_terms_shown", "supplier_identified", "legal_lines", "video_autoplay_ok", "reduced_motion", "images_alt"],
+      "checks": ["cta_first_screen", "cta_consistent", "h1_present", "numbers_not_zero", "claims_have_origin", "placeholder_data", "trial_terms", "promo_terms_shown", "discount_math", "reference_price_true", "countdown_real", "popup_dismissable", "popup_on_arrival", "sticky_cta_long_page", "cancel_terms_shown", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "video_autoplay_ok", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["juridiq-pagina-de-vendas", "jurichat-pagina-de-vendas"]
     },
     {
@@ -222,7 +227,7 @@
       "asks": ["página de planos", "página de preços", "tabela de preços", "pricing", "comparação de planos", "seção de planos", "plano mensal e anual"],
       "where": "o endereço de planos ou de preços, e a seção de planos dentro da página de vendas",
       "file": "tipos/planos.md",
-      "facts": ["product.name", "offer.plans", "offer.recurrence", "offer.cancellation", "cta_text"],
+      "facts": ["product.name", "offer.plans", "offer.recurrence", "offer.cancellation", "cta_text", "visual.direction"],
       "sections": [
         "O título e uma linha com as condições gerais: o teste e quanto dura, se pede cartão, se há fidelidade",
         "O seletor mensal ou anual, com o desconto do anual escrito nele",
@@ -257,7 +262,7 @@
         "O chamado de cada plano leva ao cadastro com o plano escolhido",
         "A tabela comparativa fica legível no celular"
       ],
-      "checks": ["h1_present", "prices_first_screen", "plan_highlighted", "discount_math", "reference_price_true", "renewal_shown", "trial_terms", "cancel_terms_shown", "promo_terms_shown", "countdown_real", "popup_dismissable", "popup_on_arrival", "numbers_not_zero", "supplier_identified", "legal_lines", "reduced_motion", "images_alt"],
+      "checks": ["h1_present", "prices_first_screen", "plan_highlighted", "discount_math", "reference_price_true", "renewal_shown", "trial_terms", "cancel_terms_shown", "promo_terms_shown", "countdown_real", "popup_dismissable", "popup_on_arrival", "numbers_not_zero", "claims_have_origin", "placeholder_data", "supplier_identified", "legal_lines", "ai_defaults", "off_brand", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["juridiq-planos", "jurichat-pagina-de-vendas"]
     },
     {
@@ -267,7 +272,8 @@
       "asks": ["página da API", "página para desenvolvedores", "página de integração", "API pública", "página do MCP", "página de webhooks"],
       "where": "o endereço da API do produto, ligado à documentação e aos planos",
       "file": "tipos/api.md",
-      "facts": ["product.name", "api.docs_url", "offer.price", "api.rate_limit", "cta_text"],
+      "demo": true,
+      "facts": ["product.name", "api.docs_url", "offer.price", "api.rate_limit", "cta_text", "visual.direction", "demo.kind"],
       "sections": [
         "O topo: o que a API permite em uma frase, o chamado para a documentação e o de ver os planos, e um console com uma chamada e a resposta",
         "A ficha técnica: endereço base, protocolo, autenticação, formato, versão e o estado do serviço ligado a uma página de status",
@@ -281,7 +287,7 @@
       "mechanics": [
         "Os exemplos de código têm uma aba por linguagem e um botão de copiar",
         "Os exemplos batem com a documentação: a mesma rota, a mesma versão, a mesma resposta",
-        "O console do topo usa dados de exemplo e diz que são de exemplo",
+        "O console do topo usa dados de exemplo e diz que são de exemplo; a chamada e a resposta são as do produto",
         "O chamado de começar leva à criação da chave"
       ],
       "events": ["docs_click", "code_copy", "api_plan_select", "api_key_created", "first_request"],
@@ -296,7 +302,7 @@
         "Está escrito se a API exige a assinatura de outro plano",
         "Os limites de uso e o que acontece quando passam estão na página e na documentação"
       ],
-      "checks": ["h1_present", "docs_first_screen", "code_sample", "rate_limits_shown", "price_shown", "plan_highlighted", "cancel_terms_shown", "supplier_identified", "legal_lines", "popup_dismissable", "popup_on_arrival", "reduced_motion", "images_alt"],
+      "checks": ["h1_present", "docs_first_screen", "cta_consistent", "code_sample", "rate_limits_shown", "price_shown", "plan_highlighted", "claims_have_origin", "placeholder_data", "cancel_terms_shown", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "popup_dismissable", "popup_on_arrival", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["juridiq-api"]
     }
   ]

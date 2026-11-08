@@ -34,6 +34,19 @@
     "prices_first_screen": { "label": "Os preços na primeira tela", "weight": "venda", "fix": "Leve os cartões dos planos para o começo da página: o título, o seletor mensal ou anual e os preços, sem uma abertura longa antes." },
     "docs_first_screen": { "label": "A documentação na primeira tela", "weight": "venda", "fix": "Ponha no topo um chamado para a documentação, ao lado do chamado de começar." },
     "code_sample": { "label": "Um exemplo de chamada", "weight": "venda", "fix": "Mostre um exemplo pronto para copiar, com a autenticação e a resposta, nas linguagens que o público usa." },
-    "rate_limits_shown": { "label": "Os limites de uso em número", "weight": "confianca", "fix": "Escreva os limites de uso de cada plano em número (requisições por minuto, por dia ou por mês) e o que acontece quando passam." }
+    "rate_limits_shown": { "label": "Os limites de uso em número", "weight": "confianca", "fix": "Escreva os limites de uso de cada plano em número (requisições por minuto, por dia ou por mês) e o que acontece quando passam." },
+    "claims_have_origin": { "label": "Os números e as urgências têm origem", "weight": "lei", "fix": "Registre em pagina.json (claims) de onde vem cada número, data ou escassez, ou tire da página. O que for inventado para uma demonstração entra lá como exemplo fictício, e a cena leva a etiqueta." },
+    "placeholder_data": { "label": "Nenhum dado de exemplo esquecido", "weight": "lei", "fix": "Troque por um dado real, com permissão para aparecer, ou tire da página." },
+    "demo_honest": { "label": "A demonstração marcada e com a etiqueta", "weight": "lei", "fix": "Marque a cena com data-demo, ponha a etiqueta Exemplo fictício junto dela quando os dados são inventados, dê um texto alternativo e tire os títulos h1 a h6 de dentro dela." },
+    "demo_film": { "label": "A cena filmada", "weight": "acesso", "fix": "Faça a cena mostrar a capa, parada, com o pedido de menos movimento, e confira o desenho do celular. Abra as folhas de quadros para ver o resto." },
+    "ai_defaults": { "label": "Os vícios de IA", "weight": "confianca", "fix": "Responda à pergunta de cada um em references/vicios.md. O que for escolha fica em pagina.json (visual.chosen); o resto sai da página." },
+    "cta_consistent": { "label": "Os mesmos chamados em toda a página", "weight": "venda", "fix": "Escolha um chamado principal e no máximo um secundário, e use o mesmo texto no menu, no topo, na barra fixa e no fim." },
+    "off_brand": { "label": "As cores e as letras da marca", "weight": "confianca", "fix": "Use as cores e as letras registradas em pagina.json (brand), ou acrescente lá a que for da marca." },
+    "mobile_fits": { "label": "Nada passa da largura do celular", "weight": "acesso", "fix": "Faça o elemento caber na largura da tela. Código e tabela rolam de lado dentro do próprio bloco, sem levar a página junto." },
+    "text_legible": { "label": "Texto legível no celular", "weight": "acesso", "fix": "Use ao menos 12 px no texto corrido, nos preços e nos botões." },
+    "tap_targets": { "label": "Botões e links fáceis de tocar", "weight": "acesso", "fix": "Dê ao menos 24 por 24 px a cada alvo de toque, ou deixe espaço em volta dele." },
+    "contrast_ok": { "label": "O contraste do texto", "weight": "acesso", "fix": "Ajuste a cor do texto ou do fundo até 4,5 para 1, ou 3 para 1 em texto grande." },
+    "controls_fit": { "label": "O texto cabe nos botões", "weight": "venda", "fix": "Deixe o botão crescer com o texto, com folga dos dois lados, em vez de fixar a largura ou a altura." },
+    "images_light": { "label": "Imagens leves", "weight": "venda", "fix": "Sirva a imagem no tamanho em que ela aparece, com srcset e em formato comprimido, como WebP ou AVIF." }
   }
 }

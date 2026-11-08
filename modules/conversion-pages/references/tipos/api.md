@@ -31,7 +31,7 @@
 
 - **Os exemplos têm uma aba por linguagem** (curl, Node.js, Python) e um botão de copiar.
 - **Os exemplos batem com a documentação.** No Juridiq, a página inicial mostra uma rota em inglês (`/tasks`), e a página da API mostra outra em português e com versão (`/v1/tarefas`).
-- **O console do topo usa dados de exemplo** e diz isso.
+- **O console do topo usa dados de exemplo** e diz isso. A chamada e a resposta são as do produto, e a cena segue `../demonstracao.md`.
 - **O chamado de começar leva à criação da chave,** não a um cadastro genérico.
 - **O plano de agentes em destaque,** quando é o que a maioria deve escolher.
 
@@ -39,6 +39,7 @@
 
 - Direto e técnico, sem adjetivo: o que cada rota faz, em uma linha.
 - Os nomes das rotas, dos campos e das ferramentas iguais aos da documentação.
+- Leia `../vicios.md` antes de escrever: disponibilidade, volume e versão precisam de origem.
 - Revise com a skill `texto-natural` antes de entregar, sem acrescentar fato, número ou promessa.
 
 ## Movimento e mídia
@@ -63,7 +64,7 @@ Os detalhes estão em `../lei.md`.
 
 ## O que a conferência olha
 
-`h1_present`, `docs_first_screen`, `code_sample`, `rate_limits_shown`, `price_shown`, `plan_highlighted`, `cancel_terms_shown`, `supplier_identified`, `legal_lines`, `popup_dismissable`, `popup_on_arrival`, `reduced_motion`, `images_alt`.
+`h1_present`, `docs_first_screen`, `cta_consistent`, `code_sample`, `rate_limits_shown`, `price_shown`, `plan_highlighted`, `claims_have_origin`, `placeholder_data`, `cancel_terms_shown`, `supplier_identified`, `legal_lines`, `demo_honest`, `demo_film`, `ai_defaults`, `off_brand`, `popup_dismissable`, `popup_on_arrival`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

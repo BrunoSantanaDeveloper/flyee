@@ -114,7 +114,8 @@ Se já existe um arquivo com o nome que o Motor vai gravar, ele é substituído;
 
 - "Capture o site da minha marca sem gravar a rolagem" ou "sem baixar o logo".
 - "Capture com o celular a 430 px de largura." O celular vai de 280 a 1080 px (padrão 390); o computador, de 800 a 3840 px (padrão 1440).
-- "Capture esta página de oferta" ou "capture a página que eu salvei no navegador". A captura lê a página inteira: as seções, os botões e se eles aparecem na primeira tela do computador e do celular, as barras fixas, as caixas que já vêm marcadas, os preços riscados, os vídeos, as animações e os relógios de contagem regressiva, e guarda o texto inteiro da página. Uma página que só abre com login vai como página salva pelo navegador (.mhtml); nela os relógios ficam parados, porque os scripts da página não rodam.
+- "Capture esta página de oferta" ou "capture a página que eu salvei no navegador". A captura lê a página inteira: as seções, os botões e se eles aparecem na primeira tela do computador e do celular, as barras fixas, as caixas que já vêm marcadas, os preços riscados, os vídeos, as animações e os relógios de contagem regressiva, e guarda o texto inteiro da página. Uma página que só abre com login vai como página salva pelo navegador (.mhtml); nela os relógios ficam parados, porque os scripts da página não rodam. A captura também mede a página pronta: o que passa da largura do celular, o texto pequeno, os botões difíceis de tocar, o contraste, o texto que não cabe nos botões e as imagens pesadas.
+- "Filme a demonstração desta página." A sua IA fotografa a parte que você pedir com a página rodando, no computador, no celular e com menos movimento, e olha as folhas de quadros. É uma gravação em tempo real: mostra a página como ela roda, sem mexer em nada, e não vê o que acontece entre dois quadros.
 
 ## As conferências
 
@@ -172,7 +173,7 @@ Cada app guarda o que produz na própria pasta do seu projeto, fora da pasta de 
 
 O Motor roda no seu computador e não envia arquivo nenhum. Ele só usa a internet em três situações:
 
-- **Na captura de um site.** O navegador sem janela visita o endereço que você pediu e baixa só imagens: o logo, os ícones e a imagem de compartilhamento, até 10 MB cada. Nada do seu computador é enviado, e nada do site roda fora do navegador.
+- **Na captura de um site.** O navegador sem janela visita o endereço que você pediu e baixa só imagens: o logo, os ícones e a imagem de compartilhamento, até 10 MB cada. Nada do seu computador é enviado, e nada do site roda fora do navegador. A filmagem de uma página abre o endereço do mesmo jeito, sem baixar nada à parte.
 - **No render, se a própria página usar algo de fora**, como uma fonte da web.
 - **Na instalação dos programas.** O ffmpeg, e o Chromium no Mac e no Linux, vêm do gerenciador de programas do seu sistema.
 

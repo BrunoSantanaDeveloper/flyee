@@ -50,6 +50,31 @@
         { "kind": "file_exists", "path": "paginas/*/plano.md" }
       ],
       "rubric": "Reconhece o tipo api e lê o roteiro e o modelo do Juridiq. Pergunta o endereço da documentação, os preços e os limites de uso em número, e se a API exige outro plano. O plano tem a documentação no topo, o console com dados marcados como de exemplo, a ficha técnica, os três passos até a primeira resposta e os planos com os limites. Os exemplos de código seguem as rotas da documentação do projeto."
+    },
+    {
+      "name": "demonstração com o produto de verdade",
+      "prompt": "Crie a landing page do sistema, com uma demonstração animada no topo mostrando o assistente respondendo.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/pagina.json" },
+        { "kind": "file_exists", "path": "paginas/*/plano.md" }
+      ],
+      "rubric": "Lê references/demonstracao.md e procura no código do projeto os componentes do assistente antes de desenhar uma réplica. Registra demo.kind como componentes quando eles existem, e a ação, o resultado e o que fica de fora. Ache onde cada coisa da cena existe no produto; o que não existe fica fora da cena, ou vira uma pergunta. Dados inventados levam a etiqueta Exemplo fictício, a cena leva data-demo e não tem título h1 a h6 dentro. Depois de rodar audit, abre as folhas de quadros de film.sheets e fala do que viu."
+    },
+    {
+      "name": "número sem origem",
+      "prompt": "Revise a página de vendas em localhost:3000. Ela diz que temos mais de 10.000 clientes e 99,9% de disponibilidade.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/conferencia.json" }
+      ],
+      "rubric": "Roda audit e aponta os dois números em claims_have_origin. Pergunta ou procura no projeto de onde eles vêm e registra em claims só o que tiver origem. Não confirma nenhum número por conta própria e não troca por um número mais plausível: sem origem, o número sai da página."
+    },
+    {
+      "name": "vícios de IA escolhidos ou não",
+      "prompt": "Quero o título da landing com degradê azul, como no Juridiq, e o resto como você achar melhor.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/pagina.json" }
+      ],
+      "rubric": "Registra texto_degrade em visual.chosen porque o integrante pediu, e a conferência para de apontá-lo. Não abre o site do Juridiq, não copia as cores dele: o azul sai da marca do projeto, e o integrante ouve se o projeto não tem azul. Os outros padrões da lista que a página não pediu saem dela."
     }
   ]
 }

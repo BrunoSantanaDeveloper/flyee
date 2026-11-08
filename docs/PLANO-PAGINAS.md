@@ -10,7 +10,9 @@
 |---|---|---|
 | T1.1 a T1.4 | ✅ | `video-render` 1.1.0, em a702826. A leitura fica em `readAnatomyDesktop` e `readAnatomyMobile` (`scripts/lib/capture.mjs`). `references/interface.md` §5 descreve `anatomy`, `texto.md`, `input_kind` e `anatomy_counts`. Testes em `tests/anatomy.test.mjs` e `tests/fixtures/oferta/` |
 | T2.1 a T2.6 | ✅ | `conversion-pages` 1.0.0, em a702826: 19 regras, 14 testes, 3 casos de avaliação. É a candidata à versão de entrada (D7, D14) |
-| T5.1 a T5.6 | ✅ | A rodada do Juridiq, em 9b986bd e e859313: `conversion-pages` 1.1.0 (ZIP sha256 `5fd81aa6…`, 30 arquivos) e o `video-render` 1.1.0 corrigido no lugar, ainda sem tag (ZIP sha256 `f40eb58c…`). Detalhes no ÉPICO 5 |
+| T5.1 a T5.6 | ✅ | A rodada do Juridiq, em 9b986bd e e859313, com o `video-render` 1.1.0 corrigido no lugar. Detalhes no ÉPICO 5 |
+| T6.1 a T6.7 | ✅ | A rodada da demonstração e das medições (2026-11-08), na árvore e sem commit: `conversion-pages` 1.1.0 e `video-render` 1.1.0, os dois ainda sem tag, corrigidos no lugar (D16). Detalhes no ÉPICO 6 |
+| ⚠️ CI do Windows | corrigido | `anatomy.test.mjs` falhava no Windows do GitHub desde a702826: o Windows Server desliga as animações do sistema, o navegador responde `prefers-reduced-motion: reduce`, e a página do teste para a animação. A captura e o render passam a fixar `no-preference` (T6.6) |
 | ⚠️ `appeared_after_scroll` | corrigido | `video-render/references/interface.md` dizia "só apareceu depois da rolagem". A captura rola a página para aquecer antes de ler, e uma janela que abre pela rolagem saía como presente na chegada. Agora há uma leitura na chegada, antes do aquecimento (T5.4) |
 | ⚠️ `above_fold.mobile` | corrigido | A interface dizia "pelo mesmo texto na mesma ordem". Um botão do menu escondido no celular tomava o par do botão de mesmo texto da página (no JuriChat, "Comece grátis" saía como ausente no celular). Agora o pareamento é primeiro pelo mesmo elemento (T5.4) |
 | T3.1 | ✅ | O código está em `packages/module-tools/src/user-apps.ts` e `cli.ts`, com 12 testes em `test/user-apps.test.ts`. A instalação real foi feita: `~/.flyee/user-apps` e as pontes `conversion-pages` e `video-render` em `~/.claude/skills/`. Logo depois do `link --user`, a sessão do Claude Code em andamento passou a listar as duas skills; skills pessoais valem em qualquer pasta. Rodando `check` de dentro do flyee-club, o projeto é o flyee-club e o motor é o 1.1.0 |
@@ -83,6 +85,12 @@ Não rodou: o `ci:verify` completo (a CLI não mudou), macOS e Linux, e um pedid
 | D12 | Os modelos da família Juridiq | Quatro entradas, uma por página, ligadas pelo tipo: `juridiq-pagina-de-vendas` (landing), `juridiq-planos` (planos), `juridiq-api` (api) e `jurichat-pagina-de-vendas` (landing e planos). Fonte e data em cada uma, como D2. | `references/modelos.json` |
 | D13 | O `video-render` 1.1.0 sem tag | Corrigido no lugar, sem versão nova: a leitura na chegada e o pareamento por elemento. A forma da anatomia não muda (o `path` fica só nas leituras internas). | `modules/video-render/scripts/lib/capture.mjs` |
 | D14 | A versão do `conversion-pages` | 1.1.0, pelo procedimento de entrada (modelo ou tipo novo sobe a versão menor). A 1.0.0 fica em a702826, com os cinco tipos de oferta, e é a candidata natural à versão de entrada; a decisão continua aberta em D7. | manifesto; console da plataforma |
+| D15 | O que entra da avaliação do Stageshow e dos seis repositórios de design (2026-11-08) | As regras da demonstração e da grade de recursos, a lista de vícios de IA e as medições objetivas, como texto e código nossos, com `NOTICE.txt` (D31). Fica de fora o kit em React, os ícones e os logos de terceiros, a recriação de páginas do Awwwards MCP e o modo de vários agentes do Genjutsu. O kit se decide depois de um teste lado a lado (ÉPICO 6, fora de cobertura). Aprovado pelo operador em 2026-11-08 ("pode seguir como sugerido"). | este plano; `modules/conversion-pages/NOTICE.txt` |
+| D16 | Versão das duas mudanças | Nenhuma versão nova: `conversion-pages` 1.1.0 e `video-render` 1.1.0 não têm tag, então mudam no lugar, como D13. A interface v1 do motor só ganha campos (`anatomy.quality`) e um comando (`film`). | manifestos |
+| D17 | A ordem de onde vem a demonstração | Componentes reais do projeto com dados fixos, depois a tela real, e a réplica simplificada só sem código nem tela. Registrada em `pagina.json` (`demo.kind`). Motivo: a cena mostra o produto que é vendido, e o que a página mostra obriga quem vende (CDC, art. 30 e 37, §1). | `references/demonstracao.md`; `pagina.json` |
+| D18 | Dado inventado contra o resto da lista de vícios | Número de uso, escassez, ano e nome sem origem são `atencao` de peso `lei` (`claims_have_origin`, `placeholder_data`). O resto da lista é aviso: o que o plano escolhe vai em `visual.chosen` e deixa de ser apontado. | `references/vicios.md`; `pagina.json` |
+| D19 | Os limiares das medições | 12 px e 40% do texto (auditoria de legibilidade do Lighthouse, retirada na versão 13); 24 por 24 px (WCAG 2.2, 2.5.8, AA); 4,5 e 3 para 1, com texto grande a 24 px ou 18,66 px em negrito (WCAG 2.2, 1.4.3); imagens de 500 KB ou servidas com o dobro da largura a partir de 100 KB (critério deste app, não regra de mercado). Conferidos em 2026-11-08. Abaixo de 1,5 para 1 a leitura duvida de si e não reprova. | `modules/video-render/scripts/lib/capture.mjs`, constantes no topo |
+| D20 | Como a demonstração é filmada | Em tempo real, com fotos em intervalo fixo, sem mexer na página: serve a qualquer página e não prova o que acontece entre dois quadros. O relógio determinístico do Stageshow ficou de fora porque só vale para páginas feitas com o kit dele. | `modules/video-render/scripts/lib/film.mjs` |
 
 ## 0.5 Convenções do repositório que este trabalho toca
 
@@ -322,6 +330,81 @@ O que mudou no motor da conferência:
 
 A janela da página inicial saiu `ok` em `popup_on_arrival`. O botão principal do JuriChat saiu "Comece grátis", o mesmo que a página mostra em azul.
 
+## ÉPICO 6: a demonstração, os vícios de IA e as medições da página pronta (2026-11-08)
+
+O operador trouxe dois vídeos e pediu a análise do que serviria aos apps de página: a skill Stageshow (benjitaylor/skills, MIT) e seis repositórios de design (Awwwards MCP, Responsively, Genjutsu, Dembrandt, App Store Screenshots e brag). A análise e a decisão estão em D15 a D20; o material lido ficou na pasta temporária da sessão, fora do repositório, e nada dele foi copiado.
+
+### T6.1: o guia da demonstração e da grade de recursos
+
+**Estado: ✅.** `modules/conversion-pages/references/demonstracao.md`, com as treze seções: de onde vem a imagem (D17), a regra da veracidade, o plano antes do código, a história (3 a 5 momentos em 10 a 16 s), a tela (3 a 7 textos reais), o enquadramento, o celular, a capa, o movimento, a cena dentro da página (`data-demo`, sem `h1` a `h6`), os cinco erros, a grade de recursos e o olhar sobre os quadros filmados.
+- **Aceite:** `npm run validate conversion-pages` passa; `references/principios.md` §5 e os roteiros `landing.md`, `api.md` e `upsell.md` apontam para o guia.
+
+### T6.2: a lista dos vícios de IA
+
+**Estado: ✅.** `modules/conversion-pages/references/vicios.md`: quatro famílias (dado inventado, enfeite sem função, layout por reflexo, texto vazio), cada item com o que aparece e a pergunta de volta ao projeto, e o nome que vai em `visual.chosen`.
+- **Aceite:** cada nome de `visual.chosen` que `ai_defaults` conhece está na lista; o teste "the defaults are named, and what the plan chose on purpose stops being pointed at" passa.
+
+### T6.3: o plano com a direção visual, a demonstração e os números
+
+**Estado: ✅.** `pagina.json` ganha `visual`, `brand`, `demo` e `claims`; `plano.md` ganha as seções "A direção visual", "A demonstração" (só nos tipos com `"demo": true`: `upsell`, `landing` e `api`) e "Os números e as urgências". `visual.direction` entra nos fatos de `landing`, `planos`, `api` e `upsell`, e `demo.kind` nos três tipos com demonstração.
+- **Aceite:** os testes de `tests/quality.test.mjs` sobre o plano passam, inclusive o de um `pagina.json` escrito antes desta rodada.
+
+### T6.4: os doze itens novos da conferência
+
+**Estado: ✅.** Em `references/checks.json` e `scripts/lib/checks.mjs`: `claims_have_origin`, `placeholder_data`, `demo_honest`, `demo_film`, `ai_defaults`, `cta_consistent`, `off_brand`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit` e `images_light`. Cada tipo lista os seus em `tipos.json` e no roteiro (um teste confere que os dois batem).
+- **Aceite:** 39 testes do `conversion-pages` passam, 16 deles novos, um com a conferência real da página de defeitos e da cena filmada pelo motor.
+
+### T6.5: as medições na captura do `video-render`
+
+**Estado: ✅.** `anatomy.quality` (`references/interface.md` §5): a largura do celular, o texto pequeno, os alvos de toque, os botões em que o texto não cabe, as imagens e o peso no celular; o contraste, as cenas `data-demo` e os padrões visuais no computador. Cada leitura falha sozinha, sem derrubar a anatomia. O contraste lê cada par onde está na tela, com todo elemento respondendo ao toque durante a leitura, e deixa de fora texto decorativo (`aria-hidden`), botão desligado, texto sobre imagem ou degradê e o par abaixo de 1,5 para 1 (D19).
+- **Aceite:** 14 testes em `tests/quality.test.mjs`, com a página `tests/fixtures/qualidade/`, que tem um defeito de cada tipo.
+
+### T6.6: o comando `film` e o movimento reduzido fixado
+
+**Estado: ✅.** `film <endereço> --select <seletor>` (`scripts/lib/film.mjs`, `scripts/commands/film.mjs`): três passadas (computador, celular, celular com menos movimento), uma folha de quadros por passada e `filme.json`. O `audit` do `conversion-pages` filma a cena quando `demo.selector` está registrado, e uma filmagem que falha deixa `demo_film` como não conferido, sem derrubar a conferência. Toda página aberta pelo motor responde `prefers-reduced-motion: no-preference`, a não ser quando a passada pede o contrário.
+- **Aceite:** os testes de `film` passam com `tests/fixtures/filme/`, que se mexe sem o pedido e fica parada com ele; o teste "a system set to reduce motion does not change what a page shows, unless asked" abre o navegador com `--force-prefers-reduced-motion` e confere as duas respostas.
+
+### T6.7: a conferência real nas quatro páginas
+
+**Estado: ✅.** As quatro páginas do Juridiq e do JuriChat passaram pelo `audit` com as medições novas, num projeto de teste. A primeira passada achou quatro falsos alarmes, corrigidos antes desta versão: as porcentagens de desconto quebradas em duas linhas, os limites dos planos lidos como números de uso, um botão com brilho decorativo lido como texto cortado e um par de contraste sobre uma camada que a leitura não via. O resultado da segunda passada está em "Verificação da rodada 6", abaixo.
+
+### Verificação da rodada 6
+
+**A conferência real, segunda passada.** As quatro páginas, num projeto de teste sem `pagina.json` preenchido. Os itens que dependem dos fatos do plano saem como antes (ÉPICO 5). Os novos acharam:
+
+| Página | Tipo | Resultado | O que os itens novos apontaram |
+|---|---|---|---|
+| inicial | `landing` | 16 ok, 10 atenção, 1 não conferido | "1.500+", "1,2 mi+" e "85.000+" sem origem; título com degradê, vidro, manchas desfocadas, três cartões iguais, animação sem fim e "Eleve"; o mesmo pedido com 9 textos; a faixa da promoção com 11 px; um botão sem nome de 20 px; "Agendar demo" a 3,12 para 1 |
+| planos | `planos` | 15 ok, 9 atenção, 1 não conferido | "+1.500" sem origem; os mesmos padrões; a faixa com 11 px; um link de 16 px de altura junto de outro; o mesmo contraste |
+| api | `api` | 15 ok, 6 atenção, 2 não conferidos | os padrões; 6 textos de chamado; a faixa com 11 px; o botão sem nome; "Agora não" a 2,68 para 1 |
+| jurichat | `landing` | 12 ok, 10 atenção, 1 não conferido | os padrões e "Revolucione"; 7 textos de chamado; a faixa com 11 px; "Próximo mês" a 2,6 para 1 |
+
+`off_brand` saiu não conferido nas quatro, porque o projeto de teste não registrou a marca. `mobile_fits`, `controls_fit` e `images_light` saíram ok nas quatro. A primeira passada achou os quatro falsos alarmes de T6.7. A segunda pôs "0+" entre os números sem origem; ele saiu depois dela, coberto por um teste, porque `numbers_not_zero` já aponta o contador parado em zero.
+
+**O que rodou:**
+- `npm run validate conversion-pages`: passa, com 33 arquivos; `pack` dá o ZIP sha256 `a19a4665…`;
+- `node --test` nos testes do `conversion-pages`: 39 passam;
+- no `video-render`, `tests/quality.test.mjs` e `tests/anatomy.test.mjs`: 30 passam;
+- os testes do `module-tools`: 75 passam, entre eles a regra de texto sobre todo texto de integrante;
+- `npm run apps -- catalog --check` e `npm run harness:check`: passam.
+
+- o `video-render` foi empacotado pela sessão que mexia no som do motor, depois da parte dela: ZIP sha256 `05fc2c85…`, 35 arquivos, `validate` passa. Ela rodou os testes de som, synth, audio, core e runner, 55 de 55;
+- `npm run apps -- link conversion-pages --user` reinstalou os dois apps, e as cópias instaladas são iguais à fonte. Rodando `check` da pasta do ONE, o projeto é o ONE, o motor é o 1.1.0 com a leitura completa e a página `home` aparece com a conferência antiga (5 ok, 2 em atenção).
+
+**O que não rodou:**
+- a suíte inteira do motor de uma vez só: cada sessão rodou a parte que mexeu;
+- o `ci:verify` completo e a CI do Windows no GitHub, que confirmaria a correção do teste da anatomia;
+- a revisão da landing do ONE com o app novo, que é o próximo pedido do operador numa sessão do ONE.
+
+### Fora de cobertura desta rodada
+
+- **O kit do Stageshow** não foi trazido nem testado. O passo seguinte é o teste lado a lado no ONE, num branch: o mesmo topo de página com e sem o kit, julgado pelas folhas de quadros. Ele mexe num repositório do operador e roda código de terceiros, por isso espera a palavra dele.
+- **O relógio determinístico** (D20) não foi testado: `film` grava em tempo real.
+- **A grade de recursos** não tem item automático: a regra é lida pela IA nas fotos.
+- **O contraste** não compõe imagens, degradês nem pseudo-elementos: esses pares voltam como não medidos, e a IA olha nas fotos.
+- **macOS e Linux** não rodaram as medições nem o `film`.
+- **Nenhuma sessão real** construiu uma página com o guia da demonstração.
+
 ## 5. Riscos
 
 | Risco | Primeiro sinal |
@@ -331,6 +414,8 @@ A janela da página inicial saiu `ok` em `popup_on_arrival`. O botão principal 
 | As heurísticas da anatomia erram num HTML incomum | o item sai `nao_conferido` em vez de errado; cada falha real vira um caso de teste |
 | A página salva traz dado pessoal (nome, e-mail, pedido) | fica no projeto do integrante; no caso do operador, na pasta de trabalho, nunca no repositório |
 | Um artigo de lei citado muda | `lei.md` traz a data da conferência; a próxima versão confere de novo |
+| Uma medição nova aponta defeito onde não há | a conferência real das quatro páginas (T6.7); cada falso alarme vira um caso em `tests/quality.test.mjs`, como os quatro desta rodada |
+| A lista de vícios vira gosto imposto | cada vício é aviso com pergunta, e o que o plano escolhe sai da conferência (D18) |
 
 ## 6. Backlog: o que os outros apps ganham
 
@@ -345,6 +430,15 @@ A janela da página inicial saiu `ok` em `popup_on_arrival`. O botão principal 
 | `ads-insights` | os eventos da página de vendas, dos planos e da API no plano de medição: pedido de demonstração, início do teste, plano e período escolhidos, a janela vista, aceita e recusada | grep por `demo_request`, `trial_start`, `plan_select` e `billing_toggle` em `modules/ads-insights`: zero |
 | `media-plan` | a conversão do teste em pagante como premissa, com origem, e o efeito do PIX à vista contra o cartão parcelado no caixa do primeiro mês | o anual e o Pix já estão em `references/oferta.md:10` e `lancamento.md:15`; grep por teste grátis, trial e período de teste em `modules/media-plan`: zero |
 | `contact-base` | a régua do teste (início, meio, véspera do fim) e a da promoção com as mesmas regras escritas da página (até quando, para quem); o lembrete da demonstração marcada | `references/` traz a régua do plano e a repermissão, sem régua de teste nem de demonstração |
+
+### Da avaliação do Stageshow e dos seis repositórios (2026-11-08)
+
+| App | O que ganharia | Evidência de que hoje não tem |
+|---|---|---|
+| `video-studio` | a regra de reaproveitar a interface real em vez de redesenhá-la, e o limite de 3 a 7 textos reais por tela nas cenas de produto | `references/roteiros.md` e `pagina-do-video.md` põem as telas reais como imagem dentro de um aparelho (`Studio.device`); não há regra de quantos textos uma tela simulada mostra |
+| `ad-creatives` (`ad-landing-page`) | as medições da página pronta (largura do celular, texto, toque, contraste, imagens) ao chamar o `audit` deste app, que já está na linha do Juridiq acima | `skills/ad-landing-page/SKILL.md`: a conferência própria não mede a página no celular |
+| `motion-carousel` | os cinco erros da cena (demais, esqueleto, encaixotada, plana, genérica) na crítica dos slides que mostram uma tela | `references/` não tem crítica de tela simulada |
+| `video-render` | gravar uma página que não foi feita para o Motor com um relógio que avança quadro a quadro, como o do Stageshow, para um vídeo sem quadros perdidos | `film` grava em tempo real (D20); não foi testado |
 
 ### Do modelo da Hostinger (D3)
 

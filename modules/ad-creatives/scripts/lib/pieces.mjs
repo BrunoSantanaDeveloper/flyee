@@ -360,12 +360,16 @@ export function beatGrid(piece) {
   return { format_version: 1, source: "peca", bpm: piece.bpm, offset: 0, beats_per_bar: 4, duration: piece.duration, beats, downbeats: beats.filter((_, index) => index % 4 === 0) };
 }
 
-/** The effects under the cuts and the gestures of the screen, as the Motor's `sfx --events` reads them. */
+/**
+ * The effects under the cuts and the gestures of the screen, as the Motor's `sfx --events` reads
+ * them. A whoosh grows into its loudest moment, so `anchor: "peak"` puts that moment on the cut
+ * (a Motor older than 1.1.0 ignores the field and starts the whoosh there).
+ */
 export function eventsOf(piece) {
   const events = [];
   const last = piece.scenes.length - 1;
   piece.scenes.forEach((scene, index) => {
-    if (index > 0) events.push({ t: scene.from, type: index === last ? "impact" : "whoosh", gain_db: index === last ? -3 : -6 });
+    if (index > 0) events.push(index === last ? { t: scene.from, type: "impact", gain_db: -3 } : { t: scene.from, type: "whoosh", gain_db: -6, anchor: "peak" });
     for (const item of scene.items) {
       if (item.type === "list") itemTimes(item).forEach((t) => t > 0 && events.push({ t, type: "pop", gain_db: -8 }));
       if (item.type === "card") item.fields.forEach((field, fieldIndex) => events.push({ t: typeof field.at === "number" ? field.at : round(item.at + 0.6 + fieldIndex * 1.2), type: "click", gain_db: -8 }));
@@ -374,6 +378,13 @@ export function eventsOf(piece) {
   });
   const kept = events.filter((event) => event.t > 0 && event.t < piece.duration - 0.05).sort((a, b) => a.t - b.t);
   return { duration: piece.duration, events: kept };
+}
+
+/** Where the music's peak goes: the cut into the last scene, the offer, where the impact lands. Null with one scene. */
+export function dropOf(piece) {
+  const scenes = piece.scenes ?? [];
+  const from = scenes.length >= 2 ? scenes.at(-1).from : null;
+  return typeof from === "number" && from > 0 && from < piece.duration ? from : null;
 }
 
 // ---------------------------------------------------------------- the page

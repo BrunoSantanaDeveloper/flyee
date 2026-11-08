@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema Exemplo: uma página com defeitos de propósito</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, sans-serif; color: #111827; background: #FFFFFF; }
+  section { padding: 40px 24px; }
+  .botao { display: inline-block; background: #0F62FE; color: #FFFFFF; padding: 14px 22px; border-radius: 8px; text-decoration: none; }
+  .apagado { background: #E5E7EB; color: #9CA3AF; }
+  .desligado { background: #E5E7EB; color: #D1D5DB; border: 0; padding: 14px 22px; }
+  .largo { width: 700px; background: #F3F4F6; }
+  .miudo { font-size: 10px; }
+  .preco-miudo { font-size: 10px; }
+  .mini { display: inline-block; width: 16px; height: 16px; font-size: 12px; overflow: hidden; }
+  .cortado { display: inline-block; width: 70px; height: 40px; overflow: hidden; white-space: nowrap; background: #0F62FE; color: #FFFFFF; border: 0; }
+  .claro { color: #C7C7C7; }
+  .escuro { background: #111827; color: #F9FAFB; padding: 16px; }
+  .sobre-imagem { background-image: linear-gradient(90deg, #111827, #1F2937); color: #FFFFFF; padding: 16px; }
+  .degrade { background: linear-gradient(90deg, #0F62FE, #06B6D4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .vidro { backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.4); width: 300px; height: 80px; }
+  .brilho { box-shadow: 0 0 40px rgba(15, 98, 254, 0.9); display: inline-block; padding: 8px; }
+  .mancha { position: absolute; top: 40px; right: 0; width: 300px; height: 300px; background: #7C3AED; filter: blur(80px); z-index: -1; }
+  .cartoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .cartao { border: 1px solid #E5E7EB; padding: 16px; min-height: 140px; }
+  .ponto { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981; animation: pulsa 1s infinite; }
+  @keyframes pulsa { from { opacity: 1; } to { opacity: 0.3; } }
+  .cena { width: 320px; padding: 16px; background: #F3F4F6; }
+  .grande { width: 100px; }
+  @media (max-width: 600px) { .cartoes { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="mancha"></div>
+<section>
+  <h1>O seu escritório em um só lugar</h1>
+  <p>O Sistema Exemplo organiza prazos, clientes e cobranças, com uma <a href="/ajuda">ajuda dentro desta frase comprida</a> que continua depois do link.</p>
+  <a class="botao" href="/agendar">Agendar demonstração</a>
+  <a class="botao apagado" href="/planos">Ver os planos agora</a>
+  <button class="cortado">Quero contratar o plano completo</button>
+  <button class="desligado" disabled>Enviar o pedido desligado</button>
+  <p aria-hidden="true" class="claro">Um texto de enfeite que o leitor de tela não lê e ninguém precisa ler.</p>
+  <p><span class="ponto"></span> respondendo agora</p>
+</section>
+<section>
+  <div class="largo">Este bloco tem 700 pixels de largura e passa da tela do celular.</div>
+  <p class="claro">Este texto cinza muito claro sobre o fundo branco quase não se lê.</p>
+  <div class="escuro">Este texto claro sobre fundo escuro se lê muito bem.</div>
+  <div class="sobre-imagem">Este texto fica sobre um degradê, e o contraste não dá para medir.</div>
+  <h2 class="degrade">O título preenchido com degradê</h2>
+  <div class="vidro">Um painel de vidro</div>
+  <p><span class="brilho">Um botão que brilha</span></p>
+</section>
+<section>
+  <h2>O que dá para fazer</h2>
+  <div class="cartoes">
+    <div class="cartao"><strong>Prazos</strong><p>Os prazos aparecem organizados por semana e por responsável.</p></div>
+    <div class="cartao"><strong>Clientes</strong><p>Cada cliente tem uma ficha com os processos e as cobranças.</p></div>
+    <div class="cartao"><strong>Cobranças</strong><p>As cobranças saem sozinhas na data combinada com o cliente.</p></div>
+  </div>
+</section>
+<section>
+  <h2>O produto funcionando</h2>
+  <div class="cena" data-demo="topo">
+    <h3>Um título que não devia estar aqui</h3>
+    <p>Maria pediu o prazo da semana.</p>
+  </div>
+  <p class="preco-miudo">Plano Essencial por R$ 19,90 por mês</p>
+  <p><a class="mini" href="/um">1</a><a class="mini" href="/dois">2</a><a class="mini" href="/tres">3</a></p>
+  <img class="grande" id="grande" alt="Uma imagem servida muito maior do que aparece">
+  <img class="grande" alt="Um desenho em vetor, que não pesa mais por ser grande" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='3000' height='2000'%3E%3Crect width='3000' height='2000' fill='%230F62FE'/%3E%3C/svg%3E">
+  <script>
+    var quadro = document.createElement("canvas");
+    quadro.width = 1200;
+    quadro.height = 800;
+    var pincel = quadro.getContext("2d");
+    pincel.fillStyle = "#0F62FE";
+    pincel.fillRect(0, 0, 1200, 800);
+    document.getElementById("grande").src = quadro.toDataURL("image/png");
+  </script>
+</section>
+<footer>
+  <p class="miudo">Letras pequenas do rodapé, com bastante texto para pesar na conta do que fica abaixo de doze pixels no celular. Estas linhas repetem de propósito o mesmo assunto, porque a conta é sobre a quantidade de caracteres e não sobre o que eles dizem. Letras pequenas do rodapé, com bastante texto para pesar na conta do que fica abaixo de doze pixels no celular. Estas linhas repetem de propósito o mesmo assunto, porque a conta é sobre a quantidade de caracteres e não sobre o que eles dizem. Letras pequenas do rodapé, com bastante texto para pesar na conta do que fica abaixo de doze pixels no celular. Estas linhas repetem de propósito o mesmo assunto, porque a conta é sobre a quantidade de caracteres e não sobre o que eles dizem.</p>
+</footer>
+</body>
+</html>

@@ -28,9 +28,9 @@ const NETWORK_QUIET_MS = 2000;
 const ASSET_TIMEOUT_MS = 20000;
 const ASSET_MAX_BYTES = 10 * 1024 * 1024;
 const MAX_LOGO_DOWNLOADS = 4;
-const MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36";
+export const MOBILE_USER_AGENT ="Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36";
 const DESKTOP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-const ACCEPT_LANGUAGE = "pt-BR,pt;q=0.9,en;q=0.8";
+export const ACCEPT_LANGUAGE = "pt-BR,pt;q=0.9,en;q=0.8";
 
 // ---------------------------------------------------------------------------------------------
 // Colors
@@ -810,6 +810,21 @@ export const SECTION_TEXT_MAX = 4000;
 /** Fixed and sticky elements kept per pass (desktop and mobile): 20 in all. */
 export const FIXED_PER_PASS = 10;
 const ANATOMY_LIMITS = { maxText: PAGE_TEXT_MAX, maxSections: 120, maxCtas: 200, maxFixed: FIXED_PER_PASS, maxForms: 100, maxPrices: 100, maxAnimations: 200, maxTimers: 40, maxElements: 60000 };
+/** Below this, text counts as small: the size the Lighthouse legibility audit used (retired in Lighthouse 13), checked on 2026-11-08. */
+const SMALL_TEXT_PX = 12;
+/** WCAG 2.2, 2.5.8, level AA: the minimum target, checked on 2026-11-08. */
+const MIN_TARGET_PX = 24;
+/** WCAG 2.2, 1.4.3: large text is 18 pt, or 14 pt in bold (24 px and 18.66 px at 96 dpi). */
+const CONTRAST_LARGE_PX = 24;
+const CONTRAST_LARGE_BOLD_PX = 18.66;
+/** Below this ratio the reading doubts itself instead of failing the text: see contrastFrom. */
+const CONTRAST_DOUBT = 1.5;
+/** The app's own criteria for images on the phone, not a market rule. */
+const HEAVY_IMAGE_BYTES = 500 * 1024;
+const OVERSIZE_RATIO = 2;
+const HEAVY_OVERSIZE_BYTES = 100 * 1024;
+/** Words that say a scene's data is an example, read from the scene and from what surrounds it. */
+const DEMO_LABEL_PATTERN = /exemplo|ficticio|ilustrativ|simulac|sample|example|fictional|illustrative/;
 /** Two reads of the timers this far apart: a countdown changes between them, a clock time does not. */
 const TIMER_GAP_MS = 1200;
 /** Time for scroll handlers and transitions to settle after a jump to the end of the page. */
@@ -1094,6 +1109,140 @@ export function buildAnatomy({ desktop, mobile = null, viewports = {} }) {
       stylesheets_unread: motion.stylesheets_unread ?? 0,
     },
     countdowns: countdownsFrom(top.timers, desktop?.again?.timer_texts),
+    quality: buildQuality({ desktop: desktop?.quality ?? null, mobile: mobile?.quality ?? null, weight: mobile?.weight ?? null }),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// The measurements of the finished page (pure)
+// ---------------------------------------------------------------------------------------------
+
+/** How much of a color shows: 1 for a solid one, 0 for a color that does not paint. */
+export function alphaOf(color) {
+  if (typeof color !== "string") return 0;
+  const text = color.trim().toLowerCase();
+  if (!text || text === "transparent") return 0;
+  const hex = /^#(?:[0-9a-f]{3}([0-9a-f])|[0-9a-f]{6}([0-9a-f]{2}))$/.exec(text);
+  if (hex) return hex[1] ? parseInt(hex[1] + hex[1], 16) / 255 : hex[2] ? parseInt(hex[2], 16) / 255 : 1;
+  const slash = /\/\s*([\d.]+%?)\s*\)$/.exec(text);
+  if (slash) return parseAlpha(slash[1]);
+  const legacy = /^(?:rgba|hsla)\([^,)]*,[^,)]*,[^,)]*,\s*([\d.]+%?)\s*\)$/.exec(text);
+  return legacy ? parseAlpha(legacy[1]) : 1;
+}
+
+function rgbOf(hex) {
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex ?? "");
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : null;
+}
+
+/** The color on screen of `top` (with its transparency) over the solid color `under`. */
+function over(top, alpha, under) {
+  return top.map((value, index) => value * alpha + under[index] * (1 - alpha));
+}
+
+/** The final color of a stack of backgrounds, topmost first, over the white page. */
+export function compositeStack(stack) {
+  let under = [255, 255, 255];
+  for (const color of [...(stack ?? [])].reverse()) {
+    const rgb = rgbOf(toHex(color));
+    if (rgb) under = over(rgb, alphaOf(color), under);
+  }
+  return under;
+}
+
+/** The WCAG contrast ratio between two colors given as [r, g, b]. */
+export function contrastRatio(a, b) {
+  const luminance = (rgb) => {
+    const [r, g, bl] = rgb.map((value) => {
+      const c = value / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+const hexFromRgb = (rgb) => `#${rgb.map((value) => Math.round(value).toString(16).padStart(2, "0")).join("")}`.toUpperCase();
+
+/** The pairs of text and background the page reading brought, judged by WCAG 2.2, 1.4.3. */
+export function contrastFrom(read) {
+  if (!Array.isArray(read?.samples)) return null;
+  const failing = [];
+  const unknown = {};
+  let checked = 0;
+  for (const sample of read.samples) {
+    if (sample.unknown) {
+      unknown[sample.unknown] = (unknown[sample.unknown] ?? 0) + 1;
+      continue;
+    }
+    const textHex = toHex(sample.color);
+    if (!textHex) {
+      unknown.cor = (unknown.cor ?? 0) + 1;
+      continue;
+    }
+    const background = compositeStack(sample.stack);
+    const text = over(rgbOf(textHex), alphaOf(sample.color), background);
+    const ratio = contrastRatio(text, background);
+    // Text a person cannot see at all is rare on a page that is live; below this, the background that
+    // was read is most likely not the one painted under the text (a layer the reading cannot see).
+    if (ratio < CONTRAST_DOUBT) {
+      unknown.camada = (unknown.camada ?? 0) + 1;
+      continue;
+    }
+    checked += 1;
+    const large = sample.font_px >= CONTRAST_LARGE_PX || (sample.bold && sample.font_px >= CONTRAST_LARGE_BOLD_PX);
+    const required = large ? 3 : 4.5;
+    if (ratio < required) failing.push({ role: sample.role, text: sample.text, ratio: round(ratio, 2), required, color: hexFromRgb(text), background: hexFromRgb(background), font_px: sample.font_px });
+  }
+  const order = { title: 0, cta: 1, heading: 2, text: 3 };
+  failing.sort((a, b) => (order[a.role] ?? 9) - (order[b.role] ?? 9) || a.ratio - b.ratio);
+  return { checked, unknown, failing: failing.slice(0, 10) };
+}
+
+/** What the phone downloaded, by kind of resource. Responses still in flight count as zero. */
+export function pageWeight(resources) {
+  const entries = resources instanceof Map ? [...resources.values()] : [];
+  const byType = {};
+  let total = 0;
+  for (const entry of entries) {
+    const bytes = entry.bytes ?? 0;
+    total += bytes;
+    byType[entry.type] = (byType[entry.type] ?? 0) + bytes;
+  }
+  const images = entries.filter((entry) => entry.type === "Image" && entry.bytes > 0).map((entry) => ({ url: String(entry.url ?? "").slice(0, 300), bytes: entry.bytes }));
+  return { total_bytes: total, by_type: byType, images };
+}
+
+/** The images of the phone pass with their weight: the heaviest first, and those served far larger than they appear. */
+export function imagesFrom(read, weight) {
+  if (!Array.isArray(read?.list)) return null;
+  const scale = Number(read.scale) || 1;
+  const bytesOf = new Map((weight?.images ?? []).map((image) => [image.url, image.bytes]));
+  const items = read.list.map((image) => ({
+    src: image.src,
+    natural_width: image.natural_width,
+    shown_width: image.shown_width,
+    oversize: round(image.natural_width / Math.max(1, image.shown_width * scale), 2),
+    bytes: bytesOf.get(image.src) ?? null,
+  }));
+  const heavy = items.filter((image) => (image.bytes ?? 0) >= HEAVY_IMAGE_BYTES).sort((a, b) => b.bytes - a.bytes).slice(0, 5);
+  // A drawing in vector weighs the same at any size, so its natural width says nothing.
+  const raster = items.filter((image) => !/^data:image\/svg|\.svg(?:[?#]|$)/i.test(image.src ?? ""));
+  const oversized = raster.filter((image) => image.oversize >= OVERSIZE_RATIO && (image.bytes ?? HEAVY_OVERSIZE_BYTES) >= HEAVY_OVERSIZE_BYTES).sort((a, b) => b.oversize - a.oversize).slice(0, 5);
+  return { count: items.length, heavy, oversized };
+}
+
+/** The `quality` block of the anatomy. A measurement that did not run stays null, so nobody takes it for a clean page. */
+export function buildQuality({ desktop = null, mobile = null, weight = null } = {}) {
+  const smallText = mobile?.small_text ? { ...mobile.small_text, share: mobile.small_text.total_chars ? round(mobile.small_text.small_chars / mobile.small_text.total_chars, 3) : 0 } : null;
+  return {
+    desktop: desktop
+      ? { contrast: contrastFrom(desktop.contrast), controls: desktop.controls ?? null, demos: desktop.demos ?? null, defaults: desktop.defaults ?? null, errors: desktop.errors ?? [] }
+      : null,
+    mobile: mobile
+      ? { overflow: mobile.overflow ?? null, small_text: smallText, tap_targets: mobile.tap_targets ?? null, controls: mobile.controls ?? null, images: imagesFrom(mobile.images, weight), weight: weight ? { total_bytes: weight.total_bytes, by_type: weight.by_type } : null, errors: mobile.errors ?? [] }
+      : null,
   };
 }
 
@@ -2158,6 +2307,400 @@ function anatomyInPage(options) {
       return { id, text: el && el.isConnected ? clean(el.textContent) : null };
     }));
 
+  // ----- Measurements of the finished page. The caller reads them apart: a failure here leaves one
+  // measurement empty and never takes the anatomy down.
+
+  const NOT_TEXT = "script, style, noscript, template, textarea, select, option, title, svg";
+  const eachText = (limit, visit) => {
+    if (!document.body) return;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let seen = 0;
+    for (let node = walker.nextNode(); node && seen < limit; node = walker.nextNode()) {
+      const text = clean(node.nodeValue);
+      if (!text) continue;
+      const parent = node.parentElement;
+      if (!parent || parent.closest(NOT_TEXT) || !shown(parent)) continue;
+      seen++;
+      visit(text, parent);
+    }
+  };
+  const ownText = (el) => Array.from(el.childNodes).some((node) => node.nodeType === 3 && /\S/.test(node.nodeValue));
+
+  // What passes the width of the phone: the page scrolling sideways, or content cut by the page's
+  // edge. Anything inside its own scrolling or clipping box (a carousel, a ticker) is that box's business.
+  attempt("overflow", () => {
+    const width = options.viewportWidth || innerWidth;
+    const insideBox = (el) => {
+      for (let node = el.parentElement; node && node !== document.body && node !== document.documentElement; node = node.parentElement) {
+        if (getComputedStyle(node).overflowX !== "visible") return true;
+      }
+      return false;
+    };
+    const offenders = [];
+    let cut = 0;
+    const all = document.querySelectorAll("body *");
+    for (let i = 0; i < all.length && i < options.maxElements; i++) {
+      const el = all[i];
+      if (!ownText(el) && !/^(img|video|table|pre|button|input|canvas|iframe)$/.test(el.localName)) continue;
+      if (el.closest("script, style, noscript, template") || !shown(el, true)) continue;
+      const r = el.getBoundingClientRect();
+      if (r.right <= width + 2 || r.left >= width || insideBox(el)) continue;
+      cut++;
+      if (offenders.length < 5) offenders.push({ tag: el.localName, text: clean(el.innerText || el.getAttribute("alt") || "").slice(0, 60), right: Math.round(r.right), width: Math.round(r.width) });
+    }
+    return { viewport_width: width, inner_width: innerWidth, scroll_width: Math.max(document.documentElement.scrollWidth, document.body ? document.body.scrollWidth : 0), cut, offenders };
+  });
+
+  // The share of the text below the legible size, and any price or call to action below it.
+  attempt("small_text", () => {
+    const limit = options.smallTextPx || 12;
+    const PRICE = re(options.price);
+    const sizes = new Map();
+    const samples = [];
+    const key = [];
+    let total = 0;
+    let small = 0;
+    let min = null;
+    eachText(options.maxElements, (text, parent) => {
+      let px = sizes.get(parent);
+      if (px === undefined) {
+        px = parseFloat(getComputedStyle(parent).fontSize) || 0;
+        sizes.set(parent, px);
+      }
+      if (!px) return;
+      total += text.length;
+      if (min === null || px < min) min = px;
+      if (px >= limit) return;
+      small += text.length;
+      const entry = { text: text.slice(0, 60), px: Math.round(px * 10) / 10 };
+      if (samples.length < 5) samples.push(entry);
+      // A price or a call to action is named by its whole text, once: "Até 40% OFF", not "Até".
+      const cta = parent.closest(CTA);
+      if (key.length < 5 && (cta || PRICE.test(joinCents(text)))) {
+        const whole = cta ? ctaText(cta).slice(0, 60) : entry.text;
+        if (!key.some((known) => known.text === whole)) key.push({ text: whole, px: entry.px });
+      }
+    });
+    return { total_chars: total, small_chars: small, min_px: min, samples, key };
+  });
+
+  // WCAG 2.2, 2.5.8: 24 by 24 CSS pixels, with its exceptions for a link inside a sentence and for
+  // spacing (a 24 px circle centered on the target touches no other target and no other such circle).
+  attempt("tap_targets", () => {
+    const min = options.minTarget || 24;
+    const SEL = "a[href], button, input:not([type='hidden' i]), select, textarea, summary, [role='button'], [role='link'], [role='checkbox'], [role='radio'], [role='switch'], [role='tab']";
+    const inSentence = (el) => {
+      if (el.localName !== "a" || getComputedStyle(el).display !== "inline" || !el.parentElement) return false;
+      return clean(el.parentElement.innerText).length > clean(el.innerText).length + 20;
+    };
+    const targets = [];
+    for (const el of document.querySelectorAll(SEL)) {
+      if (targets.length >= 400) break;
+      if (el.parentElement && el.parentElement.closest(SEL)) continue;
+      const label = el.labels && el.labels.length ? Array.from(el.labels).find((candidate) => shown(candidate)) || null : null;
+      if (!label && !shown(el, true)) continue;
+      const own = el.getBoundingClientRect();
+      const box = label ? label.getBoundingClientRect() : own;
+      const left = label ? Math.min(own.left, box.left) : own.left;
+      const top = label ? Math.min(own.top, box.top) : own.top;
+      const right = label ? Math.max(own.right, box.right) : own.right;
+      const bottom = label ? Math.max(own.bottom, box.bottom) : own.bottom;
+      if (right - left <= 0 || bottom - top <= 0 || right + scrollX <= 0 || bottom + scrollY <= 0) continue;
+      if (inCookieBanner(el) || inSentence(el)) continue;
+      // A target with no name stays with an empty text: that it has no name is part of the finding.
+      targets.push({ left: left + scrollX, top: top + scrollY, right: right + scrollX, bottom: bottom + scrollY, width: right - left, height: bottom - top, text: ctaText(el) || (label ? clean(label.innerText) : "") || clean(el.getAttribute("placeholder")) || "" });
+    }
+    const isSmall = (target) => Math.min(target.width, target.height) < min;
+    const center = (target) => ({ x: (target.left + target.right) / 2, y: (target.top + target.bottom) / 2 });
+    const crowded = (target) => {
+      const c = center(target);
+      return targets.some((other) => {
+        if (other === target) return false;
+        if (isSmall(other)) {
+          const d = center(other);
+          return Math.hypot(c.x - d.x, c.y - d.y) < min;
+        }
+        const dx = Math.max(other.left - c.x, 0, c.x - other.right);
+        const dy = Math.max(other.top - c.y, 0, c.y - other.bottom);
+        return Math.hypot(dx, dy) < min / 2;
+      });
+    };
+    const small = targets.filter(isSmall);
+    const undersized = small.filter(crowded);
+    return { checked: targets.length, small: small.length, undersized: undersized.length, samples: undersized.slice(0, 6).map((target) => ({ text: String(target.text).slice(0, 60), width: Math.round(target.width), height: Math.round(target.height) })) };
+  });
+
+  // A button whose label does not fit: cut by its box, spilling past it, or touching one side. Only
+  // the label counts: a badge or a shine placed on top of the button, and text hidden for screen
+  // readers, are left out, because they sit outside the label on purpose.
+  attempt("controls", () => {
+    const problems = [];
+    let checked = 0;
+    const range = document.createRange();
+    const offLabel = (node, root) => {
+      for (let up = node; up && up !== root; up = up.parentElement) {
+        const s = getComputedStyle(up);
+        if (s.position === "absolute" || s.position === "fixed") return true;
+        if ((s.clipPath && s.clipPath !== "none") || (s.clip && s.clip !== "auto")) return true;
+      }
+      return false;
+    };
+    for (const { el, text } of ctaRead(document, options.maxCtas)) {
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      const style = getComputedStyle(el);
+      const box = {
+        left: r.left + (parseFloat(style.borderLeftWidth) || 0),
+        right: r.right - (parseFloat(style.borderRightWidth) || 0),
+        top: r.top + (parseFloat(style.borderTopWidth) || 0),
+        bottom: r.bottom - (parseFloat(style.borderBottomWidth) || 0),
+      };
+      let t = null;
+      let clips = false;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        if (!/\S/.test(node.nodeValue || "") || !node.parentElement || offLabel(node.parentElement, el)) continue;
+        range.selectNodeContents(node);
+        const b = range.getBoundingClientRect();
+        if (!b.width || !b.height) continue;
+        t = t ? { left: Math.min(t.left, b.left), right: Math.max(t.right, b.right), top: Math.min(t.top, b.top), bottom: Math.max(t.bottom, b.bottom) } : { left: b.left, right: b.right, top: b.top, bottom: b.bottom };
+        for (let up = node.parentElement; up && !clips; up = up === el ? null : up.parentElement) {
+          const s = getComputedStyle(up);
+          clips = s.overflowX !== "visible" || s.overflowY !== "visible";
+        }
+      }
+      if (!t) continue;
+      checked++;
+      const button = styledAsButton(style);
+      const outside = t.left < box.left - 1 || t.right > box.right + 1 || t.top < box.top - 1 || t.bottom > box.bottom + 1;
+      let reason = null;
+      if (outside && clips) reason = "cortado";
+      else if (outside && button) reason = "vaza";
+      else if (button) {
+        const left = t.left - box.left;
+        const right = box.right - t.right;
+        if ((left <= 2 && right >= 5) || (right <= 2 && left >= 5)) reason = "colado";
+      }
+      if (reason && problems.length < 8) problems.push({ text: text.slice(0, 60), reason, width: Math.round(r.width), height: Math.round(r.height) });
+    }
+    return { checked, problems };
+  });
+
+  attempt("images", () => {
+    const list = [];
+    for (const img of document.images) {
+      if (list.length >= 200) break;
+      if (!img.complete || !img.naturalWidth || !shown(img)) continue;
+      const r = img.getBoundingClientRect();
+      if (r.width < 2) continue;
+      list.push({ src: String(abs(img.currentSrc || img.getAttribute("src")) || "").slice(0, 300), natural_width: img.naturalWidth, shown_width: Math.round(r.width) });
+    }
+    return { scale: devicePixelRatio, list };
+  });
+
+  // The text colors of the page and what is painted under them. The colors go back as the browser
+  // reports them, for Node to compose. Each distinct pair is scrolled to and read where it is on
+  // screen, because a text placed over an image or over another box has neither as an ancestor.
+  // While it reads, every element answers the hit test, so a background layer that ignores the
+  // pointer is seen too; the page is put back as it was at the end.
+  attempt("contrast", () => {
+    const startY = scrollY;
+    const unlock = document.createElement("style");
+    unlock.textContent = "* { pointer-events: auto !important; }";
+    document.head.appendChild(unlock);
+    try {
+      return contrastRead();
+    } finally {
+      unlock.remove();
+      window.scrollTo({ top: startY, left: 0, behavior: "instant" });
+    }
+  });
+
+  function contrastRead() {
+    const opaque = (color) => !/\/\s*(?:0?\.\d+|0)\s*\)$/.test(color) && !/^rgba\([^)]*,\s*(?:0?\.\d+|0)\s*\)$/.test(color);
+    // A ::before or ::after that paints a background can sit under the text, and the hit test never returns it.
+    const paintedPseudo = (node) => ["::before", "::after"].some((which) => {
+      const s = getComputedStyle(node, which);
+      if (!s.content || s.content === "none" || s.content === "normal") return false;
+      return !isTransparent(s.backgroundColor) || (s.backgroundImage && s.backgroundImage !== "none");
+    });
+    const paints = (style) => !isTransparent(style.backgroundColor) || (style.backgroundImage && style.backgroundImage !== "none");
+    const nearestBackground = (el) => {
+      for (let node = el; node; node = node.parentElement) {
+        const style = getComputedStyle(node);
+        if (style.backgroundImage && style.backgroundImage !== "none") return "imagem";
+        if (!isTransparent(style.backgroundColor)) return style.backgroundColor;
+      }
+      return "";
+    };
+    const firstTextParent = (el) => {
+      if (ownText(el)) return el;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) if (/\S/.test(node.nodeValue || "") && node.parentElement) return node.parentElement;
+      return el;
+    };
+    const pairs = new Map();
+    // Text marked aria-hidden is decoration by the page's own word: WCAG leaves it out of 1.4.3.
+    const decorative = (el) => Boolean(el.closest("[aria-hidden='true']"));
+    const add = (el, role, chars, text) => {
+      if (!el || decorative(el)) return;
+      const style = getComputedStyle(el);
+      const key = `${role}|${style.color}|${nearestBackground(el)}|${Math.round(parseFloat(style.fontSize))}`;
+      const known = pairs.get(key);
+      if (known) known.chars += chars;
+      else if (pairs.size < (options.maxContrast || 60)) pairs.set(key, { el, role, chars, text: clean(text).slice(0, 60) });
+    };
+    for (const heading of headings()) add(firstTextParent(heading), heading.localName === "h1" ? "title" : "heading", clean(heading.innerText).length, heading.innerText);
+    // A disabled control is an inactive component, which WCAG 1.4.3 leaves out.
+    for (const { el, text } of ctaRead(document, 40)) if (!(el.disabled === true || el.getAttribute("aria-disabled") === "true")) add(firstTextParent(el), "cta", text.length, text);
+    eachText(3000, (text, parent) => {
+      if (text.length >= 20) add(parent, "text", text.length, text);
+    });
+    const read = ({ el, role, chars, text }) => {
+      const style = getComputedStyle(el);
+      const sample = { role, text, chars, color: style.color, font_px: parseFloat(style.fontSize) || 0, bold: (parseInt(style.fontWeight, 10) || 400) >= 700, stack: [], unknown: null };
+      const clip = style.webkitBackgroundClip || style.backgroundClip;
+      if (clip === "text" || isTransparent(style.webkitTextFillColor || "") && style.webkitTextFillColor) {
+        sample.unknown = "degrade";
+        return sample;
+      }
+      for (let node = el; node; node = node.parentElement) {
+        if (Number(getComputedStyle(node).opacity) < 1) {
+          sample.unknown = "opacidade";
+          return sample;
+        }
+      }
+      el.scrollIntoView({ block: "center", behavior: "instant" });
+      const r = el.getBoundingClientRect();
+      const x = Math.max(1, Math.min(innerWidth - 2, r.left + Math.min(r.width / 2, 60)));
+      const y = Math.max(1, Math.min(innerHeight - 2, r.top + r.height / 2));
+      let started = false;
+      for (const node of document.elementsFromPoint(x, y)) {
+        const related = node === el || node.contains(el) || el.contains(node);
+        if (!started && !related) {
+          // A window or a bar that stays on screen is not what the text sits on, and a box that paints
+          // nothing covers nothing; anything else covers the text.
+          let pinnedAbove = false;
+          for (let up = node; up && !pinnedAbove; up = up.parentElement) pinnedAbove = getComputedStyle(up).position === "fixed";
+          if (pinnedAbove) continue;
+          const coverStyle = getComputedStyle(node);
+          if (!paints(coverStyle) && !paintedPseudo(node) && !/^(img|video|canvas|picture|iframe|svg)$/.test(node.localName)) continue;
+          sample.unknown = "coberto";
+          return sample;
+        }
+        started = true;
+        if (el.contains(node) && node !== el) continue;
+        if (/^(img|video|canvas|picture|iframe|svg)$/.test(node.localName)) {
+          sample.unknown = "imagem";
+          return sample;
+        }
+        if (paintedPseudo(node)) {
+          sample.unknown = "camada";
+          return sample;
+        }
+        const nodeStyle = getComputedStyle(node);
+        if (nodeStyle.backgroundImage && nodeStyle.backgroundImage !== "none") {
+          sample.unknown = "imagem";
+          return sample;
+        }
+        if (!isTransparent(nodeStyle.backgroundColor)) {
+          sample.stack.push(nodeStyle.backgroundColor);
+          if (opaque(nodeStyle.backgroundColor)) break;
+        }
+      }
+      if (!started) sample.unknown = "coberto";
+      return sample;
+    };
+    return { samples: Array.from(pairs.values()).map(read) };
+  }
+
+  // The product scenes the page marks with data-demo.
+  attempt("demos", () => {
+    const LABEL = re(options.demoLabel);
+    return Array.from(document.querySelectorAll("[data-demo]")).slice(0, 10).map((el) => {
+      const around = clean(`${el.innerText || ""} ${el.parentElement ? el.parentElement.innerText || "" : ""}`).slice(0, 1500);
+      const named = clean(el.getAttribute("aria-label")) || (el.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean).map((id) => clean((document.getElementById(id) || {}).textContent)).join(" ");
+      return {
+        name: el.getAttribute("data-demo") || null,
+        ...boxOf(el),
+        section: sectionOf(el),
+        headings: el.querySelectorAll("h1, h2, h3, h4, h5, h6").length,
+        has_name: Boolean(named),
+        label_near: LABEL.test(fold(around)),
+      };
+    });
+  });
+
+  // The defaults a model reaches for that a page shows in its styles. Each comes with a few examples.
+  attempt("defaults", () => {
+    const found = { gradient_text: [], glass: [], glow: [], blobs: [], equal_cards: [], status_dots: [] };
+    const counts = { gradient_text: 0, glass: 0, glow: 0, blobs: 0, equal_cards: 0, status_dots: 0 };
+    const note = (kind, text) => {
+      counts[kind]++;
+      if (found[kind].length < 4) found[kind].push(clean(text).slice(0, 60));
+    };
+    const coloredGlow = (shadow) => {
+      if (!shadow || shadow === "none") return false;
+      return shadow.split(/,(?![^(]*\))/).some((part) => {
+        const color = /(?:rgba?|oklch|oklab|lab|lch|hsla?|color)\([^)]*\)|#[0-9a-f]{3,8}/i.exec(part);
+        const numbers = part.replace(color ? color[0] : "", " ").match(/-?\d*\.?\d+px/g) || [];
+        const [x, y, blur] = numbers.map((value) => parseFloat(value));
+        if (x !== 0 || y !== 0 || !(blur >= 20) || !color) return false;
+        const rgb = /rgba?\(\s*(\d+)[ ,]+(\d+)[ ,]+(\d+)/.exec(color[0]);
+        if (!rgb) return true;
+        return Math.max(+rgb[1], +rgb[2], +rgb[3]) - Math.min(+rgb[1], +rgb[2], +rgb[3]) > 30;
+      });
+    };
+    const runningOn = new Map();
+    if (typeof document.getAnimations === "function") {
+      for (const animation of document.getAnimations()) {
+        const timing = animation.effect && animation.effect.getComputedTiming ? animation.effect.getComputedTiming() : {};
+        if (animation.playState === "running" && timing.iterations === Infinity && animation.effect.target) runningOn.set(animation.effect.target, true);
+      }
+    }
+    const all = document.querySelectorAll("body *");
+    for (let i = 0; i < all.length && i < options.maxElements; i++) {
+      const el = all[i];
+      if (el.closest("script, style, noscript, template") || !shown(el)) continue;
+      const style = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      const words = clean(el.innerText).slice(0, 60);
+      if ((style.webkitBackgroundClip === "text" || style.backgroundClip === "text") && words) note("gradient_text", words);
+      if (style.backdropFilter && /blur/.test(style.backdropFilter) && r.width >= 120 && r.height >= 40) note("glass", words || el.localName);
+      if (coloredGlow(style.boxShadow) || (words && coloredGlow(style.textShadow))) note("glow", words || el.localName);
+      const positioned = style.position === "absolute" || style.position === "fixed";
+      if (positioned && !words && r.width >= 150 && r.height >= 150) {
+        const blur = /blur\(\s*(\d*\.?\d+)px/.exec(style.filter || "");
+        const fading = /radial-gradient\([^)]*(?:transparent|rgba\([^)]*,\s*0(?:\.0+)?\))/.test(style.backgroundImage || "");
+        if ((blur && parseFloat(blur[1]) >= 30) || fading) note("blobs", el.className && typeof el.className === "string" ? el.className : el.localName);
+      }
+      if (runningOn.has(el) && r.width <= 14 && r.height <= 14 && r.width > 0 && parseFloat(style.borderTopLeftRadius) >= r.width / 2 - 1) note("status_dots", clean(el.parentElement ? el.parentElement.innerText : "") || el.localName);
+      const kids = Array.from(el.children).filter((kid) => shown(kid));
+      if (kids.length === 3 && kids.every((kid) => kid.localName === kids[0].localName && kid.className === kids[0].className)) {
+        const boxes = kids.map((kid) => kid.getBoundingClientRect());
+        const same = boxes.every((box) => Math.abs(box.width - boxes[0].width) <= 2 && Math.abs(box.top - boxes[0].top) <= 2 && Math.abs(box.height - boxes[0].height) <= 2);
+        if (same && boxes[0].width >= 200 && boxes[0].height >= 100 && kids.every((kid) => clean(kid.innerText).length >= 20) && !kids.some((kid) => re(options.price).test(joinCents(clean(kid.innerText))))) {
+          const section = headings()[(sectionOf(el) || 1) - 1];
+          note("equal_cards", section ? section.innerText : clean(kids[0].innerText));
+        }
+      }
+    }
+    let total = 0;
+    let mono = 0;
+    const fonts = new Map();
+    eachText(options.maxElements, (text, parent) => {
+      total += text.length;
+      if (parent.closest("code, pre, kbd, samp")) return;
+      let family = fonts.get(parent);
+      if (family === undefined) {
+        family = getComputedStyle(parent).fontFamily || "";
+        fonts.set(parent, family);
+      }
+      if (/mono|courier|consolas|menlo|monaco/i.test(family)) mono += text.length;
+    });
+    return { found, counts, mono_share: total ? Math.round((mono / total) * 1000) / 1000 : 0 };
+  });
+
   return out;
 }
 /* eslint-enable no-undef */
@@ -2373,18 +2916,25 @@ async function saveAssets(plan, { dir, allowFile, referer, onProgress }) {
 // ---------------------------------------------------------------------------------------------
 
 /** Counts requests in flight and remembers the main document's response (status, type). */
-function trackNetwork(page, mainFrameId) {
-  const state = { inflight: new Set(), document: null, mainFrameId };
+export function trackNetwork(page, mainFrameId) {
+  const state = { inflight: new Set(), document: null, mainFrameId, resources: new Map() };
   const mine = (sessionId) => sessionId === page.sessionId;
   const offs = [
     page.browser.on("Network.requestWillBeSent", (params, sessionId) => {
       if (!mine(sessionId) || params.redirectResponse) return;
       state.inflight.add(params.requestId);
     }),
-    page.browser.on("Network.loadingFinished", (params, sessionId) => mine(sessionId) && state.inflight.delete(params.requestId)),
+    page.browser.on("Network.loadingFinished", (params, sessionId) => {
+      if (!mine(sessionId)) return;
+      state.inflight.delete(params.requestId);
+      const resource = state.resources.get(params.requestId);
+      if (resource) resource.bytes = params.encodedDataLength ?? 0;
+    }),
     page.browser.on("Network.loadingFailed", (params, sessionId) => mine(sessionId) && state.inflight.delete(params.requestId)),
     page.browser.on("Network.responseReceived", (params, sessionId) => {
-      if (!mine(sessionId) || params.type !== "Document") return;
+      if (!mine(sessionId)) return;
+      state.resources.set(params.requestId, { url: params.response?.url ?? null, type: params.type ?? "Other", bytes: 0 });
+      if (params.type !== "Document") return;
       if (state.mainFrameId && params.frameId && params.frameId !== state.mainFrameId) return;
       state.document = { status: params.response?.status ?? null, mime_type: params.response?.mimeType ?? null, url: params.response?.url ?? null };
     }),
@@ -2393,11 +2943,12 @@ function trackNetwork(page, mainFrameId) {
   state.reset = () => {
     state.inflight.clear();
     state.document = null;
+    state.resources.clear();
   };
   return state;
 }
 
-async function waitForNetworkQuiet(state, { idleMs = 400, timeoutMs = NETWORK_QUIET_MS } = {}) {
+export async function waitForNetworkQuiet(state, { idleMs = 400, timeoutMs = NETWORK_QUIET_MS } = {}) {
   const started = Date.now();
   let quietSince = state.inflight.size === 0 ? Date.now() : null;
   while (Date.now() - started < timeoutMs) {
@@ -2410,7 +2961,7 @@ async function waitForNetworkQuiet(state, { idleMs = 400, timeoutMs = NETWORK_QU
   return false;
 }
 
-async function setMetrics(page, { width, height, scale, mobile }) {
+export async function setMetrics(page, { width, height, scale, mobile }) {
   page.width = width;
   page.height = height;
   page.scale = scale;
@@ -2435,7 +2986,7 @@ async function warmUp(page) {
   return state;
 }
 
-async function dismissCookies(page) {
+export async function dismissCookies(page) {
   const patterns = { accept: asPattern(COOKIE_ACCEPT_PATTERN), hint: asPattern(COOKIE_HINT_PATTERN) };
   const result = await page.evaluate(inPage(dismissCookieBannerInPage, patterns), { awaitPromise: false }).catch((error) => ({ clicked: false, error: error.message }));
   if (!result.clicked) return { dismissed: false, button: null, candidates: result.candidates ?? 0 };
@@ -2451,6 +3002,10 @@ function anatomyOptions(parts, extra = {}) {
   return {
     parts,
     ...ANATOMY_LIMITS,
+    smallTextPx: SMALL_TEXT_PX,
+    minTarget: MIN_TARGET_PX,
+    maxContrast: 60,
+    demoLabel: asPattern(DEMO_LABEL_PATTERN),
     price: asPattern(PRICE_PATTERN),
     timer: asPattern(TIMER_PATTERN),
     decline: asPattern(DECLINE_PATTERN),
@@ -2489,6 +3044,16 @@ async function readAnatomyDesktop(page) {
   await page.evaluate(SCROLL_TOP, { awaitPromise: false });
   await sleep(150);
   return { top, end, again };
+}
+
+/** A measurement of the finished page, read apart from the anatomy: what fails here stays null, with the reason in `errors`. */
+async function readQuality(page, parts, extra = {}) {
+  try {
+    await page.evaluate(SCROLL_TOP, { awaitPromise: false });
+    return await readAnatomy(page, parts, { extra });
+  } catch (error) {
+    return { errors: [String(error?.message ?? error)] };
+  }
 }
 
 /** The mobile reading: where each call to action sits at the top, and the fixed elements at the top and at the end. */
@@ -2684,6 +3249,8 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     onProgress("Lendo a anatomia da página: seções, chamados, barras fixas, caixas, preços, vídeos e movimento…");
     try {
       anatomyReads.desktop = { ...(await readAnatomyDesktop(page)), arrival: arrivalDesktop };
+      onProgress("Medindo a página no computador: contraste, botões e padrões visuais…");
+      anatomyReads.desktop.quality = await readQuality(page, ["controls", "contrast", "demos", "defaults"]);
     } catch (error) {
       anatomyFailure = error?.message ?? String(error);
     }
@@ -2723,6 +3290,9 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     if (anatomyReads.desktop && !anatomyFailure) {
       try {
         anatomyReads.mobile = { ...(await readAnatomyMobile(page)), arrival: arrivalMobile };
+        onProgress("Medindo a página no celular: largura, texto, toque e imagens…");
+        anatomyReads.mobile.quality = await readQuality(page, ["overflow", "small_text", "tap_targets", "controls", "images"], { viewportWidth: mobileWidth });
+        anatomyReads.mobile.weight = pageWeight(network.resources);
       } catch (error) {
         anatomyFailure = error?.message ?? String(error);
       }

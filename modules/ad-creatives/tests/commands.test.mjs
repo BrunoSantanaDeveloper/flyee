@@ -248,7 +248,9 @@ describe("the round, from the briefing to the journal", () => {
 
     project.clearCalls();
     const preview = await ok(project, ["preview", CAMPAIGN, "memoria"]);
-    assert.deepEqual(project.calls().map((call) => call[0]), ["music", "sfx", "preview", "mix", "frames", "accept"]);
+    // the help first: does this Motor place the music's peak (--drop-at)? This one does not.
+    assert.deepEqual(project.calls().map((call) => call[0]), ["help", "music", "sfx", "preview", "mix", "frames", "accept"]);
+    assert.ok(!project.calls().find((call) => call[0] === "music").includes("--drop-at"));
     const accept = project.calls().find((call) => call[0] === "accept");
     assert.ok(accept.includes("--networks") && accept.includes("ads_meta"), accept.join(" "));
     assert.equal(accept[accept.indexOf("--safe") + 1], "networks");
@@ -257,6 +259,15 @@ describe("the round, from the briefing to the journal", () => {
     project.clearCalls();
     assert.equal((await ok(project, ["preview", CAMPAIGN, "memoria"])).reused, true, "nothing changed: nothing rendered again");
     assert.deepEqual(project.calls(), []);
+
+    // a Motor that places the music's peak gets it on the cut into the last scene, the offer
+    project.configure({ dropAt: true });
+    project.clearCalls();
+    await ok(project, ["preview", CAMPAIGN, "memoria", "--refresh"]);
+    const lastCut = JSON.parse(readFileSync(join(project.dir, "pecas", "memoria", "peca.json"), "utf8")).scenes.at(-1).from;
+    const placed = project.calls().find((call) => call[0] === "music");
+    assert.ok(lastCut > 0);
+    assert.equal(Number(placed[placed.indexOf("--drop-at") + 1]), lastCut, placed.join(" "));
 
     await refused(project, ["final", CAMPAIGN, "memoria"], "preview_not_approved");
     await ok(project, ["approve", CAMPAIGN, "preview", "memoria"]);
@@ -331,11 +342,11 @@ describe("the three pieces of an ad: vertical video, 4:5 video and image", () =>
     project.clearCalls();
     const preview = await ok(project, ["preview", CAMPAIGN, "memoria"]);
     const calls = project.calls();
-    assert.deepEqual(calls.map((call) => call[0]), ["music", "sfx", "preview", "mix", "frames", "accept", "frames", "accept", "frames", "accept"]);
-    const feedAccept = calls[7];
+    assert.deepEqual(calls.map((call) => call[0]), ["help", "music", "sfx", "preview", "mix", "frames", "accept", "frames", "accept", "frames", "accept"]);
+    const feedAccept = calls[8];
     assert.equal(feedAccept[feedAccept.indexOf("--format") + 1], "4:5");
     assert.equal(feedAccept[feedAccept.indexOf("--safe") + 1], "instagram-feed", "a 4:5 page is never checked as a carousel slide");
-    assert.ok(calls[8][1].endsWith("imagem.html") && calls[9][1].endsWith("imagem.html"));
+    assert.ok(calls[9][1].endsWith("imagem.html") && calls[10][1].endsWith("imagem.html"));
     assert.deepEqual(preview.placements.map((entry) => [entry.id, entry.passed]), [["feed", true], ["imagem", true]]);
     assert.equal(preview.passed, true);
 

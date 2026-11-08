@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "ad-creatives",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -183,8 +183,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "A IA procura os concorrentes antes de perguntar e escreve o que achou na própria pergunta, para um sim aceitar a lista. Oferta, preço e termos proibidos continuam pedindo a resposta do integrante.",
-    "en": "The AI looks for the competitors before asking and writes what it found inside the question, so a yes accepts the list. Offer, price and forbidden terms still need the member's answer."
+    "pt-BR": "O som dos vídeos acompanha melhor os cortes. O whoosh de cada corte agora soa mais alto no instante do corte, e não um pouco depois, e a trilha tem o ponto alto no corte para a oferta, onde o impacto já cai. Isso vale com o Motor de vídeo atualizado; com um mais antigo, o som sai como antes.",
+    "en": "The videos' sound follows the cuts more closely. Each cut's whoosh is now loudest on the cut itself, not a little after it, and the track peaks on the cut into the offer, where the impact already lands. This works with the updated Video engine; with an older one, the sound comes out as before."
   },
   "license": "member"
 }

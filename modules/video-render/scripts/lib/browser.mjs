@@ -357,6 +357,9 @@ export class Page {
   async init() {
     await this.send("Page.enable");
     await this.send("Runtime.enable");
+    // A page behaves the same on every machine: a system set to reduce motion (the default on Windows
+    // Server) would otherwise change what a render shows and what a capture reads.
+    await this.setReducedMotion(false);
     this.browser.on("Runtime.exceptionThrown", (params, sessionId) => {
       if (sessionId !== this.sessionId) return;
       const detail = params.exceptionDetails ?? {};
@@ -372,6 +375,11 @@ export class Page {
     this.browser.on("Page.loadEventFired", (_params, sessionId) => {
       if (sessionId === this.sessionId) this.loaded = true;
     });
+  }
+
+  /** What `prefers-reduced-motion` answers in this page. An old browser without the feature keeps its own answer. */
+  async setReducedMotion(on) {
+    await this.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: on ? "reduce" : "no-preference" }] }).catch(() => null);
   }
 
   /** The CSS viewport stays at the film size; a fractional scale gives a smaller screenshot with the same layout. */

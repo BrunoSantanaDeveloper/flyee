@@ -48,6 +48,7 @@ import {
   deadlineFrom,
   defaultEvents,
   draftRoteiro,
+  dropMoment,
   eventsFile,
   formatNumber,
   formatPrice,
@@ -764,13 +765,28 @@ test("timeline, the beat grid, the effects list and the texts on screen", () => 
 
   const sound = eventsFile(SAMPLE);
   assert.equal(sound.duration, 15);
-  assert.deepEqual(sound.events.slice(0, 4), [{ t: 0, type: "impact" }, { t: 1.875, type: "whoosh" }, { t: 5.625, type: "pop" }, { t: 6.5625, type: "click" }]);
+  assert.deepEqual(sound.events.slice(0, 4), [{ t: 0, type: "impact" }, { t: 1.875, type: "whoosh", anchor: "peak" }, { t: 5.625, type: "pop" }, { t: 6.5625, type: "click" }], "a whoosh is heard at its loudest moment, so that moment goes on the cut");
   assert.equal(sound.events.length, 13);
   assert.deepEqual(sound.events.map((event) => event.t), [...sound.events.map((event) => event.t)].sort((a, b) => a - b), "in time order");
   const custom = patch(SAMPLE, (roteiro) => {
     roteiro.scenes[1].events = [{ beat: 7.5, type: "whoosh", direction: "out", gain_db: -6, pan: 0.3, length: 0.4, pitch: 1.2 }];
   });
-  assert.deepEqual(eventsFile(validateRoteiro(custom, TEMPLATES)).events[1], { t: 5.3906, type: "whoosh", gain_db: -6, pan: 0.3, length: 0.4, pitch: 1.2, direction: "out" });
+  assert.deepEqual(eventsFile(validateRoteiro(custom, TEMPLATES)).events[1], { t: 5.3906, type: "whoosh", gain_db: -6, pan: 0.3, length: 0.4, pitch: 1.2, direction: "out", anchor: "peak" });
+  const starts = patch(SAMPLE, (roteiro) => {
+    roteiro.scenes[1].events = [{ beat: 0, type: "swish", anchor: "start" }, { beat: 2, type: "pop", anchor: "peak" }];
+  });
+  assert.deepEqual(eventsFile(validateRoteiro(starts, TEMPLATES)).events.slice(1, 3), [{ t: 1.875, type: "swish", anchor: "start" }, { t: 2.8125, type: "pop", anchor: "peak" }], "an anchor the roteiro wrote is kept");
+  assert.throws(() => validateRoteiro(patch(SAMPLE, (roteiro) => { roteiro.scenes[1].events = [{ beat: 0, type: "whoosh", anchor: "meio" }]; }), TEMPLATES), /scenes\[1\]\.events\[0\]\.anchor/);
+
+  // the composed music's peak goes on the template's biggest change
+  const proofStart = timeline(SAMPLE).scenes.find((scene) => scene.role === "prova").start;
+  assert.ok(proofStart > 0);
+  assert.equal(dropMoment(SAMPLE, TEMPLATES), proofStart, "the proof changes the world: the peak goes there");
+  const noProof = draftRoteiro(briefState({ proof: field(null, "padrao") }), KIT, TEMPLATES);
+  assert.ok(!noProof.scenes.some((scene) => scene.role === "prova"));
+  assert.equal(dropMoment(noProof, TEMPLATES), timeline(noProof).scenes.at(-1).start, "without the proof, the signature");
+  assert.equal(dropMoment({ ...SAMPLE, template: "sem-modelo" }, TEMPLATES), null);
+  assert.equal(dropMoment(SAMPLE, { templates: { lancamento: { ...TEMPLATES.templates.lancamento, peak: undefined } } }), null);
 
   assert.deepEqual(
     onScreenTexts(SAMPLE).map((item) => [item.n, item.role, item.start, item.field, item.text, item.source]),
@@ -1533,12 +1549,13 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     const music = roteiro.music;
     assert.deepEqual(calls, [
       ["capture", "https://www.sorrisopleno.com.br", "--out", "capturas/sorrisopleno-com-br"],
+      // before composing: does this Motor place the peak (--drop-at)? This one does not.
+      ["help"],
       ["music", "--out", `${p}/audio/trilha.wav`, "--duration", String(roteiro.duration), "--bpm", String(roteiro.bpm), "--style", music.style, "--seed", String(music.seed), "--arc", "auto"],
       ["sfx", "--out", `${p}/audio/efeitos.wav`, "--events", `${p}/audio/eventos.json`, "--duration", String(roteiro.duration)],
       ["preview", `${p}/pagina.html`, "--out", `${p}/render/previa-sem-som.mp4`, "--format", "9:16", "--fps", "30", "--scale", "0.5"],
       ["mix", "--video", `${p}/render/previa-sem-som.mp4`, "--out", `${p}/previa/previa.mp4`, "--music", `${p}/audio/trilha.wav`, "--sfx", `${p}/audio/efeitos.wav`, "--fade-out", "0.4", "--tp", "-1.5"],
       ["frames", `${p}/pagina.html`, "--out", `${p}/previa/quadros`, "--format", "9:16", "--beats", `${p}/audio/batidas.json`, "--scale", "0.5"],
-      ["help"],
       ["accept", `${p}/pagina.html`, "--format", "9:16", "--safe", "instagram-feed", "--beats", `${p}/audio/batidas.json`, "--video", `${p}/previa/previa.mp4`],
       ["render", `${p}/pagina.html`, "--out", `${p}/render/final-sem-som.mp4`, "--format", "9:16", "--fps", "30", "--sub", "2"],
       ["mix", "--video", `${p}/render/final-sem-som.mp4`, "--out", `${p}/entrega/${slug}.mp4`, "--music", `${p}/audio/trilha.wav`, "--sfx", `${p}/audio/efeitos.wav`, "--fade-out", "0.4", "--tp", "-1.5"],
@@ -1842,7 +1859,7 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     project.clearCalls();
     const direct = await ok(project, ["final", video.slug, "--direct"]);
     assert.equal(direct.accept.passed, true);
-    assert.deepEqual(project.calls().map((call) => call[0]), ["music", "sfx", "render", "mix", "frames", "help", "accept", "probe"], "builds, composes and renders in one go");
+    assert.deepEqual(project.calls().map((call) => call[0]), ["help", "music", "sfx", "render", "mix", "frames", "accept", "probe"], "builds, composes and renders in one go");
     assert.ok(existsSync(join(video.dir, "roteiro.json")));
     assert.equal(readJsonFile(join(video.dir, "pedido.json")).delivery.direct, true);
 
@@ -2058,7 +2075,7 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     project.clearCalls();
     const first = await ok(project, ["preview", slug]);
     assert.deepEqual(first.reused, []);
-    assert.deepEqual(project.calls().map((call) => call[0]), ["music", "sfx", "preview", "mix", "frames", "help", "accept"]);
+    assert.deepEqual(project.calls().map((call) => call[0]), ["help", "music", "sfx", "preview", "mix", "frames", "accept"]);
     assert.equal(typeof first.elapsed_s, "number");
     assert.equal(first.open_command, `${SCRIPT} open ${slug} previa --json`);
     assert.equal(first.loudness.integrated_lufs, -14.1);
@@ -2075,7 +2092,7 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     project.clearCalls();
     const refreshed = await ok(project, ["preview", slug, "--refresh"]);
     assert.deepEqual(refreshed.reused, []);
-    assert.deepEqual(project.calls().map((call) => call[0]), ["music", "sfx", "preview", "mix", "frames", "help", "accept"]);
+    assert.deepEqual(project.calls().map((call) => call[0]), ["help", "music", "sfx", "preview", "mix", "frames", "accept"]);
 
     // only the sound changes: the page is the same roteiro plus other effects, so everything follows
     const roteiro = readJsonFile(join(dir, "roteiro.json"));
@@ -2085,8 +2102,9 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     await ok(project, ["build", slug]);
     const warm = await ok(project, ["preview", slug]);
     assert.equal(warm.music.style, "warm");
-    assert.deepEqual(project.calls().map((call) => call[0]), ["music", "preview", "mix", "frames", "help", "accept"], "the effects are the same and are kept");
-    assert.equal(project.calls()[0][project.calls()[0].indexOf("--style") + 1], "warm");
+    assert.deepEqual(project.calls().map((call) => call[0]), ["help", "music", "preview", "mix", "frames", "accept"], "the effects are the same and are kept");
+    const warmCall = project.calls().find((call) => call[0] === "music");
+    assert.equal(warmCall[warmCall.indexOf("--style") + 1], "warm");
 
     // a check that fails is data: ok stays true, the result and the report say which one
     writeFileSync(join(dir, "pagina.html"), readFileSync(join(dir, "pagina.html"), "utf8").replace("</body>", "<!-- SEM_CAPA -->\n</body>"));
@@ -2137,6 +2155,37 @@ describe("the script in a member's project", { concurrency: 4, skip: REAL_INTAKE
     assert.equal(plain.accept.networks, null);
     assert.equal(plain.accept.passed, true);
     assert.ok(!plain.reused.includes("accept"), "what the conference can measure changed, so it is run again");
+  });
+
+  test("--drop-at goes to the Motor only when its help offers it, on the start of the film's biggest change", { timeout: 600000 }, async (t) => {
+    const project = makeProject(t, { engine: "fake", settings: { dropAt: true } });
+    const video = await videoAt(project, { request: R3, until: "build" });
+    const { slug, dir } = video;
+    project.clearCalls();
+    await ok(project, ["preview", slug]);
+    const roteiro = readJsonFile(join(dir, "roteiro.json"));
+    const peak = dropMoment(roteiro, TEMPLATES);
+    assert.ok(peak > 0, "the template names where its biggest change is");
+    const music = project.calls().find((call) => call[0] === "music");
+    assert.ok(music.includes("--drop-at"), music.join(" "));
+    assert.ok(Math.abs(Number(music[music.indexOf("--drop-at") + 1]) - peak) < 1e-3, `${music.join(" ")} contra ${peak}`);
+
+    // the same Motor without the option: the command line goes without it, and nothing fails
+    project.configure({});
+    project.clearCalls();
+    await ok(project, ["preview", slug, "--refresh"]);
+    assert.ok(!project.calls().find((call) => call[0] === "music").includes("--drop-at"));
+
+    // a loop has no peak to place: the synth never gets it
+    const looped = readJsonFile(join(dir, "roteiro.json"));
+    looped.music = { mode: "synth", style: "warm", seed: 3, file: null };
+    looped.loop = true;
+    writeFileSync(join(dir, "roteiro.json"), JSON.stringify(looped, null, 2));
+    project.configure({ dropAt: true });
+    project.clearCalls();
+    await ok(project, ["preview", slug]);
+    assert.equal(project.calls()[0][0], "synth");
+    assert.ok(!project.calls().some((call) => call.includes("--drop-at")));
   });
 
   test("the member's files: a logo, photos and a song from materiais/, and a video without music", { timeout: 600000 }, async (t) => {

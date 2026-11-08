@@ -23,6 +23,7 @@ Só o JSON vai para o stdout. Em erro, `ok` vem `false` e `error` traz `code`, `
 6. Nenhuma taxa de mercado sem fonte. A taxa de aceite do integrante vem da medição dele.
 7. Promoção e teste grátis com as regras escritas: até quando, para quem, a que se aplica, quantos dias. Uma janela de promoção nunca cobre a página na chegada.
 8. Os modelos já trazem a análise de cada página, inclusive o visual descrito em palavras: use os arquivos do app e não abra o site original para construir. Ele pode ter mudado desde a análise, e a página do integrante segue a marca dele. Do modelo, leve a estrutura, a mecânica e o efeito visual. Nunca copie texto, imagem, logo, cores ou código de outra empresa, ainda mais de uma concorrente do integrante. Se ele pedir para ver o site como está hoje, abra só para ler.
+9. A demonstração do produto mostra só o que ele faz hoje, de preferência com os componentes reais do projeto e dados fixos. O que for inventado para a cena leva a etiqueta "Exemplo fictício". Fora da cena, número, escassez, nome e data só entram com a origem registrada em `claims`.
 
 ## Passo 0: o tipo de página
 
@@ -55,19 +56,29 @@ Antes de planejar, leia:
 Antes de perguntar, olhe o projeto:
 - o framework e onde ficam as páginas: package.json, as rotas, os componentes;
 - o visual da marca: cores, fontes e os componentes de botão e de cartão que já existem;
+- os componentes do próprio produto que podem entrar na demonstração, com dados fixos;
 - o fluxo de compra: o checkout, a página de obrigado, o provedor de pagamento e se ele guarda o meio de pagamento para cobrar com um clique;
-- os preços, os planos, o teste, a garantia e os textos que já estão no código.
+- os preços, os planos, o teste, a garantia e os textos que já estão no código;
+- de onde vem cada número de prova que a página vai usar.
 
-Rode `new <pagina> --type <tipo>`. Ele cria `pagina.json` e `plano.md` em `paginas/<pagina>/`, ou em `docs/paginas/<pagina>/` quando o projeto já tem `docs/`. Preencha `pagina.json` com o que encontrou. O que ainda faltar (`missing`) vai ao integrante numa mensagem só, com até quatro perguntas, cada uma com uma sugestão escrita de modo que "sim" a aceite; um "ok" aceita as sugestões da rodada. Um fato do negócio (preço, garantia, prazo) vai sem sugestão e pede a resposta dele. Uma pergunta que depende de outra ainda em aberto fica para a rodada seguinte.
+Rode `new <pagina> --type <tipo>`. Ele cria `pagina.json` e `plano.md` em `paginas/<pagina>/`, ou em `docs/paginas/<pagina>/` quando o projeto já tem `docs/`. Preencha `pagina.json` com o que encontrou:
+- `brand`: as cores e as letras da marca, tiradas do código do projeto ou da captura do site dele, com a origem em `brand.source`. Nunca as de outra empresa;
+- `visual.direction`: a direção visual em uma frase, que diga o que torna a página deste produto. Num projeto com marca, a direção mantém a marca;
+- `demo`: de onde vem a imagem e a cena, pela ordem de `../../references/demonstracao.md`, nos tipos que têm demonstração;
+- `claims`: cada número, escassez ou data de prova, com a origem.
+
+O que ainda faltar (`missing`) vai ao integrante numa mensagem só, com até quatro perguntas, cada uma com uma sugestão escrita de modo que "sim" a aceite; um "ok" aceita as sugestões da rodada. Um fato do negócio (preço, garantia, prazo) vai sem sugestão e pede a resposta dele. Uma pergunta que depende de outra ainda em aberto fica para a rodada seguinte.
 
 ## Passo 2: o plano
 
-Com os fatos fechados, rode `plan <pagina>`. O `plano.md` traz as seções na ordem, a mecânica, a medição, as linhas legais e a lista do que conferir à mão. No chat, resuma em três linhas e traga só as decisões; o plano completo fica no arquivo.
+Com os fatos fechados, rode `plan <pagina>`. O `plano.md` traz a direção visual, a demonstração, as seções na ordem, a mecânica, a medição, as linhas legais e a lista do que conferir à mão. No chat, resuma em três linhas e traga só as decisões; o plano completo fica no arquivo. O passo termina quando `plan` não devolve nada em `missing`.
 
 ## Passo 3: construir
 
 - Use a tecnologia e os componentes do projeto. Comece pelo celular e siga o plano seção por seção.
 - Se o projeto tem as próprias skills de página, como um manual de design ou uma verificação visual, siga-as na construção e no visual. Esta skill cuida da estratégia do tipo de página e da conferência do que o tipo exige; as duas valem juntas.
+- A demonstração e a grade de recursos seguem `../../references/demonstracao.md`. Marque a cena com `data-demo` e registre o seletor em `demo.selector`.
+- Leia `../../references/vicios.md` antes de escrever o texto e de escolher o layout. O que a página usar da lista de propósito vai em `visual.chosen`.
 - Movimento e mídia seguem `../../references/movimento.md`:
   - vídeo de demonstração sem som, em loop, com capa no idioma da página;
   - barra fixa quando o cartão da oferta ou o botão do topo sai da tela;
@@ -86,6 +97,10 @@ O `audit` usa o Motor de vídeo (`.flyee/modules/video-render/scripts/render.mjs
 3. Se a instalação falhar, confira lendo o código com a lista do plano, e avise que a conferência automática ficou de fora.
 
 Cada item volta `ok`, `atencao` ou `nao_conferido`. O que a captura não trouxe nunca é dado como reprovado. Corrija o que está em `atencao` e rode `audit` de novo. Confira também, lendo o código, a lista do que conferir à mão no plano.
+
+Quando `demo.selector` está preenchido, o `audit` também filma a cena e devolve as folhas de quadros em `film.sheets`. Abra cada uma e responda às perguntas de "Conferir olhando" em `../../references/demonstracao.md`, olhando para os quadros, nunca para o código. As fotos da página inteira, em `files.photos`, servem para ler o resto da página do mesmo jeito.
+
+O passo termina quando nada de `atencao` ficou sem correção ou sem motivo, e no máximo depois de duas rodadas de correção visual: diga ao integrante o que ficou.
 
 ## Passo 5: entregar
 

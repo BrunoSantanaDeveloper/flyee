@@ -189,7 +189,14 @@ export function beatGrid(roteiro) {
   };
 }
 
-/** The effects of the whole film as the Motor's `sfx --events` reads them: `{ duration, events: [{ t, type, … }] }`. */
+/** The sounds that grow into their loudest moment: the ear hears the cut there, not where they start. */
+const SWEEPS = new Set(["whoosh", "swish"]);
+
+/**
+ * The effects of the whole film as the Motor's `sfx --events` reads them: `{ duration, events: [{ t, type, … }] }`.
+ * A whoosh or a swish gets `anchor: "peak"` unless the roteiro says otherwise, so its loudest
+ * moment lands on the cut (a Motor older than 1.1.0 ignores the field and starts it there).
+ */
 export function eventsFile(roteiro) {
   const times = timeline(roteiro);
   const events = [];
@@ -197,12 +204,29 @@ export function eventsFile(roteiro) {
     for (const event of scene.events) {
       if (event.t >= times.duration - 1e-6) continue;
       const out = { t: event.t, type: event.type };
-      for (const key of ["gain_db", "pan", "length", "pitch", "direction"]) if (event[key] !== undefined && event[key] !== null) out[key] = event[key];
+      for (const key of ["gain_db", "pan", "length", "pitch", "direction", "anchor"]) if (event[key] !== undefined && event[key] !== null) out[key] = event[key];
+      if (SWEEPS.has(out.type) && out.anchor === undefined) out.anchor = "peak";
       events.push(out);
     }
   }
   events.sort((a, b) => a.t - b.t);
   return { duration: times.duration, events };
+}
+
+/**
+ * Where the composed music's peak goes: the start of the first scene whose role is in the
+ * template's `peak` list, the film's biggest change. Null when the template names none, the
+ * roteiro has none of those roles, or that scene opens the film.
+ */
+export function dropMoment(roteiro, templates) {
+  const order = specsOf(templates)[roteiro.template]?.peak;
+  if (!Array.isArray(order)) return null;
+  const scenes = timeline(roteiro).scenes;
+  for (const role of order) {
+    const scene = scenes.find((item) => item.role === role);
+    if (scene) return scene.start > 0 ? scene.start : null;
+  }
+  return null;
 }
 
 /** One line per scene, for the result of `build`: when it plays and what it says. */
@@ -314,6 +338,7 @@ function validateEvent(value, path, beats) {
   if (value.length !== undefined && value.length !== null) event.length = numberAt(value.length, `${path}.length`, { min: 0.01, max: 10 });
   if (value.pitch !== undefined && value.pitch !== null) event.pitch = numberAt(value.pitch, `${path}.pitch`, { min: 0.1, max: 8 });
   if (value.direction !== undefined && value.direction !== null) event.direction = oneOf(value.direction, `${path}.direction`, ["in", "out"]);
+  if (value.anchor !== undefined && value.anchor !== null) event.anchor = oneOf(value.anchor, `${path}.anchor`, ["start", "peak"]);
   return event;
 }
 

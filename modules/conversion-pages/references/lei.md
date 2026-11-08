@@ -41,3 +41,6 @@ O §2 do art. 5 vale para toda oferta acrescentada ao pedido. Quem desiste do pe
 | um teste grátis sem a duração (art. 31 do CDC; art. 2, V) | `trial_terms` |
 | um desconto, uma economia ou uma média mensal que não fecha com os preços (art. 37, §1) | `discount_math` |
 | preços sem como cancelar e sem dizer se há fidelidade (art. 6, III) | `cancel_terms_shown` |
+| um número de uso, uma escassez ou uma data sem origem registrada (art. 37, §1) | `claims_have_origin` |
+| um nome ou um texto de exemplo esquecido na página (art. 37, §1) | `placeholder_data` |
+| uma demonstração sem a etiqueta de dados de exemplo (art. 30 e art. 37, §1) | `demo_honest` |

@@ -20,12 +20,14 @@ Outros pedidos:
 - "Confira se o painel de atendimento está no ar e com as cores do sistema."
 - "Esconda as campanhas e a central de ajuda do painel de atendimento."
 - "Mude o robô para responder sozinho."
+- "O WhatsApp do atendimento parou de receber mensagens, veja o que houve."
 
 ## O que o seu cliente recebe
 
 - O botão "Atendimento" no seu sistema, que abre o painel já logado, com o nome, o logo e as cores do sistema.
 - Uma equipe por cliente, sem limite de atendentes: entra no painel só quem o sistema marca como equipe de atendimento, cada cliente vê só o que é dele, e quem sai da equipe sai do painel.
 - A tela "Conectar WhatsApp": pela API oficial, com as credenciais da Meta, ou pelo WhatsApp Web, lendo um QR depois de aceitar o aviso de risco.
+- Um aviso quando o número para: o sistema confere o número a cada 15 minutos e avisa quem cuida dele quando cai, pede atenção ou volta. A tela mostra o que houve e o caminho de volta, sem perder as conversas.
 - A tela "Robô de atendimento": apresentação, instruções, perguntas e respostas, horário da equipe, quando passar para a equipe e quais dados do sistema o robô pode consultar.
 
 ## Quem controla o que o robô sabe

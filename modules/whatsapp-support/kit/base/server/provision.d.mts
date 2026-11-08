@@ -1,3 +1,5 @@
+import type { HealthFinding, HealthLevel, HealthMemory } from "./health.mjs";
+
 export interface InboxState {
   id: number;
   route: "oficial" | "nao_oficial";
@@ -20,6 +22,8 @@ export interface SupportState {
   inboxes?: InboxState[];
   staff?: Record<string, number>;
   features_off?: string[];
+  /** A memória da conferência do número, por caixa (healthAlerts). */
+  health?: Record<string, HealthMemory>;
 }
 
 type FetchImpl = typeof fetch;
@@ -99,7 +103,22 @@ export function connectOpenWA(input: {
   fetchImpl?: FetchImpl;
 }): Promise<{ state: SupportState; inboxId: number; sessionId: string }>;
 
-export function whatsappStatus(input: { openwaUrl: string; openwaApiKey: string; sessionId: string; fetchImpl?: FetchImpl }): Promise<{ status: string; qrCode: string | null }>;
+export function updateCloudApi(input: {
+  chatwootUrl: string;
+  state: SupportState;
+  inboxId: number;
+  cloud: { apiKey: string; phoneNumberId?: string; businessAccountId?: string };
+  fetchImpl?: FetchImpl;
+}): Promise<{ state: SupportState; inboxId: number; metaWebhook: { callbackUrl: string | null; verifyToken: string | null } }>;
+
+export function whatsappStatus(input: { openwaUrl: string; openwaApiKey: string; sessionId: string; fetchImpl?: FetchImpl }): Promise<{
+  status: string;
+  qrCode: string | null;
+  level: HealthLevel;
+  findings: HealthFinding[];
+}>;
+
+export function reconnectOpenWA(input: { openwaUrl: string; openwaApiKey: string; sessionId: string; fetchImpl?: FetchImpl }): Promise<{ status: string; started: boolean }>;
 
 export function conversationHistory(input: {
   chatwootUrl: string;

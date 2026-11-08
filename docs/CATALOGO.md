@@ -6,13 +6,13 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
-| [Criativos para anúncios](#ad-creatives) | 1.2.0 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
-| [Medição e leitura de resultados](#ads-insights) | 1.0.0 | tool | escalar | — | — |
-| [Base de contatos e CRM](#contact-base) | 1.1.0 | workflow | vender | — | — |
+| [Criativos para anúncios](#ad-creatives) | 1.2.1 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
+| [Medição e leitura de resultados](#ads-insights) | 1.0.1 | tool | escalar | — | — |
+| [Base de contatos e CRM](#contact-base) | 1.2.0 | workflow | vender | — | — |
 | [Páginas que vendem](#conversion-pages) | 1.1.0 | workflow | vender | `video-render` | — |
 | [Pesquisa no Instagram](#instagram-research) | 1.1.0 | tool | planejar | `video-analysis` | `ad-creatives` |
-| [Plano de estratégia e mídia](#media-plan) | 1.1.0 | workflow | planejar | — | — |
-| [Carrossel animado](#motion-carousel) | 1.1.3 | skill | divulgar | `video-render` | — |
+| [Plano de estratégia e mídia](#media-plan) | 1.1.1 | workflow | planejar | — | — |
+| [Carrossel animado](#motion-carousel) | 1.1.4 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.2 | tool | planejar | — | `ad-creatives`, `instagram-research`, `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.1.0 | tool | divulgar | — | `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio` |
 | [Estúdio de vídeo](#video-studio) | 1.1.1 | workflow | divulgar | `video-render` | — |
@@ -22,7 +22,7 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 ## ad-creatives
 
-**Criativos para anúncios** (Ad creatives) · versão 1.2.0 · workflow · trilha divulgar · testado em `claude_code`
+**Criativos para anúncios** (Ad creatives) · versão 1.2.1 · workflow · trilha divulgar · testado em `claude_code`
 
 > Prepara os criativos da sua campanha de tráfego pago na Meta (Instagram e Facebook): pesquisa os anúncios dos concorrentes, propõe três conceitos com a evidência de cada um e entrega os vídeos e as imagens conferidos, os textos dos anúncios e a conta da verba.
 
@@ -61,7 +61,7 @@ Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook
 
 ## ads-insights
 
-**Medição e leitura de resultados** (Measurement and results reading) · versão 1.0.0 · tool · trilha escalar · testado em `claude_code`
+**Medição e leitura de resultados** (Measurement and results reading) · versão 1.0.1 · tool · trilha escalar · testado em `claude_code`
 
 > Deixa a medição pronta antes do primeiro real e lê os resultados depois: o contrato do que conta, as tags da página, a regra única de link, a planilha de origem sem dado pessoal, o veredito de cada anúncio com a amostra que ele tem e a leitura da semana com o que fazer.
 
@@ -69,7 +69,7 @@ Deixa a medição pronta antes do primeiro real e lê os resultados depois, com 
 
 **Skills**
 
-- `ads-insights`: Deixa a medição de tráfego pago pronta antes do primeiro real (contrato do que conta, tags da página, regra de link, planilha de origem sem dado pessoal) e lê os resultados depois pelo export da Meta ou do Google Ads, com o veredito de cada anúncio, a leitura da semana e o pulso diário. Use para conferir o rastreamento, ler uma campanha, decidir o que escalar ou cortar, ou fazer a leitura da semana.
+- `ads-insights`: Deixa a medição de tráfego pago pronta antes do primeiro real (contrato do que conta, tags da página, regra de link, planilha de origem sem dado pessoal) e lê os resultados pelo export da Meta ou do Google Ads, com o veredito de cada anúncio, a leitura da semana e o pulso diário. Use para conferir o rastreamento, ler uma campanha, decidir o que escalar ou cortar, ou fazer a leitura da semana.
 
 **Serve outros apps**
 
@@ -86,7 +86,7 @@ Deixa a medição pronta antes do primeiro real e lê os resultados depois, com 
 
 ## contact-base
 
-**Base de contatos e CRM** (Contact base and CRM) · versão 1.1.0 · workflow · trilha vender · testado em `claude_code`
+**Base de contatos e CRM** (Contact base and CRM) · versão 1.2.0 · workflow · trilha vender · testado em `claude_code`
 
 > Transforma a sua base de contatos numa régua que pode ser enviada: limpa e conta a base sem tirar dado do projeto, registra a base legal de cada grupo, escreve a régua de e-mail e de WhatsApp nas datas do plano, com repermissão após seis meses, e confere a entrega do domínio.
 
@@ -171,7 +171,7 @@ Mostra, com números de verdade, quais Reels e posts fizeram muito mais do que o
 
 ## media-plan
 
-**Plano de estratégia e mídia** (Strategy and media plan) · versão 1.1.0 · workflow · trilha planejar · testado em `claude_code`
+**Plano de estratégia e mídia** (Strategy and media plan) · versão 1.1.1 · workflow · trilha planejar · testado em `claude_code`
 
 > Monta o plano de tráfego pago da sua marca a nível de especialista: olha o que o projeto já sabe, pergunta só o que falta, já com uma sugestão, e entrega a conta do que um cliente pode custar, a oferta, o calendário por fases até a data alvo e o plano escrito para você aprovar.
 
@@ -197,7 +197,7 @@ Monta o plano de tráfego pago da sua marca a nível de especialista, antes de q
 
 ## motion-carousel
 
-**Carrossel animado** (Motion carousel) · versão 1.1.3 · skill · trilha divulgar · testado em `claude_code`
+**Carrossel animado** (Motion carousel) · versão 1.1.4 · skill · trilha divulgar · testado em `claude_code`
 
 > Cria carrosséis para o Instagram em que cada slide é um vídeo curto em loop, com movimento e som na batida, a partir de um tema; entrega os MP4 prontos para postar e uma prévia de como fica no feed.
 
@@ -227,6 +227,7 @@ Transforma um tema em um carrossel para o Instagram em que cada slide é um víd
 - fs:read: ~/.flyee/keys.json (só a chave GEMINI_API_KEY)
 - fs:read: ~/.codex/generated_images (só as imagens que o Codex acabou de gerar para o carrossel)
 - env: GEMINI_API_KEY, CODEX_HOME
+- fs:read: media-plan/marca.md, roteiros/canal.md e estudio-de-video/marcas/, quando existem
 
 ## video-analysis
 

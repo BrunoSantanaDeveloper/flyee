@@ -4,6 +4,8 @@
 
 import { createHmac } from "node:crypto";
 
+import { classifySession, worstLevel } from "../../kit/base/server/health.mjs";
+
 const CHECK_TIMEOUT = 15000;
 
 async function fetchText(url, { headers = {}, fetchImpl = fetch } = {}) {
@@ -27,6 +29,37 @@ function signed(secret, method, url, body = "") {
 }
 
 const trim = (url) => String(url ?? "").replace(/\/+$/, "");
+
+/**
+ * Cada sessão do OpenWA: o número conectado ou o que falta. O número da rota oficial não aparece aqui, porque
+ * a saúde dele se lê com o token da conta de serviço, que fica no estado do projeto: quem confere é a rotina
+ * checkWhatsapp e a tela Conectar WhatsApp.
+ */
+async function checkSessions(openwa, apiKey, add, fetchImpl) {
+  let list = null;
+  let seen = "sem resposta";
+  try {
+    const response = await fetchText(`${openwa}/api/sessions`, { headers: { "X-API-Key": apiKey }, fetchImpl });
+    list = response.status === 200 ? jsonOf(response.text) : null;
+    seen = `status ${response.status}`;
+  } catch {
+    list = null;
+  }
+  if (!Array.isArray(list)) {
+    add("numero_conectado", false, seen, "Confira OPENWA_API_KEY e se o OpenWA está no ar.");
+    return;
+  }
+  if (!list.length) {
+    add("numero_conectado", true, "nenhuma sessão criada ainda");
+    return;
+  }
+  for (const session of list) {
+    const findings = classifySession(session);
+    const level = worstLevel(findings.map((item) => item.level));
+    const problem = findings.find((item) => item.level === level);
+    add(`numero_conectado_${session.name ?? session.id}`, level !== "fora", `${session.status}${problem ? `: ${problem.detail}` : ""}`, problem?.fix ?? "");
+  }
+}
 
 /**
  * env: CHATWOOT_PUBLIC_URL, CHATWOOT_PLATFORM_TOKEN, SUPPORT_BOT_PUBLIC_URL, SUPPORT_BOT_SECRET, PROJECT_URL,
@@ -132,6 +165,7 @@ export async function verify({ env, expected, fetchImpl = fetch }) {
     } catch {
       add("openwa_no_ar", false, "sem resposta", "Confira o contêiner do OpenWA e o host wa no proxy.");
     }
+    if (env.OPENWA_API_KEY) await checkSessions(openwa, env.OPENWA_API_KEY, add, fetchImpl);
   }
 
   return { ok: checks.every((check) => check.ok), checks };

@@ -214,8 +214,18 @@ test("contract: the template takes the allowable cost, the event, the margin and
   const validity = validateContract(data);
   assert.deepEqual(validity.required_unknown, ["tipo_negocio", "arbitro", "campo_origem"]);
   assert.equal(validity.ready, false);
-  assert.equal(validity.questions.length, 4);
+  assert.deepEqual(validity.questions.map((question) => question.key), ["tipo_negocio", "campo_origem"], "only what can be answered now");
+  assert.deepEqual(validity.waiting, [{ key: "arbitro", after: ["tipo_negocio"] }, { key: "evento_ativacao", after: ["tipo_negocio"] }]);
   assert.ok(validity.questions.every((question) => question.question));
+  const typed = structuredClone(data);
+  typed.items.tipo_negocio = { value: "saas", status: "informado" };
+  const next = validateContract(typed);
+  assert.deepEqual(next.waiting, []);
+  for (const key of ["arbitro", "evento_ativacao"]) {
+    const question = next.questions.find((candidate) => candidate.key === key);
+    assert.ok(question.suggestion, key);
+    assert.equal(question.yes_accepts, true, key);
+  }
   const values = contractValues(data);
   assert.equal(values.allowable, 40);
   assert.equal(values.type, null);

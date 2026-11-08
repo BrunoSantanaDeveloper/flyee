@@ -19,7 +19,7 @@ export const REFEREE = {
 
 export const ITEMS = [
   { key: "tipo_negocio", label: "Tipo de negócio", ask: "Que tipo de negócio é: software por assinatura, serviço, loja, app, negócio local ou infoproduto?", required: true },
-  { key: "arbitro", label: "O árbitro (a verdade do negócio)", ask: "Qual número do negócio julga os anúncios: contas pagas, contratos, pedidos, agendamentos?", required: true },
+  { key: "arbitro", label: "O árbitro (a verdade do negócio)", ask: "Qual número do negócio julga os anúncios: contas pagas, contratos, pedidos, agendamentos?", required: true, after: ["tipo_negocio"] },
   { key: "meta", label: "A meta que o marketing deve", ask: "Qual é a meta e até quando?", required: true },
   { key: "semana", label: "Semana de reporte", ask: null, required: false },
   { key: "fuso", label: "Fuso horário", ask: null, required: false },
@@ -27,7 +27,7 @@ export const ITEMS = [
   { key: "cliente_novo", label: "Cliente novo", ask: "O que é um cliente novo: o primeiro pagamento, pelo e-mail?", required: false },
   { key: "campo_origem", label: "O campo de origem que viaja com a conta", ask: "Onde a origem fica gravada quando alguém se cadastra ou compra: um campo no formulário, no CRM, na cobrança?", required: true },
   { key: "evento_otimizacao", label: "Evento de otimização", ask: "Por qual evento a campanha otimiza: lead, cadastro, compra?", required: true },
-  { key: "evento_ativacao", label: "Evento de ativação", ask: "O que é a ativação, o primeiro resultado útil que a pessoa tem no produto?", required: false },
+  { key: "evento_ativacao", label: "Evento de ativação", ask: "O que é a ativação, o primeiro resultado útil que a pessoa tem no produto?", required: false, after: ["tipo_negocio"] },
   { key: "custo_permitido_brl", label: "Custo permitido por resultado", ask: "Quanto um resultado do evento de otimização pode custar?", required: true },
   { key: "margem_pct", label: "Margem de contribuição", ask: "Qual é a margem antes dos anúncios, em porcentagem?", required: false },
   { key: "mer_equilibrio", label: "MER de equilíbrio (receita por real gasto que empata)", ask: null, required: false },
@@ -93,11 +93,20 @@ export function validateContract(data) {
     (value.status === "desconhecido" ? unknown : settled).push(entry.key);
   }
   const requiredUnknown = ITEMS.filter((entry) => entry.required && unknown.includes(entry.key)).map((entry) => entry.key);
-  const questions = ITEMS.filter((entry) => unknown.includes(entry.key) && entry.ask)
+  // Only what can be answered now: the referee and the activation wait for the type of business,
+  // which turns both into a suggestion the member accepts with a yes.
+  const blockedBy = (entry) => (entry.after ?? []).filter((key) => unknown.includes(key));
+  const askable = ITEMS.filter((entry) => unknown.includes(entry.key) && entry.ask);
+  const questions = askable
+    .filter((entry) => !blockedBy(entry).length)
     .sort((a, b) => Number(b.required) - Number(a.required))
     .slice(0, 4)
-    .map((entry) => ({ key: entry.key, label: entry.label, question: entry.ask, required: entry.required, suggestion: suggestionFor(entry.key, data) }));
-  return { settled, unknown, required_unknown: requiredUnknown, questions, ready: requiredUnknown.length === 0 };
+    .map((entry) => {
+      const suggestion = suggestionFor(entry.key, data);
+      return { key: entry.key, label: entry.label, question: entry.ask, required: entry.required, suggestion, yes_accepts: Boolean(suggestion) };
+    });
+  const waiting = askable.filter((entry) => blockedBy(entry).length).map((entry) => ({ key: entry.key, after: blockedBy(entry) }));
+  return { settled, unknown, required_unknown: requiredUnknown, questions, waiting, ready: requiredUnknown.length === 0 };
 }
 
 function suggestionFor(key, data) {

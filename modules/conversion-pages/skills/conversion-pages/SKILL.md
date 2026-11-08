@@ -58,7 +58,7 @@ Antes de perguntar, olhe o projeto:
 - o fluxo de compra: o checkout, a página de obrigado, o provedor de pagamento e se ele guarda o meio de pagamento para cobrar com um clique;
 - os preços, os planos, o teste, a garantia e os textos que já estão no código.
 
-Rode `new <pagina> --type <tipo>`. Ele cria `pagina.json` e `plano.md` em `paginas/<pagina>/`, ou em `docs/paginas/<pagina>/` quando o projeto já tem `docs/`. Preencha `pagina.json` com o que encontrou. O que ainda faltar (`missing`) vai ao integrante numa mensagem só, com até quatro perguntas, cada uma com uma sugestão.
+Rode `new <pagina> --type <tipo>`. Ele cria `pagina.json` e `plano.md` em `paginas/<pagina>/`, ou em `docs/paginas/<pagina>/` quando o projeto já tem `docs/`. Preencha `pagina.json` com o que encontrou. O que ainda faltar (`missing`) vai ao integrante numa mensagem só, com até quatro perguntas, cada uma com uma sugestão escrita de modo que "sim" a aceite; um "ok" aceita as sugestões da rodada. Um fato do negócio (preço, garantia, prazo) vai sem sugestão e pede a resposta dele. Uma pergunta que depende de outra ainda em aberto fica para a rodada seguinte.
 
 ## Passo 2: o plano
 
@@ -74,7 +74,7 @@ Com os fatos fechados, rode `plan <pagina>`. O `plano.md` traz as seções na or
   - pausa para o que troca sozinho, e números animados já escritos no HTML com o valor final;
   - a regra de menos movimento.
 - A medição segue `../../references/medicao.md`: os eventos do tipo e uma identificação por posição de chamado.
-- Escreva o texto na voz da marca e revise com a skill `texto-natural` antes de entregar.
+- Escreva o texto na voz da marca e revise com a skill `texto-natural` antes de entregar: ela não acrescenta fato, número ou promessa.
 
 ## Passo 4: conferir
 

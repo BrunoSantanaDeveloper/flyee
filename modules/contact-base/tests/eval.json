@@ -101,6 +101,18 @@
         }
       ],
       "rubric": "audience testaram gera o CSV só com hashes, a lista de exclusão dos clientes e as contagens (quantos entram, quantos saíram e por quê, o reconhecimento estimado de 40 a 60%). A IA passa o passo a passo do Gerenciador em palavras simples, diz que quem sobe é o integrante e que a taxa real da Meta substitui a estimativa. Nenhum e-mail ou telefone legível aparece na conversa ou nos arquivos para outros apps."
+    },
+    {
+      "name": "a base legal em duas rodadas",
+      "setup": "Base inventariada com os quatro grupos e a coluna de último contato; base-legal.md ainda não existe.",
+      "prompt": "Vamos registrar a base legal da minha lista.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "contatos/base-legal.md"
+        }
+      ],
+      "rubric": "A primeira mensagem traz quatro perguntas, cada uma uma vez só para todos os grupos: como entraram, o que leram, onde a lista está e o teto, este com a sugestão escrita para um sim aceitar. Dados presentes e último contato não são perguntados, porque o inventário já os tem. A base legal vem na rodada seguinte, com a sugestão de cada grupo, e a IA espera a resposta a ela: um ok solto não a fecha. Ao ouvir que os clientes entraram por outro caminho, a IA preenche a linha desse grupo sem refazer as outras. Se o integrante disser que quem sabe é o jurídico, a IA usa a skill questionario e segue com o resto."
     }
   ]
 }

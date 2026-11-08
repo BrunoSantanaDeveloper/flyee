@@ -27,6 +27,8 @@ Só contagens. O app de plano lê para saber o tamanho da base e quantos estão 
 }
 ```
 
+Desde a 1.2.0, cada grupo traz também `unsubscribed` (quantos pediram para sair) e `last_contact` (a data do contato mais recente do grupo, ou null).
+
 ### `contatos/segmentos.json`
 
 Contagens por segmento (`engajados-30`, `engajados-90`, `engajados-180`, `parados`, `clientes-novos`, `recorrentes`, `vip`, `sem-contato-6-meses`, `compradores-recentes` e os quatro grupos), o resumo do RFM, o teto de mensagens (`caps`), a prioridade e a escada de ofertas (`ladder`).
@@ -49,4 +51,4 @@ A voz do cliente como leitura declarada para o app de criativos: `kind: "declare
 
 ### `contatos/base-legal.md`
 
-A base legal de cada grupo, nos oito campos; o estado de cada grupo é lido por `legal` e por `sequence`.
+A base legal de cada grupo, nos oito campos, com a seção "Todos os grupos" para o que é igual; o estado de cada grupo é lido por `legal` e por `sequence`.

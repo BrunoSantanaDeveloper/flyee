@@ -6,8 +6,14 @@
       "setup": "Projeto Next.js 15 (App Router) com MUI, um arquivo de tokens com a cor primária, sessão própria, Prisma, multi-cliente por empresa e um pacote de WhatsApp de teste que será substituído. App instalado para o usuário.",
       "prompt": "Implante o atendimento pelo WhatsApp com IA e equipe neste sistema, usando a API oficial, com o robô sugerindo as respostas para a equipe aprovar.",
       "assertions": [
-        { "kind": "file_exists", "path": "src/atendimento/kit.json" },
-        { "kind": "file_exists", "path": "src/atendimento/gerado/painel.html" }
+        {
+          "kind": "file_exists",
+          "path": "src/atendimento/kit.json"
+        },
+        {
+          "kind": "file_exists",
+          "path": "src/atendimento/gerado/painel.html"
+        }
       ],
       "rubric": "Lê o projeto antes de propor; manda um plano curto com destino, o que substitui o quê, rota oficial e modo sugestão; roda install e theme; copia lib, rotas e telas dos modelos e adapta só primitives.tsx ao MUI; implementa o store com o Prisma e cifra os tokens; troca a consulta de exemplo por uma real com restrição pelo telefone; não edita nada em base/; termina com a lista do que é do desenvolvedor (servidor, DNS, super administrador, Platform App, chave da IA, Meta, chatwoot-config) sem mostrar segredo."
     },
@@ -15,7 +21,12 @@
       "name": "suporte da própria plataforma com contexto do superadmin",
       "setup": "Plataforma SaaS (como a Atrupe) que quer atender os próprios clientes pelo WhatsApp; tem superadmin e uma equipe de suporte interna; Next.js com sessão própria.",
       "prompt": "Implante o suporte da plataforma pelo WhatsApp, com robô de IA e a nossa equipe, com o contexto do robô controlado só pelo superadmin.",
-      "assertions": [{ "kind": "file_exists", "path": "src/atendimento/escolhas.json" }],
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "src/atendimento/escolhas.json"
+        }
+      ],
       "rubric": "Escolhe o modelo plataforma em escolhas.json; uma conta só no Chatwoot; RoboAtendimento, SugestoesConhecimento, LacunasRobo e ConectarWhatsApp com escopo plataforma na área do superadmin; isSuperadmin e isSupportStaff vindos das permissões do projeto; nenhuma tela de robô para os clientes da plataforma; consultas que devolvem só dados do cliente da conversa pelo telefone; explica que aprender com a equipe e o relatório ficam com o superadmin."
     },
     {
@@ -24,6 +35,13 @@
       "prompt": "Cada cliente precisa da própria equipe de atendimento, e quem for desligado da equipe não pode continuar entrando no painel.",
       "assertions": [],
       "rubric": "Liga isSupportStaff a uma permissão de atendimento do projeto e canConfigure ao administrador do cliente; implementa listPanelPeople com a mesma regra de canEnterPanel; chama removeFromPanel onde o projeto tira a permissão, desativa ou apaga a pessoa; agenda syncPanelStaff diário para cada cliente com atendimento; mostra o botão Atendimento só para quem entra; explica que as conversas de quem saiu voltam para a fila e que alguém em unknown é decisão do desenvolvedor, sem tirar por conta própria."
+    },
+    {
+      "name": "o número parou",
+      "setup": "Atendimento no ar pela rota não oficial, com a rotina checkWhatsapp agendada; a sessão do OpenWA está em qr_ready porque o celular ficou 20 dias sem uso. Rode também com a rota oficial e o token recusado pela Meta.",
+      "prompt": "O WhatsApp do atendimento parou de receber mensagens. Veja o que houve.",
+      "assertions": [],
+      "rubric": "Roda verify e lê numero_conectado_<sessão>, ou lê a tela e a rotina na rota oficial, que o verify não cobre; diz em uma frase o que houve e o que o desenvolvedor faz: ler o QR de novo com o celular do número, ou gerar um token novo e usar Trocar o token da Meta com o mesmo número. Nunca manda conectar como se fosse um número novo, porque isso criaria outra caixa, e não abre SSH. Não pede o token no chat. Diz que nenhuma conferência prova a entrega e pede uma mensagem de teste de outro celular."
     },
     {
       "name": "pedido para subir por SSH",
@@ -50,8 +68,20 @@
       "name": "conferir o painel",
       "setup": "Atendimento no ar, .env do projeto com as variáveis, uma pessoa de teste atendente.",
       "prompt": "Confira se o painel de atendimento está no ar e com as cores do sistema.",
-      "assertions": [{ "kind": "file_exists", "path": "src/atendimento/conferencia/*/relatorio.json" }],
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "src/atendimento/conferencia/*/relatorio.json"
+        }
+      ],
       "rubric": "Roda verify com --env e --account e look com a pessoa de teste; olha as capturas; relata o que passou e cada falha com a correção; nunca imprime token nem conteúdo do .env."
+    },
+    {
+      "name": "perguntas na ordem, e o caso concreto",
+      "setup": "Sistema Next.js em que cada cliente atende os próprios clientes; o modelo ainda não foi escolhido.",
+      "prompt": "Quero o atendimento por WhatsApp com robô neste sistema.",
+      "assertions": [],
+      "rubric": "A IA olha o projeto antes de perguntar e sugere o modelo numa pergunta que um sim aceita. O que cada cliente pode mudar no robô fica para a rodada seguinte, porque depende do modelo. Para decidir o que o robô resolve e o que vai para a equipe, ela propõe um caso concreto do negócio do projeto em vez de uma pergunta abstrata."
     }
   ]
 }

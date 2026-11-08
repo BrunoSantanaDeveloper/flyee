@@ -47,6 +47,14 @@ São funções que você escreve no seu sistema, uma para cada pergunta que o ro
 
 Na API oficial, o Chatwoot fala direto com a Meta, com as credenciais do cliente. Na conexão pelo WhatsApp Web, o OpenWA mantém o número conectado e o plugin leva as mensagens para o Chatwoot e as respostas de volta; notas internas nunca saem. A conexão pelo WhatsApp Web tem risco de banimento e não serve para atividade regulada: a tela mostra o aviso e pede o aceite.
 
+## Quando o número para
+
+Um número que caiu não mostra erro: o painel só fica vazio, como num dia sem clientes. Por isso o sistema confere o número a cada 15 minutos. No WhatsApp Web, olha se a sessão continua conectada e se o WhatsApp pôs alguma restrição. Na API oficial, usa a consulta que o Chatwoot faz à Meta: token recusado, número bloqueado, qualidade baixa, endereço de aviso errado.
+
+O aviso vai para quem conecta o número, e também para quem cuida do servidor quando o problema é dele. Ele sai quando o estado muda, e uma vez por dia enquanto o número estiver fora; o que costuma passar sozinho só vira aviso se continuar na conferência seguinte. Para voltar, a tela retoma a mesma caixa, com o QR de novo ou o token novo da Meta, e as conversas continuam lá.
+
+A conferência não prova que uma mensagem chegou. Depois de implantar e depois de cada atualização, mande uma mensagem de outro celular e veja a resposta chegar.
+
 ## Privacidade
 
 Tokens e chaves ficam no cofre do seu ambiente e no banco do seu sistema, cifrados, nunca em arquivo versionado. A IA recebe as mensagens, o conhecimento configurado, o primeiro nome do contato (dá para desligar) e o resultado das consultas; o telefone fica só entre o robô e o seu sistema.

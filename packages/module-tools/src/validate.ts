@@ -72,6 +72,10 @@ function validateEval(dir: string, slug: string, errors: string[]): void {
   });
 }
 
+/** A skill that interviews the member says what a yes settles (docs/COMO-CRIAR-UM-APP.md, §3). */
+const ASKS_THE_MEMBER = /\bpergunte\b|\bvocê pergunta\b|\bperguntas? (?:ao|numa|na mesma)\b|\baté (?:quatro|\d+) perguntas\b|\brodada de perguntas\b/i;
+const SAYS_WHAT_A_YES_ACCEPTS = /["“](?:sim|ok)["”]/i;
+
 function validateSkills(dir: string, files: string[], report: Report): void {
   const skillFiles = files.filter((file) => /^skills\/[^/]+\/SKILL\.md$/.test(file));
   for (const file of skillFiles) {
@@ -99,6 +103,10 @@ function validateSkills(dir: string, files: string[], report: Report): void {
     }
     for (const key of keys) {
       if (!KNOWN_FRONTMATTER.has(key)) report.warnings.push(`${file}: frontmatter key "${key}" is not part of the Agent Skills standard`);
+    }
+    // A tool asks one thing now and then; a skill or a workflow runs an interview.
+    if (report.manifest?.type !== "tool" && ASKS_THE_MEMBER.test(parsed.body) && !SAYS_WHAT_A_YES_ACCEPTS.test(parsed.body)) {
+      report.warnings.push(`${file}: asks the member questions without saying what "sim" or "ok" accepts; see "Como o app pergunta" in docs/COMO-CRIAR-UM-APP.md`);
     }
     report.skills.push({ name, description });
   }

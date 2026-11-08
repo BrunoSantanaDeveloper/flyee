@@ -99,11 +99,26 @@ Perguntas e respostas tiradas de uma conversa que a equipe resolveu: `{ "account
 | `ssoUrl` | o link de entrada já logado (5 minutos, uso único) |
 | `connectCloudApi` | caixa WhatsApp Cloud, robô, equipe; devolve o retorno para a Meta |
 | `connectOpenWA` | caixa API, repasse, webhook, adaptador, sessão, instância, robô |
-| `whatsappStatus` | estado da sessão do OpenWA e o QR |
+| `updateCloudApi` | troca o token de uma caixa oficial que já existe, mantendo o token de verificação do retorno |
+| `whatsappStatus` | estado da sessão do OpenWA, o que a conferência acha dele e o QR; com o OpenWA fora do ar, devolve `unknown` com o achado em vez de lançar |
+| `reconnectOpenWA` | retoma a sessão que a caixa já tem, sem criar outra; `session_missing` quando ela não existe mais |
 | `ensureDashboardApp` | página do projeto como aba da conversa |
 | `conversationHistory` | o histórico para a rota `history` |
 
-O estado de cada cliente (`SupportState` em `provision.d.mts`) tem tokens: grave cifrado e nunca em log. Todas as funções podem rodar de novo sem duplicar o que já existe, menos as de conectar número, que criam uma caixa nova a cada chamada.
+O estado de cada cliente (`SupportState` em `provision.d.mts`) tem tokens: grave cifrado e nunca em log. Todas as funções podem rodar de novo sem duplicar o que já existe, menos `connectCloudApi` e `connectOpenWA`, que criam uma caixa nova a cada chamada. Para o mesmo número, use `updateCloudApi` ou `reconnectOpenWA`; o modelo `connectWhatsapp` já escolhe pelo telefone.
+
+## Conferência do número (`base/server/health.mjs`)
+
+| Função | O que faz |
+|---|---|
+| `checkWhatsappHealth` | confere o número atual (`currentInbox`) e devolve `{ checked_at, level, inboxes: [{ inbox_id, route, phone, level, findings }] }`; não lança: serviço fora do ar vira achado |
+| `classifySession` | os estados e as restrições de uma sessão do OpenWA, em achados |
+| `classifyCloudHealth` | a saúde da caixa no Chatwoot, ou o erro dela, em achados |
+| `healthAlerts` | compara com a memória (`state.health`) e devolve `{ alerts, health }`: avisa na mudança e na volta, lembra uma vez por dia enquanto estiver fora |
+
+Um achado é `{ level, code, detail, fix, fixBy }`. Um aviso traz `title` e `text` prontos para enviar, sem segredo, além de `kind` (`novo`, `lembrete` ou `voltou`), `level`, `since`, `fixBy` e os achados.
+
+No modelo `next/lib/atendimento.ts`, `checkWhatsapp(tenantId)` junta as duas coisas: confere, chama `store.alertWhatsapp` e só então grava a memória. Assim, se o canal do aviso falhar, o aviso volta na próxima conferência. A memória só muda quando algo muda, e a rotina não grava o estado a cada 15 minutos. Com mais de uma réplica do servidor, rode a rotina em uma só: duas ao mesmo tempo mandam o aviso duas vezes.
 
 ## Variáveis do servidor do projeto
 

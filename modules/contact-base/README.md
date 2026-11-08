@@ -6,7 +6,7 @@ Transforma a sua base antiga de contatos numa régua que pode ser enviada, sem t
 
 Você exporta a lista de usuários ou contatos da sua ferramenta e a sua IA faz o inventário: tira os duplicados, separa os e-mails inválidos, põe o 55 e o DDD nos telefones, agrupa quem paga, quem pagou e saiu, quem testou sem pagar e quem só se cadastrou, e conta. Só as contagens saem da base; a lista limpa fica na pasta do projeto e não vai para lugar nenhum.
 
-Depois ela registra, com você, a base legal de cada grupo: como as pessoas entraram, o que leram ao entrar, onde a lista está guardada, por que a marca pode escrever para elas e quantas mensagens por semana é o teto. Enquanto faltar algo, a régua daquele grupo fica pendente.
+Depois ela registra, com você, a base legal de cada grupo: como as pessoas entraram, o que leram ao entrar, onde a lista está guardada, por que a marca pode escrever para elas e quantas mensagens por semana é o teto. O que é igual para todos os grupos ela pergunta uma vez só, e o que a sua lista já mostra ela nem pergunta. Enquanto faltar algo, a régua daquele grupo fica pendente. Se a resposta estiver com outra pessoa, como o jurídico, ela escreve um questionário para você enviar.
 
 Com isso ela separa os segmentos (quem usou nos últimos 30, 90 e 180 dias, quem comprou uma ou mais vezes, os melhores clientes, quem está sem contato há seis meses) e escreve a régua de e-mail de cada grupo, ancorada nas datas do plano de mídia: a repermissão para quem não ouve da marca há seis meses, a novidade, o convite para testar, a prova, a lista, o acesso antecipado, a abertura, o lembrete e o último dia. Cada mensagem tem data, um trabalho só, um assunto curto, um chamado e um link com a regra única do plano, para a medição saber de onde veio cada clique.
 
@@ -55,5 +55,6 @@ Quem envia é você, pela sua ferramenta de e-mail ou pela sua conta da API do W
 
 ## O que há de novo
 
+- 1.2.0: a base legal pergunta menos. O que é igual para todos os grupos vem uma vez só, o que a sua lista já mostra entra sozinho, um grupo sem ninguém não pergunta nada, e a base legal vem depois de como as pessoas entraram e do que leram. Para aceitar uma sugestão, basta dizer sim.
 - 1.1.0: a régua por WhatsApp pela API oficial, a conferência de entrega do domínio (SPF, DMARC, DKIM, limiares e lotes), o público personalizado para a Meta só em hash com a lista de exclusão dos clientes, a voz do cliente com a leitura declarada para os criativos e o atendimento do pico.
 - 1.0.0: primeira versão. O inventário da base com a limpeza e as contagens, a base legal por grupo, os segmentos com o teto de mensagens e a escada de ofertas, e a régua de e-mail por grupo ancorada no plano ou numa data alvo, com a repermissão para quem está sem contato há seis meses.

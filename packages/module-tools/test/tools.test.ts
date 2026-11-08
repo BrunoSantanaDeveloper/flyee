@@ -134,6 +134,43 @@ describe("creating an app from the chat", () => {
   });
 });
 
+describe("how an app asks", () => {
+  const warningsOf = (report: { warnings: string[] }) => report.warnings.filter((warning) => warning.includes('what "sim" or "ok" accepts'));
+  function rewriteSkill(dir: string, slug: string, body: string): void {
+    const skill = join(dir, "skills", slug, "SKILL.md");
+    const frontmatter = /^---\n[\s\S]*?\n---\n/.exec(readFileSync(skill, "utf8"))?.[0] ?? "";
+    writeFileSync(skill, `${frontmatter}${body}\n`);
+  }
+
+  it("a new app starts from the template with the rule already written", () => {
+    const dir = makeApp("pergunta-nova");
+    assert.deepEqual(warningsOf(validateModule(dir)), []);
+    const skill = readFileSync(join(dir, "skills", "pergunta-nova", "SKILL.md"), "utf8");
+    assert.match(skill, /## Como perguntar/);
+    assert.match(skill, /`questionario`/);
+    assert.equal(JSON.parse(readFileSync(join(dir, "flyee.module.json"), "utf8")).min_core, ">=1.11.0");
+  });
+
+  it("warns on a skill that interviews the member without saying what a yes accepts", () => {
+    const dir = makeApp("pergunta-vaga");
+    rewriteSkill(dir, "pergunta-vaga", "# App\n\nPergunte o tema, o público e o tom.");
+    const warned = warningsOf(validateModule(dir));
+    assert.equal(warned.length, 1);
+    assert.match(warned[0] ?? "", /skills\/pergunta-vaga\/SKILL\.md/);
+    rewriteSkill(dir, "pergunta-vaga", '# App\n\nPergunte o tema, o público e o tom, de modo que "sim" aceite a sua sugestão.');
+    assert.deepEqual(warningsOf(validateModule(dir)), []);
+  });
+
+  it("leaves alone a skill that asks nothing and a tool that asks one thing", () => {
+    const silent = makeApp("sem-pergunta");
+    rewriteSkill(silent, "sem-pergunta", "# App\n\nRode o script e entregue o resultado.");
+    assert.deepEqual(warningsOf(validateModule(silent)), []);
+    const tool = makeApp("ferramenta-pergunta", { type: "tool" });
+    rewriteSkill(tool, "ferramenta-pergunta", "# App\n\nSe o pedido for vago, pergunte uma vez, tudo junto.");
+    assert.deepEqual(warningsOf(validateModule(tool)), []);
+  });
+});
+
 describe("validate", () => {
   it("accepts a complete app and never ships its tests", () => {
     const report = validateModule(makeApp("copy-social"));

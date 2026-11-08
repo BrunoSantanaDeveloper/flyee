@@ -26,7 +26,7 @@ Leia antes de propor qualquer coisa:
 - camada de IA que já existe, com regras de aprovação ou auditoria;
 - como o projeto é implantado e em que domínio.
 
-Depois, mande ao desenvolvedor um plano curto: onde o kit vai ficar, o que substitui o quê, a rota de conexão e o modo do robô sugeridos, e a lista do que só ele faz. Pergunte só o que não deu para descobrir, até quatro perguntas numa mensagem, cada uma com a sua sugestão.
+Depois, mande ao desenvolvedor um plano curto: onde o kit vai ficar, o que substitui o quê, a rota de conexão e o modo do robô sugeridos, e a lista do que só ele faz. Pergunte só o que não deu para descobrir, até quatro perguntas numa mensagem, cada uma com a sua sugestão escrita de modo que "sim" a aceite; um "ok" aceita as sugestões da rodada. Uma pergunta que depende de outra ainda em aberto fica para a rodada seguinte: o que cada cliente pode mudar no robô depende do modelo escolhido. Para fechar o que o robô resolve e o que vai para a equipe, proponha um caso concreto do negócio do projeto, como "um cliente pede reembolso às 22 horas: o robô responde ou abre para a equipe?", e grave a decisão.
 
 Para decidir o modelo e quem controla o contexto do robô, leia [references/contexto.md](../../references/contexto.md). O superadmin sempre controla a camada da plataforma; no modelo `por-cliente`, ele decide o que cada cliente pode mudar no robô dele. Para decidir a rota, leia [references/whatsapp.md](../../references/whatsapp.md). Atividade regulada (saúde, jurídico, financeiro) usa a API oficial. Projeto em que toda resposta de IA passa por aprovação humana começa no modo sugestão, ou usa o provedor `project` para gerar a resposta pela IA do próprio projeto.
 
@@ -46,6 +46,7 @@ Siga [references/contratos.md](../../references/contratos.md) e [references/arqu
 
 - **Servidor.** Copie `modelos/next/lib/atendimento.ts` para o código do projeto e implemente o `store` com o banco e a sessão do projeto: o estado de cada cliente (com os tokens cifrados), a camada da plataforma (uma só), a camada de cada cliente, as sugestões pendentes, as passagens para a equipe, a conta do Chatwoot de cada cliente, a lista de quem atende em cada cliente (`listPanelPeople`) e a pessoa logada, com `isSuperadmin`, `canConfigure` e `isSupportStaff` vindos das permissões do projeto. Ajuste os caminhos de import para onde a base ficou.
 - **Equipe.** Entra no painel só quem passa em `canEnterPanel` (equipe de atendimento e, no `por-cliente`, quem administra o cliente). Chame `removeFromPanel` no ponto em que o projeto tira a permissão de atendimento, desativa ou apaga uma pessoa, e rode `syncPanelStaff` numa rotina diária do projeto para cada cliente: a sessão do Chatwoot dura até 2 meses, e quem saiu da equipe precisa sair da conta. Se a rotina devolver alguém em `unknown`, conte ao desenvolvedor em vez de tirar.
+- **Número.** Implemente `alertWhatsapp` no `store`, com o canal de avisos que o projeto já tem, e rode `checkWhatsapp` a cada 15 minutos numa rotina do projeto, para cada cliente com atendimento (no modelo `plataforma`, só `PLATFORM_TENANT`). Sem isso, um número que cai só aparece quando um cliente reclama. Quando alguém disser que o WhatsApp parou, rode `verify`, leia o que a conferência achou e siga [references/whatsapp.md](../../references/whatsapp.md): a volta retoma a mesma caixa, pela tela Conectar WhatsApp.
 - **Rotas.** Copie `modelos/next/app/api/atendimento/` para o app. Em outro framework ou linguagem, porte as mesmas rotas usando `base/server/*.mjs` ou os contratos.
 - **Consultas do robô.** Troque o exemplo `consultar_pedido` pelas consultas reais. Cada uma devolve só dados da pessoa da conversa e é o projeto que confere quem ela é ([references/seguranca.md](../../references/seguranca.md)).
 - **Telas.** Copie `modelos/react/`. Adapte só `primitives.tsx` aos componentes do design system; as telas usam apenas ele.
@@ -81,7 +82,7 @@ node .flyee/modules/whatsapp-support/scripts/kit.mjs verify <destino> --env <arq
 node .flyee/modules/whatsapp-support/scripts/kit.mjs look <destino> --account <id da conta> --user <id da pessoa de teste> --env <arquivo .env> --json
 ```
 
-A pessoa de teste é uma atendente criada pelo próprio projeto, por exemplo com `ensureStaffUser` e a chave `conferencia`. `look` salva capturas em `<destino>/conferencia/`; olhe as capturas antes de dizer que o tema e o enxugar estão certos. Cada falha volta com a correção; corrija e rode de novo.
+A pessoa de teste é uma atendente criada pelo próprio projeto, por exemplo com `ensureStaffUser` e a chave `conferencia`. `look` salva capturas em `<destino>/conferencia/`; olhe as capturas antes de dizer que o tema e o enxugar estão certos. Cada falha volta com a correção; corrija e rode de novo. `verify` confere cada sessão do OpenWA; o número da rota oficial aparece na tela Conectar WhatsApp e na rotina `checkWhatsapp`. Nenhuma conferência prova a entrega: peça ao desenvolvedor para mandar uma mensagem de outro celular e ver a resposta chegar.
 
 ## Atualizar
 

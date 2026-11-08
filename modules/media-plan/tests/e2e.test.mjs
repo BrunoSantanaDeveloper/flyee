@@ -128,7 +128,7 @@ test("premises tells what is settled and pending, with the suggestions, and asks
   assert.deepEqual(json.blocking_pending, ["produto_oferta", "verba", "evento"]);
   assert.equal(json.settled.length, 7);
   assert.equal(json.next_step.action, "ask");
-  assert.match(json.next_step.say, /numa mensagem só, cada pergunta com a sua sugestão/);
+  assert.match(json.next_step.say, /numa mensagem só, com cada sugestão escrita na pergunta, para um sim aceitá-la/);
   assert.ok(json.questions.every((question) => question.suggestion && question.if_different));
   writePremises(root, settle);
   const settled = await run(root, ["premises", PLAN]);

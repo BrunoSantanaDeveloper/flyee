@@ -107,6 +107,18 @@
         }
       ],
       "rubric": "replan cria a versão 2 como rascunho com a seção do que mudou no topo: os três achados com a certeza, o movimento M1 que funcionou, M3 e M4 como decisões do integrante, a lacuna do e-mail e a meta atualizada (10 de 30 pela planilha). A versão 1 aprovada não muda. A IA mostra as três linhas de say e as decisões, não move verba, não muda a meta por conta própria e pede o sim antes de approve."
+    },
+    {
+      "name": "o evento espera o preço",
+      "setup": "Plano novo com as quatro primeiras premissas respondidas; o preço e o evento ainda em aberto.",
+      "prompt": "Pode seguir com as próximas perguntas.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "media-plan/*/premissas.json"
+        }
+      ],
+      "rubric": "A rodada traz o preço, a base, a prontidão e a capacidade, e não traz o evento de otimização, que espera o preço. Na rodada seguinte o evento vem com a sugestão escrita na pergunta, para um sim aceitar, e o que muda se a resposta for outra. Se o integrante disser que não sabe a margem, a IA grava não sei como informado e segue com a faixa marcada; se disser que quem sabe é o contador, usa a skill questionario."
     }
   ]
 }

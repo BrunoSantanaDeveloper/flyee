@@ -20,10 +20,25 @@ Antes de travar uma versão nova, o kit confere no código dela:
 - o serviço que devolve a marca (que não pode existir na imagem `-ce`);
 - a API de plataforma (contas com `features`, pessoas, papéis, login único);
 - as rotas que o token do robô alcança e o formato da assinatura dos avisos;
-- os identificadores estáveis do menu lateral usados em `chatwoot.esconder`.
+- os identificadores estáveis do menu lateral usados em `chatwoot.esconder`;
+- a rota de saúde da caixa e os estados que ela devolve (`Whatsapp::HealthService`).
+
+A cada versão nova do OpenWA, confere os estados da sessão, os campos `engineLoaded` e `restriction`, e a resposta do início de uma sessão já carregada.
 
 ## Notas por versão
 
 ### 1.0.0
 
 Primeira versão. Contexto em duas camadas, com os modelos `plataforma` (o sistema atende os próprios clientes; só o superadmin controla o contexto) e `por-cliente` (o superadmin define as regras de todos e o que cada cliente pode mudar); texto fixo de até 200 mil caracteres no prompt, com a parte fixa separada para o cache dos provedores; sugestões de conhecimento tiradas das conversas resolvidas pela equipe, só com aprovação; relatório das lacunas por assunto. Equipe: entra no painel só quem passa em `canEnterPanel`, e quem sai da equipe sai da conta do Chatwoot (`removeFromPanel` e a conferência diária `syncPanelStaff`). Robô sem estado com quatro provedores de IA (OpenAI e compatíveis, Anthropic, Gemini e o próprio projeto), modos responder, sugerir e desligado; provisionamento por conta com conta de serviço, robô da conta, equipe como atendente e login único; rota oficial pela caixa WhatsApp Cloud do Chatwoot e não oficial pelo OpenWA com o adaptador; telas de modelo em React com a camada `primitives.tsx`; rotas de modelo para o Next.js; tema gerado de escolhas.json; conferências por HTTP e no navegador. Versões travadas: Chatwoot 4.19.1 (`-ce`), OpenWA 0.29.1, adaptador 0.9.15.
+
+#### Conferência do número, acrescentada depois na mesma 1.0.0
+
+Quem implantou antes dela vê `base_changed` em `status`, com o mesmo número de versão. Depois do `update`, faça no projeto, nos arquivos que vieram dos modelos, em qualquer framework:
+
+1. No código que veio de `lib/atendimento.ts`, porte do modelo: `alertWhatsapp` no `store` (implemente com o canal de avisos do projeto), `checkWhatsapp`, `whatsapp`, `reconnectWhatsapp` e o trecho oficial de `connectWhatsapp`. Um projeto que carrega a base módulo a módulo acrescenta `server/health.mjs` ao carregador.
+2. Porte a rota `app/api/atendimento/whatsapp/route.ts`, que agora aceita `acao: "reconectar"`.
+3. Porte a tela `ConectarWhatsApp.tsx`, que mostra o que a conferência viu e retoma a mesma caixa. Se as telas ficam em outro repositório, com cópia própria de `base/ui/client.mjs`, acrescente lá a chamada `reconnect` e os campos `level` e `findings` do estado.
+4. Agende `checkWhatsapp` a cada 15 minutos numa rotina do projeto, para cada cliente com atendimento (no modelo `plataforma`, só `PLATFORM_TENANT`). Com mais de uma réplica do servidor, rode em uma só: duas ao mesmo tempo mandam o aviso duas vezes.
+5. Rode `verify`, que agora traz uma linha `numero_conectado_<sessão>` para cada sessão do OpenWA, e mande uma mensagem de outro celular para ver a resposta chegar.
+
+Antes dela, a tela criava outra caixa ao conectar de novo. Se um projeto já tem caixas repetidas para o mesmo número, a conferência olha a última; a decisão de apagar as antigas é do desenvolvedor.

@@ -1,9 +1,9 @@
 ---
 name: humanizer-pt-br
 description: |
-  Remove traços de escrita gerada por IA de textos em português brasileiro, tornando-os mais naturais, humanos e com personalidade real.
-  Detecta e corrige padrões típicos de IA: linguagem promocional, estruturas mecânicas, vocabulário genérico de chatbot, excesso de conectivos, frases de preenchimento, análises rasas com gerúndio, três elementos em lista, atribuições vagas, conclusões genéricas, tom bajulador, ganchos dramáticos artificiais, intervalos falsos, ênfase indevida em notabilidade e aspas tipográficas.
-  Ideal para roteiros falados, artigos, posts, roteiros de vídeo, e qualquer texto que precise soar como escrito por um ser humano real.
+  Remove traços de escrita gerada por IA de textos em português brasileiro sem mudar o que eles dizem e sem acrescentar fato.
+  Detecta e corrige padrões típicos de IA: contrastes do tipo "não é X, é Y", frases finais que repetem, ditados que soam profundos, preparação antes do ponto, revelação encenada, objeções que ninguém fez, listas de três, travessões, vocabulário de chatbot, exagero de significado, gerúndio no fim da frase, linguagem promocional, autoridade emprestada e texto que fala de si.
+  Ideal para roteiros falados, artigos, posts, roteiros de vídeo e qualquer texto que precise soar como escrito por um ser humano real.
   Gatilhos: humanizar texto, remover IA, texto artificial, soar natural, roteiro humano, reescrever texto, tirar traços de IA, texto robótico, parece IA
 allowed-tools:
   - Read

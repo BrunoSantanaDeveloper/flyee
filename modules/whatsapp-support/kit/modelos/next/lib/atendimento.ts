@@ -25,19 +25,22 @@ import {
   type Scope,
 } from "../atendimento/base/shared/settings.mjs";
 import { createToolRunner, handleBotRequest, type BotRequest, type GapEventPayload, type ProjectTool } from "../atendimento/base/server/bot-contract.mjs";
+import { checkWhatsappHealth, currentInbox, healthAlerts, type WhatsappAlert } from "../atendimento/base/server/health.mjs";
 import {
   connectCloudApi,
   connectOpenWA,
   conversationHistory,
   ensureStaffUser,
   provisionAccount,
+  reconnectOpenWA,
   removeStaffUser,
   ssoUrl,
   syncStaff,
+  updateCloudApi,
   whatsappStatus,
   type SupportState,
 } from "../atendimento/base/server/provision.mjs";
-import { brPhoneVariants, contactPhone } from "../atendimento/base/shared/phone.mjs";
+import { brPhoneVariants, contactPhone, samePhone } from "../atendimento/base/shared/phone.mjs";
 import escolhas from "../atendimento/escolhas.json";
 
 export const MODEL: Model = escolhas.modelo === "plataforma" ? "plataforma" : "por-cliente";
@@ -105,6 +108,14 @@ export interface SupportStore {
    * No modelo plataforma, tenantId é PLATFORM_TENANT. A conferência diária tira do Chatwoot quem saiu da lista.
    */
   listPanelPeople(tenantId: string): Promise<string[]>;
+  /**
+   * Avisa que o WhatsApp do atendimento parou, pede atenção ou voltou, pelo canal que o projeto já tem
+   * (e-mail, notificação no sistema). Cada aviso traz title e text prontos, sem segredo. Mande para quem
+   * conecta o número (no modelo plataforma, o superadmin; no por-cliente, quem administra o cliente) e,
+   * quando fixBy for "tecnico", também para quem cuida do servidor. Se lançar erro, o aviso volta na próxima
+   * conferência.
+   */
+  alertWhatsapp(tenantId: string, alerts: WhatsappAlert[]): Promise<void>;
   /** A camada da plataforma (uma só no sistema), editada pelo superadmin. */
   loadPlatformSettings(): Promise<PlatformSettings | null>;
   savePlatformSettings(settings: PlatformSettings): Promise<void>;
@@ -130,6 +141,7 @@ export const store: SupportStore = {
   saveState: adapt("grave o estado do atendimento do cliente, cifrado"),
   tenantByAccount: adapt("encontre o cliente pela conta do Chatwoot (account_id do estado)"),
   listPanelPeople: adapt("liste as chaves de quem pode atender neste cliente hoje"),
+  alertWhatsapp: adapt("avise quem conecta o número e, quando fixBy for tecnico, quem cuida do servidor"),
   loadPlatformSettings: adapt("leia a camada da plataforma"),
   savePlatformSettings: adapt("grave a camada da plataforma"),
   loadSettings: adapt("leia a camada do cliente"),
@@ -261,6 +273,29 @@ export async function syncPanelStaff(tenantId: string) {
   return { removed: result.removed, unknown: result.unknown, skipped: result.skipped };
 }
 
+/**
+ * Conferência do número: lê a sessão do OpenWA, ou a saúde que o Chatwoot consulta na Meta, e avisa pelo
+ * alertWhatsapp quando o número para, pede atenção ou volta. Enquanto estiver parado, lembra uma vez por dia.
+ * ADAPTE: rode a cada 15 minutos numa rotina do projeto, para cada cliente com atendimento (no modelo
+ * plataforma, só PLATFORM_TENANT), em uma réplica só do servidor: duas ao mesmo tempo avisam duas vezes.
+ * Sem ela, um número que cai só aparece quando um cliente reclama.
+ */
+export async function checkWhatsapp(tenantId: string) {
+  const state = await store.loadState(tenantId);
+  const inbox = currentInbox(state);
+  if (!state?.account_id || !inbox) return { skipped: "no_inbox" as const, report: null, alerts: [] };
+  const report = await checkWhatsappHealth({
+    chatwootUrl: env.chatwootUrl(),
+    state,
+    openwa: inbox.route === "nao_oficial" ? { url: env.openwaUrl(), apiKey: env.openwaApiKey() } : null,
+  });
+  const { alerts, health } = healthAlerts({ previous: state.health, report });
+  // Avisa antes de gravar: se o canal falhar, o aviso volta na próxima conferência.
+  if (alerts.length) await store.alertWhatsapp(tenantId, alerts);
+  if (JSON.stringify(health) !== JSON.stringify(state.health ?? {})) await store.saveState(tenantId, { ...state, health });
+  return { skipped: null, report, alerts };
+}
+
 export async function readSettings(request: Request, scope: Scope) {
   const person = await store.currentPerson(request);
   if (!canEdit(person, scope)) return null;
@@ -337,11 +372,24 @@ export async function whatsapp(request: Request) {
   const person = await store.currentPerson(request);
   if (!canConnect(person)) return null;
   const state = (await store.loadState(tenantOf(person!))) ?? {};
-  const inbox = state.inboxes?.[state.inboxes.length - 1];
-  if (!inbox) return { connected: false, route: null, status: null, qrCode: null };
-  if (inbox.route === "oficial") return { connected: true, route: "oficial", status: "ready", qrCode: null };
+  const inbox = currentInbox(state);
+  if (!inbox) return { connected: false, route: null, status: null, qrCode: null, level: null, findings: [] };
+  if (inbox.route === "oficial") {
+    const current = (await checkWhatsappHealth({ chatwootUrl: env.chatwootUrl(), state })).inboxes[0];
+    return { connected: current.level !== "fora", route: "oficial", status: null, qrCode: null, level: current.level, findings: current.findings };
+  }
   const status = await whatsappStatus({ openwaUrl: env.openwaUrl(), openwaApiKey: env.openwaApiKey(), sessionId: inbox.session_id! });
   return { connected: status.status === "ready", route: "nao_oficial", ...status };
+}
+
+/** Ler o QR de novo: retoma a sessão que a caixa já tem, sem criar outra caixa. */
+export async function reconnectWhatsapp(request: Request) {
+  const person = await store.currentPerson(request);
+  if (!canConnect(person)) return { status: 403, body: { code: "forbidden", message: "Você não pode conectar o número." } };
+  const inbox = currentInbox(await store.loadState(tenantOf(person!)));
+  if (inbox?.route !== "nao_oficial" || !inbox.session_id) return { status: 409, body: { code: "no_session", message: "Não há conexão pelo WhatsApp Web para retomar." } };
+  const result = await reconnectOpenWA({ openwaUrl: env.openwaUrl(), openwaApiKey: env.openwaApiKey(), sessionId: inbox.session_id });
+  return { status: 200, body: { ok: true, status: result.status } };
 }
 
 export async function connectWhatsapp(request: Request, body: Record<string, string>) {
@@ -350,11 +398,12 @@ export async function connectWhatsapp(request: Request, body: Record<string, str
   const tenantId = tenantOf(person!);
   const state = await ensureAccount(tenantId);
   if (body.route === "oficial") {
-    const result = await connectCloudApi({
-      chatwootUrl: env.chatwootUrl(),
-      state,
-      cloud: { phoneNumber: body.phoneNumber, phoneNumberId: body.phoneNumberId, businessAccountId: body.businessAccountId, apiKey: body.apiKey },
-    });
+    const cloud = { phoneNumber: body.phoneNumber, phoneNumberId: body.phoneNumberId, businessAccountId: body.businessAccountId, apiKey: body.apiKey };
+    // O mesmo número de novo é a troca do token: o Chatwoot aceita cada número uma vez só.
+    const existing = (state.inboxes ?? []).find((inbox) => inbox.route === "oficial" && samePhone(inbox.phone ?? "", cloud.phoneNumber));
+    const result = existing
+      ? await updateCloudApi({ chatwootUrl: env.chatwootUrl(), state, inboxId: existing.id, cloud })
+      : await connectCloudApi({ chatwootUrl: env.chatwootUrl(), state, cloud });
     await store.saveState(tenantId, result.state);
     return { status: 200, body: { metaWebhook: result.metaWebhook } };
   }

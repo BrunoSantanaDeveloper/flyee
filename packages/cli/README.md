@@ -63,6 +63,7 @@ Português e inglês, seguindo o idioma da sua conta.
 
 ## Mudanças
 
+- 1.2.6: a revisão de texto que vem com o flyee deixa de trocar uma frase vazia por um dado inventado. Ela não acrescenta fato, número nem promessa que o seu texto não traz, e o que sobra quando quase tudo era adjetivo vem como está, com o dado que falta. Gancho, título e chamada de venda seguem a regra do app que os escreveu. As perguntas dos apps ficam mais curtas: a sua IA procura antes o que outros apps já sabem, pergunta só o que já dá para responder e aceita um sim para a sugestão dela. Quando a resposta está com outra pessoa, ela escreve um questionário para você enviar.
 - 1.2.5: ao tirar um app que outros apps do projeto usam, a sua IA fica sabendo quais são e pergunta antes, porque sem ele esses apps pedem para instalar de novo. Um app que nenhum outro usa sai como antes, sem pergunta.
 - 1.2.3: quando você pede um plano, um relatório ou a leitura de uma campanha, a sua IA resume na conversa e grava o documento completo no arquivo do app; as perguntas vêm numa mensagem só, cada uma com a sugestão dela.
 - 1.2.2: um computador que você desconectou no painel volta a se conectar com um login novo. Antes, a aprovação no navegador dava certo e a conexão falhava com "este computador foi desconectado", sem saída. A página depois da aprovação agora diz que a aprovação chegou, e a conversa confirma a conexão.

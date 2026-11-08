@@ -20,12 +20,14 @@ Other requests:
 - "Check that the support panel is live and in the system's colors."
 - "Hide campaigns and the help center from the support panel."
 - "Switch the bot to answer on its own."
+- "The WhatsApp support stopped receiving messages, find out what happened."
 
 ## What your customer gets
 
 - A "Support" button in your system that opens the panel already signed in, with the system's name, logo and colors.
 - One team per customer, with no limit on agents: only the people the system marks as the support team get into the panel, each customer sees only what is theirs, and whoever leaves the team leaves the panel.
 - A "Connect WhatsApp" screen: through the official API, with Meta credentials, or through WhatsApp Web, scanning a QR code after accepting the risk notice.
+- A notice when the number stops: the system checks the number every 15 minutes and tells whoever looks after it when it goes down, needs attention or comes back. The screen shows what happened and the way back, without losing the conversations.
 - A "Support bot" screen: introduction, instructions, questions and answers, team hours, when to hand over to the team and which system data the bot may look up.
 
 ## Who controls what the bot knows

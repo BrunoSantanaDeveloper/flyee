@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { audienceCsv, buildAudience, uploadSteps } from "./lib/audience.mjs";
 import { checkDomain } from "./lib/deliverability.mjs";
 import { buildInventory, cleanHeader, cleanLines, GROUPS, readClean, readExport } from "./lib/inventory.mjs";
-import { GROUP_LABELS, legalQuestions, legalTemplate, parseLegal } from "./lib/legal.mjs";
+import { GROUP_LABELS, legalQuestions, legalRound, legalTemplate, parseLegal, upgradeLegal } from "./lib/legal.mjs";
 import { inventorySay, renderAudience, renderDeliverability, renderSequences } from "./lib/report.mjs";
 import { segmentBase } from "./lib/segments.mjs";
 import { anchorsFor, buildSequence, CHANNELS, DEFAULT_UTM_RULE } from "./lib/sequence.mjs";
@@ -109,8 +109,19 @@ function loadLegal({ inventory = null, today, create = false }) {
     text = legalTemplate({ inventory, today });
     writeFileAtomic(PATHS.legal, text);
     created = true;
+  } else if (text !== null && create) {
+    const upgraded = upgradeLegal(text, inventory);
+    if (upgraded !== text) {
+      writeFileAtomic(PATHS.legal, upgraded);
+      text = upgraded;
+    }
   }
   return { parsed: text === null ? null : parseLegal(text), created, exists: text !== null };
+}
+
+/** The groups with someone in them. A group with nobody has nothing to ask and no sequence to hold. */
+function groupsInUse(inventory) {
+  return GROUPS.filter((group) => !inventory?.groups || (inventory.groups[group]?.total ?? 0) > 0);
 }
 
 // ---------------------------------------------------------------- commands
@@ -125,7 +136,7 @@ function checkCommand(values) {
   const legalStatus = parsed ? Object.fromEntries(GROUPS.map((group) => [group, parsed[group]?.status ?? "pendente"])) : null;
   const next = !inventory
     ? { action: "inventory", command: command("inventory contatos/entrada/<export.csv>"), say: "Comece pelo inventário: o export de usuários e contatos entra, a base limpa e as contagens saem." }
-    : !parsed || Object.values(legalStatus).some((status) => status !== "completo")
+    : !parsed || groupsInUse(inventory).some((group) => legalStatus[group] !== "completo")
       ? { action: "legal", command: command("legal"), say: "Falta a base legal de um ou mais grupos: sem ela a régua fica pendente." }
       : { action: "sequence", command: command("sequence clientes"), say: "Base e base legal prontas: monte a régua de cada grupo." };
   return {
@@ -180,11 +191,11 @@ function legalCommand(values) {
   const today = todayOf(values);
   const inventory = loadInventory({ required: false });
   const { parsed, created } = loadLegal({ inventory, today, create: true });
-  const groups = values.group ? [values.group] : GROUPS;
+  const groups = values.group ? [values.group] : groupsInUse(inventory);
   for (const group of groups) if (!GROUPS.includes(group)) throw new AppError("group_unknown", `O grupo ${group} não existe.`, `Os grupos são ${GROUPS.join(", ")}.`);
   const status = Object.fromEntries(groups.map((group) => [group, { label: GROUP_LABELS[group], status: parsed[group].status, basis: parsed[group].basis, missing: parsed[group].missing, marketing_allowed: parsed[group].marketing_allowed, counts: inventory?.groups?.[group] ?? null }]));
   const pending = groups.filter((group) => parsed[group].status !== "completo");
-  const questions = pending.flatMap((group) => legalQuestions(parsed, group)).slice(0, 4);
+  const { questions, more_pending, waiting } = legalRound(parsed, pending);
   return {
     ...base("legal"),
     file: rel(PATHS.legal),
@@ -192,8 +203,10 @@ function legalCommand(values) {
     groups: status,
     pending,
     questions,
+    more_pending,
+    waiting,
     next_step: pending.length
-      ? { action: "ask", command: command("legal"), say: `${created ? `Criei ${rel(PATHS.legal)} com uma seção por grupo. ` : ""}${pending.length} grupo(s) com a base legal pendente. Pergunte ao integrante numa mensagem só (até quatro perguntas, cada uma com a sugestão), grave as respostas nas linhas do arquivo e rode legal de novo. Isto é método, não parecer jurídico.` }
+      ? { action: "ask", command: command("legal"), say: `${created ? `Criei ${rel(PATHS.legal)}. ` : ""}${pending.length} grupo(s) com a base legal pendente. Pergunte ao integrante numa mensagem só o que veio em questions, com a sugestão escrita na pergunta, para um sim aceitá-la. Grave cada resposta na linha que write_to indica: o que vale para todos vai uma vez só, e um grupo diferente preenche a própria linha. A base legal pede resposta própria: um ok solto não vale para ela. Se a resposta estiver com outra pessoa, como o jurídico, use a skill questionario. Depois rode legal de novo. Isto é método, não parecer jurídico.` }
       : { action: "segments", command: command("segments"), say: "Base legal completa em todos os grupos. Monte os segmentos e a régua." },
   };
 }

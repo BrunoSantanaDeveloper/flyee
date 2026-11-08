@@ -44,7 +44,7 @@
 - O nome do plano diz para quem ele é: o advogado sozinho, a sociedade pequena, o escritório estruturado.
 - Os itens do cartão são os que decidem a escolha (usuários, volume, o recurso que só aquele plano tem), não a lista inteira.
 - A mesma palavra para a mesma coisa em todos os cartões e na tabela.
-- Revise com a skill `texto-natural` antes de entregar.
+- Revise com a skill `texto-natural` antes de entregar, sem acrescentar fato, número ou promessa.
 
 ## Movimento e mídia
 

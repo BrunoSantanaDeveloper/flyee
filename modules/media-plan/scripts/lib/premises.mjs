@@ -15,7 +15,8 @@ export const BILLING = ["mensal", "anual", "unico"];
 /**
  * The table. `blocking` premises hold the plan's approval; the others become labelled
  * assumptions. `fields` are the typed values the arithmetic reads; `value` is the sentence
- * the member reads.
+ * the member reads. `after` names the premises whose answer this one depends on: it waits for
+ * the next round, because the price says how much an event may cost.
  */
 export const PREMISES = [
   {
@@ -71,6 +72,7 @@ export const PREMISES = [
     key: "evento",
     label: "Evento de otimização",
     blocking: true,
+    after: ["preco_planos"],
     fields: { event: "string", cost_brl: "number" },
     ask: "Por qual acontecimento a campanha otimiza (lead, cadastro, teste, compra), e quanto você aceita pagar por ele?",
   },
@@ -190,27 +192,42 @@ export function validatePremises(data) {
   return { settled, pending, blocking_pending: blockingPending };
 }
 
+/** A premise is closed when it has a value from the member or from the project. */
+function isSettled(data, key) {
+  const entry = data.premises?.[key] ?? {};
+  const value = typeof entry.value === "string" ? entry.value.trim() : "";
+  return Boolean(value) && SETTLED.has(entry.source);
+}
+
 /**
- * The questions for the member, in the order that decides the plan's shape, at most `max`,
- * each with the AI's suggestion when there is one. Settled premises never become questions.
+ * The questions for the member, in the order that decides the plan's shape, at most `max`, each
+ * with the AI's suggestion when there is one, which a yes accepts. Only what can be answered now:
+ * a premise whose answer depends on one still open comes back in `waiting`, for the next round.
+ * A "não sei" recorded as `informado` closes a premise, so nothing waits forever.
  */
 export function questionsFor(data, max = 4) {
-  const questions = [];
   const ordered = [...PREMISES.filter((premise) => premise.blocking), ...PREMISES.filter((premise) => !premise.blocking)];
-  for (const premise of ordered) {
-    const entry = data.premises?.[premise.key] ?? {};
-    const value = typeof entry.value === "string" ? entry.value.trim() : "";
-    if (value && SETTLED.has(entry.source)) continue;
-    questions.push({
-      key: premise.key,
-      label: premise.label,
-      blocking: premise.blocking,
-      question: premise.ask,
-      suggestion: value && entry.source === "sugerido-pendente" ? value : null,
-      if_different: typeof entry.if_different === "string" && entry.if_different.trim() ? entry.if_different.trim() : null,
+  const open = ordered.filter((premise) => !isSettled(data, premise.key));
+  const blockedBy = (premise) => (premise.after ?? []).filter((key) => !isSettled(data, key));
+  const questions = open
+    .filter((premise) => !blockedBy(premise).length)
+    .slice(0, max)
+    .map((premise) => {
+      const entry = data.premises?.[premise.key] ?? {};
+      const value = typeof entry.value === "string" ? entry.value.trim() : "";
+      const suggestion = value && entry.source === "sugerido-pendente" ? value : null;
+      return {
+        key: premise.key,
+        label: premise.label,
+        blocking: premise.blocking,
+        question: premise.ask,
+        suggestion,
+        yes_accepts: Boolean(suggestion),
+        if_different: typeof entry.if_different === "string" && entry.if_different.trim() ? entry.if_different.trim() : null,
+      };
     });
-  }
-  return { questions: questions.slice(0, max), more_pending: Math.max(0, questions.length - max) };
+  const waiting = open.filter((premise) => blockedBy(premise).length).map((premise) => ({ key: premise.key, after: blockedBy(premise) }));
+  return { questions, more_pending: open.length - questions.length, waiting };
 }
 
 /** A premise's typed field, or null. */

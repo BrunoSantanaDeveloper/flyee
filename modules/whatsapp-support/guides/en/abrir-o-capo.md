@@ -47,6 +47,14 @@ They are functions you write in your system, one for each question the bot may a
 
 With the official API, Chatwoot talks to Meta directly, with the customer's credentials. With the WhatsApp Web connection, OpenWA keeps the number connected and the plugin carries messages into Chatwoot and replies back; private notes never leave. The WhatsApp Web connection carries a risk of the number being banned and does not suit regulated activity: the screen shows the notice and asks for acceptance.
 
+## When the number stops
+
+A number that went down shows no error: the panel just stays empty, like a day with no customers. So the system checks the number every 15 minutes. On WhatsApp Web, it looks at whether the session is still connected and whether WhatsApp has placed a restriction. On the official API, it uses the query Chatwoot makes to Meta: token refused, number blocked, low quality, wrong callback address.
+
+The notice goes to whoever connects the number, and also to whoever looks after the server when the problem is there. It goes out when the state changes, and once a day while the number is down; what usually clears on its own only becomes a notice if it is still there at the next check. To come back, the screen resumes the same inbox, with a new QR code or a new Meta token, and the conversations stay there.
+
+The check does not prove that a message arrived. After deploying and after each update, send a message from another phone and watch the reply arrive.
+
 ## Privacy
 
 Tokens and keys live in your environment's secret store and in your system's database, encrypted, never in versioned files. The AI receives the messages, the configured knowledge, the contact's first name (which can be turned off) and the lookup results; the phone number stays between the bot and your system.

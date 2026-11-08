@@ -39,7 +39,7 @@
 
 - Direto e técnico, sem adjetivo: o que cada rota faz, em uma linha.
 - Os nomes das rotas, dos campos e das ferramentas iguais aos da documentação.
-- Revise com a skill `texto-natural` antes de entregar.
+- Revise com a skill `texto-natural` antes de entregar, sem acrescentar fato, número ou promessa.
 
 ## Movimento e mídia
 

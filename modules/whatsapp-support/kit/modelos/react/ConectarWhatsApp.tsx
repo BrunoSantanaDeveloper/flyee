@@ -2,27 +2,46 @@
 
 // Tela "Conectar WhatsApp": o cliente escolhe a API oficial (credenciais da Meta) ou a conexão
 // não oficial (QR do WhatsApp Web, depois de ler o aviso de risco). Os passos vêm de base/ui/connect.mjs.
+// Com o número já ligado, mostra o que a conferência viu e retoma a mesma caixa quando ele para: o QR de
+// novo na não oficial, o token novo na oficial.
 
 import { useEffect, useReducer, useState } from "react";
 
 import { connectReducer, initialConnectState, OFFICIAL_FIELDS, pollingDelay, UNOFFICIAL_RISK, validateOfficial } from "../atendimento/base/ui/connect.mjs";
-import { supportApi } from "../atendimento/base/ui/client.mjs";
+import { supportApi, type WhatsappStatus } from "../atendimento/base/ui/client.mjs";
 import { Alert, Button, Card, Choice, Loading, Stack, Text, TextField, Toggle } from "./primitives";
 
 const api = supportApi();
+
+const SEM_LEITURA: WhatsappStatus = { connected: false, route: null, status: null, qrCode: null, level: null, findings: [] };
+
+function Achados({ itens }: { itens: WhatsappStatus["findings"] }) {
+  return (
+    <Stack gap={8}>
+      {itens.map((item) => (
+        <Text key={item.code}>
+          {item.detail} {item.fix}
+        </Text>
+      ))}
+    </Stack>
+  );
+}
 
 export function ConectarWhatsApp({ permitirNaoOficial = true }: { permitirNaoOficial?: boolean }) {
   const [state, dispatch] = useReducer(connectReducer, initialConnectState);
   const [valores, setValores] = useState<Record<string, string>>({});
   const [problemas, setProblemas] = useState<Record<string, string>>({});
-  const [conectado, setConectado] = useState<boolean | null>(null);
+  const [situacao, setSituacao] = useState<WhatsappStatus | null>(null);
+  const [outroNumero, setOutroNumero] = useState(false);
+  const noInicio = state.step === "escolher";
 
   useEffect(() => {
+    if (!noInicio) return;
     api
       .whatsappStatus()
-      .then((status) => setConectado(status.connected))
-      .catch(() => setConectado(false));
-  }, []);
+      .then(setSituacao)
+      .catch(() => setSituacao(SEM_LEITURA));
+  }, [noInicio]);
 
   useEffect(() => {
     const delay = pollingDelay(state.step);
@@ -61,11 +80,49 @@ export function ConectarWhatsApp({ permitirNaoOficial = true }: { permitirNaoOfi
     }
   }
 
-  if (conectado === null) return <Loading />;
-  if (conectado && state.step === "escolher") {
+  async function lerQrDeNovo() {
+    dispatch({ type: "enviar" });
+    try {
+      await api.reconnect();
+      dispatch({ type: "criou_sessao" });
+    } catch (error) {
+      dispatch({ type: "erro", message: (error as Error).message });
+    }
+  }
+
+  if (situacao === null) return <Loading />;
+  if (noInicio && situacao.route && situacao.connected) {
     return (
       <Card title="WhatsApp conectado">
-        <Text>O número já está ligado ao atendimento. As conversas chegam no painel de atendimento.</Text>
+        <Stack>
+          <Text>O número já está ligado ao atendimento. As conversas chegam no painel de atendimento.</Text>
+          {situacao.findings.length ? (
+            <Alert tone="warning">
+              <Achados itens={situacao.findings} />
+            </Alert>
+          ) : null}
+        </Stack>
+      </Card>
+    );
+  }
+  if (noInicio && situacao.route && !outroNumero) {
+    return (
+      <Card title={situacao.level === "fora" ? "O WhatsApp do atendimento parou" : "O WhatsApp do atendimento pede atenção"}>
+        <Stack>
+          <Alert tone={situacao.level === "fora" ? "danger" : "warning"}>
+            <Achados itens={situacao.findings} />
+          </Alert>
+          <Stack direction="row" gap={8}>
+            {situacao.route === "nao_oficial" ? (
+              <Button onClick={lerQrDeNovo}>Ler o QR de novo</Button>
+            ) : (
+              <Button onClick={() => dispatch({ type: "escolher_rota", route: "oficial" })}>Trocar o token da Meta</Button>
+            )}
+            <Button variant="secondary" onClick={() => setOutroNumero(true)}>
+              Conectar outro número
+            </Button>
+          </Stack>
+        </Stack>
       </Card>
     );
   }

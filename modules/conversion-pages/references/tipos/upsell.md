@@ -53,7 +53,7 @@ A barra fixa com o preço e o botão aparece quando o cartão da oferta sai da t
 - A frase de apoio diz o que é, para quem é e quanto custa, nessa ordem.
 - O botão diz a ação, como "Adicionar ao meu pedido", e não algo genérico como "Comprar".
 - A recusa usa palavras neutras.
-- Antes de entregar, revise o texto com a skill `texto-natural`, mantendo a voz da marca.
+- Antes de entregar, revise o texto com a skill `texto-natural`, mantendo a voz da marca e sem acrescentar fato, número ou promessa.
 
 ## Movimento e mídia
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "media-plan",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "workflow",
   "trail": "planejar",
   "title": {
@@ -15,7 +15,7 @@
   "compatible_ais": [
     "claude_code"
   ],
-  "min_core": ">=1.10.0",
+  "min_core": ">=1.11.0",
   "entry": "skills/media-plan/SKILL.md",
   "files": [
     "NOTICE.txt",
@@ -80,8 +80,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "O plano completo: a decisão por canal (roda, testa, fica para depois ou não, com a lente que decidiu e o que o viraria), a estrutura na Meta e na Busca do Google em linguagem de negócio (objetivo, conjuntos contra o piso de aprendizado, remarketing por etapa, campanhas de marca e de não marca), as regras de decisão e os gatilhos com plano B nos mesmos números do app de medição, e o replanejamento a partir da leitura semanal, com o que mudou e por quê no topo da versão nova.",
-    "en": "The complete plan: the decision per channel (run, test, later or no, with the lens that decided and what would flip it), the structure on Meta and Google Search in business language (objective, ad sets against the learning floor, remarketing by stage, brand and non-brand campaigns), the decision rules and the triggers with a plan B in the measurement app's numbers, and the replan from the weekly read, with what changed and why on top of the new version."
+    "pt-BR": "As perguntas vêm na ordem certa: o evento de otimização espera o preço, porque é o preço que diz quanto um evento pode custar. Para aceitar uma sugestão, basta dizer sim. Um não sei fecha a pergunta, com a faixa de referência marcada no plano, e o que está com outra pessoa vira um questionário para enviar. A IA propõe o sentido exato de palavras como lead e cliente e testa com um caso.",
+    "en": "Questions come in the right order: the optimization event waits for the price, because the price says how much an event may cost. To accept a suggestion you just say yes. An I don't know closes the question, with the labelled reference range in the plan, and what another person knows becomes a questionnaire to send. The AI proposes the exact meaning of words like lead and customer and tests it with a case."
   },
   "license": "member"
 }

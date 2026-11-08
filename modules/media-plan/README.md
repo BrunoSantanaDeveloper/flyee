@@ -46,5 +46,6 @@ O plano sai escrito, curto em cima e completo embaixo: o que olhamos, dois ou tr
 
 ## O que há de novo
 
+- 1.1.1: as perguntas vêm na ordem certa: o evento de otimização espera o preço, porque é o preço que diz quanto um evento pode custar. Para aceitar uma sugestão, basta dizer sim, e o que está com outra pessoa vira um questionário para enviar.
 - 1.1.0: a decisão por canal com a lente, a confiança e o que viraria o veredito; a estrutura na Meta e na Busca do Google em linguagem de negócio, com a verba do conjunto conferida contra o piso de aprendizado e três saídas quando fica abaixo; as regras de decisão e os gatilhos com plano B nos números do app de medição; o replanejamento a partir da leitura semanal, com a versão nova em rascunho e o que mudou e por quê no topo; os guias de conformidade e das peças do lançamento fora dos anúncios.
 - 1.0.0: primeira versão. Olhar antes de perguntar, até quatro perguntas com sugestão, premissas rotuladas, a conta do que um cliente pode custar, o funil ao contrário com três cenários e o teto da capacidade do time, a fase de aprendizado e a frequência da base, as formas de oferta com a colisão entre promoções e as linhas do consumidor, o calendário por fases com feriados e o plano escrito como rascunho até o seu sim.

@@ -200,7 +200,7 @@ function contractCommand(values) {
   const { data, validity } = loadContract();
   const next = validity.ready
     ? { action: "tags", command: command("tags <url da página de destino>"), say: "Contrato fechado. Confira as tags da página e os links antes do primeiro real." }
-    : { action: "ask", command: null, say: `Pergunte ao integrante numa mensagem só o que o contrato não sabe (${validity.questions.length} pergunta(s), cada uma com a sugestão); grave as respostas em ${rel(PATHS.contract)} como informado e rode contract de novo.` };
+    : { action: "ask", command: null, say: `Pergunte ao integrante numa mensagem só o que o contrato não sabe (${validity.questions.length} pergunta(s), com cada sugestão escrita na pergunta, para um sim aceitá-la); grave as respostas em ${rel(PATHS.contract)} como informado e rode contract de novo.` };
   return { ...base("contract"), file: rel(PATHS.contract), created, plan: plan ? { plan: plan.slug, state: plan.data.state } : null, agreed_on: data.agreed_on ?? null, ...validity, items: Object.fromEntries(Object.entries(data.items).filter(([key]) => key !== "sal").map(([key, value]) => [key, { value: value.value, status: value.status }])), next_step: next };
 }
 

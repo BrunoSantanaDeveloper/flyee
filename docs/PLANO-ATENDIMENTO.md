@@ -2,30 +2,32 @@
 
 **Objetivo:** existe no catálogo o app `whatsapp-support`, um kit que a IA do desenvolvedor usa dentro de um projeto de código para montar ali o atendimento pelo WhatsApp com robô de IA e equipe, com o Chatwoot como motor. O app não instala nada em servidor. Ele traz a base pronta, adaptável ao design system do projeto, as orientações e os pré-requisitos, e o caminho para atualizar cada projeto.
 
-> Auditado contra o código em 2026-11-07: a primeira rodada sobre main em 848b820, com trabalho de outras sessões sem commit na árvore (`conversion-pages`, `video-render` 1.1.0, `user-apps.ts`); a segunda rodada (ÉPICO 9) sobre main em a702826. Fontes externas lidas no código, em clones rasos na pasta temporária da sessão: Chatwoot na tag `v4.19.1`, OpenWA em 79d7f86 (0.29.1, 2026-11-07) e OpenWA-plugins em 37a94c6 (`chatwoot-adapter` 0.9.15). Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
+> Auditado contra o código em 2026-11-07: a primeira rodada sobre main em 848b820, com trabalho de outras sessões sem commit na árvore (`conversion-pages`, `video-render` 1.1.0, `user-apps.ts`); a segunda rodada (ÉPICO 9) sobre main em a702826; a conferência do número (ÉPICO 10) em 2026-11-08, sobre main em e859313. Fontes externas lidas no código, em clones rasos na pasta temporária da sessão: Chatwoot na tag `v4.19.1`, OpenWA em 79d7f86 (0.29.1, 2026-11-07) e OpenWA-plugins em 37a94c6 (`chatwoot-adapter` 0.9.15). Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
 
 As decisões de produto vieram do operador nesta conversa de 2026-11-07 e estão na memória do projeto (`support-app-decisions`). Este plano não as repete além do necessário para executar.
 
-## Estado em 2026-11-07, fim do dia
+## Estado em 2026-11-08
 
-O app `whatsapp-support` 1.0.0 foi construído no mesmo dia em duas rodadas, **sem tag**, e instalado para o usuário do operador (`npm run apps -- link whatsapp-support --user`) para o teste dele num projeto próprio.
+O app `whatsapp-support` 1.0.0 foi construído em 2026-11-07 em duas rodadas e ganhou uma terceira em 2026-11-08, **sem tag**, e está instalado para o usuário do operador (`npm run apps -- link whatsapp-support --user`) para o teste dele num projeto próprio.
 
 - ⚠️ A primeira rodada (até o ÉPICO 8) entrou no commit a702826 às 13:46, junto com `conversion-pages` e `video-render` 1.1.0, por um commit que esta sessão não fez. A versão antiga deste parágrafo dizia "sem commit".
-- A segunda rodada (ÉPICO 9: contexto em camadas, cache, sugestões e lacunas, D19 e D20) está na árvore sem commit, ainda como 1.0.0, porque nenhuma 1.0.0 tem tag nem chegou à plataforma.
+- ⚠️ A segunda rodada (ÉPICO 9: contexto em camadas, cache, sugestões e lacunas, D19 e D20, e a equipe de cada cliente) entrou no commit 9b986bd, também feito fora desta sessão. Este parágrafo dizia que ela estava sem commit. Continua como 1.0.0, porque nenhuma 1.0.0 tem tag nem chegou à plataforma.
+- A terceira rodada (ÉPICO 10: a conferência do número) entrou no commit da CLI 1.2.6, em 2026-11-08, ainda como 1.0.0.
 - Um projeto que instalou o kit da primeira rodada vê a atualização: `kit.mjs status` compara a base gravada com a do kit (`base_changed`), além do número de versão.
 - Na mesma tarde, a pedido do operador, a equipe de cada cliente: quem entra no painel (T4.4) e a saída de quem deixa a equipe (T4.5).
 - ⚠️ O `README.md` dizia que os relatórios do Chatwoot vinham prontos para o cliente; só administrador os vê (`app/policies/report_policy.rb`), e no kit a equipe é sempre atendente. A frase saiu, e `references/enxugar.md` avisa para não prometer os relatórios.
 
 | Prova | Resultado |
 |---|---|
-| `node --test "modules/whatsapp-support/tests/*.test.mjs"` | 68 de 68 passam (robô, adaptadores de IA, provisionamento e conexão contra Chatwoot e OpenWA falsos, contrato, tema, instalar e atualizar, conferências; na segunda rodada, camadas e permissões, cache, lacunas, sugestões, limpeza de dado pessoal, base diferente com a mesma versão, quem entra no painel, a saída da equipe e a conferência da equipe) |
-| `npm run validate whatsapp-support` | OK, 90 arquivos, uma skill |
-| `npm run pack whatsapp-support` | primeira rodada: 81 arquivos, sha256 `dda03250…`; segunda rodada, com a equipe: `dist/modules/whatsapp-support-1.0.0.zip`, 90 arquivos, 155.725 bytes, sha256 `e8ec131edc1094084f42e0df57eb75f8f73eb614169a2d92cce36d295918706e` |
+| `node --test "modules/whatsapp-support/tests/*.test.mjs"` | 87 de 87 passam, 19 deles da conferência do número em `tests/health.test.mjs` (robô, adaptadores de IA, provisionamento e conexão contra Chatwoot e OpenWA falsos, contrato, tema, instalar e atualizar, conferências; na segunda rodada, camadas e permissões, cache, lacunas, sugestões, limpeza de dado pessoal, base diferente com a mesma versão, quem entra no painel, a saída da equipe e a conferência da equipe) |
+| `npm run validate whatsapp-support` | OK, 92 arquivos, uma skill |
+| `npm run pack whatsapp-support` | primeira rodada: 81 arquivos, sha256 `dda03250…`; segunda rodada, com a equipe: 90 arquivos, sha256 `e8ec131e…`; terceira rodada: `dist/modules/whatsapp-support-1.0.0.zip`, 92 arquivos, 170.590 bytes, sha256 `63120edb81e79f9f04e42847d2e3b40d2feb80adc12d937c90c5016750e4bd15` |
 | `tsc --strict` dos modelos (`modelos/next`, `modelos/react`) num projeto de rascunho com a mesma estrutura de um app Next.js, com tipos do Node e uma declaração mínima de React | sem erros |
 | `look` no Edge contra uma imitação local do painel (variáveis e `n-brand` compiladas como no 4.19.1, tema do kit no fim do body) | passou nos modos claro e escuro: cor do projeto no botão com o azul fixo, seletor escondido invisível, link solto no canto |
+| Ensaio da atualização numa cópia dos arquivos versionados de `atendimento/` do projeto Atrupe (`git archive` de `wt/back` em 227e7c65, sem tocar no projeto) | `status` acusa `base_changed`; `update` troca 7 arquivos da base sem conflito e lista 3 modelos em `models_changed` (`lib/atendimento.ts`, a rota `whatsapp`, `ConectarWhatsApp.tsx`); depois, `update_available` é falso |
 | `npm run harness:check` | sincronizado; o catálogo gerado já lista o app |
 
-Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina estava parado e não foi ligado; ÉPICO 7 continua aberto).
+Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (ÉPICO 7 continua aberto, para o teste do operador na Atrupe).
 
 ## 0. Decisões
 
@@ -51,6 +53,8 @@ Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina est
 | D18 | Versões travadas na 1.0.0 | proposto: Chatwoot `v4.19.1-ce`, `pgvector/pgvector:pg16`, `redis:7-alpine`, OpenWA `0.29.1`, adaptador `0.9.15`, `caddy:2`, `node:22-alpine` para o robô | `kit/versoes.json`, `references/atualizar.md` |
 | D19 | Contexto da empresa | decidido (o operador concordou com a proposta, 2026-11-07) e feito no ÉPICO 9, dentro da 1.0.0 sem tag. Nenhum treino de modelo: o robô lê, a cada mensagem, o conhecimento escrito, as consultas ao vivo e o histórico curto. Até 200.000 caracteres de conhecimento somados (`MAX_KNOWLEDGE_CHARS`), com a parte fixa separada para o cache do provedor; sugestões de pergunta e resposta tiradas das conversas que a equipe resolveu, só com aprovação de quem cuida do conhecimento; relatório das lacunas por assunto. A base de documentos com busca (trechos e pgvector no banco do projeto) fica para quando algum cliente precisar | `kit/base/shared/settings.mjs`, `kit/base/bot/src/prompt.mjs`, `kit/base/shared/report.mjs`, `references/contexto.md` |
 | D20 | Quem controla o contexto | decidido (operador, 2026-11-07: "em outros projetos preciso que o contexto seja controlado via superadmin", com a Atrupe de exemplo, que vai usar o app no suporte aos clientes da própria plataforma). Dois modelos: `plataforma` (uma conta, só a camada do superadmin, os clientes não editam nada) e `por-cliente` (as regras da plataforma valem acima das de cada cliente, que edita só os grupos que o superadmin liberar; o servidor descarta o resto e só oferece as consultas que o superadmin liberou) | `escolhas.json` (`modelo`), `kit/base/shared/settings.mjs` (`botConfig`, `applyClientEdits`, `knowledgeOwner`), `kit/modelos/next/lib/atendimento.ts` |
+| D21 | wacli (`openclaw/wacli`) | decidido (operador, 2026-11-08: "não vou usar o wacli agora"): não entra agora. Não substitui o OpenWA (D13). O papel que ele poderia ter, o de cliente de teste, está no backlog como opção | seção "Backlog: um cliente de teste com o wacli" |
+| D22 | Conferência do número | decidido (operador, 2026-11-08: "faça a conferência"; os valores são propostos): rotina a cada 15 minutos, lembrete a cada 24 horas enquanto o número estiver fora, e aviso só na segunda conferência para o que costuma passar sozinho | `kit/modelos/next/lib/atendimento.ts` (`checkWhatsapp`), `kit/base/server/health.mjs` (`remindHours`, `PASSING`) |
 
 ## 0.5 Convenções do repositório que este trabalho toca
 
@@ -186,7 +190,7 @@ Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina est
 
 **Estado: ⬜** nada rodou contra um Chatwoot, um OpenWA ou a Meta de verdade.
 - Sem número de WhatsApp, num Chatwoot local: SSO, marca no `-ce`, tema por `DASHBOARD_SCRIPTS`, funções desligadas pela API, cabeçalhos da moldura, nota privada do robô numa caixa API, `look` acusando um seletor quebrado de propósito.
-- Com número real, no teste do operador num projeto dele: QR do OpenWA, resposta do robô saindo pelo WhatsApp, passagem para a equipe.
+- Com número real, no teste do operador num projeto dele: QR do OpenWA, resposta do robô saindo pelo WhatsApp, passagem para a equipe. Depois, tirar o aparelho conectado no celular de propósito e ver o aviso, o "Ler o QR de novo" na mesma caixa e o aviso da volta (ÉPICO 10).
 - **Aceite:** o relatório de `kit.mjs verify` e as capturas de `kit.mjs look`, guardados no projeto de teste.
 
 ## ÉPICO 9: contexto em camadas, cache, aprender com a equipe e lacunas (D19, D20)
@@ -206,6 +210,27 @@ Não rodou: nada contra Chatwoot, OpenWA ou Meta reais (o Docker da máquina est
 ### T9.4: relatório das lacunas
 **Estado: ✅** a ação de passar para a equipe ganhou `category` e `topic`; cada passagem vai à rota `events` com o trecho limpo. `summarizeGaps` (`kit/base/shared/report.mjs`) agrupa por assunto; a tela é `LacunasRobo` e a rota é `lacunas`.
 - **Aceite:** testes do evento com trecho limpo, do relatório desligado que não envia nada e do agrupamento por assunto, por janela de dias e só do que o robô não sabia.
+
+## ÉPICO 10: conferência do número (D22)
+
+**Origem:** a avaliação do wacli (D21) mostrou que nada avisava quando o número caía. `verify` via só se o OpenWA respondia e se o adaptador estava ligado, e o estado da sessão (`whatsappStatus`) só a tela lia.
+
+### T10.1: a conferência
+**Estado: ✅** `kit/base/server/health.mjs`: `classifySession` (os estados do OpenWA 0.29.1, `engineLoaded` e `restriction`, em `docs/06-api-specification.md` do OpenWA), `classifyCloudHealth` (`GET inboxes/:id/health` do Chatwoot 4.19.1, `app/services/whatsapp/health_service.rb`) e `checkWhatsappHealth`, que olha a última caixa e não lança.
+- **Aceite:** testes "sessão do OpenWA", "restrições do WhatsApp", "saúde da Meta" e "conferência, rota oficial/não oficial" em `tests/health.test.mjs`. Serviço fora do ar vira achado, com `fixBy: "tecnico"`. Não rodou contra serviço real (ÉPICO 7).
+
+### T10.2: os avisos
+**Estado: ✅** `healthAlerts` guarda a memória em `state.health` e devolve `title` e `text` prontos, sem segredo. O modelo `checkWhatsapp` avisa antes de gravar a memória, e `store.alertWhatsapp` é o canal do projeto.
+- **Aceite:** testes "avisos": número bom não avisa nem muda a memória; parou avisa uma vez, lembra depois de 24 horas e avisa a volta; o que passa sozinho só avisa se continuar; quem foi avisado da queda fica sabendo da volta; o texto não leva token nem chave.
+
+### T10.3: os caminhos de volta na mesma caixa
+**Estado: ✅** `reconnectOpenWA` (o modelo `reconnectWhatsapp`, a rota com `acao: "reconectar"`, `api.reconnect`) e `updateCloudApi` (o modelo `connectWhatsapp` escolhe pelo telefone). A tela `ConectarWhatsApp` mostra o que a conferência viu e oferece o caminho.
+- ⚠️ Antes, conectar de novo criava outra caixa e outra sessão na rota não oficial, e na oficial falhava, porque o Chatwoot aceita cada número uma vez só (`validates :phone_number, uniqueness`, `app/models/channel/whatsapp.rb`). `references/contratos.md` já avisava que conectar criava caixa nova, sem dizer como voltar.
+- **Aceite:** testes "ler o QR de novo" (sessão parada recebe o início; motor carregado não; não cria sessão) e "trocar o token da Meta" (mesma caixa, `webhook_verify_token` mantido, recusa com `meta_rejected`). `tsc --strict` dos modelos sem erros.
+
+### T10.4: `verify`
+**Estado: ✅** uma linha `numero_conectado_<sessão>` por sessão do OpenWA, e `numero_conectado` quando não há sessão ou a lista falha. O número da rota oficial fica de fora, porque a saúde dele pede o token da conta de serviço, que mora no estado do projeto.
+- **Aceite:** testes "verify: cada sessão do OpenWA aparece" e "verify: sem sessão ainda não reprova".
 
 ## ÉPICO 8: instalação para o usuário na CLI dos integrantes
 
@@ -227,6 +252,15 @@ A sessão das páginas analisou o jurichat.com, atendimento por WhatsApp com IA 
 | Integrações dentro da conversa (agenda com videochamada, contrato assinado pelo celular, lembrete de audiência) | 🟡 Dashboard Apps (`app/models/dashboard_app.rb`); o kit já cria o seu (`ensureDashboardApp`) | ações do projeto no painel lateral (agendar, enviar contrato); o lembrete semanas depois é mensagem ativa, que na API oficial exige modelo aprovado pela Meta e é cobrada |
 | Eventos para outros sistemas (`message.received`, `conversation.resolved`) | ✅ webhooks da conta (`message_created`, `conversation_status_changed` e outros) | nada novo; o projeto assina o próprio webhook pela conta de serviço |
 
+## Backlog: um cliente de teste com o wacli (D21)
+
+O wacli (`github.com/openclaw/wacli`, MIT, Go sobre whatsmeow, 0.26.0 de 2026-11-05) entra num número como aparelho conectado, envia pela linha de comando e lê o que chega. Avaliado em 2026-11-08 pela documentação do repositório, sem rodar.
+
+- **Não substitui o OpenWA:** não tem API HTTP para enviar (o envio passa pelo processo local de `sync --follow`), o aviso por `sync --webhook` não tem novas tentativas (`docs/sync.md`) e conectar é um comando interativo.
+- **O papel possível é o de cliente de teste,** num chip só para isso, nunca no número do atendimento: um roteiro de mensagens depois de implantar e de cada atualização, ou um vigia de algumas rodadas por dia em produção. É o que cobre o que o ÉPICO 10 não vê, a mensagem que se perde com tudo dizendo que está bem.
+- **Custos:** o chip e o celular usado a cada 14 dias; o wacli não está no winget, e a CLI só instala por gerenciador de pacotes (`packages/cli/src/programs.ts:23`), então a máquina do desenvolvedor pediria baixar o binário da versão publicada com conferência do SHA-256; em produção, um contêiner montado pelo projeto, porque o repositório não publica imagem; cada rodada abre uma conversa, que teria de se resolver sozinha e ficar fora das sugestões e das lacunas; na API oficial, cada resposta sai da mesma cota de 1.000 mensagens de serviço por mês.
+- **Decisão do operador:** entra quando um projeto em que o atendimento não pode parar pedir. Antes disso, a prova é uma mensagem mandada de outro celular.
+
 ## Onde é errado estar certo
 
 - **D7, regra do `validate`.** O operador aceitou criar uma regra própria para kit de desenvolvedor. A leitura do código mostrou que a 1.0 não precisa dela: o `validate` só recusa comandos de instalação de programa e frases que mandam a pessoa ao terminal (`validate.ts:37` e `:39`), e os textos do kit falam com a IA, que roda `docker compose`, `npm` e o próprio `kit.mjs`. A regra entra quando um texto do kit precisar de algo que o `validate` recusa.
@@ -243,6 +277,8 @@ A sessão das páginas analisou o jurichat.com, atendimento por WhatsApp com IA 
 | O OpenWA, ainda 0.x e com versão a cada duas semanas, muda a API de sessão ou do adaptador | `kit.mjs verify` falha na conferência do OpenWA depois de trocar a versão |
 | A Meta muda a regra para IA no WhatsApp | a referência traz a data da leitura; revisar a cada versão do kit |
 | O robô reinicia e perde o histórico curto | a conversa segue com o histórico que o projeto devolve em `history` |
+| O estado que o OpenWA mostra depois que o celular tira o aparelho conectado não é o que a conferência espera | ÉPICO 7: `checkWhatsapp` não avisa depois de tirar o aparelho de propósito |
+| Uma URL de retorno válida fica em outro servidor que repassa ao painel | `meta_aviso_em_outro_endereco` aparece com o atendimento funcionando; por isso esse achado é `atencao`, e não `fora` |
 
 ## Cobertura declarada
 
@@ -250,4 +286,6 @@ A sessão das páginas analisou o jurichat.com, atendimento por WhatsApp com IA 
 - Do Chatwoot foram lidos só os arquivos citados; a pasta `enterprise`, os modelos de e-mail e o app de celular não foram examinados. O app de celular do Chatwoot pede e-mail e senha, e as pessoas criadas pelo projeto não têm senha conhecida: na 1.0 o atendimento é pelo navegador.
 - O cadastro incorporado da Meta (Embedded Signup) não foi examinado.
 - O ÉPICO 9 rodou só contra provedores e projeto falsos: o acerto do cache, a qualidade das sugestões e a escolha de `category` e `topic` por uma IA real não foram medidos. A limpeza de dado pessoal cobre e-mail, CPF, CNPJ, número de processo, cartão e telefone por padrão de texto; um nome ou endereço escrito por extenso passa, e por isso nada entra no conhecimento sem aprovação.
+- O ÉPICO 10 rodou só contra serviços falsos. `checkWhatsapp`, `reconnectWhatsapp`, a rota e a tela passaram no `tsc --strict`, mas não foram executados. O formato de `webhook_configuration` veio do código do Chatwoot (`AccountHealth.vue`), não de uma resposta real da Meta. A regra dos 14 dias dos aparelhos conectados vem de fontes de terceiros.
+- O porte do ÉPICO 10 na Atrupe (`wt/back` em NestJS, `wt/web` em Next.js) é da sessão daquele projeto; desta sessão, a Atrupe só foi lida.
 - As regras da Meta sobre IA vêm de fontes de imprensa e de fornecedores (memória `whatsapp-business-facts`), não da página da Meta.

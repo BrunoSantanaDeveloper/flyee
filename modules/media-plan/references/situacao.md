@@ -42,6 +42,8 @@ A captação de uma fase de preparação promete o acesso a uma oferta. Ela prec
 
 `look` lê o que o projeto já tem: a marca em `media-plan/marca.md`, os briefings e capturas do app de criativos, a pesquisa no Instagram, o inventário da base. O que está lá entra como `encontrado`, com o arquivo. O que não está vira pergunta, no máximo quatro, numa mensagem só, nesta ordem: produto e oferta, para quem e quantos, meta e data, verba. Cada pergunta leva a sua sugestão e o que muda se a resposta for outra. Rastreamento nunca é pergunta técnica: a pergunta é "quando alguém compra ou se cadastra, dá para ver de onde veio?".
 
+**Palavras vagas e casos concretos.** "Lead", "cliente", "assinatura" e "cadastro" mudam de sentido de uma marca para outra, e a meta e a planilha de origem dependem disso. Quando o integrante usar uma delas, proponha o sentido exato ("lead é quem entrou na lista de espera, e cliente é quem pagou a primeira cobrança?") e grave na premissa. Para testar um limite, proponha um caso: "quem testou, cancelou e voltou pela oferta conta como assinatura nova na meta?".
+
 ## 6. A narrativa
 
 Você escreve a narrativa (`narrativa.json`): até três achados, cada um com a certeza (`confirmado`, duas fontes ou o dado do integrante; `provavel`, uma fonte boa ou um padrão claro; `primeira-leitura`, uma leitura só), a história em um parágrafo, o primeiro passo, o que não vamos fazer e o que não conseguimos conferir. O script confere: nenhuma promessa de resultado, nenhum travessão, nenhum ponto de exclamação, a seção "Em resumo" em até 150 palavras. Os números são do script; você os cita, nunca os inventa.

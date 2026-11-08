@@ -13,7 +13,7 @@
     "en": "One line on what the app delivers, by its result and not by its technique."
   },
   "compatible_ais": ["claude_code", "codex", "gemini_cli", "cursor"],
-  "min_core": ">=1.0.0",
+  "min_core": ">=1.11.0",
   "entry": "skills/meu-app/SKILL.md",
   "files": [],
   "external_credentials": [],

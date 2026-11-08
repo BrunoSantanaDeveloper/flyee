@@ -1,10 +1,13 @@
-Este app adapta método e trechos de dois projetos publicados sob a licença MIT. Os avisos de copyright e de permissão seguem abaixo, como a licença pede.
+Este app adapta método e trechos de três projetos publicados sob a licença MIT. Os avisos de copyright e de permissão seguem abaixo, como a licença pede.
 
 1. goose-skills (GooseWorks), skill "email-lifecycle" (flow-library, segments-cadence-offers, copy-craft, deliverability, sms-push-whatsapp).
    Copyright (c) 2026 GooseWorks
 
 2. agency-agents (AgentLand Contributors), agente "marketing-email-strategist".
    Copyright (c) 2025 AgentLand Contributors
+
+3. mattpocock/skills (Matt Pocock), skills "grilling" e "to-questionnaire": a ordem e a forma das perguntas.
+   Copyright (c) 2026 Matt Pocock
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

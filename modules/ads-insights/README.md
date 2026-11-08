@@ -48,4 +48,5 @@ Ela não mexe na sua conta de anúncios: prescreve, você executa, e quando voc�
 
 ## O que há de novo
 
+- 1.0.1: as perguntas do contrato vêm na ordem certa: primeiro o tipo de negócio, e depois o número que julga os anúncios e a ativação, já com a sugestão. Para aceitar uma sugestão, basta dizer sim, e o que está com outra pessoa vira um questionário para enviar.
 - 1.0.0: primeira versão, completa. Contrato de medição, tags da página, regra única de link, plano de rastreamento, planilha de origem com pseudônimos, leitura dos exports da Meta e do Google Ads em português e em inglês, veredito por peça com a amostra mínima, leitura da semana com a verdade do negócio e os movimentos, pulso diário por exceção.

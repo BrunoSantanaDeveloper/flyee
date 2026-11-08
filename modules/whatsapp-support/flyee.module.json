@@ -48,6 +48,8 @@
     "kit/base/server/bot-contract.d.mts",
     "kit/base/server/bot-contract.mjs",
     "kit/base/server/chatwoot.mjs",
+    "kit/base/server/health.d.mts",
+    "kit/base/server/health.mjs",
     "kit/base/server/openwa.mjs",
     "kit/base/server/provision.d.mts",
     "kit/base/server/provision.mjs",
@@ -169,8 +171,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: robô de IA com qualquer provedor, que consulta só o que o sistema libera e passa para a equipe; contexto controlado pelo superadmin, para o suporte da própria plataforma ou para cada cliente atender os dele; sugestões de conhecimento com aprovação e relatório do que o robô não soube; painel do Chatwoot com o login e as cores do sistema; API oficial ou OpenWA.",
-    "en": "First version: an AI bot with any provider that looks up only what the system allows and hands over to the team; context controlled by the super admin, for the platform's own support or for each customer serving its own; knowledge suggestions with approval and a report of what the bot could not answer; the Chatwoot panel with the system's login and colors; official API or OpenWA."
+    "pt-BR": "Primeira versão: robô de IA com qualquer provedor, que consulta só o que o sistema libera e passa para a equipe; contexto controlado pelo superadmin, para o suporte da própria plataforma ou para cada cliente atender os dele; sugestões de conhecimento com aprovação e relatório do que o robô não soube; painel do Chatwoot com o login e as cores do sistema; API oficial ou OpenWA; conferência do número a cada 15 minutos, com aviso quando ele para e o caminho de volta na mesma caixa.",
+    "en": "First version: an AI bot with any provider that looks up only what the system allows and hands over to the team; context controlled by the super admin, for the platform's own support or for each customer serving its own; knowledge suggestions with approval and a report of what the bot could not answer; the Chatwoot panel with the system's login and colors; official API or OpenWA; a check of the number every 15 minutes, with a notice when it stops and the way back in the same inbox."
   },
   "license": "member"
 }

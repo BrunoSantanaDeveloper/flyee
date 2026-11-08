@@ -247,12 +247,12 @@ export function buildInventory(exports, { today, thresholds }) {
       consent_recorded: count((contact) => contact.consent === true),
       stale_6_months: count((contact) => contact.stale && marketable(contact)),
     },
-    groups: Object.fromEntries(GROUPS.map((group) => [group, { total: count((contact) => contact.group === group), marketable: count((contact) => contact.group === group && marketable(contact)), stale: count((contact) => contact.group === group && contact.stale && marketable(contact)) }])),
+    groups: Object.fromEntries(GROUPS.map((group) => [group, { total: count((contact) => contact.group === group), marketable: count((contact) => contact.group === group && marketable(contact)), stale: count((contact) => contact.group === group && contact.stale && marketable(contact)), unsubscribed: count((contact) => contact.group === group && contact.unsubscribed), last_contact: clean.filter((contact) => contact.group === group && contact.last_contact).map((contact) => contact.last_contact).sort().pop() ?? null }])),
     activity: Object.fromEntries(ACTIVITY.map((activity) => [activity, count((contact) => contact.activity === activity)])),
     by_source: bySource,
     created_between: dates.length ? { first: dates[0], last: dates[dates.length - 1] } : null,
     thresholds: { active_days: thresholds.groups.active_days, stalled_days: thresholds.groups.stalled_days, stale_days: thresholds.repermission.stale_days, source: thresholds.groups.label },
-    note: "Só contagens: nenhum nome, e-mail ou telefone entra aqui. A base limpa fica em contatos/base-limpa.csv, dentro do projeto, e não sai da máquina.",
+    note: "Só contagens e a data do contato mais recente de cada grupo: nenhum nome, e-mail ou telefone entra aqui. A base limpa fica em contatos/base-limpa.csv, dentro do projeto, e não sai da máquina.",
   };
   return { clean, inventory, problems };
 }

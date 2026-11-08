@@ -15,7 +15,7 @@ Só o JSON vai para o stdout. Em erro, `ok` é `false` e `error` traz `code`, `m
 
 ## O briefing da página
 
-`page brief <campanha> --json` escreve `anuncios/<campanha>/pagina-briefing.md` a partir do plano (`media-plan/<plano>/pagina.md`, quando existe), do briefing da campanha e dos conceitos aprovados: a primeira frase por ângulo, o que a página mostra, as objeções respondidas em uma linha, as linhas que a lei pede (preço de referência, prazo com data e hora, regras, os 7 dias de arrependimento, o aviso de cookies), o que ela faz por dentro (preservar a UTM até o cadastro, disparar os eventos, carregar rápido no celular) e as perguntas de qualificação. Entregue ao integrante, ou a quem constrói a página, como veio; o que o plano não respondeu aparece como `[a decidir]`, e você pergunta numa mensagem só.
+`page brief <campanha> --json` escreve `anuncios/<campanha>/pagina-briefing.md` a partir do plano (`media-plan/<plano>/pagina.md`, quando existe), do briefing da campanha e dos conceitos aprovados: a primeira frase por ângulo, o que a página mostra, as objeções respondidas em uma linha, as linhas que a lei pede (preço de referência, prazo com data e hora, regras, os 7 dias de arrependimento, o aviso de cookies), o que ela faz por dentro (preservar a UTM até o cadastro, disparar os eventos, carregar rápido no celular) e as perguntas de qualificação. Entregue ao integrante, ou a quem constrói a página, como veio; o que o plano não respondeu aparece como `[a decidir]`, e você pergunta numa mensagem só, com a sua sugestão escrita na pergunta, de modo que "sim" a aceite.
 
 ## A conferência da página viva
 

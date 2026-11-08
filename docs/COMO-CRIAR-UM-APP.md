@@ -80,6 +80,34 @@ description: Encontra Reels que performaram acima do normal do próprio perfil e
 - Uma skill por tarefa clara. Descrições que se sobrepõem fazem a IA escolher errado: o `validate` acusa nomes repetidos entre apps.
 - A skill nunca fala de material interno nem aponta para links que o servidor não deu.
 
+### Como o app pergunta
+
+Cada pergunta custa um pouco da paciência de um integrante iniciante. Vale para todo app que pergunta alguma coisa, e o modelo novo já vem com isto em `skills/meu-app/SKILL.md`:
+
+| O que é | O que a IA faz | Exemplo |
+|---|---|---|
+| Dá para descobrir | descobre e diz de onde veio; nunca pergunta | o site, o que outro app gravou, a coluna do export |
+| Decisão | sugere dentro da pergunta, de modo que "sim" aceite; "ok" aceita as sugestões da rodada | o teto de mensagens, o estilo do vídeo |
+| Fato que só o integrante sabe | pergunta sem sugestão; "não sei" fecha a pergunta com a suposição marcada | preço, margem |
+| Decisão de direitos | mostra a sugestão e espera a resposta a essa pergunta; "ok" solto não vale | base legal, marca de outra empresa, publicidade |
+| Está com outra pessoa | usa a skill `questionario` do core (`min_core` >=1.11.0) e segue com o resto | o jurídico, quem cuida do site, o cliente da agência |
+
+- **Até quatro por mensagem, e só o que já dá para responder.** Uma pergunta que depende de outra ainda em aberto fica para a rodada seguinte. Quando um script distribui as perguntas, o item declara `after` e o resultado traz `waiting`.
+- **O que é igual para vários itens é perguntado uma vez**, com "se algum for diferente, diga qual". Foi o que tirou a base legal do `contact-base` de oito rodadas para duas.
+- **Palavras vagas viram um sentido exato**, testado com um caso concreto: "quem cancelou e voltou conta como cliente novo?".
+- **Meça.** Um teste percorre as rodadas respondendo como o integrante e conta quantas são (`modules/contact-base/tests/rounds.test.mjs`, `modules/media-plan/tests/questions.test.mjs`). A referência completa é o `video-studio` (`references/perguntas.json`).
+- O `validate` avisa quando uma skill de um app `skill` ou `workflow` pergunta sem dizer o que "sim" ou "ok" aceita. Um app usado em repositórios de código (`link --user`) não recebe o bloco do core nem a skill `questionario`: a regra vai escrita na própria skill.
+
+### Como escrever a skill
+
+Adaptado de `writing-for-agents` (mattpocock/skills, MIT):
+
+- **Cada passo termina num critério de conclusão** que a IA consegue conferir: "até `blocking_pending` ficar vazio", em vez de "até entender". Quanto mais exigente o critério, mais trabalho ela faz naquele passo.
+- **A `description` é um ponteiro:** o que a skill faz e os pedidos distintos que devem acioná-la. Sinônimos de um mesmo pedido gastam contexto em toda sessão.
+- **Prefira dizer o que fazer.** Uma proibição traz o comportamento proibido para o contexto; use "não" só nas regras que não se quebram e, quando der, junto do que fazer no lugar.
+- **O que só alguns caminhos usam vai para `references/`**, atrás de um ponteiro; o que todo caminho usa fica no corpo.
+- **Corte o que não muda o comportamento.** A frase que a IA já obedeceria sem ler é custo sem efeito, e o que dá para descobrir com um comando não precisa estar escrito.
+
 ## 4. O integrante não usa o terminal
 
 Esta é a regra de experiência de todo app: o integrante conversa com a IA dele, e a IA roda tudo. Ele só confirma na conversa o que a IA vai fazer, aprova o login no navegador e cola chaves numa página que abre no navegador. Nenhum texto do app manda o integrante abrir o terminal, rodar um comando ou instalar um programa. A validação recusa um `.md` do app com comando de instalação (`winget install`, `brew install`, `apt install`, `pip install`…) ou com "no seu terminal".
@@ -128,7 +156,7 @@ O README é o guia dentro do projeto. Escreva para quem nunca viu o app: o que e
 
 **Comandos como a IA precisa rodar.** Toda menção a um comando do flyee num texto que a IA lê é `npx --yes flyee@latest <comando>`: o `--yes` responde a pergunta que o npx faz antes de baixar, e `@latest` mantém uma cópia só, como o `/instalar.md` da plataforma escreve. A chave é `npx --yes flyee@latest key set <ENV> --browser --json`, que nunca pede a chave no terminal. Instalar outro app é uma frase simples ao integrante ("Vou instalar o app X, que faz Y") e `add <app> --yes --json`, com tempo limite de 10 minutos, sem `--dry-run` e sem esperar o sim: é a regra do core desde a 1.8.0 (decisão do operador de 2026-10-21). Se a instalação falhar, ou se o integrante pedir para não instalar, o app segue sem o outro e diz o que fica de fora.
 
-**App que escreve pelo integrante.** Se o app produz texto para o público do integrante (roteiro, legenda, post, texto de carrossel), o último passo da skill antes de entregar manda a IA revisar o texto com a skill `texto-natural`, que o core instala em todo projeto. O perfil de voz que o app guardou manda sobre ela. Declare `"min_core": ">=1.3.0"`, o primeiro core que a instala.
+**App que escreve pelo integrante.** Se o app produz texto para o público do integrante (roteiro, legenda, post, texto de carrossel), o último passo da skill antes de entregar manda a IA revisar o texto com a skill `texto-natural`, que o core instala em todo projeto. O perfil de voz que o app guardou manda sobre ela, e a skill do app diz que a revisão não acrescenta fato, número ou promessa. Declare `"min_core": ">=1.3.0"`, o primeiro core que a instala.
 
 ## 7. Avaliação
 

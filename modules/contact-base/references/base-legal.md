@@ -15,6 +15,8 @@ Quem pediu para sair não recebe marketing em nenhum canal, em nenhum grupo. O t
 
 ## Os oito campos de cada grupo
 
+O que é igual para todos os grupos fica uma vez só na seção "Todos os grupos" do arquivo, e um grupo diferente preenche a própria linha. A base legal é sempre de cada grupo. Dados presentes e último contato vêm do inventário quando o export traz as colunas.
+
 1. **Como entrou**: o formulário, a compra, o teste, a planilha de um evento; quem trouxe.
 2. **Texto aceito**: a frase que a pessoa leu ao entrar, com ou sem a parte sobre receber novidades. Sem o texto, a base é mais fraca, e a repermissão vira o caminho.
 3. **Dados presentes**: e-mail, telefone, nome, datas de uso; nada além do necessário para escrever. CPF, endereço e data de nascimento ficam fora da base limpa.
@@ -30,4 +32,4 @@ Quem não recebe nada há 6 meses ou mais recebe primeiro a pergunta: ainda quer
 
 ## O que o app faz com isto
 
-`legal` cria `contatos/base-legal.md` com uma seção por grupo e os oito campos, e marca cada grupo como `pendente` ou `completo`. `sequence` lê o arquivo: a régua de um grupo pendente é escrita, mas marcada `pendente`, e a IA pergunta ao integrante o que falta, numa mensagem só, com a sugestão de cada campo. Quando o grupo fica completo, a régua passa a `pronta`. Nada é assinado nem cerimônia: é um registro, feito uma vez e emendado quando a marca muda.
+`legal` cria `contatos/base-legal.md` com a seção "Todos os grupos", uma seção por grupo e os oito campos, e marca cada grupo como `pendente` ou `completo`. Um grupo sem ninguém não pergunta nada. `sequence` lê o arquivo: a régua de um grupo pendente é escrita, mas marcada `pendente`, e a IA pergunta ao integrante o que falta, numa mensagem só, com a sugestão de cada campo. Quando o grupo fica completo, a régua passa a `pronta`. Nada é assinado nem cerimônia: é um registro, feito uma vez e emendado quando a marca muda.

@@ -189,12 +189,12 @@ function lookCommand(positionals) {
 function premisesCommand(positionals) {
   const { slug, paths, data } = planOf(positionals[0]);
   const result = validatePremises(data);
-  const { questions, more_pending } = questionsFor(data, 4);
+  const { questions, more_pending, waiting } = questionsFor(data, 4);
   const suggestions = questions.filter((question) => question.suggestion);
   const next = result.blocking_pending.length
-    ? { action: "ask", command: null, say: `Pergunte ao integrante numa mensagem só${suggestions.length ? ", cada pergunta com a sua sugestão e o que muda se a resposta for outra" : ""}; com as respostas, grave as premissas como informado ou confirmado e rode premises de novo.` }
+    ? { action: "ask", command: null, say: `Pergunte ao integrante numa mensagem só${suggestions.length ? ", com cada sugestão escrita na pergunta, para um sim aceitá-la, e o que muda se a resposta for outra" : ""}. Com as respostas, grave as premissas como informado ou confirmado: um sim a uma sugestão vira confirmado, e um não sei vira informado, com a faixa de referência no plano. Depois rode premises de novo.` }
     : { action: "funnel", command: command(`funnel ${slug}`), say: "As premissas que bloqueiam estão fechadas: faça a conta." };
-  return { ...base("premises"), plan: slug, ...result, questions, more_pending, file: rel(paths.premises), target_date: data.target_date ?? null, next_step: next };
+  return { ...base("premises"), plan: slug, ...result, questions, more_pending, waiting, file: rel(paths.premises), target_date: data.target_date ?? null, next_step: next };
 }
 
 function calendarFor(data, values, paths) {

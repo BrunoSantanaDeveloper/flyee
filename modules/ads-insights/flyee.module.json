@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "ads-insights",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "tool",
   "trail": "escalar",
   "title": {
@@ -15,7 +15,7 @@
   "compatible_ais": [
     "claude_code"
   ],
-  "min_core": ">=1.10.0",
+  "min_core": ">=1.11.0",
   "entry": "skills/ads-insights/SKILL.md",
   "files": [
     "NOTICE.txt",
@@ -79,8 +79,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão, completa: contrato de medição, tags da página, regra única de link, plano de rastreamento, planilha de origem com pseudônimos, leitura dos exports da Meta e do Google Ads em português e em inglês, veredito por peça com a amostra mínima, leitura da semana com a verdade do negócio e os movimentos, pulso diário por exceção.",
-    "en": "First version, complete: measurement contract, page tags, single link rule, tracking plan, origin ledger with pseudonyms, reading of Meta and Google Ads exports in Portuguese and English, verdict per piece with the minimum sample, weekly read with the business truth and the moves, exception-only daily pulse."
+    "pt-BR": "As perguntas do contrato vêm na ordem certa: primeiro o tipo de negócio, e na rodada seguinte o número que julga os anúncios e a ativação, já com a sugestão que o tipo permite. Para aceitar uma sugestão, basta dizer sim, e o que está com outra pessoa vira um questionário para enviar.",
+    "en": "The contract's questions come in the right order: first the type of business, and in the next round the number that judges the ads and the activation, with the suggestion the type allows. To accept a suggestion you just say yes, and what another person knows becomes a questionnaire to send."
   },
   "license": "member"
 }

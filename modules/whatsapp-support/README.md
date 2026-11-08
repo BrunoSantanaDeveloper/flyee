@@ -11,6 +11,7 @@ O app não instala nada em servidor. Ele traz a base pronta e a sua IA, aberta n
 - **Conectar o número numa tela do sistema**: pela API oficial do WhatsApp (credenciais da Meta) ou pelo WhatsApp Web, lendo um QR, com o aviso de risco antes.
 - **Configurar o robô numa tela do sistema**: como ele se apresenta, o que ele sabe, o horário da equipe, quando passa a conversa e quais dados do sistema ele pode consultar.
 - **Escolher como o robô trabalha**: responde sozinho, só sugere a resposta numa nota interna para alguém da equipe enviar, ou fica desligado.
+- **Saber quando o número para**: o sistema confere o número a cada 15 minutos e avisa quem cuida dele quando cai, pede atenção ou volta. A tela mostra o que houve e o caminho de volta na mesma caixa, com o QR de novo ou o token novo da Meta, e as conversas continuam lá.
 
 ## Quem controla o que o robô sabe
 
@@ -40,7 +41,7 @@ Para o suporte da própria plataforma:
 
 > Implante o suporte da plataforma pelo WhatsApp, com robô de IA e a nossa equipe, com o contexto do robô controlado só pelo superadmin.
 
-Outros pedidos: "Atualize o atendimento pelo WhatsApp para a versão nova do app", "Confira se o painel de atendimento está com as cores do sistema", "Esconda as campanhas e a central de ajuda do painel de atendimento".
+Outros pedidos: "Atualize o atendimento pelo WhatsApp para a versão nova do app", "Confira se o painel de atendimento está com as cores do sistema", "Esconda as campanhas e a central de ajuda do painel de atendimento", "O WhatsApp do atendimento parou de receber mensagens, veja o que houve".
 
 ## O que ele grava e onde
 

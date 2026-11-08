@@ -61,7 +61,7 @@ Quando há uma promoção, como a Black Friday dos modelos:
 - O título fala do resultado para quem compra, não do produto.
 - Cada recurso tem o resultado no título e uma frase de como funciona.
 - Os chamados dizem a ação: "Agendar demonstração", "Começar o teste".
-- Antes de entregar, revise o texto com a skill `texto-natural`, mantendo a voz da marca.
+- Antes de entregar, revise o texto com a skill `texto-natural`, mantendo a voz da marca e sem acrescentar fato, número ou promessa.
 
 ## Movimento e mídia
 

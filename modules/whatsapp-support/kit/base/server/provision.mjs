@@ -5,6 +5,7 @@
 import { randomBytes } from "node:crypto";
 
 import { chatwootAccount, chatwootPlatform, chatwootProfile } from "./chatwoot.mjs";
+import { classifySession, openwaFailure, worstLevel } from "./health.mjs";
 import { ADAPTER_ID, adapterIngressUrl, openwaClient } from "./openwa.mjs";
 
 /** Funções que o atendimento usa e que nunca se desligam numa conta. */
@@ -30,6 +31,12 @@ export class ProvisionError extends Error {
     this.code = code;
     this.fix = fix;
   }
+}
+
+/** O Chatwoot responde 422 quando a Meta não aceita os dados ou quando o número já está em outra caixa. */
+function rejectedByChatwoot(error) {
+  if (error?.code !== "http_422") throw error;
+  throw new ProvisionError("meta_rejected", "O Chatwoot recusou os dados do número.", "Confira o token permanente e os IDs no WhatsApp Manager da Meta, e se este número já está ligado a outro cliente.");
 }
 
 function strongPassword() {
@@ -184,15 +191,17 @@ async function addStaffToInbox(account, state, inboxId) {
  */
 export async function connectCloudApi({ chatwootUrl, state, cloud, fetchImpl = fetch }) {
   const account = chatwootAccount({ url: chatwootUrl, token: state.service_token, accountId: state.account_id, fetchImpl });
-  const inbox = await account.createInbox({
-    name: cloud.inboxName ?? "WhatsApp",
-    channel: {
-      type: "whatsapp",
-      phone_number: cloud.phoneNumber,
-      provider: "whatsapp_cloud",
-      provider_config: { api_key: cloud.apiKey, phone_number_id: cloud.phoneNumberId, business_account_id: cloud.businessAccountId },
-    },
-  });
+  const inbox = await account
+    .createInbox({
+      name: cloud.inboxName ?? "WhatsApp",
+      channel: {
+        type: "whatsapp",
+        phone_number: cloud.phoneNumber,
+        provider: "whatsapp_cloud",
+        provider_config: { api_key: cloud.apiKey, phone_number_id: cloud.phoneNumberId, business_account_id: cloud.businessAccountId },
+      },
+    })
+    .catch(rejectedByChatwoot);
   await account.setAgentBot(inbox.id, state.bot_id);
   await addStaffToInbox(account, state, inbox.id);
   const next = { ...state, inboxes: [...(state.inboxes ?? []), { id: inbox.id, route: "oficial", phone: cloud.phoneNumber }] };
@@ -200,6 +209,28 @@ export async function connectCloudApi({ chatwootUrl, state, cloud, fetchImpl = f
     state: next,
     inboxId: inbox.id,
     metaWebhook: { callbackUrl: inbox.callback_webhook_url ?? null, verifyToken: inbox.provider_config?.webhook_verify_token ?? null },
+  };
+}
+
+/**
+ * Troca o token (e os IDs, se vierem) de uma caixa oficial que já existe, sem criar outra: o Chatwoot aceita
+ * cada número uma vez só e confere os dados novos com a Meta antes de gravar. O token de verificação do
+ * retorno continua o mesmo, por isso a configuração atual da caixa é lida antes de gravar.
+ */
+export async function updateCloudApi({ chatwootUrl, state, inboxId, cloud, fetchImpl = fetch }) {
+  const account = chatwootAccount({ url: chatwootUrl, token: state.service_token, accountId: state.account_id, fetchImpl });
+  const current = await account.inbox(inboxId);
+  const providerConfig = {
+    ...(current?.provider_config ?? {}),
+    api_key: cloud.apiKey,
+    ...(cloud.phoneNumberId ? { phone_number_id: cloud.phoneNumberId } : {}),
+    ...(cloud.businessAccountId ? { business_account_id: cloud.businessAccountId } : {}),
+  };
+  const updated = await account.updateInbox(inboxId, { channel: { provider_config: providerConfig } }).catch(rejectedByChatwoot);
+  return {
+    state,
+    inboxId,
+    metaWebhook: { callbackUrl: updated?.callback_webhook_url ?? current?.callback_webhook_url ?? null, verifyToken: providerConfig.webhook_verify_token ?? null },
   };
 }
 
@@ -276,20 +307,55 @@ export async function connectOpenWA({ chatwootUrl, platformToken, state, input, 
   return { state: next, inboxId: inbox.id, sessionId: session.id };
 }
 
-/** Estado da sessão do OpenWA e, enquanto ela espera, o QR para a tela mostrar. */
+/**
+ * Estado da sessão do OpenWA, o que a conferência acha dele e, enquanto ela espera, o QR para a tela mostrar.
+ * Com o OpenWA fora do ar, não lança: devolve o estado unknown com o achado.
+ */
 export async function whatsappStatus({ openwaUrl, openwaApiKey, sessionId, fetchImpl = fetch }) {
   const openwa = openwaClient({ url: openwaUrl, apiKey: openwaApiKey, fetchImpl });
-  const session = await openwa.session(sessionId);
+  let session;
+  try {
+    session = await openwa.session(sessionId);
+  } catch (error) {
+    const failure = openwaFailure(error);
+    return { status: "unknown", qrCode: null, level: failure.level, findings: [failure] };
+  }
   const status = session?.status ?? "unknown";
+  const findings = classifySession(session);
+  const level = worstLevel(findings.map((item) => item.level));
   if (status === "qr_ready") {
     try {
       const { qrCode } = await openwa.qr(sessionId);
-      return { status, qrCode };
+      return { status, qrCode, level, findings };
     } catch {
-      return { status, qrCode: null };
+      return { status, qrCode: null, level, findings };
     }
   }
-  return { status, qrCode: null };
+  return { status, qrCode: null, level, findings };
+}
+
+/**
+ * Ler o QR de novo: retoma a sessão que a caixa já tem, sem criar outra caixa nem outra sessão. Sessão parada
+ * (sem o motor carregado) recebe o pedido de início; com o motor carregado, o OpenWA já está tentando ou já
+ * mostra o QR, e o início responderia 400. Depois, a tela acompanha pelo whatsappStatus.
+ */
+export async function reconnectOpenWA({ openwaUrl, openwaApiKey, sessionId, fetchImpl = fetch }) {
+  const openwa = openwaClient({ url: openwaUrl, apiKey: openwaApiKey, fetchImpl });
+  let session;
+  try {
+    session = await openwa.session(sessionId);
+  } catch (error) {
+    if (error?.code === "http_404") throw new ProvisionError("session_missing", "A sessão do OpenWA desta caixa não existe mais.", "Use Conectar outro número na tela Conectar WhatsApp.");
+    throw error;
+  }
+  if (session?.status === "ready" || session?.engineLoaded === true) return { status: session.status, started: false };
+  try {
+    await openwa.startSession(sessionId);
+  } catch (error) {
+    if (error?.code !== "http_400") throw error;
+    return { status: session?.status ?? "unknown", started: false };
+  }
+  return { status: "initializing", started: true };
 }
 
 /** Uma página do projeto como aba dentro de cada conversa da conta (Dashboard App), sem repetir. */

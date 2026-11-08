@@ -40,7 +40,9 @@ Rode `check --json`.
 
 ## Passo 1: o briefing (na conversa)
 
-Pergunte de uma vez só o que faltar: o **tema**, **para quem**, a **promessa** (o que a pessoa leva ao chegar ao último slide), o **tom**, a **palavra da chamada final** com o que a pessoa recebe ao comentar e, se o tema pedir, se ele quer **fotos** (as dele ou geradas). O resto você decide e diz:
+Antes de perguntar, leia o que o projeto já sabe, quando existe: `media-plan/marca.md`, `roteiros/canal.md` e `estudio-de-video/marcas/`. O público, o tom e a marca que estiverem lá entram sem pergunta, e você diz de onde vieram.
+
+Pergunte de uma vez só o que faltar, com a sua sugestão escrita em cada pergunta, de modo que "sim" a aceite; um "ok" aceita todas: o **tema**, **para quem**, a **promessa** (o que a pessoa leva ao chegar ao último slide), o **tom**, a **palavra da chamada final** com o que a pessoa recebe ao comentar e, se o tema pedir, se ele quer **fotos** (as dele ou geradas). O resto você decide e diz:
 
 - **Slides:** 5 é o padrão; de 3 a 7. O primeiro é `hook`, o último é `cta`, os do meio são `point` (ou `photo`, com foto), uma ideia cada.
 - **Compassos:** 3 por slide (6 s a 120 BPM) e 4 na chamada final (8 s).

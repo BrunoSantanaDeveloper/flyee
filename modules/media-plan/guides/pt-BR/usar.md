@@ -13,7 +13,7 @@ Você diz o que quer vender e até quando, e recebe o plano de tráfego pago da 
 ## O que acontece
 
 1. A IA lê o que o projeto já tem: a sua marca, os briefings de campanha, a captura do seu site, a pesquisa no Instagram, o inventário da sua base. O que está lá ela não pergunta.
-2. Ela manda uma mensagem só, com até quatro perguntas, na ordem que decide o plano: o produto e a oferta, para quem e quantas pessoas dá para alcançar, a meta e a data, a verba. Cada pergunta vem com a sugestão dela e o que muda se a sua resposta for outra. Você responde o que sabe; o que não sabe fica como suposição marcada.
+2. Ela manda uma mensagem só, com até quatro perguntas, na ordem que decide o plano: o produto e a oferta, para quem e quantas pessoas dá para alcançar, a meta e a data, a verba. Cada pergunta vem com a sugestão dela e o que muda se a sua resposta for outra: para aceitar a sugestão, basta dizer sim. Você responde o que sabe; o que não sabe fica como suposição marcada, e o que está com outra pessoa vira um questionário para você enviar.
 3. Ela faz as contas e mostra em poucas frases: quanto um cliente pode custar, quantos podem vir de quem já conhece a marca, quantos leads e visitas a meta pede, se a verba tira um conjunto de anúncios da fase de aprendizado. Com verba pequena e produto caro, essa conta muda a conversa e decide o que a campanha otimiza.
 4. Ela mostra as formas de oferta como opções, aponta se uma promoção que está no ar colide com a do pico e lista o que uma oferta vendida à distância precisa ter.
 5. Ela desenha o calendário de trás para frente: as fases, o ponto de decisão, os prazos que não se discutem e os feriados no caminho.

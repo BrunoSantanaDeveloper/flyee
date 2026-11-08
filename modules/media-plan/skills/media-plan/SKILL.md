@@ -38,7 +38,14 @@ Rode `check --json` uma vez por sessão. `plans` lista os planos do projeto; com
 
 ## Passo 2: perguntar numa mensagem só
 
-Rode `premises <plano> --json`. `questions` traz até quatro, na ordem que decide o plano (produto e oferta, para quem e quantos, meta e data, verba), cada uma com `suggestion` e `if_different` quando você já propôs algo. Escreva uma mensagem com o que o projeto já mostrou (duas ou três linhas) e as perguntas como frases, nunca um formulário. Com as respostas, grave cada premissa como `informado` ou `confirmado` e rode `premises` de novo até `blocking_pending` ficar vazio.
+Rode `premises <plano> --json`. `questions` traz até quatro, na ordem que decide o plano (produto e oferta, para quem e quantos, meta e data, verba), cada uma com `suggestion` e `if_different` quando você já propôs algo. `waiting` lista o que depende de uma resposta ainda em aberto e fica para a rodada seguinte: o evento de otimização espera o preço, porque é o preço que diz quanto um evento pode custar. Escreva uma mensagem com o que o projeto já mostrou (duas ou três linhas) e as perguntas como frases, nunca um formulário.
+
+- Onde há sugestão (`yes_accepts`), escreva-a na própria pergunta, de modo que "sim" a aceite; um "ok" aceita as sugestões da rodada, e cada uma vira `confirmado`.
+- Um fato da marca que só ele sabe, como preço e margem, vai sem sugestão e pede a resposta dele.
+- Se ele não souber, grave "não sei" como `informado` e siga: o plano usa a faixa de referência, marcada como tal.
+- Se a resposta estiver com outra pessoa, como quem cuida do financeiro ou do site, use a skill `questionario` e siga com o resto.
+
+Com as respostas, grave cada premissa como `informado` ou `confirmado` e rode `premises` de novo até `blocking_pending` ficar vazio.
 
 ## Passo 3: as contas
 

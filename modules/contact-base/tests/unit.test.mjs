@@ -74,8 +74,10 @@ test("the inventory removes duplicates by e-mail and phone, counts invalid e-mai
   assert.equal(inventory.counts.phones_without_area_code, 1);
   assert.equal(inventory.counts.unsubscribed, 2);
   assert.equal(inventory.counts.valid, 14);
-  assert.deepEqual(inventory.groups.clientes, { total: 5, marketable: 5, stale: 2 });
-  assert.deepEqual(inventory.groups["ex-clientes"], { total: 3, marketable: 2, stale: 2 });
+  const counts = ({ total, marketable, stale }) => ({ total, marketable, stale });
+  assert.deepEqual(counts(inventory.groups.clientes), { total: 5, marketable: 5, stale: 2 });
+  assert.deepEqual(counts(inventory.groups["ex-clientes"]), { total: 3, marketable: 2, stale: 2 });
+  assert.match(inventory.groups.clientes.last_contact, /^\d{4}-\d{2}-\d{2}$/);
   assert.equal(inventory.activity.ativos, 5);
   assert.equal(inventory.by_source.site, 9);
   assert.equal(inventory.created_between.first, "2024-12-01");
@@ -119,20 +121,19 @@ test("classify: a paying contact is a customer, a canceled one a former customer
 
 // ---------------------------------------------------------------- legal
 
-test("the legal file starts with every field empty and pending; filled, every group is complete and marketing is allowed", () => {
+test("the legal file starts pending, with only what the inventory knows; filled, every group is complete and marketing is allowed", () => {
   const { inventory } = inventoryOf();
   const template = legalTemplate({ inventory, today: TODAY });
   assert.ok(!/[–—!]/.test(template));
   const empty = parseLegal(template);
   for (const group of GROUPS) {
     assert.equal(empty[group].status, "pendente");
-    assert.equal(empty[group].missing.length, 8);
+    assert.equal(empty[group].missing.length, 6, "the data present and the last contact come from the inventory");
     assert.equal(empty[group].marketing_allowed, false);
   }
   const questions = legalQuestions(empty, "testaram");
   assert.equal(questions.length, 4);
-  assert.equal(questions[0].key, "base_legal");
-  assert.equal(questions[0].suggestion, "legitimo-interesse");
+  assert.equal(questions[0].key, "como_entrou");
   const full = parseLegal(filledLegal(inventory));
   for (const group of GROUPS) {
     assert.equal(full[group].status, "completo", `${group}: ${full[group].missing.join(",")}`);

@@ -40,6 +40,11 @@ export function chatwootAccount({ url, token, accountId, fetchImpl = fetch }) {
   return {
     inboxes: async () => (await call("GET", "inboxes"))?.payload ?? [],
     createInbox: ({ name, channel }) => call("POST", "inboxes", { name, channel }),
+    /** provider_config só vem para administradores, como a conta de serviço. */
+    inbox: (id) => call("GET", `inboxes/${Number(id)}`),
+    updateInbox: (id, fields) => call("PATCH", `inboxes/${Number(id)}`, fields),
+    /** Saúde do número na Meta (só caixa WhatsApp Cloud), consultada na hora. Erro da Meta volta como 422, com error.type. */
+    inboxHealth: (id) => call("GET", `inboxes/${Number(id)}/health`),
     setAgentBot: (inboxId, botId) => call("POST", `inboxes/${Number(inboxId)}/set_agent_bot`, { agent_bot: botId }),
     agentBots: async () => (await call("GET", "agent_bots")) ?? [],
     createAgentBot: ({ name, description, outgoing_url }) => call("POST", "agent_bots", { name, description, outgoing_url, bot_type: "webhook" }),

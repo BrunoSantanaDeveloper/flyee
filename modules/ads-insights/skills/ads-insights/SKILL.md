@@ -1,6 +1,6 @@
 ---
 name: ads-insights
-description: Deixa a medição de tráfego pago pronta antes do primeiro real (contrato do que conta, tags da página, regra de link, planilha de origem sem dado pessoal) e lê os resultados depois pelo export da Meta ou do Google Ads, com o veredito de cada anúncio, a leitura da semana e o pulso diário. Use para conferir o rastreamento, ler uma campanha, decidir o que escalar ou cortar, ou fazer a leitura da semana.
+description: Deixa a medição de tráfego pago pronta antes do primeiro real (contrato do que conta, tags da página, regra de link, planilha de origem sem dado pessoal) e lê os resultados pelo export da Meta ou do Google Ads, com o veredito de cada anúncio, a leitura da semana e o pulso diário. Use para conferir o rastreamento, ler uma campanha, decidir o que escalar ou cortar, ou fazer a leitura da semana.
 ---
 
 # Medição e leitura de resultados
@@ -23,12 +23,12 @@ Os guias desta pasta: `../../references/medicao.md` (o contrato e o árbitro por
 - **Nenhum dado pessoal entra em arquivo nenhum.** A planilha de origem leva um pseudônimo; nome, e-mail e telefone ficam de fora. Uma lista com dados pessoais só é lida de `ads-insights/entrada/`, e você nunca copia uma linha dela para a conversa.
 - **O app prescreve; o integrante executa.** Ninguém aqui mexe na conta de anúncios, no e-mail ou no WhatsApp, nem pede a senha deles. Um movimento vira "aplicado" só quando ele diz que fez, com a data.
 - **Chat curto, documento completo.** Na conversa vão as três linhas de `say` e as decisões; a leitura inteira fica no arquivo, que você indica numa frase. Quando ele pedir, mostre a seção.
-- **Perguntas numa mensagem só**, até quatro, cada uma com a sugestão que o script traz.
+- **Perguntas numa mensagem só**, até quatro, com a sugestão que o script traz escrita na própria pergunta, de modo que "sim" a aceite; um "ok" aceita as sugestões da rodada. Uma resposta que está com outra pessoa, como quem cuida do site ou do CRM, vai pela skill `questionario`.
 
 ## Antes do primeiro real
 
 1. `check --json` diz o que o projeto já tem. Com um plano aprovado em `media-plan/`, o custo permitido, o evento e a regra de link vêm dele.
-2. `contract --json` cria `ads-insights/medicao.json` com o que o plano já responde e devolve `questions`: até quatro, com `suggestion`. Pergunte numa mensagem só, grave cada resposta no arquivo como `informado` (ou `verificado`, quando alguém conferiu) e rode `contract` de novo até `ready`.
+2. `contract --json` cria `ads-insights/medicao.json` com o que o plano já responde e devolve `questions`: até quatro, com `suggestion`. `waiting` lista o que espera outra resposta: o árbitro e a ativação esperam o tipo de negócio e voltam na rodada seguinte, com a sugestão pronta. Pergunte numa mensagem só, grave cada resposta no arquivo como `informado` (ou `verificado`, quando alguém conferiu) e rode `contract` de novo até `ready`.
 3. `tags <url> --json` lê o HTML público da página de destino e diz o que está lá. Diga ao integrante com as palavras de `say`; se a página exigir login, peça o HTML salvo em `ads-insights/entrada/` e rode `tags --html <arquivo>`.
 4. `utm build … --json` monta cada link pela regra única; `utm check <link> --json` confere um link pronto. `utm_content` é o nome do anúncio letra por letra; com `--names anuncios/<campanha>/entrega/nomes.json` o script confere.
 5. `events --json` escreve `ads-insights/rastreamento.md` para este negócio: os eventos, a deduplicação, a conversão do Google, o plano de teste no Gerenciador de Eventos, a restrição da categoria. Percorra o plano de teste com o integrante e marque no contrato o que ficou `verificado`.

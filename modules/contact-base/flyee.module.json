@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "contact-base",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "workflow",
   "trail": "vender",
   "title": {
@@ -15,7 +15,7 @@
   "compatible_ais": [
     "claude_code"
   ],
-  "min_core": ">=1.10.0",
+  "min_core": ">=1.11.0",
   "entry": "skills/contact-base/SKILL.md",
   "files": [
     "NOTICE.txt",
@@ -79,8 +79,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "A régua por WhatsApp (quatro toques pela API oficial, modelos aprovados dois dias antes, repermissão um a um, pendente sem o aceite de WhatsApp), a conferência de entrega do domínio (SPF, DMARC e DKIM no DNS público, os limiares de saúde e os lotes de uma lista parada), o público personalizado para a Meta só em hash com a lista de exclusão dos clientes, a voz do cliente (questionário, roteiro e a leitura declarada que o app de criativos importa) e o atendimento do pico.",
-    "en": "The WhatsApp sequence (four touches through the official API, templates approved two days before, one-to-one re-permission, pending without a WhatsApp opt-in), the domain deliverability check (SPF, DMARC and DKIM from public DNS, the health thresholds and the batches of a dormant list), the Meta custom audience as hashes only with the customers' exclusion list, the customer voice (questionnaire, script and the declared reading the creatives app imports) and the peak support file."
+    "pt-BR": "A base legal pergunta menos: o que é igual para todos os grupos vem uma vez só, numa seção própria do arquivo, e um grupo diferente preenche a própria linha; os dados presentes e o último contato vêm do inventário quando o export traz as colunas; um grupo sem ninguém não pergunta nada; a base legal vem depois de como as pessoas entraram e do que leram, e pede resposta própria. Para aceitar uma sugestão, basta dizer sim, e o que está com outra pessoa vira um questionário para enviar.",
+    "en": "The legal basis asks less: what is the same for every group comes once, in its own section of the file, and a group that differs fills in its own line; the data present and the last contact come from the inventory when the export has those columns; a group with nobody in it asks nothing; the legal basis comes after how people came in and what they read, and needs its own answer. To accept a suggestion you just say yes, and what another person knows becomes a questionnaire to send."
   },
   "license": "member"
 }

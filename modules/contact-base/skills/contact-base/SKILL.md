@@ -34,7 +34,14 @@ Os guias desta pasta: `../../references/base-legal.md` (o método da base legal 
 
 ## Passo 2: a base legal
 
-`legal --json` cria `contatos/base-legal.md` com uma seção por grupo e os oito campos (como entrou, texto aceito, dados presentes, último contato e descadastros, onde está guardada, base legal, teto de contatos, retenção), e devolve `questions`: até quatro, com `suggestion`. Pergunte numa mensagem só, grave as respostas nas linhas do arquivo e rode `legal` de novo até cada grupo ficar `completo`. O método está em `../../references/base-legal.md`.
+`legal --json` cria `contatos/base-legal.md` com os oito campos (como entrou, texto aceito, dados presentes, último contato e descadastros, onde está guardada, base legal, teto de contatos, retenção). O script escreve o que o inventário já sabe e devolve a rodada em `questions`: até quatro, cada uma uma vez só para todos os grupos que a têm em aberto, e só para os grupos que têm alguém. `waiting` lista o que espera outra resposta: a base legal vem depois de como as pessoas entraram e do que leram.
+
+- Pergunte numa mensagem só. Onde há `suggestion` e `yes_accepts`, escreva a sugestão na pergunta, de modo que "sim" a aceite; um "ok" aceita as sugestões da rodada.
+- Grave cada resposta onde `write_to` indica: a seção "Todos os grupos" vale para os quatro. Se ele disser que um grupo é diferente, preencha a linha desse grupo, que manda sobre a seção.
+- A base legal traz `own_answer`: é uma decisão de direitos. Mostre a sugestão de cada grupo e espere a resposta a essa pergunta; um "ok" solto para a rodada não vale para ela.
+- Se a resposta estiver com outra pessoa, como quem cuida do jurídico, use a skill `questionario` e siga com o resto.
+
+Rode `legal` de novo até cada grupo com alguém ficar `completo`. O método está em `../../references/base-legal.md`.
 
 ## Passo 3: os segmentos
 
@@ -49,7 +56,7 @@ Os guias desta pasta: `../../references/base-legal.md` (o método da base legal 
 
 ## Passo 5: a entrega
 
-Antes do primeiro envio em volume, `deliverability <domínio> --dkim <seletor> --json` consulta o DNS público do domínio de envio (o que vem depois do @ do remetente): SPF, DMARC e DKIM, cada um com o estado (`ok`, `missing`, `attention`, `unknown`) e o que fazer. O seletor DKIM está na tela de autenticação da ferramenta de e-mail do integrante; sem ele, o DKIM fica `unknown`. `missing` bloqueia o envio em volume: diga ao integrante o que criar no DNS com as palavras de cada `fix`. O que depende de uma mensagem real (o descadastro em um clique, o rodapé) e dos relatórios (reclamação, rejeição, descadastro por envio) fica `unknown` até ele trazer; nunca marque como ok o que o app não viu. O plano de lotes de uma lista parada está em `contatos/envio.md`.
+Antes do primeiro envio em volume, `deliverability <domínio> --dkim <seletor> --json` consulta o DNS público do domínio de envio (o que vem depois do @ do remetente): SPF, DMARC e DKIM, cada um com o estado (`ok`, `missing`, `attention`, `unknown`) e o que fazer. O seletor DKIM está na tela de autenticação da ferramenta de e-mail do integrante; sem ele, o DKIM fica `unknown`. `missing` bloqueia o envio em volume: diga ao integrante o que criar no DNS com as palavras de cada `fix`; se outra pessoa cuida do DNS, a skill `questionario` escreve o pedido para ele enviar. O que depende de uma mensagem real (o descadastro em um clique, o rodapé) e dos relatórios (reclamação, rejeição, descadastro por envio) fica `unknown` até ele trazer; nunca marque como ok o que o app não viu. O plano de lotes de uma lista parada está em `contatos/envio.md`.
 
 ## Passo 6: o público para a Meta
 

@@ -115,8 +115,8 @@ test("legal creates the file, asks at most four questions with suggestions, and 
   assert.equal(first.json.created, true);
   assert.equal(first.json.pending.length, 4);
   assert.ok(first.json.questions.length <= 4);
-  assert.equal(first.json.questions[0].key, "base_legal");
-  assert.equal(first.json.questions[0].suggestion, "legitimo-interesse");
+  assert.equal(first.json.questions[0].key, "como_entrou");
+  assert.deepEqual(first.json.waiting, [{ key: "base_legal", after: ["como_entrou", "texto_aceito"] }]);
   assert.equal(first.json.next_step.action, "ask");
   assert.ok(existsSync(join(root, "contatos", "base-legal.md")));
   const one = await run(root, ["legal", "--group", "clientes", TODAY]);

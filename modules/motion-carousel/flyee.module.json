@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "motion-carousel",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "type": "skill",
   "trail": "divulgar",
   "title": {
@@ -165,11 +165,19 @@
         "pt-BR": "Lê a chave do Gemini de uma variável de ambiente, se você preferir defini-la assim (ela tem prioridade), e onde o Codex guarda as imagens dele. A chave nunca é pedida no chat, gravada ou mostrada.",
         "en": "Reads the Gemini key from an environment variable, if you prefer to set it that way (it takes precedence), and where Codex keeps its images. The key is never asked for in the chat, written or shown."
       }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "media-plan/marca.md, roteiros/canal.md e estudio-de-video/marcas/, quando existem",
+      "reason": {
+        "pt-BR": "Lê o que os outros apps do flyee já sabem da sua marca, para não perguntar de novo o público, o tom e a marca.",
+        "en": "Reads what the other flyee apps already know about your brand, so it does not ask again about the audience, the tone and the brand."
+      }
     }
   ],
   "changelog": {
-    "pt-BR": "Um ffmpeg travado ao tratar uma imagem não deixa mais a sua IA esperando sem fim: passado um tempo limite folgado, ele é encerrado e a sua IA recebe o erro com o que fazer.",
-    "en": "A stuck ffmpeg while treating an image no longer leaves your AI waiting forever: past a generous time limit it is stopped, and your AI gets the error with what to do next."
+    "pt-BR": "A IA lê o que os outros apps já sabem da marca antes de perguntar, escreve a sua sugestão em cada pergunta, e um sim aceita.",
+    "en": "The AI reads what the other apps already know about the brand before asking, writes its suggestion inside each question, and a yes accepts it."
   },
   "license": "member"
 }

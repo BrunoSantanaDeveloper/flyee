@@ -46,3 +46,28 @@ Como o kit liga as peças, nesta ordem, porque o segredo só nasce no Chatwoot (
 Depois a tela pergunta o estado da sessão a cada 3 segundos e mostra o QR até o número conectar. Grupos ficam fora (`relayGroups` desligado): o atendimento é de pessoa para empresa.
 
 Quando o adaptador vê um atendente assumir a conversa no Chatwoot, ele cala os outros robôs do próprio OpenWA naquela conversa. O robô do kit não é um robô do OpenWA: ele para porque a conversa sai de pendente.
+
+## Quando o número para
+
+Por dentro, um número que caiu não mostra erro: o painel só fica vazio, como num dia sem clientes. A conferência do número (`base/server/health.mjs`) olha o número atual, a última caixa conectada:
+
+| Rota | O que ela lê | O que ela acha |
+|---|---|---|
+| Não oficial | a sessão no OpenWA, a ponte `chatwoot-adapter` e a caixa no painel | número fora do aparelho conectado (espera um QR), sessão parada ou com falha, restrição do WhatsApp, ponte desligada, OpenWA ou painel fora do ar |
+| Oficial | a saúde que o Chatwoot consulta na Meta (chatwoot.md) | token recusado, estado do número (`BANNED`, `DISCONNECTED`, `RESTRICTED`, `FLAGGED`), qualidade amarela ou vermelha, URL de retorno ausente ou em outro endereço, painel fora do ar |
+
+Cada achado traz o nível (`fora`: mensagens não chegam ou não saem; `atencao`: funciona, mas pede um olhar), o que se viu, a correção e quem corrige (`quem_conecta` ou `tecnico`).
+
+Como isso chega às pessoas:
+
+- **A rotina `checkWhatsapp(tenantId)`**, que o projeto roda a cada 15 minutos para cada cliente com atendimento, avisa por `alertWhatsapp` no canal que o projeto já tem. Avisa quando o número para, pede atenção ou volta, e lembra uma vez por dia enquanto estiver fora. O que costuma passar sozinho (o OpenWA tentando de novo, a sessão iniciando, a Meta sem responder) só vira aviso se continuar na conferência seguinte.
+- **A tela Conectar WhatsApp** mostra o que a conferência viu e o caminho de volta.
+- **`kit.mjs verify`** confere cada sessão do OpenWA. O número da rota oficial fica de fora, porque a saúde dele pede o token da conta de serviço, que mora no estado do projeto.
+
+Os caminhos de volta retomam a mesma caixa, e as conversas continuam nela:
+
+- **Não oficial: "Ler o QR de novo"** (`reconnectOpenWA`). Retoma a sessão que a caixa já tem. Com o motor do OpenWA carregado, ele já está tentando ou já mostra o QR, e o kit só acompanha.
+- **Oficial: "Trocar o token da Meta"** (`updateCloudApi`). O formulário com o mesmo número troca o token da caixa, porque o Chatwoot aceita cada número uma vez só. O token de verificação do retorno continua o mesmo.
+- **"Conectar outro número"** cria uma caixa nova, e a conferência passa a olhar para ela.
+
+O que a conferência não vê: uma mensagem que se perde no caminho com tudo dizendo que está bem. Só uma mensagem mandada de fora prova a entrega; depois de implantar e depois de cada atualização, peça a alguém para mandar uma mensagem de outro celular.

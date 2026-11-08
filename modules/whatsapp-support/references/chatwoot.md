@@ -47,6 +47,13 @@ O token do Platform App não acessa a API das contas. Por isso o kit cria em cad
 - Passar para a equipe: `POST .../conversations/:id/toggle_status` com `status: open`, feito pelo robô numa conversa pendente (`bot_handoff!`).
 - O Chatwoot espera 5 segundos pela resposta do aviso (`WEBHOOK_TIMEOUT`). Se o aviso falha numa conversa pendente, ele abre a conversa e registra a falha.
 
+## Caixa WhatsApp Cloud
+
+- `GET /api/v1/accounts/:id/inboxes/:inbox_id/health` consulta a Meta na hora (`Whatsapp::HealthService`) e devolve `status`, `quality_rating`, `webhook_configuration`, `expected_webhook_url` e outros campos. Um erro da Meta responde 422 com `error.type`: `authorization` é o código 190, token vencido ou revogado. O próprio Chatwoot repete essa consulta a cada 6 horas (`Channels::Whatsapp::HealthSyncSchedulerJob`), grava na caixa e registra em log, sem avisar ninguém: quem avisa é a conferência do kit (whatsapp.md).
+- A URL de retorno que vale é a do número, depois a da conta do WhatsApp Business, depois a do app (`AccountHealth.vue`). Uma URL pode servir a vários números do mesmo app da Meta: o Chatwoot acha o número pelo conteúdo do aviso (`Webhooks::WhatsappEventsJob`).
+- `PATCH /api/v1/accounts/:id/inboxes/:inbox_id` com `channel.provider_config` grava o objeto inteiro e confere os dados com a Meta antes. Sem o `webhook_verify_token` no objeto, o Chatwoot gera outro (`ensure_webhook_verify_token`). `provider_config` só vem no `GET` para administradores.
+- O número é único entre as caixas (`validates :phone_number, uniqueness`): criar outra caixa com o mesmo número responde 422.
+
 ## Funções da conta
 
 As funções (`config/features.yml`) se ligam e desligam por conta na API de plataforma. O menu lateral e a busca de comandos escondem a área de cada função desligada. Lista do que desligar e do que nunca desligar em enxugar.md. Toda chamada por token exige `api_and_webhooks` ligado (`validate_token_api_access`).

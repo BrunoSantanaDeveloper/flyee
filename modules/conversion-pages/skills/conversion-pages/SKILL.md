@@ -1,6 +1,6 @@
 ---
 name: conversion-pages
-description: Monta e confere páginas que vendem pelo tipo (página de vendas, planos e preços, API, order bump, upsell, downsell, cross-sell e obrigado), com a estratégia de mercado de cada uma e modelos reais analisados. Use quando pedirem uma dessas páginas ou a revisão de uma delas. A continuidade entre um anúncio e a página fica com o ad-landing-page.
+description: Monta e confere páginas que vendem pelo tipo (landing page, planos e preços, API, order bump, upsell, downsell, cross-sell e obrigado), com a estratégia de mercado e modelos reais analisados (Juridiq, JuriChat, Hostinger). Use quando pedirem uma dessas páginas, uma página no estilo de um desses modelos ou a revisão de uma delas. A continuidade entre anúncio e página é do ad-landing-page.
 ---
 
 # Páginas que vendem
@@ -22,6 +22,7 @@ Só o JSON vai para o stdout. Em erro, `ok` vem `false` e `error` traz `code`, `
 5. Você não inventa fato do negócio, como preço, garantia, prazo, duração do teste ou provedor de pagamento: procura no projeto ou pergunta.
 6. Nenhuma taxa de mercado sem fonte. A taxa de aceite do integrante vem da medição dele.
 7. Promoção e teste grátis com as regras escritas: até quando, para quem, a que se aplica, quantos dias. Uma janela de promoção nunca cobre a página na chegada.
+8. Os modelos já trazem a análise de cada página, inclusive o visual descrito em palavras: use os arquivos do app e não abra o site original para construir. Ele pode ter mudado desde a análise, e a página do integrante segue a marca dele. Do modelo, leve a estrutura, a mecânica e o efeito visual. Nunca copie texto, imagem, logo, cores ou código de outra empresa, ainda mais de uma concorrente do integrante. Se ele pedir para ver o site como está hoje, abra só para ler.
 
 ## Passo 0: o tipo de página
 
@@ -37,6 +38,8 @@ Rode `check` uma vez por sessão e depois `types`. Reconheça o tipo pelo pedido
 | oferta para quem recusou, última chance | `downsell` |
 | produtos relacionados, combina com, quem comprou também levou | `cross-sell` |
 | página de obrigado, pedido concluído | `obrigado` |
+
+Um pedido "no estilo de" um modelo, como "a landing page no estilo do Juridiq", é um pedido do tipo desse modelo, com ele como referência principal: a estrutura, a mecânica e o efeito visual, traduzidos para a marca do projeto.
 
 Quando a página de vendas é o destino de uma campanha paga, construa-a como `landing`. A skill `ad-landing-page`, do app de criativos para anúncios, escreve o briefing a partir da campanha e confere a continuidade entre o anúncio e a página: use-a antes e depois, quando estiver instalada. Sem ela, avise que essa conferência ficou de fora.
 

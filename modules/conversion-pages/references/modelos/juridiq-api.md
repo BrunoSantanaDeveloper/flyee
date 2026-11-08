@@ -43,6 +43,16 @@ Escritórios que querem ligar o sistema a outros programas, ou colocar um agente
 
 Quase nada se mexe: um cursor pisca no terminal, e o console e a conversa do agente ficam parados. A janela da promoção abre com a rolagem, como na página inicial.
 
+## O visual, em palavras
+
+- **O fundo é escuro,** com um brilho azul discreto, e o menu e a faixa são os da página de vendas.
+- **Em cima, dois selos em letra de máquina de escrever, com letras espaçadas:** a versão da API à esquerda e o estado "Operacional" à direita, com um ponto verde.
+- **O título,** grande, pesado e alinhado à esquerda: as duas primeiras linhas brancas e a última em azul.
+- **Os botões:** o principal azul, com ícone de livro e seta de link externo; o secundário com contorno branco. Ao lado, a linha técnica em letra de código, cinza.
+- **O console,** numa janela escura com os três pontos de janela: a lista de rotas à esquerda, com o método colorido, e o JSON à direita, com cores de sintaxe.
+
+Na página do integrante, troque cores e letra pelas da marca dele; o que vale levar é a cara de ferramenta, com código de verdade no topo.
+
 ## O que não repetir
 
 - **Os limites de uso não estão em número.** A página diz "rate limit pronto para produção", sem quantas requisições por minuto ou por mês.

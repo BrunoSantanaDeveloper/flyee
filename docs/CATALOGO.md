@@ -119,7 +119,7 @@ Monta e confere páginas que vendem pelo tipo, com a estratégia que o mercado u
 
 **Skills**
 
-- `conversion-pages`: Monta e confere páginas que vendem pelo tipo (página de vendas, planos e preços, API, order bump, upsell, downsell, cross-sell e obrigado), com a estratégia de mercado de cada uma e modelos reais analisados. Use quando pedirem uma dessas páginas ou a revisão de uma delas. A continuidade entre um anúncio e a página fica com o ad-landing-page.
+- `conversion-pages`: Monta e confere páginas que vendem pelo tipo (landing page, planos e preços, API, order bump, upsell, downsell, cross-sell e obrigado), com a estratégia de mercado e modelos reais analisados (Juridiq, JuriChat, Hostinger). Use quando pedirem uma dessas páginas, uma página no estilo de um desses modelos ou a revisão de uma delas. A continuidade entre anúncio e página é do ad-landing-page.
 
 **Usa** `video-render` · **Usado por** —
 

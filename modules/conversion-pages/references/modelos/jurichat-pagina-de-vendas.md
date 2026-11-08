@@ -62,6 +62,23 @@ Escritórios de advocacia que atendem clientes pelo WhatsApp, pelo Instagram e p
 - Os logos correm em faixa contínua.
 - Com o pedido de menos movimento, o letreiro para e o ponto e o cursor continuam.
 
+## O visual, em palavras
+
+- **O topo é claro,** num degradê azul bem leve, ao contrário do Juridiq.
+- **Acima do título,** uma pílula escura com a promoção.
+- **O título** tem a primeira parte em azul, sublinhada por uma barra azul, e o resto em preto.
+- **No celular,** os dois botões ocupam a largura toda: o principal azul, com seta, e o secundário branco, com borda.
+- **As condições** vêm com marcas de verificação azuis, ao lado do selo de parceiro da Meta.
+- **A tela do produto** fica numa moldura de navegador, com os três pontos e o endereço do app.
+- **O menu** é escuro e, no computador, vira uma barra flutuante de cantos arredondados.
+- **A história:**
+  - fundo cinza bem claro;
+  - passos com números grandes e finos, ligados por uma linha azul;
+  - a conversa no visual do WhatsApp: fundo bege, balões verdes do agente e brancos da cliente.
+- **A letra** é a mesma família do Juridiq.
+
+Na página do integrante, troque cores, letra e imagens pelas da marca dele; o que vale levar é o topo leve com o título destacado e a conversa que conta a história.
+
 ## O que não repetir
 
 - **O título usa um verbo genérico,** "revolucione", em vez do resultado que a frase de baixo já diz.

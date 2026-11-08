@@ -64,6 +64,21 @@ As quatro páginas da família (a inicial, os planos, a API e o produto irmão) 
 - **O fundo do topo:** um degradê que se move num ciclo de 8 s.
 - **As entradas:** a maior parte do conteúdo já está visível; as poucas entradas duram 0,5 s.
 
+## O visual, em palavras
+
+- **O topo, em fundo quase preto,** como a faixa da promoção e o menu.
+- **O título,** grande, pesado e centralizado: a primeira frase em branco e a segunda num degradê de azul para ciano.
+- **Um selo em forma de pílula,** com borda fina e um ícone, acima do título.
+- **Os botões:** o principal azul cheio, com ícone de calendário; o secundário também azul, com uma seta.
+- **As linhas pequenas em cinza:** as condições e os números. Os logos de quem confia, também em cinza, ficam sob um rótulo em maiúsculas espaçadas.
+- **A tela real do produto** logo abaixo, numa moldura grande de cantos arredondados, com um cartão flutuante da assistente.
+- **O menu ao rolar** vira uma barra escura flutuante, de cantos arredondados e afastada das bordas.
+- **O resto da página** alterna seções brancas, com cartões de borda fina e cantos arredondados, e seções escuras. A da prova é escura, com estrelas amarelas nos depoimentos.
+- **Um botão redondo de WhatsApp,** verde, fixo no canto.
+- **A letra:** uma família só, sem serifa e geométrica (Geist), em vários pesos.
+
+Na página do integrante, troque cores, letra e imagens pelas da marca dele. O que vale levar é o efeito: um topo escuro de alto contraste, uma parte do título destacada em cor e a tela real do produto logo abaixo.
+
 ## O que não repetir
 
 - **Os números começam em zero.** Antes da animação, a página mostra "0+" escritórios e "0h" economizadas. É isso que o buscador e o leitor de tela leem, e a contagem roda até para quem pediu menos movimento.

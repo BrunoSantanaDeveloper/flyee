@@ -56,6 +56,21 @@ Todas as contas fecham:
 
 Quase nada se mexe: o seletor troca os preços na hora, a tabela é parada e a janela da promoção abre com a rolagem, como na página inicial.
 
+## O visual, em palavras
+
+- **A página é branca,** com o menu e a faixa escuros da página de vendas. O título fica grande e centralizado, com a linha de condições em cinza.
+- **A promoção,** num bloco escuro com o letreiro correndo na base.
+- **O seletor,** em forma de pílula: a opção marcada fica escura, com o selo do desconto em azul.
+- **Os quatro cartões** são brancos, de borda fina e cantos arredondados. O recomendado tem fundo escuro, contorno azul e o selo "Recomendado" azul sobre a borda.
+- **Dentro do cartão:**
+  - o preço riscado pequeno, em cinza;
+  - a média mensal grande e pesada;
+  - as outras contas pequenas;
+  - a linha do PIX em azul;
+  - a promoção numa pílula escura (azul no recomendado).
+
+Na página do integrante, troque cores e letra pelas da marca dele; o que vale levar é a hierarquia dos preços e o destaque do plano.
+
 ## O que não repetir
 
 - **A página não tem um título principal marcado (h1).** O título visível não é um título para o buscador nem para o leitor de tela.

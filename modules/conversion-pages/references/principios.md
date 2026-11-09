@@ -26,9 +26,9 @@ Depoimento, número ou demonstração precisam ser sobre o produto da oferta. Um
 
 ## 5. Mostrar o produto funcionando
 
-Uma demonstração curta do produto em uso vale mais do que a lista de recursos. Ela mostra o pedido, o resultado e a prova, em vídeo sem som ou animada na própria página, em loop, com a capa no idioma da página (veja `movimento.md`).
+Uma figura que se entende sem ler vale mais do que a lista de recursos. Cada seção mostra um objeto que quem chegou reconhece em três segundos: o telefone com a conversa, o calendário com os dias marcados, a janela grande do sistema. Uma demonstração animada mostra o pedido, o resultado e a prova, sem som, em loop, com a capa no idioma da página (veja `movimento.md`).
 
-Sempre que possível, ela usa o produto de verdade: os componentes reais do projeto com dados fixos, depois a tela real, e uma réplica simplificada só quando não há código nem tela. Mostra só o que o produto faz hoje, e o que for inventado para a cena leva a etiqueta "Exemplo fictício". O guia está em `demonstracao.md`.
+A figura é desenhada para quem nunca viu o produto, com as cores, a letra e as palavras dele. A tela real entra quando se entende no tamanho da página. Tudo o que a figura mostra existe no produto hoje, e o que for inventado para ela leva a etiqueta "Exemplo fictício". O guia está em `demonstracao.md`.
 
 ## 6. O celular vem primeiro
 
@@ -76,10 +76,37 @@ Número de uso, escassez, ano de fundação, nome de cliente e depoimento vêm d
 
 ## 15. A página tem a cara deste produto
 
-O plano traz a direção visual em uma frase, que diga o que torna a página deste produto, e as cores e as letras da marca. Os padrões que a IA repete sem ninguém pedir estão em `vicios.md`: o que ficar deles é escolha registrada.
+O plano traz a direção visual em uma frase, que diga o que torna a página deste produto, e as cores e as letras da marca. Quando o integrante escolheu um modelo, o efeito visual dele faz parte da direção. Os padrões que a IA repete sem ninguém pedir estão em `vicios.md`: a lista evita acrescentar por reflexo, e nunca tira o que o integrante escolheu.
 
-Página sem esses vícios fica menos genérica, e só isso. Nenhum dos materiais usados aqui mede venda: quem diz se a página vende é a medição do próprio projeto.
+Nenhum dos materiais usados aqui mede venda: quem diz se a página vende é a medição do próprio projeto.
 
 ## 16. Olhar a página pronta
 
-Quem constrói sem ver entrega defeitos que só aparecem na tela: um texto cortado, uma lista por cima de uma imagem, uma barra que cobre o botão. Antes de entregar, abra as fotos e as folhas de quadros que a conferência grava, no computador e no celular.
+Quem constrói sem ver entrega defeitos que só aparecem na tela: um texto cortado, uma lista por cima de uma imagem, uma figura que não se entende. Uma conferência toda em ok só diz que as regras passaram. Antes de entregar, abra as fotos que ela grava, a página sem letras primeiro, e responda às perguntas de "Conferir olhando" em `demonstracao.md`.
+
+Numa página que já existe, fotografe antes de mexer, e compare depois. Uma revisão que deixa a página com menos figura do que tinha piorou a página.
+
+## 17. O título vende, e se diz em voz alta
+
+O título é o que a pessoa leva da página. Ele promete o que muda na vida dela, em palavras que ela usaria. Um nome de categoria não é título: "Automação com IA no contencioso de massa" diz em que prateleira o produto está, e ninguém fala assim.
+
+Antes de escolher, escreva pelo menos cinco, de formas diferentes, e guarde em `headline.options`. Para um sistema de agenda de clínicas, por exemplo:
+
+| A forma | Um exemplo |
+|---|---|
+| O que a pessoa passa a ter | "Sua agenda cheia, sem ninguém no telefone" |
+| O que acaba | "Chega de paciente que marca e não aparece" |
+| A frase que o cliente dela repete | "Doutora, ainda tem horário amanhã?" |
+| O que o produto faz enquanto ela está em outro lugar | "Enquanto você atende, a agenda se preenche sozinha" |
+| O resultado para quem compra | "Menos cadeira vazia no fim do mês" |
+
+Os testes, um por um:
+
+1. **Em voz alta.** Diga a frase a alguém do ramo, numa conversa. Ela soa como conversa, ou como anúncio de folheto?
+2. **Trocando o nome.** Com o nome de um concorrente no lugar, ela continua verdadeira? Então não diz nada deste produto.
+3. **A palavra de dentro.** Há uma palavra que só quem faz o produto usa? Quem chega entende?
+4. **A imagem.** Dá para ver a cena na cabeça? "Prazo perdido" dá; "gestão integrada" não dá.
+
+Exagere o interesse, nunca o fato. O título pode provocar, cutucar uma dor e prometer forte tudo o que o produto entrega de verdade. "Nada inventado" (seção 14) cuida do fato e não pede um título sem graça. Os títulos das seções seguem a mesma regra: o resultado, em até 8 palavras.
+
+A escolha é do integrante: leve a sugerida e duas alternativas, de modo que um "sim" aceite a sugerida. Numa página que já existe, um título que não passa nos testes é apontado mesmo quando ninguém pediu para mexer nele.

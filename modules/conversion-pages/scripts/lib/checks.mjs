@@ -81,6 +81,18 @@ const SECTION_NUMBER = /^[ \t]*0\d{1,2}[ \t]*(?:[/·.:][ \t]*)?\p{L}/mu;
 const SCROLL_CUE = /^[ \t]*(?:role(?: para (?:baixo|ver|continuar))?|deslize(?: para (?:baixo|ver))?|scroll(?: down| to explore)?)[ \t]*$/imu;
 const MONO_SHARE = 0.25;
 const NO_MEASURE = "A captura não trouxe esta medição: atualize o Motor de vídeo e rode audit de novo.";
+/** A title that opens with the shelf the product sits on, and never speaks to whoever arrived. Runs on folded text. */
+const CATEGORY_TITLE = /^(?:(?:a|o|uma|um) )?(?:melhor )?(?:automacao|automacoes|gestao|plataforma|sistema|software|solucao|solucoes|ferramenta|ferramentas|tecnologia|inteligencia|servico|servicos|consultoria|assessoria|aplicativo)(?![a-z])/;
+const READER_WORD = /(?<![a-z])(?:voce|voces|seu|sua|seus|suas)(?![a-z])/;
+// Measured on the Juridiq and JuriChat pages and on a page people found hard to read (2026-11-08): among
+// cards that are neither a quote, a question nor a plan, the models stop at 25 and 31 words to read, and at
+// no hole in a tall card; the hard page reached 55 and 40 words, and holes of 46% and 31%.
+const CARD_READ_WORDS = 32;
+const CARD_HOLE = 0.3;
+const CARD_TALL_PX = 200;
+const CARD_HAS_PICTURE = 0.3;
+const FIGURE_SENTENCE_WORDS = 15;
+const FIGURE_READ_WORDS = 30;
 const GENERIC_FONT = /^(?:system-ui|ui-sans-serif|ui-serif|ui-monospace|sans-serif|serif|monospace|arial|helvetica|times new roman|-apple-system|blinkmacsystemfont|segoe ui|roboto)$/i;
 
 const kb = (bytes) => `${Math.round((bytes ?? 0) / 1024)} KB`;
@@ -407,6 +419,49 @@ const RULES = {
     const h1 = (anatomy.sections ?? []).find((s) => s.heading?.tag === "h1");
     if (h1) return ["ok", `O título principal está marcado: "${clip(h1.heading.text, 70)}".`];
     return ["atencao", "A página não tem um título principal marcado como h1."];
+  },
+
+  title_promises({ anatomy }) {
+    const h1 = (anatomy.sections ?? []).find((s) => s.heading?.tag === "h1");
+    if (!h1) return ["nao_conferido", "A página não tem um título principal marcado para ler."];
+    const title = fold(h1.heading.text);
+    if (CATEGORY_TITLE.test(title) && !READER_WORD.test(title)) return ["atencao", `"${clip(h1.heading.text, 90)}" abre com o nome da categoria e não fala com quem chegou.`];
+    return ["ok", "O título não abre com o nome da categoria. Leia em voz alta: só um ouvido diz se alguém falaria assim."];
+  },
+
+  figures_seen({ anatomy, facts }) {
+    const figures = anatomy.quality?.desktop?.figures;
+    if (!Array.isArray(figures)) return ["nao_conferido", NO_MEASURE];
+    const planned = (Array.isArray(facts?.figures) ? facts.figures : []).map((figure) => figure?.name).filter(Boolean);
+    if (!planned.length && !figures.length) return ["nao_conferido", "Registre em pagina.json (figures) o objeto que cada seção mostra, e marque cada figura com data-figura."];
+    const problems = [];
+    const marked = new Set(figures.map((figure) => figure.name));
+    const absent = planned.filter((name) => !marked.has(name));
+    if (absent.length) problems.push(`o plano traz ${quoted(absent.slice(0, 4))}, e a página não marca ${absent.length === 1 ? "essa figura" : "essas figuras"} com data-figura`);
+    const reading = figures.filter((figure) => figure.longest > FIGURE_SENTENCE_WORDS || figure.read_words > FIGURE_READ_WORDS).sort((a, b) => b.read_words - a.read_words);
+    if (reading.length) problems.push(`a figura "${clip(reading[0].name ?? "sem nome", 30)}" pede a leitura de ${reading[0].read_words} palavras, com uma frase de ${reading[0].longest}${reading.length > 1 ? `, e mais ${reading.length - 1} também pede${reading.length > 2 ? "m" : ""} leitura` : ""}`);
+    if (problems.length) return ["atencao", `${problems.join("; ")}.`];
+    return ["ok", "Nenhuma figura pede leitura longa. Abra a página sem letras: só o olho diz se cada uma ainda é um objeto."];
+  },
+
+  cards_short({ anatomy }) {
+    const cards = anatomy.quality?.desktop?.cards;
+    if (!Array.isArray(cards)) return ["nao_conferido", NO_MEASURE];
+    const plain = cards.filter((card) => card.kind === "card");
+    if (!plain.length) return null;
+    const long = plain.filter((card) => card.read_words > CARD_READ_WORDS && (card.picture_share ?? 0) < CARD_HAS_PICTURE).sort((a, b) => b.read_words - a.read_words);
+    if (!long.length) return ["ok", `Os ${plain.length} cartões pedem até ${CARD_READ_WORDS} palavras de leitura.`];
+    return ["atencao", `O cartão "${clip(long[0].text, 50)}" pede a leitura de ${long[0].read_words} palavras${long.length > 1 ? `, e mais ${long.length - 1} passa${long.length > 2 ? "m" : ""} de ${CARD_READ_WORDS}` : ""}.`];
+  },
+
+  cards_no_holes({ anatomy }) {
+    const cards = anatomy.quality?.desktop?.cards;
+    if (!Array.isArray(cards)) return ["nao_conferido", NO_MEASURE];
+    const plain = cards.filter((card) => card.kind === "card");
+    if (!plain.length) return null;
+    const holes = plain.filter((card) => card.height >= CARD_TALL_PX && card.hole >= CARD_HOLE && (card.picture_share ?? 0) < CARD_HAS_PICTURE).sort((a, b) => b.hole - a.hole);
+    if (!holes.length) return ["ok", "Nenhum cartão alto tem um buraco no meio."];
+    return ["atencao", `O cartão "${clip(holes[0].text, 50)}" tem ${percent(holes[0].hole)} da altura vazia${holes.length > 1 ? `, e mais ${holes.length - 1} também tem um buraco` : ""}.`];
   },
 
   numbers_not_zero({ text }) {

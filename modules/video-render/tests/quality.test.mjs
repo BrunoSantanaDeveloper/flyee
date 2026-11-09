@@ -19,6 +19,7 @@ import { findBrowser } from "../scripts/lib/tools.mjs";
 const SCRIPT = fileURLToPath(new URL("../scripts/render.mjs", import.meta.url));
 const QUALITY_PAGE = fileURLToPath(new URL("./fixtures/qualidade/index.html", import.meta.url));
 const FILM_PAGE = fileURLToPath(new URL("./fixtures/filme/index.html", import.meta.url));
+const CARDS_PAGE = fileURLToPath(new URL("./fixtures/cartoes/index.html", import.meta.url));
 const OUT_ROOT = process.env.FLYEE_TEST_OUT ? resolve(process.env.FLYEE_TEST_OUT) : join(tmpdir(), "flyee-video-render-tests", "quality");
 const browser = findBrowser();
 const noBrowser = browser ? false : "no browser (Edge, Chrome or Chromium) on this machine";
@@ -135,6 +136,9 @@ test("a measurement that did not run stays null, never a clean page", () => {
   assert.equal(partial.mobile.small_text.share, 0.4);
   assert.equal(partial.mobile.overflow, null);
   assert.deepEqual(partial.mobile.errors, ["x"]);
+  const desktop = buildQuality({ desktop: { errors: [], cards: [{ text: "a" }] } }).desktop;
+  assert.deepEqual(desktop.cards, [{ text: "a" }]);
+  assert.equal(desktop.figures, null);
 });
 
 test("filmStats counts the changes, the longest still and the return to the first frame", () => {
@@ -230,6 +234,82 @@ test("captureSite measures a page with defects on purpose", { skip: noBrowser },
   assert.match(found.equal_cards[0], /O que dá para fazer/);
   assert.equal(counts.status_dots, 1);
   assert.equal(desktop.defaults.mono_share, 0);
+});
+
+test("captureSite reads the cards and the figures, and photographs the page with no letters", { skip: noBrowser }, async () => {
+  const out = fresh("cartoes");
+  const capture = await captureSite({ url: CARDS_PAGE, outDir: out, scrollSeconds: 0, assets: false, noLetters: true });
+  const { cards, figures, contrast, defaults } = capture.anatomy.quality.desktop;
+  const card = (text) => cards.find((entry) => entry.text.startsWith(text));
+
+  // A long card asks to be read; each kind that is meant to be read says so; text for screen readers does not count.
+  assert.equal(card("Um cartão longo").kind, "card");
+  assert.ok(card("Um cartão longo").read_words >= 40, `read_words ${card("Um cartão longo").read_words}`);
+  assert.equal(card("Um depoimento").kind, "quote");
+  assert.equal(card("Plano Essencial").kind, "priced");
+  assert.equal(card("Um cartão curto").read_words, 0);
+  assert.ok(card("Um cartão curto").words <= 10, `words ${card("Um cartão curto").words}`);
+
+  // The hole between the text at the top and the icon at the bottom
+  assert.ok(card("Um cartão com buraco").hole >= 0.5, `hole ${card("Um cartão com buraco").hole}`);
+  assert.ok(card("Um cartão curto").hole < 0.3, `hole ${card("Um cartão curto").hole}`);
+
+  // A figure with a sentence and a figure made of short labels and a picture
+  const figure = (name) => figures.find((entry) => entry.name === name);
+  assert.equal(figures.length, 3);
+  assert.equal(figure("conversa").mark, "figura");
+  assert.ok(figure("conversa").longest >= 20, `longest ${figure("conversa").longest}`);
+  assert.equal(figure("calendario").read_words, 0);
+  assert.ok(figure("calendario").picture_share >= 0.3, `share ${figure("calendario").picture_share}`);
+  assert.equal(figure("topo").mark, "demo");
+
+  // The sheets are there, and the readings after them saw the page as it was.
+  assert.equal(capture.files.no_letters_desktop, "sem-letras.jpg");
+  assert.equal(capture.files.no_letters_mobile, "sem-letras-celular.jpg");
+  assert.ok(existsSync(join(out, "sem-letras.jpg")));
+  assert.ok(existsSync(join(out, "sem-letras-celular.jpg")));
+  assert.equal(defaults.counts.gradient_text, 1);
+  assert.ok((contrast.unknown.degrade ?? 0) >= 1, JSON.stringify(contrast.unknown));
+
+  // Where the black text was, the sheet is white; the same area of the plain photo is not.
+  const instance = await Browser.launch({ path: browser?.path, width: 800, height: 600 });
+  try {
+    const page = await instance.newPage({ width: 800, height: 600 });
+    await page.goto("about:blank");
+    const darkShare = async (file, area) => {
+      const src = `data:image/${file.endsWith("png") ? "png" : "jpeg"};base64,${readFileSync(join(out, file)).toString("base64")}`;
+      return page.evaluate(`new Promise((done, fail) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const paint = canvas.getContext("2d");
+          paint.drawImage(img, 0, 0);
+          const a = ${JSON.stringify(area)};
+          const data = paint.getImageData(a.x, a.y, a.width, a.height).data;
+          let dark = 0;
+          for (let i = 0; i < data.length; i += 4) if (data[i] < 90 && data[i + 1] < 90 && data[i + 2] < 90) dark++;
+          done(dark / (data.length / 4));
+        };
+        img.onerror = () => fail(new Error("the image did not open"));
+        img.src = ${JSON.stringify(src)};
+      })`, { timeoutMs: 30000 });
+    };
+    // The first band of the sheet starts after its title, shown at 540/1440 of its size; the stamp sits in its top corner.
+    const noLetters = await darkShare("sem-letras.jpg", { x: 120, y: 60, width: 400, height: 60 });
+    const plain = await darkShare("desktop.png", { x: 24, y: 40, width: 1000, height: 170 });
+    assert.ok(plain > 0.03, `plain ${plain}`);
+    assert.ok(noLetters < 0.002, `no letters ${noLetters}`);
+  } finally {
+    await instance.close();
+  }
+});
+
+test("a capture does not photograph the page with no letters unless asked", { skip: noBrowser }, async () => {
+  const capture = await captureSite({ url: CARDS_PAGE, outDir: fresh("cartoes-sem-pedido"), scrollSeconds: 0, assets: false });
+  assert.equal(capture.files.no_letters_desktop, null);
+  assert.equal(capture.files.no_letters_mobile, null);
 });
 
 test("the anatomy survives a measurement that fails", () => {

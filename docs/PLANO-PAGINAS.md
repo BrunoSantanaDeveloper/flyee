@@ -2,7 +2,7 @@
 
 **Objetivo:** quando o operador (ou um integrante) pedir à IA uma página de um tipo conhecido (página de vendas, planos e preços, página de API, order bump, upsell, downsell, cross-sell, página de obrigado), a IA segue o roteiro de mercado daquele tipo e os modelos reais analisados, constrói a página e a confere pela captura. O repertório cresce a cada modelo que o operador traz.
 
-> Conferido contra o código em 2026-11-08. A primeira rodada (Hostinger) está em a702826; a segunda (Juridiq, ÉPICO 5) está em 9b986bd e e859313; a terceira (ÉPICO 6) está em 4cc2280. As tags `video-render@1.1.0` e `conversion-pages@1.1.0` apontam para 4cc2280 e chegaram à plataforma como rascunho, com o SHA-256 da plataforma igual ao do pack. Publicar e marcar a versão de entrada (D7) continuam sendo cliques do operador. Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
+> Conferido contra o código em 2026-11-08. A primeira rodada (Hostinger) está em a702826; a segunda (Juridiq, ÉPICO 5) está em 9b986bd e e859313; a terceira (ÉPICO 6) está em 4cc2280. As tags `video-render@1.1.0` e `conversion-pages@1.1.0` apontam para 4cc2280 e chegaram à plataforma como rascunho, com o SHA-256 da plataforma igual ao do pack. Publicar e marcar a versão de entrada (D7) continuam sendo cliques do operador. **⚠️ A terceira rodada piorou a página do ONE e não deve ser publicada; o ÉPICO 7 a corrige em `conversion-pages` 1.2.0 e `video-render` 1.2.0, ainda sem commit e sem tag.** Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
 
 ## Estado da implementação (2026-11-07)
 
@@ -12,6 +12,7 @@
 | T2.1 a T2.6 | ✅ | `conversion-pages` 1.0.0, em a702826: 19 regras, 14 testes, 3 casos de avaliação. É a candidata à versão de entrada (D7, D14) |
 | T5.1 a T5.6 | ✅ | A rodada do Juridiq, em 9b986bd e e859313, com o `video-render` 1.1.0 corrigido no lugar. Detalhes no ÉPICO 5 |
 | T6.1 a T6.7 | ✅ | A rodada da demonstração e das medições (2026-11-08), commitada em 4cc2280 junto com o som do motor: `conversion-pages` 1.1.0 e `video-render` 1.1.0, corrigidos no lugar antes das tags (D16). Detalhes no ÉPICO 6 |
+| T7.1 a T7.5 | ✅ na árvore, sem commit | A correção da rodada 6 (2026-11-08): detalhes no ÉPICO 7 |
 | ⚠️ CI do Windows | corrigido | `anatomy.test.mjs` falhava no Windows do GitHub desde a702826: o Windows Server desliga as animações do sistema, o navegador responde `prefers-reduced-motion: reduce`, e a página do teste para a animação. A captura e o render passam a fixar `no-preference` (T6.6). A CI de 4cc2280 passou no Linux e no Windows (run 42508159600) |
 | ⚠️ `appeared_after_scroll` | corrigido | `video-render/references/interface.md` dizia "só apareceu depois da rolagem". A captura rola a página para aquecer antes de ler, e uma janela que abre pela rolagem saía como presente na chegada. Agora há uma leitura na chegada, antes do aquecimento (T5.4) |
 | ⚠️ `above_fold.mobile` | corrigido | A interface dizia "pelo mesmo texto na mesma ordem". Um botão do menu escondido no celular tomava o par do botão de mesmo texto da página (no JuriChat, "Comece grátis" saía como ausente no celular). Agora o pareamento é primeiro pelo mesmo elemento (T5.4) |
@@ -87,10 +88,16 @@ Não rodou: o `ci:verify` completo (a CLI não mudou), macOS e Linux, e um pedid
 | D14 | A versão do `conversion-pages` | 1.1.0, pelo procedimento de entrada (modelo ou tipo novo sobe a versão menor). A 1.0.0 fica em a702826, com os cinco tipos de oferta, e é a candidata natural à versão de entrada; a decisão continua aberta em D7. | manifesto; console da plataforma |
 | D15 | O que entra da avaliação do Stageshow e dos seis repositórios de design (2026-11-08) | As regras da demonstração e da grade de recursos, a lista de vícios de IA e as medições objetivas, como texto e código nossos, com `NOTICE.txt` (D31). Fica de fora o kit em React, os ícones e os logos de terceiros, a recriação de páginas do Awwwards MCP e o modo de vários agentes do Genjutsu. O kit se decide depois de um teste lado a lado (ÉPICO 6, fora de cobertura). Aprovado pelo operador em 2026-11-08 ("pode seguir como sugerido"). | este plano; `modules/conversion-pages/NOTICE.txt` |
 | D16 | Versão das duas mudanças | Nenhuma versão nova: `conversion-pages` 1.1.0 e `video-render` 1.1.0 não têm tag, então mudam no lugar, como D13. A interface v1 do motor só ganha campos (`anatomy.quality`) e um comando (`film`). | manifestos |
-| D17 | A ordem de onde vem a demonstração | Componentes reais do projeto com dados fixos, depois a tela real, e a réplica simplificada só sem código nem tela. Registrada em `pagina.json` (`demo.kind`). Motivo: a cena mostra o produto que é vendido, e o que a página mostra obriga quem vende (CDC, art. 30 e 37, §1). | `references/demonstracao.md`; `pagina.json` |
+| D17 | ⚠️ **Errada, trocada por D21.** A ordem de onde vem a demonstração | Componentes reais do projeto com dados fixos, depois a tela real, e a réplica simplificada só sem código nem tela. Foi inferência minha, sem teste, e inverteu a tese do próprio Stageshow. A veracidade (CDC, art. 30 e 37, §1) nunca dependeu do componente: depende de `demo.real_today`. | substituída em `references/demonstracao.md` |
 | D18 | Dado inventado contra o resto da lista de vícios | Número de uso, escassez, ano e nome sem origem são `atencao` de peso `lei` (`claims_have_origin`, `placeholder_data`). O resto da lista é aviso: o que o plano escolhe vai em `visual.chosen` e deixa de ser apontado. | `references/vicios.md`; `pagina.json` |
 | D19 | Os limiares das medições | 12 px e 40% do texto (auditoria de legibilidade do Lighthouse, retirada na versão 13); 24 por 24 px (WCAG 2.2, 2.5.8, AA); 4,5 e 3 para 1, com texto grande a 24 px ou 18,66 px em negrito (WCAG 2.2, 1.4.3); imagens de 500 KB ou servidas com o dobro da largura a partir de 100 KB (critério deste app, não regra de mercado). Conferidos em 2026-11-08. Abaixo de 1,5 para 1 a leitura duvida de si e não reprova. | `modules/video-render/scripts/lib/capture.mjs`, constantes no topo |
 | D20 | Como a demonstração é filmada | Em tempo real, com fotos em intervalo fixo, sem mexer na página: serve a qualquer página e não prova o que acontece entre dois quadros. O relógio determinístico do Stageshow ficou de fora porque só vale para páginas feitas com o kit dele. | `modules/video-render/scripts/lib/film.mjs` |
+| D21 | De onde vem a figura (substitui D17) | Uma versão desenhada para a página (`replica`), depois a tela real (`tela`), depois os componentes do projeto (`componentes`). A tela foi feita para quem a usa todo dia, e a figura é para quem nunca a viu. O que a figura mostra precisa existir hoje, e isso fica em `demo.real_today`. | `references/demonstracao.md` §2 |
+| D22 | Quem manda no visual | O pedido do integrante, o manual do projeto, o modelo escolhido e só então o guia. A lista de vícios (D18) é aviso, serve para não acrescentar por reflexo e nunca tira de uma página o que alguém escolheu. Cada modelo lista os padrões que usa. Decidido depois da queixa do operador em 2026-11-08. | `references/vicios.md`; regra 10 da skill; `references/modelos/*.md` |
+| D23 | Como conferir se a página se entende | Olhando a página sem nenhuma letra (`capture --no-letters`, `files.no_letters`). Testada lado a lado com a página borrada: a borrada deixa ler os títulos e disfarça o problema. Nenhuma medida separa o telefone da caixa branca, só o olho. A regra de quatro perguntas está em "Conferir olhando". | `references/demonstracao.md` §14; `modules/video-render/scripts/lib/capture.mjs` |
+| D24 | Os limites de texto | Só o que separou as páginas medidas: cartão até 32 palavras para ler e sem buraco de 30% em cartão de 200 px ou mais (depoimento, pergunta, plano e cartão com figura ficam de fora); frase em figura até 15 palavras e até 30 para ler na figura. O total de palavras da página não entra: não separa uma página boa de uma ruim (tabela no ÉPICO 7). | `scripts/lib/checks.mjs` |
+| D25 | Versões | `conversion-pages` 1.2.0 e `video-render` 1.2.0, porque as 1.1.0 já têm tag e são imutáveis. A interface v1 do motor só ganha campos e uma opção. O rascunho `conversion-pages` 1.1.0 não deve ser publicado. A versão de entrada (D7) continua aberta. | manifestos; console da plataforma |
+| D26 | A prova de que melhorou | Uma regra que muda o que o app constrói só vale depois de uma construção de verdade: sessão nova, pedido real, resultado olhado ao lado do que ele substitui. Teste e conferência provam que a regra roda, nunca que o resultado melhorou. | `.claude/rules/apps.md`; `.claude/skills/app-author/SKILL.md` passo 5 |
 
 ## 0.5 Convenções do repositório que este trabalho toca
 
@@ -336,12 +343,12 @@ O operador trouxe dois vídeos e pediu a análise do que serviria aos apps de p�
 
 ### T6.1: o guia da demonstração e da grade de recursos
 
-**Estado: ✅.** `modules/conversion-pages/references/demonstracao.md`, com as treze seções: de onde vem a imagem (D17), a regra da veracidade, o plano antes do código, a história (3 a 5 momentos em 10 a 16 s), a tela (3 a 7 textos reais), o enquadramento, o celular, a capa, o movimento, a cena dentro da página (`data-demo`, sem `h1` a `h6`), os cinco erros, a grade de recursos e o olhar sobre os quadros filmados.
+**Estado: ⚠️ substituído no ÉPICO 7.** O guia foi escrito, mas a ordem de D17 e a grade da seção 12 pioraram a página. `modules/conversion-pages/references/demonstracao.md`, com as treze seções: de onde vem a imagem (D17), a regra da veracidade, o plano antes do código, a história (3 a 5 momentos em 10 a 16 s), a tela (3 a 7 textos reais), o enquadramento, o celular, a capa, o movimento, a cena dentro da página (`data-demo`, sem `h1` a `h6`), os cinco erros, a grade de recursos e o olhar sobre os quadros filmados.
 - **Aceite:** `npm run validate conversion-pages` passa; `references/principios.md` §5 e os roteiros `landing.md`, `api.md` e `upsell.md` apontam para o guia.
 
 ### T6.2: a lista dos vícios de IA
 
-**Estado: ✅.** `modules/conversion-pages/references/vicios.md`: quatro famílias (dado inventado, enfeite sem função, layout por reflexo, texto vazio), cada item com o que aparece e a pergunta de volta ao projeto, e o nome que vai em `visual.chosen`.
+**Estado: ⚠️ corrigida no ÉPICO 7 (D22).** Ela mandava tirar o que o integrante tinha escolhido. `modules/conversion-pages/references/vicios.md`: quatro famílias (dado inventado, enfeite sem função, layout por reflexo, texto vazio), cada item com o que aparece e a pergunta de volta ao projeto, e o nome que vai em `visual.chosen`.
 - **Aceite:** cada nome de `visual.chosen` que `ai_defaults` conhece está na lista; o teste "the defaults are named, and what the plan chose on purpose stops being pointed at" passa.
 
 ### T6.3: o plano com a direção visual, a demonstração e os números
@@ -406,6 +413,101 @@ O operador trouxe dois vídeos e pediu a análise do que serviria aos apps de p�
 - **macOS e Linux** não rodaram as medições nem o `film`.
 - **Nenhuma sessão real** construiu uma página com o guia da demonstração.
 
+## ÉPICO 7: a correção da rodada 6, depois que ela piorou a página (2026-11-08)
+
+O operador testou a home do ONE refeita com a 1.1.0 e escreveu "parece que ficou foi mais ruim", com quatro queixas: o título da hero sem fala natural, o elemento abaixo dela mais confuso, a seção de atendimento só com texto e um monte de cartão cheio de texto. O plano já declarava "nenhuma sessão real construiu uma página com o guia", e mesmo assim a rodada foi apresentada como melhora.
+
+### A auditoria do erro
+
+**Método:** a versão anterior (7fdd3e8 do ONE) rodada a partir do código, numa cópia fora do repositório; a publicada (2285f14); os modelos no ar; as três medidas pela mesma ferramenta. **Cobertura:** o ONE é uma página só, e o julgamento é visual.
+
+| Queixa | De onde veio | Evidência |
+|---|---|---|
+| Título | Não veio da rodada 6: está igual desde f4e0c2a (21/10). ⚠️ `tipos/landing.md` já pedia o resultado no título, mas nada obrigava a testar, e o `audit` não olhava | `git log -S` em `packages/content/messages/pt-BR.json`; `one-home-title` igual nos dois commits |
+| Elemento abaixo da hero | D17 e as seções 1, 5 e 6 do guia: a janela com etapas e cartões soltos virou um recorte de componentes reais | `CaseScreen` e os cartões saíram de `page.tsx`, `case-demo.tsx` entrou; `pagina.json` do ONE registrou `demo.kind: componentes` |
+| Atendimento só com texto | Em parte: os quatro cartões são anteriores. O telefone (`PhoneFrame`) virou uma caixa branca com balões (`ConversationFigure`), porque o guia dizia que tela desenhada era dado inventado | `page.tsx` nos dois commits |
+| Cartões cheios de texto | A seção 12 do guia (a grade) e a linha da lista de vícios contra alternar imagem e texto: o calendário, o gráfico de barras e o "4 de 4" viraram uma grade de frases | `FeatureRows` virou `BentoGrid`; o catálogo de textos perdeu `one-home-link-*`, `-court-*`, `-deadline-*`, `-board-*` |
+| O brilho do topo saiu | A lista de vícios e o texto que passei ("tire os vícios da lista"), embora os modelos usem esses padrões | comentário em `hero.tsx` citando "mancha desfocada"; `quality.desktop.defaults`: Juridiq com 12 degradês, 4 vidros e 12 manchas |
+| 16 itens ok | Nenhum item olhava se a página se entende | `docs/paginas/home/conferencia.json` do ONE |
+
+**As medidas.** O total de palavras não explica a queixa: a página de que o operador reclamou é a que tem menos texto.
+
+| Página | Palavras por 1.000 px | Parte em blocos de 12 palavras ou mais | Maior cartão, em palavras para ler (fora depoimento, pergunta e plano) | Buraco em cartão alto |
+|---|---|---|---|---|
+| Juridiq | 165 | 41% | 25 | nenhum |
+| JuriChat | 153 | 42% | 31, com gráfico | nenhum sem figura |
+| ONE antes (7fdd3e8) | 162 | 45% | 27 | nenhum |
+| ONE publicado (2285f14) | 148 | 48% | 55 e 40 | 46% e 31% |
+
+O telefone contra a caixa branca não aparece em número nenhum: as duas seções têm quase as mesmas contagens. Por isso a conferência principal é olhar (D23).
+
+### T7.1: a foto sem letras e as leituras novas do motor
+
+**Estado: ✅ na árvore.** `capture --no-letters` grava `sem-letras.jpg` e `sem-letras-celular.jpg`, com o texto apagado e ícones, imagens, cores e formas no lugar (`writeNoLetters`, `scripts/lib/capture.mjs`; as folhas saíram de `film.mjs` para `scripts/lib/sheet.mjs`). `anatomy.quality.desktop` ganha `figures[]` e `cards[]` (`references/interface.md`).
+- **Aceite:** `node --test modules/video-render/tests/quality.test.mjs`, com o caso "captureSite reads the cards and the figures, and photographs the page with no letters", que abre a foto e mede que o texto preto sumiu.
+
+### T7.2: o guia reescrito
+
+**Estado: ✅ na árvore.** `references/demonstracao.md` abre com "A figura se entende sem ler"; a ordem é a de D21; o cartão branco com frase, o recorte de interface e o cartão com linhas estão entre os erros; a janela grande voltou a valer; os recursos principais ganham uma linha com figura grande, e a grade só entra a pedido. `references/vicios.md` segue D22. `references/principios.md` ganha a seção 17, o título que vende, com cinco formas e quatro testes e a regra do operador de 2026-10-30 ("exagere o interesse, nunca o fato"). Os modelos do Juridiq e do JuriChat ganham "As figuras, seção por seção", vistas sem letras, e os padrões da lista que usam.
+- **Aceite:** o teste "the guide puts the drawing first and never tells anyone to strip a chosen look".
+
+### T7.3: o plano, os itens novos e a foto de antes
+
+**Estado: ✅ na árvore.** `pagina.json` ganha `headline` e `figures`, que passam a ser fatos obrigatórios de `landing`; o plano mostra as duas tabelas. Quatro itens: `title_promises`, `figures_seen`, `cards_short` e `cards_no_holes`, com os limites de D24. `audit --before` guarda a página em `antes/`, e o `audit` seguinte devolve `files.before`. O resultado e `conferencia.json` trazem `not_checked`, que diz o que a conferência não vê, e `next_step` diz que "nada em atenção" não quer dizer página boa.
+- **Aceite:** `node --test modules/conversion-pages/tests/pages.test.mjs modules/conversion-pages/tests/quality.test.mjs`: 45 passam, entre eles "the limits of the cards separate the pages they were measured on", com os números reais da tabela acima.
+
+### T7.4: a skill que não deixa pular
+
+**Estado: ✅ na árvore.** Veio do segundo teste de construção, abaixo: a skill agora diz, antes das regras, que os seis passos não são opcionais, e a regra 11 diz que conferência em ok não é página boa. O passo 5 proíbe dizer que a página ficou boa porque a conferência passou.
+
+### T7.5: as construções de verdade
+
+**Estado: ✅, com as ressalvas abaixo.** Três sessões novas do Claude Code, sem contexto além da skill instalada. A evidência está em `C:\AppsProjects\flyee-workspace\pesquisa-paginas\one-home-2026-11-08\`, com um `LEIAME.txt`.
+
+| Sessão | Pedido | Modelo | Tempo | O que aconteceu |
+|---|---|---|---|---|
+| 1 | Refazer a home do ONE, numa cópia fora do repositório (`git archive` de 34e5b4f), com as quatro queixas nas palavras do operador | o padrão do operador (Opus) | 39 min, 275 turnos | Título "Você advoga. O ONE faz o resto."; a janela grande do sistema, o telefone no centro com dois cartões escuros de cada lado, o radar, os documentos, a petição, o calendário e a pasta do protocolo. Usou `audit --before`, a foto sem letras e um agente sem contexto sem ninguém lembrar. Nenhum cartão pede mais de 15 palavras de leitura. Conferência: 21 ok, 2 em atenção (CNPJ e reembolso, os mesmos de antes) |
+| 2 | Uma página do zero, em HTML, para um produto fictício de outro ramo (`PRODUTO.md`), antes de T7.4 | Sonnet | 78 s, 12 turnos | ⚠️ Leu os guias e escreveu a página direto, sem plano, sem as cinco opções de título e sem conferir, e disse isso no fim. A hero ficou boa. Abaixo dela, as figuras eram cartões brancos com linhas, o que a foto sem letras mostra de cara: foi o que originou T7.4 |
+| 3 | O mesmo pedido, depois de T7.4 | Sonnet | 4 min, 25 turnos | Seguiu os passos: plano, cinco títulos, construção, conferência, foto sem letras no computador e no celular, uma figura corrigida e nova conferência. Telefone com a nota fiscal, barras de estoque, telefone com a conversa e relatório. Depois de corrigir, não abriu de novo a foto do computador, e disse isso |
+
+**A leitura às cegas.** Um agente sem contexto (Sonnet), no papel de sócio de escritório, viu as três versões da home do ONE, sob os nomes A, B e C. Continuaria rolando a refeita, depois a anterior, e sairia da publicada. As críticas dele à refeita: "faz o resto" promete sem limite, e "Escrevendo a petição" pode assustar um advogado. É uma leitura de IA, de um único agente, com as duas primeiras telas de cada versão.
+
+**Onde o resultado ficou aquém:**
+- ⚠️ O brilho de fundo do topo, que a rodada 6 tirou, não voltou na sessão 1: o comentário em `hero.tsx` ainda dizia que ele saiu por causa da lista de vícios, e a análise do modelo não descrevia o efeito. Agora descreve, e o operador pediu o brilho de volta (T7.6). O manual do próprio ONE já avisava contra um topo liso (`.claude/skills/marketing-page/SKILL.md:88`): a lista passou por cima dele, o que D22 agora impede.
+- "Você advoga. O ONE faz o resto." é forte e discutível: escrever a petição também é advogar. A própria sessão apontou isso e trocou o subtítulo para "a primeira versão da petição". O título segue como decisão do operador, com as alternativas em `docs/paginas/home/pagina.json`.
+- A página da sessão 3 se entende, mas não tem a riqueza dos modelos.
+- A skill pede e não obriga: a sessão 3 é uma amostra só de que o reforço funciona.
+- A sessão 1 custou US$ 15,85 pela conta do Claude Code (`total_cost_usd`), e as sessões 2 e 3, US$ 0,34 e US$ 0,57.
+
+- **Aceite:** abrir `comparacao-topo.jpg` e `comparacao-sem-letras.jpg` naquela pasta: a refeita mostra objetos onde a publicada mostra caixas. O juiz final é o olho do operador, que viu a refeita e aprovou em 2026-11-08 ("essa versão ficou muito boa").
+
+### T7.6: a home refeita no ONE
+
+**Estado: ✅ na árvore do ONE, sem commit.** O operador aprovou a página, ficou com o título sugerido ("Você advoga. O ONE faz o resto.") e pediu o brilho do topo de volta. A luz atrás do título (`mkt-aurora`, finita, parada com menos movimento) e o halo atrás da janela (`ProductFrame glow`) voltaram como eram em 7fdd3e8, primeiro na cópia. O pacote foi aplicado sobre aa15754, com outras sessões avisadas; o Prettier do projeto formatou `product-figures.tsx`; um comentário que citava o componente removido foi corrigido. O que chega ao ar depende do commit, que é do operador.
+- **Aceite:** no ONE, `git diff` mostra só os 22 arquivos da home além do que já estava em andamento; `conferencia.json` com 21 ok e 2 em atenção (CNPJ e reembolso, decisões de lançamento); `git status` não mostra `captura/` nem `filme/`.
+
+**O que rodou no próprio ONE:** o servidor do projeto (`next dev --turbopack`) abriu a home com o título e o brilho; `prune-messages --check`, limpo; ESLint nos arquivos da home, sem apontamentos; `.claude/hooks/marketing-lint.mjs` nos mesmos arquivos, calado, depois de provado numa violação de propósito na cópia; `vitest` em `src/components/marketing` e `src/lib/i18n`, 16 passam; `tsc -p apps/web`, um único erro, em `.next/types/validator.ts`, apontando para a página temporária `convite/prev-pdf` de outra sessão; as telas em 1440 px no modo escuro, 768 px e 390 px, com um `h1` e nada passando da largura; com menos movimento, o brilho sem animação. **O que não rodou:** o `next build` e os testes de navegador do ONE (`test:e2e`).
+
+
+### Verificação da rodada 7
+
+- `npm run validate`: 13 apps válidos; `pack` dá os ZIPs `a77b9581…` (`conversion-pages` 1.2.0, 33 arquivos) e `8b8ef9c2…` (`video-render` 1.2.0, 36 arquivos), e as cópias instaladas para o usuário são iguais à fonte;
+- `npm run test:apps`: 782 testes, 780 passam, 2 opcionais pulados, nenhum falha, com os 45 do `conversion-pages`; os 19 da regra de texto do `module-tools` passam;
+- `npm run harness:check` e `npm run apps -- catalog --check`: passam;
+- a conferência nova na página publicada do ONE aponta o título, os cartões de 55 e 40 palavras e os buracos, e nenhum dos três no Juridiq e no JuriChat;
+- `npm run apps -- link conversion-pages video-render --user` instalou as duas versões para o usuário;
+- as pastas de fotos da conferência (`captura/`, `antes/`, `filme/`) levam um `.gitignore`, depois que a sessão 1 avisou que elas não deviam entrar no commit, com teste;
+- `node --test` nos testes do `conversion-pages` depois disso: 45 passam.
+
+### Fora de cobertura desta rodada
+
+- **O julgamento é visual e de poucos olhos:** o meu, um agente sem contexto no papel de sócio de escritório e, por fim, o do operador. Nenhum advogado real viu, e nada foi medido em conversão.
+- **A página refeita** não passou pelo `next build` nem pelos testes de navegador do ONE, e a sessão que a construiu rodou numa pasta sem confiança, onde os hooks do projeto não foram confirmados: o hook de lint rodou depois, à mão.
+- **A pasta de atalhos das cópias sumiu às 21:29,** sem comando meu, e a causa não foi achada. O `node_modules` do ONE ficou intacto.
+- **Modelos:** a construção longa rodou no modelo padrão do operador; a curta, em Sonnet. Outras IAs não rodaram.
+- **macOS e Linux** não rodaram a foto sem letras.
+- **A foto sem letras** não apaga o texto que está dentro de uma imagem, e para em 16.000 px no computador e em 9.600 px no celular, com aviso.
+
 ## 5. Riscos
 
 | Risco | Primeiro sinal |
@@ -416,7 +518,8 @@ O operador trouxe dois vídeos e pediu a análise do que serviria aos apps de p�
 | A página salva traz dado pessoal (nome, e-mail, pedido) | fica no projeto do integrante; no caso do operador, na pasta de trabalho, nunca no repositório |
 | Um artigo de lei citado muda | `lei.md` traz a data da conferência; a próxima versão confere de novo |
 | Uma medição nova aponta defeito onde não há | a conferência real das quatro páginas (T6.7); cada falso alarme vira um caso em `tests/quality.test.mjs`, como os quatro desta rodada |
-| A lista de vícios vira gosto imposto | cada vício é aviso com pergunta, e o que o plano escolhe sai da conferência (D18) |
+| ⚠️ A lista de vícios vira gosto imposto | aconteceu na rodada 6: a IA tirou o que o operador tinha escolhido. Agora a lista só avisa (D22), e cada modelo diz os padrões que usa |
+| Uma regra nova melhora o teste e piora a página | só uma construção de verdade mostra (D26) |
 
 ## 6. Backlog: o que os outros apps ganham
 
@@ -436,10 +539,19 @@ O operador trouxe dois vídeos e pediu a análise do que serviria aos apps de p�
 
 | App | O que ganharia | Evidência de que hoje não tem |
 |---|---|---|
-| `video-studio` | a regra de reaproveitar a interface real em vez de redesenhá-la, e o limite de 3 a 7 textos reais por tela nas cenas de produto | `references/roteiros.md` e `pagina-do-video.md` põem as telas reais como imagem dentro de um aparelho (`Studio.device`); não há regra de quantos textos uma tela simulada mostra |
+| `video-studio` | ⚠️ riscado: "reaproveitar a interface real em vez de redesenhá-la" é o erro de D17. Fica só o limite de 3 a 7 textos para ler por tela nas cenas de produto | `references/roteiros.md` e `pagina-do-video.md` põem as telas reais como imagem dentro de um aparelho (`Studio.device`); não há regra de quantos textos uma tela simulada mostra |
 | `ad-creatives` (`ad-landing-page`) | as medições da página pronta (largura do celular, texto, toque, contraste, imagens) ao chamar o `audit` deste app, que já está na linha do Juridiq acima | `skills/ad-landing-page/SKILL.md`: a conferência própria não mede a página no celular |
 | `motion-carousel` | os cinco erros da cena (demais, esqueleto, encaixotada, plana, genérica) na crítica dos slides que mostram uma tela | `references/` não tem crítica de tela simulada |
 | `video-render` | gravar uma página que não foi feita para o Motor com um relógio que avança quadro a quadro, como o do Stageshow, para um vídeo sem quadros perdidos | `film` grava em tempo real (D20); não foi testado |
+
+### Do erro da rodada 6 (2026-11-08)
+
+| App | O que ganharia | Evidência de que hoje não tem |
+|---|---|---|
+| `ad-creatives` (`ad-landing-page`) | a foto sem letras e os testes do título na página do anúncio, ao chamar o `audit` deste app | `skills/ad-landing-page/SKILL.md`: a conferência própria lê texto e não olha a página sem ele |
+| `youtube-script` | a mesma pergunta na thumbnail: sem o texto, a imagem ainda diz o assunto? | a 1.3.0 mede palavras e repetição do título na thumbnail; não há teste da imagem sem texto |
+| `video-studio`, `motion-carousel` | os quadros de uma cena de produto sem letras, para saber se o objeto se reconhece com o som e o texto de fora: o motor já aplica o mesmo CSS | `film` e as folhas de contato mostram a página com o texto |
+| `contact-base` | os testes do título no assunto do e-mail (em voz alta, trocando o nome), com a mesma regra de exagerar o interesse e nunca o fato | `references/copy-regua.md:8` pede até 45 caracteres e palavras concretas; não traz esses testes |
 
 ### Do modelo da Hostinger (D3)
 

@@ -1,12 +1,13 @@
 # Os vícios de IA numa página
 
-Este guia é para a IA. Um vício é um padrão que aparece porque a IA o repete, sem que o plano tenha pedido. Esta lista não traz substitutos: trocar um vício por outro resolve pouco. Ela traz a pergunta que leva de volta ao projeto.
+Este guia é para a IA. Um vício é um padrão que aparece porque a IA o repete, sem que ninguém tenha pedido. A lista serve para você não acrescentar por reflexo. Ela nunca é motivo para tirar de uma página o que o integrante escolheu.
 
 ## A regra
 
 - **Dado inventado sai da página, sem exceção:** o fato precisa de origem no projeto, ou de uma resposta do integrante. É o que diz a lei (CDC, art. 37, §1).
-- **O resto é aviso.** Um padrão da lista pode ficar quando o plano o escolhe de propósito: registre o nome dele em `pagina.json` (`visual.chosen`), e a conferência para de apontá-lo. O degradê no título do modelo do Juridiq é um exemplo: serve, desde que seja uma escolha.
-- **Adjetivo não escolhe nada.** "Moderno", "premium" ou "editorial" não autorizam um padrão. O pedido do integrante autoriza quando nomeia o padrão, e aí ele entra em `visual.chosen`.
+- **O resto é aviso, e um aviso não apaga nada.** Um padrão fica quando veio do pedido do integrante, do manual de design do projeto ou do modelo escolhido: registre o nome dele em `pagina.json` (`visual.chosen`), e a conferência para de apontá-lo. Cada modelo em `modelos/` diz quais padrões desta lista usa, e quem pede uma página no estilo dele está escolhendo esses padrões.
+- **Numa página que já existe, nada sai por causa desta lista sem o integrante pedir.** Você aponta, ele decide. Brilho, vidro e mancha de cor dão peso à página quando fazem parte do estilo, e uma página sem eles pode ficar mais pobre, sem vender mais.
+- **Adjetivo não escolhe nada.** "Moderno", "premium" ou "editorial" não autorizam um padrão que nada mais pediu.
 
 Tirar os vícios deixa a página menos genérica, e só isso. Quem diz se ela vende é a medição do próprio projeto (veja `medicao.md`).
 
@@ -23,11 +24,11 @@ Pergunte sempre: de onde vem isto? A resposta vai em `pagina.json` (`claims`).
 | Códigos sem catálogo: "SEC-01", "REF-204" | que catálogo ou documento esse código indica? |
 | Nome de exemplo: "João da Silva", "Acme", "Empresa X", `lorem ipsum`, depoimento de quem nunca foi consultado | é cliente real, com permissão para aparecer? |
 | Crédito de foto que não existe: "Arquivo da casa, nº 12" | quem fez a foto, e o projeto pode dar o crédito? |
-| Tela do produto desenhada de memória | existe tela ou componente real? Sem isso, a página precisa dessa imagem? Veja `demonstracao.md` |
+| Figura com um recurso que o produto não tem | onde isto existe no produto hoje? Desenhar a figura é normal; inventar o recurso, não. Veja `demonstracao.md` |
 
-## Enfeite sem função
+## Enfeite por reflexo
 
-Pergunte: o que isto informa?
+Pergunte: isto veio do pedido, do manual ou do modelo? Então fica, registrado em `visual.chosen`. Se veio só do hábito, o que ele acrescenta aqui?
 
 | Nome em `visual.chosen` | O que aparece | A pergunta |
 |---|---|---|
@@ -53,7 +54,8 @@ Pergunte: esta forma veio do conteúdo ou do hábito?
 
 Leia também, à mão:
 
-- imagem à esquerda e texto à direita, depois o contrário, mais de duas vezes seguidas;
+- grade de cartões só com texto, onde uma figura diria a mesma coisa de relance;
+- figura que é uma frase dentro de um cartão (veja `demonstracao.md`);
 - toda seção com o mesmo arranjo: título no centro e uma grade;
 - grade com um bloco vazio ou só com degradê;
 - título de um lado e um parágrafo pequeno solto no canto oposto;
@@ -72,6 +74,7 @@ Pergunte: esta frase é verdade deste produto, e de nenhum outro?
 
 Leia também, à mão:
 
+- título que é o nome da categoria, como "Plataforma de gestão para clínicas" (veja a seção 17 de `principios.md`);
 - o mesmo pedido com vários nomes: "Comece agora", "Teste grátis" e "Criar conta" na mesma página (a conferência aponta em `cta_consistent`);
 - rótulos poéticos, como "Do campo" em cima de depoimentos;
 - prova com falsa modéstia, como "Discretamente escolhido por";
@@ -83,6 +86,6 @@ Leia também, à mão:
 - Antes de escrever o texto, leia a pergunta de "Texto vazio".
 - Antes de pôr um número, um nome ou uma data, leia a de "Dado inventado".
 - Antes de escolher o layout, a de "Layout por reflexo".
-- Antes de um enfeite, a de "Enfeite sem função".
+- Antes de um enfeite, a de "Enfeite por reflexo".
 
-Na conferência, `ai_defaults` lista o que dá para ver na página pronta, e `claims_have_origin` e `placeholder_data` cobrem o dado inventado. O resto é leitura sua, uma vez, com a página pronta. Um vício que já estava no projeto, em outra página, você aponta ao integrante e não muda sem ele pedir.
+Na conferência, `ai_defaults` lista o que dá para ver na página pronta, e `claims_have_origin` e `placeholder_data` cobrem o dado inventado. O resto é leitura sua, uma vez, com a página pronta. Um padrão que já estava no projeto, nesta ou em outra página, você aponta ao integrante e não muda sem ele pedir.

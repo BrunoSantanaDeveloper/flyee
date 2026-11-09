@@ -23,12 +23,14 @@ export const FACT_LABELS = {
   "api.docs_url": "o endereço da documentação",
   "api.rate_limit": "os limites de uso: requisições por minuto, por dia ou por mês",
   "visual.direction": "a direção visual, em uma frase que diga o que torna a página deste produto",
-  "demo.kind": "de onde vem a demonstração: componentes reais do projeto, tela real ou réplica",
+  "headline.chosen": "o título da página, escolhido entre as opções de headline.options",
+  figures: "as figuras: o objeto que cada seção mostra, em figures",
+  "demo.kind": "de onde vem a figura principal: uma versão desenhada para a página (replica), a tela real (tela) ou os componentes do projeto (componentes)",
   url: "o endereço da página para a conferência",
 };
 
 const DEMO_LABELS = {
-  kind: "de onde vem a imagem (componentes, tela ou replica)",
+  kind: "de onde vem a imagem (replica, tela ou componentes)",
   shows: "o objeto em foco",
   action: "a única ação",
   result: "o que muda e fica na tela",
@@ -55,6 +57,8 @@ export function newFacts({ name, type, today }) {
     offer: { price: null, reference_price: null, recurrence: null, renewal_price: null, guarantee_days: null, deadline: null, plans: null, recommended_plan: null, trial_days: null, cancellation: null },
     payment: { one_click: null, provider: null },
     api: { docs_url: null, rate_limit: null },
+    headline: { chosen: null, options: [] },
+    figures: [],
     visual: { direction: null, chosen: [] },
     brand: { colors: [], fonts: [], source: null },
     demo: { kind: null, shows: null, action: null, result: null, left_out: null, real_today: null, sample_data: null, animated: null, selector: null },
@@ -71,7 +75,7 @@ function valueAt(facts, path) {
 export function missingFacts(facts, type) {
   return type.facts.filter((path) => {
     const value = valueAt(facts, path);
-    return value === null || value === undefined || value === "";
+    return value === null || value === undefined || value === "" || (Array.isArray(value) && !value.length);
   });
 }
 
@@ -98,17 +102,46 @@ function visualLines(facts) {
   ];
 }
 
+/** The promise: the title chosen and the others written before choosing it. */
+function headlineLines(facts) {
+  const options = Array.isArray(facts.headline?.options) ? facts.headline.options : [];
+  return [
+    "## O título",
+    "",
+    `Escolhido: ${show(facts.headline?.chosen)}`,
+    "",
+    ...(options.length ? ["As opções pensadas:", "", ...options.map((option) => `- ${option}`), ""] : []),
+    "As formas e os testes estão no app, em references/principios.md, seção 17: em voz alta, trocando o nome, a palavra de dentro e a imagem.",
+    "",
+  ];
+}
+
+/** What a person sees in each section, before reading anything. */
+function figureLines(facts) {
+  const figures = Array.isArray(facts.figures) ? facts.figures : [];
+  return [
+    "## As figuras",
+    "",
+    ...(figures.length
+      ? ["| Seção | O que se vê | O que se entende sem ler | Marca na página |", "|---|---|---|---|", ...figures.map((figure) => `| ${show(figure?.section)} | ${show(figure?.object)} | ${show(figure?.says)} | \`data-figura="${show(figure?.name)}"\` |`)]
+      : ["Nenhuma registrada ainda. Cada seção de recurso mostra um objeto que se reconhece em três segundos: registre em figures."]),
+    "",
+    "Sem as letras, cada uma continua sendo um objeto. O guia está no app, em references/demonstracao.md.",
+    "",
+  ];
+}
+
 /** The scene, for the types that show the product working. */
 function demoLines(facts) {
   const demo = facts.demo ?? {};
   return [
-    "## A demonstração",
+    "## A figura principal",
     "",
     "| O quê | Valor |",
     "|---|---|",
     ...Object.entries(DEMO_LABELS).map(([key, label]) => `| ${label} | ${show(demo[key])} |`),
     "",
-    "A ordem de preferência, as medidas e o que conferir estão no app, em references/demonstracao.md. A cena mostra só o que o produto faz hoje.",
+    "A ordem de preferência, as medidas e o que conferir estão no app, em references/demonstracao.md. Ela se entende sem ler e mostra só o que o produto faz hoje.",
     "",
   ];
 }
@@ -146,8 +179,10 @@ export function renderPlan({ facts, type, checks, models, today }) {
     "",
     "Os campos em [a decidir] são perguntados numa mensagem só, cada decisão com uma sugestão que um sim aceita.",
     "",
+    ...(type.facts.includes("headline.chosen") ? headlineLines(facts) : []),
     ...visualLines(facts),
     ...(type.demo ? demoLines(facts) : []),
+    ...(type.facts.includes("figures") ? figureLines(facts) : []),
     ...claimLines(facts),
     "## As seções, na ordem",
     "",

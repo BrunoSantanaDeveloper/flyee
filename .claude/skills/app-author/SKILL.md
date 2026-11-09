@@ -60,6 +60,7 @@ Present the four groups to the operator in a short table, with your recommendati
 1. `npm run validate <slug>` must pass: no `[PREENCHER]` left, the guides in place, the copy rules kept, every app it calls exists, the README names its dependencies. `npm run pack <slug>` regenerates `files` and produces `dist/modules/<slug>-<version>.zip` with its checksum.
 2. `npm run apps -- link <slug> <apps it uses>`, then run the skill and the eval cases from the workspace (the `apps` skill shows how).
 3. For a first version of a flagship app, confirm the reduced 1.0 and the complete 1.1 are both ready before the launch video.
+4. When the change shapes what the app builds for the member (a guide, a rule, a check, a limit), run it for real before calling it better: a fresh session, a real request, the result looked at next to what it replaces. Tests and checks prove the rule runs, not that the result improved (`.claude/rules/apps.md`).
 
 ## 6. Hand over
 

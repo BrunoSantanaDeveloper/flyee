@@ -71,13 +71,34 @@ As quatro páginas da família (a inicial, os planos, a API e o produto irmão) 
 - **Um selo em forma de pílula,** com borda fina e um ícone, acima do título.
 - **Os botões:** o principal azul cheio, com ícone de calendário; o secundário também azul, com uma seta.
 - **As linhas pequenas em cinza:** as condições e os números. Os logos de quem confia, também em cinza, ficam sob um rótulo em maiúsculas espaçadas.
-- **A tela real do produto** logo abaixo, numa moldura grande de cantos arredondados, com um cartão flutuante da assistente.
+- **A tela real do produto** logo abaixo, clara sobre o fundo quase preto, numa moldura grande de cantos arredondados, com cartões flutuantes de vidro escuro sobre as bordas.
+- **A luz:** as seções escuras têm um brilho azul em volta da janela e dos botões, e o fundo do topo é um degradê escuro que se move devagar.
 - **O menu ao rolar** vira uma barra escura flutuante, de cantos arredondados e afastada das bordas.
 - **O resto da página** alterna seções brancas, com cartões de borda fina e cantos arredondados, e seções escuras. A da prova é escura, com estrelas amarelas nos depoimentos.
 - **Um botão redondo de WhatsApp,** verde, fixo no canto.
 - **A letra:** uma família só, sem serifa e geométrica (Geist), em vários pesos.
 
-Na página do integrante, troque cores, letra e imagens pelas da marca dele. O que vale levar é o efeito: um topo escuro de alto contraste, uma parte do título destacada em cor e a tela real do produto logo abaixo.
+Na página do integrante, troque cores, letra e imagens pelas da marca dele. O que vale levar é o efeito: um topo escuro de alto contraste, uma parte do título destacada em cor e a tela do produto, grande, logo abaixo.
+
+Da lista de `vicios.md`, esta página usa `texto_degrade`, `vidro` e `mancha_desfocada`. Quem pede uma página no estilo dela está escolhendo esses padrões: registre em `visual.chosen` os que levar.
+
+## As figuras, seção por seção
+
+Sem nenhuma letra, esta página continua dizendo o que é. É isso que vale levar, antes de qualquer detalhe:
+
+| Seção | O que se vê | O que se entende sem ler |
+|---|---|---|
+| O topo | a janela do sistema, larga como o conteúdo, densa, com menu, painéis, números e agenda, e dois ou três cartões flutuando sobre as bordas | existe um sistema inteiro aqui |
+| A dor | um telefone grande no centro, com a conversa no visual de um aplicativo de mensagens, e dois cartões escuros de cada lado | o cliente pergunta e recebe a resposta no celular |
+| O monitoramento | um radar grande, com um ponteiro que gira e pontos acesos, e um cartão de movimentação embaixo | alguém está vigiando por você |
+| Os prazos | uma colagem de telas de calendário sobrepostas, com compromissos coloridos | a agenda se organiza |
+| As publicações | uma lista com números e um resumo aberto por cima, ligados por uma linha até um selo de IA | a IA lê e resume |
+| O financeiro | gráficos em anel e cartões de valores, sobrepostos | o dinheiro num painel |
+| Os recursos menores | só no fim, três cartões curtos, com ícone, título e duas linhas | o resto do que ele faz |
+
+Em volta de cada figura grande há pouco: um título de 5 a 8 palavras com o resultado e duas ou três linhas de apoio. Os lados se alternam. A densidade fica na figura, que é vista, e nunca no texto, que precisaria ser lido.
+
+O título é uma frase que alguém diria: o que a pessoa passa a ter, seguido do que acaba na rotina dela. Ele fala com ela, e nada nele é nome de categoria.
 
 ## O que não repetir
 

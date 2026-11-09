@@ -64,7 +64,7 @@ Os detalhes estão em `../lei.md`.
 
 ## O que a conferência olha
 
-`h1_present`, `docs_first_screen`, `cta_consistent`, `code_sample`, `rate_limits_shown`, `price_shown`, `plan_highlighted`, `claims_have_origin`, `placeholder_data`, `cancel_terms_shown`, `supplier_identified`, `legal_lines`, `demo_honest`, `demo_film`, `ai_defaults`, `off_brand`, `popup_dismissable`, `popup_on_arrival`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
+`cards_short`, `cards_no_holes`, `h1_present`, `docs_first_screen`, `cta_consistent`, `code_sample`, `rate_limits_shown`, `price_shown`, `plan_highlighted`, `claims_have_origin`, `placeholder_data`, `cancel_terms_shown`, `supplier_identified`, `legal_lines`, `demo_honest`, `demo_film`, `ai_defaults`, `off_brand`, `popup_dismissable`, `popup_on_arrival`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

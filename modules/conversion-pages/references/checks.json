@@ -39,7 +39,7 @@
     "placeholder_data": { "label": "Nenhum dado de exemplo esquecido", "weight": "lei", "fix": "Troque por um dado real, com permissão para aparecer, ou tire da página." },
     "demo_honest": { "label": "A demonstração marcada e com a etiqueta", "weight": "lei", "fix": "Marque a cena com data-demo, ponha a etiqueta Exemplo fictício junto dela quando os dados são inventados, dê um texto alternativo e tire os títulos h1 a h6 de dentro dela." },
     "demo_film": { "label": "A cena filmada", "weight": "acesso", "fix": "Faça a cena mostrar a capa, parada, com o pedido de menos movimento, e confira o desenho do celular. Abra as folhas de quadros para ver o resto." },
-    "ai_defaults": { "label": "Os vícios de IA", "weight": "confianca", "fix": "Responda à pergunta de cada um em references/vicios.md. O que for escolha fica em pagina.json (visual.chosen); o resto sai da página." },
+    "ai_defaults": { "label": "Os vícios de IA", "weight": "confianca", "fix": "Responda à pergunta de cada um em references/vicios.md. O que veio do pedido, do manual ou do modelo fica, registrado em pagina.json (visual.chosen). O resto você aponta ao integrante; numa página que já existe, nada sai sem ele pedir." },
     "cta_consistent": { "label": "Os mesmos chamados em toda a página", "weight": "venda", "fix": "Escolha um chamado principal e no máximo um secundário, e use o mesmo texto no menu, no topo, na barra fixa e no fim." },
     "off_brand": { "label": "As cores e as letras da marca", "weight": "confianca", "fix": "Use as cores e as letras registradas em pagina.json (brand), ou acrescente lá a que for da marca." },
     "mobile_fits": { "label": "Nada passa da largura do celular", "weight": "acesso", "fix": "Faça o elemento caber na largura da tela. Código e tabela rolam de lado dentro do próprio bloco, sem levar a página junto." },
@@ -47,6 +47,10 @@
     "tap_targets": { "label": "Botões e links fáceis de tocar", "weight": "acesso", "fix": "Dê ao menos 24 por 24 px a cada alvo de toque, ou deixe espaço em volta dele." },
     "contrast_ok": { "label": "O contraste do texto", "weight": "acesso", "fix": "Ajuste a cor do texto ou do fundo até 4,5 para 1, ou 3 para 1 em texto grande." },
     "controls_fit": { "label": "O texto cabe nos botões", "weight": "venda", "fix": "Deixe o botão crescer com o texto, com folga dos dois lados, em vez de fixar a largura ou a altura." },
-    "images_light": { "label": "Imagens leves", "weight": "venda", "fix": "Sirva a imagem no tamanho em que ela aparece, com srcset e em formato comprimido, como WebP ou AVIF." }
+    "images_light": { "label": "Imagens leves", "weight": "venda", "fix": "Sirva a imagem no tamanho em que ela aparece, com srcset e em formato comprimido, como WebP ou AVIF." },
+    "title_promises": { "label": "O título promete em vez de nomear a categoria", "weight": "venda", "fix": "Reescreva o título pelo que muda para quem chegou, numa frase que alguém diria em voz alta. As formas e os testes estão em references/principios.md, seção 17. A escolha é do integrante: leve a sugerida e duas alternativas." },
+    "figures_seen": { "label": "As figuras não pedem leitura", "weight": "venda", "fix": "Marque cada figura com data-figura, igual ao nome em pagina.json (figures), e tire de dentro dela a frase longa: até 15 palavras por frase. Depois abra a página sem letras e diga o que cada figura é." },
+    "cards_short": { "label": "Cartões que se leem de relance", "weight": "venda", "fix": "Deixe no cartão um título de até 6 palavras e uma frase de até 20. Com mais do que isso, o recurso merece uma linha com figura, ou o texto está sobrando." },
+    "cards_no_holes": { "label": "Nenhum cartão com um buraco", "weight": "venda", "fix": "Ponha no cartão uma figura que preencha o espaço, ou deixe o cartão do tamanho do texto." }
   }
 }

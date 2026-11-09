@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cartões e figuras: uma página que pede leitura</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, sans-serif; color: #000000; background: #FFFFFF; }
+  section { padding: 24px; }
+  h1 { font-size: 48px; background: linear-gradient(90deg, #000000, #111111); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+  .cartao { border: 1px solid #000000; padding: 16px; }
+  .alto { height: 320px; display: flex; flex-direction: column; justify-content: space-between; }
+  .figura { width: 400px; padding: 16px; border: 1px solid #000000; }
+  .telefone { width: 240px; height: 240px; }
+  .so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<section>
+  <h1>Um título preenchido com degradê</h1>
+  <p>Linhas de texto preto sobre o fundo branco, para a foto sem letras ficar branca onde elas estavam.</p>
+  <p>Linhas de texto preto sobre o fundo branco, para a foto sem letras ficar branca onde elas estavam.</p>
+  <p>Linhas de texto preto sobre o fundo branco, para a foto sem letras ficar branca onde elas estavam.</p>
+</section>
+<section>
+  <h2>O que dá para fazer</h2>
+  <div class="grade">
+    <div class="cartao" id="longo"><strong>Um cartão longo</strong><p>Este cartão pede leitura porque traz uma frase comprida com muito mais palavras do que alguém lê de relance ao passar pela página.</p><p>E logo depois vem outra frase comprida, também escrita para ser lida com calma, que continua explicando o mesmo recurso.</p></div>
+    <div class="cartao alto" id="buraco"><div><strong>Um cartão com buraco</strong><p>Uma frase curta em cima.</p></div><svg width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" fill="currentColor"/></svg></div>
+    <div class="cartao" id="depoimento"><blockquote>Um depoimento pode ser longo, porque quem lê um depoimento quer saber o que aquela pessoa viveu com o produto, e a frase dela vai até o fim sem pressa nenhuma.</blockquote></div>
+    <div class="cartao" id="preco"><strong>Plano Essencial</strong><p>R$ 19,90 por mês, com o que vem no plano escrito nesta frase comprida, porque um cartão de plano pede leitura de quem está comparando os preços.</p></div>
+    <div class="cartao" id="curto"><strong>Um cartão curto</strong><p>Uma frase só, de relance.</p><span class="so-leitor">Um texto só para o leitor de tela, que não conta como leitura de quem olha a página e pode ser bem comprido sem pesar.</span></div>
+  </div>
+</section>
+<section>
+  <h2>As figuras</h2>
+  <div class="figura" data-figura="conversa"><p>Esta figura traz uma frase inteira para ler, com bem mais palavras do que cabem num balão que alguém entende só de olhar.</p><p>Curto</p></div>
+  <div class="figura" data-figura="calendario"><span>1</span> <span>2</span> <span>3</span> <span>4</span> <span>5</span><svg class="telefone" viewBox="0 0 48 48"><rect width="48" height="48" fill="#000000"/></svg></div>
+  <div class="figura" data-demo="topo"><p>Ação curta</p></div>
+</section>
+</body>
+</html>

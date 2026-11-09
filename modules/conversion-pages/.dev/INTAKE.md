@@ -38,12 +38,15 @@ O repositório é público. O bruto vai para `C:\AppsProjects\flyee-workspace\pe
   - a página na ordem;
   - a mecânica que vale levar;
   - o movimento;
+  - o visual em palavras, com os padrões de `references/vicios.md` que a página usa (`quality.desktop.defaults` em `captura.json`);
+  - as figuras, seção por seção: o que se vê e o que se entende sem ler, escrito olhando a foto sem letras (`capture --no-letters`). É isso que a IA leva do modelo; sem essa tabela, ela volta a montar cartões com frases (o erro de 2026-11-08, ÉPICO 7 do plano);
   - o que não repetir.
 
   Entram só a nossa análise e trechos curtos. A citação também passa pela regra de texto: nenhuma frase com travessão ou palavra vetada.
 - `references/modelos.json`: a entrada com os destaques.
 - O que o modelo muda no roteiro do tipo vai para `references/tipos.json` e `references/tipos/<tipo>.md`: uma seção, uma mecânica ou um item de conferência.
-- Um item de conferência novo entra em `references/checks.json` e em `scripts/lib/checks.mjs`, com teste.
+- Um item de conferência novo entra em `references/checks.json` e em `scripts/lib/checks.mjs`, com teste. Um limite numérico só entra medido nas páginas dos modelos e numa página ruim conhecida: a medição de 2026-11-08 mostrou que o total de palavras da página não separa uma da outra.
+- **Uma regra que muda o que a IA constrói só entra depois de uma construção de verdade:** uma sessão nova, um pedido real, o resultado olhado ao lado do que ele substitui.
 - Um tipo novo entra em `tipos.json` e em `tipos/<tipo>.md`; o teste de coerência confere os dois.
 
 ## 5. A conferência entre apps

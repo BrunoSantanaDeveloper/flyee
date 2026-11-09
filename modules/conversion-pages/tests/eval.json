@@ -52,13 +52,13 @@
       "rubric": "Reconhece o tipo api e lê o roteiro e o modelo do Juridiq. Pergunta o endereço da documentação, os preços e os limites de uso em número, e se a API exige outro plano. O plano tem a documentação no topo, o console com dados marcados como de exemplo, a ficha técnica, os três passos até a primeira resposta e os planos com os limites. Os exemplos de código seguem as rotas da documentação do projeto."
     },
     {
-      "name": "demonstração com o produto de verdade",
+      "name": "figura que se entende sem ler",
       "prompt": "Crie a landing page do sistema, com uma demonstração animada no topo mostrando o assistente respondendo.",
       "assertions": [
         { "kind": "file_exists", "path": "paginas/*/pagina.json" },
         { "kind": "file_exists", "path": "paginas/*/plano.md" }
       ],
-      "rubric": "Lê references/demonstracao.md e procura no código do projeto os componentes do assistente antes de desenhar uma réplica. Registra demo.kind como componentes quando eles existem, e a ação, o resultado e o que fica de fora. Ache onde cada coisa da cena existe no produto; o que não existe fica fora da cena, ou vira uma pergunta. Dados inventados levam a etiqueta Exemplo fictício, a cena leva data-demo e não tem título h1 a h6 dentro. Depois de rodar audit, abre as folhas de quadros de film.sheets e fala do que viu."
+      "rubric": "Lê references/demonstracao.md e escolhe um objeto que se reconhece sem ler: o telefone ou o painel com a pergunta e a resposta chegando. Desenha a figura para quem nunca viu o produto (demo.kind replica) e só usa o componente real se ele, naquele tamanho, já for esse objeto. Registra a ação, o resultado e o que fica de fora, abre files.no_letters e diz o que a figura é. Ache onde cada coisa da cena existe no produto; o que não existe fica fora da cena, ou vira uma pergunta. Dados inventados levam a etiqueta Exemplo fictício, a cena leva data-demo e não tem título h1 a h6 dentro. Depois de rodar audit, abre as folhas de quadros de film.sheets e fala do que viu."
     },
     {
       "name": "número sem origem",
@@ -67,6 +67,30 @@
         { "kind": "file_exists", "path": "paginas/*/conferencia.json" }
       ],
       "rubric": "Roda audit e aponta os dois números em claims_have_origin. Pergunta ou procura no projeto de onde eles vêm e registra em claims só o que tiver origem. Não confirma nenhum número por conta própria e não troca por um número mais plausível: sem origem, o número sai da página."
+    },
+    {
+      "name": "título que é nome de categoria",
+      "prompt": "Revise a home em localhost:3000. O título é 'Automação com IA no contencioso de massa, do primeiro contato ao protocolo'. Ninguém entende.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/pagina.json" }
+      ],
+      "rubric": "Escreve pelo menos cinco títulos de formas diferentes em headline.options, testa cada um pelos quatro testes de references/principios.md, seção 17, e traz o sugerido e duas alternativas. Os títulos são frases que alguém diria e prometem o que muda para quem chegou. Nenhum inventa número ou recurso, e nenhum fica sem graça por medo de prometer."
+    },
+    {
+      "name": "seção que só tem texto",
+      "prompt": "Na minha página, a seção de atendimento só tem texto, mesmo onde era para ser um exemplo ilustrativo, e há um monte de cartão cheio de texto. Corrija.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/pagina.json" }
+      ],
+      "rubric": "Roda audit --before antes de mexer. Troca a caixa com frases por um objeto reconhecível, como um telefone com a conversa curta, e os cartões longos por linhas com figura grande ou por cartões de até 20 palavras. Compara a foto sem letras de antes e a de depois, e a de depois tem mais objetos. Não diz que ficou boa porque a conferência passou."
+    },
+    {
+      "name": "revisão não apaga o estilo escolhido",
+      "prompt": "Revise a minha página no estilo do Juridiq, que está em localhost:3000, antes de eu publicar.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/conferencia.json" }
+      ],
+      "rubric": "A página tem brilho, vidro e manchas de cor, vindos do modelo. Registra esses padrões em visual.chosen. Não tira nenhum deles da página: aponta, no máximo, e o integrante decide."
     },
     {
       "name": "vícios de IA escolhidos ou não",

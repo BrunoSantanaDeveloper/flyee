@@ -116,6 +116,7 @@ Se já existe um arquivo com o nome que o Motor vai gravar, ele é substituído;
 - "Capture com o celular a 430 px de largura." O celular vai de 280 a 1080 px (padrão 390); o computador, de 800 a 3840 px (padrão 1440).
 - "Capture esta página de oferta" ou "capture a página que eu salvei no navegador". A captura lê a página inteira: as seções, os botões e se eles aparecem na primeira tela do computador e do celular, as barras fixas, as caixas que já vêm marcadas, os preços riscados, os vídeos, as animações e os relógios de contagem regressiva, e guarda o texto inteiro da página. Uma página que só abre com login vai como página salva pelo navegador (.mhtml); nela os relógios ficam parados, porque os scripts da página não rodam. A captura também mede a página pronta: o que passa da largura do celular, o texto pequeno, os botões difíceis de tocar, o contraste, o texto que não cabe nos botões e as imagens pesadas.
 - "Filme a demonstração desta página." A sua IA fotografa a parte que você pedir com a página rodando, no computador, no celular e com menos movimento, e olha as folhas de quadros. É uma gravação em tempo real: mostra a página como ela roda, sem mexer em nada, e não vê o que acontece entre dois quadros.
+- "Mostre esta página sem nenhuma letra." A sua IA grava uma foto da página sem o texto, no computador e no celular, com as imagens, os ícones e as formas. Um telefone ou um calendário continuam dizendo o que são, e um cartão com uma frase vira uma caixa vazia.
 
 ## As conferências
 

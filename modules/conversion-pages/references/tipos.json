@@ -178,13 +178,13 @@
       "where": "o endereço principal do produto, ou o destino das campanhas e dos links",
       "file": "tipos/landing.md",
       "demo": true,
-      "facts": ["product.name", "product.what", "audience", "cta_text", "visual.direction", "demo.kind"],
+      "facts": ["product.name", "product.what", "audience", "cta_text", "headline.chosen", "visual.direction", "demo.kind", "figures"],
       "sections": [
         "A faixa de cima, só com uma promoção de verdade: o que é, até quando e um chamado",
-        "O topo: para quem é e o resultado no título, uma frase com o que o produto faz, o chamado principal e o secundário, a linha de condições embaixo, uma prova curta e o produto, de verdade, embaixo ou ao lado",
-        "O produto funcionando: os componentes reais com dados fixos, a tela real, um vídeo curto ou uma réplica simplificada, nessa ordem, só com o que ele faz hoje e com os dados de exemplo marcados como fictícios",
-        "A dor nas palavras do cliente, em três ou quatro cartões, e a frase que liga a dor à solução",
-        "Os recursos do dia a dia, um por bloco, com o resultado no título e a tela ao lado; numa grade, um bloco lidera e nem todo bloco é tela",
+        "O topo: um título que promete o que muda para quem chegou e se diz em voz alta, uma frase com o que o produto faz, o chamado principal e o secundário, a linha de condições embaixo, uma prova curta e, embaixo ou ao lado, a figura grande do produto",
+        "O produto funcionando: uma figura que se entende sem ler, ou uma cena curta, só com o que ele faz hoje e com os dados de exemplo marcados como fictícios",
+        "A dor nas palavras do cliente: a frase dele como título, um objeto grande que mostra o problema resolvido, como um telefone com a conversa, três ou quatro cartões curtos e a frase que liga a dor à solução",
+        "Os recursos do dia a dia, de três a cinco, uma linha por recurso: o resultado no título, até duas linhas de apoio e uma figura grande ao lado, alternando os lados; os menores terminam em até três cartões curtos",
         "A diferença: por que este produto e não uma alternativa genérica",
         "A história de uso: um cliente de exemplo, do primeiro contato ao resultado, passo a passo",
         "As integrações, com o que depende do plano escrito",
@@ -209,15 +209,17 @@
       ],
       "manual": [
         "Os números da página têm origem: clientes, horas economizadas, volume de uso",
-        "A demonstração mostra só o que o produto faz hoje, e os dados inventados para ela levam a etiqueta",
-        "A página tem a cara deste produto: a direção visual do plano aparece nela, e nenhum vício da lista ficou sem ser escolha",
+        "O título passa nos testes de references/principios.md, seção 17: em voz alta, trocando o nome, a palavra de dentro e a imagem",
+        "Sem as letras, cada figura continua sendo um objeto, e nenhuma seção de recurso ficou só com caixas",
+        "As figuras mostram só o que o produto faz hoje, e os dados inventados para elas levam a etiqueta",
+        "A página tem a cara deste produto, e o efeito visual do modelo escolhido aparece nela",
         "A duração da demonstração é a mesma no topo, nos chamados e na agenda",
         "Os exemplos de código e as telas batem com o produto e com a documentação",
         "As regras da promoção são as mesmas na faixa, na seção, na janela, nos planos e nas perguntas frequentes",
         "Os depoimentos falam deste produto e vêm de clientes diferentes",
         "O que depende do plano está escrito perto do recurso"
       ],
-      "checks": ["cta_first_screen", "cta_consistent", "h1_present", "numbers_not_zero", "claims_have_origin", "placeholder_data", "trial_terms", "promo_terms_shown", "discount_math", "reference_price_true", "countdown_real", "popup_dismissable", "popup_on_arrival", "sticky_cta_long_page", "cancel_terms_shown", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "video_autoplay_ok", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
+      "checks": ["title_promises", "figures_seen", "cards_short", "cards_no_holes", "cta_first_screen", "cta_consistent", "h1_present", "numbers_not_zero", "claims_have_origin", "placeholder_data", "trial_terms", "promo_terms_shown", "discount_math", "reference_price_true", "countdown_real", "popup_dismissable", "popup_on_arrival", "sticky_cta_long_page", "cancel_terms_shown", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "video_autoplay_ok", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["juridiq-pagina-de-vendas", "jurichat-pagina-de-vendas"]
     },
     {
@@ -262,7 +264,7 @@
         "O chamado de cada plano leva ao cadastro com o plano escolhido",
         "A tabela comparativa fica legível no celular"
       ],
-      "checks": ["h1_present", "prices_first_screen", "plan_highlighted", "discount_math", "reference_price_true", "renewal_shown", "trial_terms", "cancel_terms_shown", "promo_terms_shown", "countdown_real", "popup_dismissable", "popup_on_arrival", "numbers_not_zero", "claims_have_origin", "placeholder_data", "supplier_identified", "legal_lines", "ai_defaults", "off_brand", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
+      "checks": ["cards_no_holes", "h1_present", "prices_first_screen", "plan_highlighted", "discount_math", "reference_price_true", "renewal_shown", "trial_terms", "cancel_terms_shown", "promo_terms_shown", "countdown_real", "popup_dismissable", "popup_on_arrival", "numbers_not_zero", "claims_have_origin", "placeholder_data", "supplier_identified", "legal_lines", "ai_defaults", "off_brand", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["juridiq-planos", "jurichat-pagina-de-vendas"]
     },
     {
@@ -302,7 +304,7 @@
         "Está escrito se a API exige a assinatura de outro plano",
         "Os limites de uso e o que acontece quando passam estão na página e na documentação"
       ],
-      "checks": ["h1_present", "docs_first_screen", "cta_consistent", "code_sample", "rate_limits_shown", "price_shown", "plan_highlighted", "claims_have_origin", "placeholder_data", "cancel_terms_shown", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "popup_dismissable", "popup_on_arrival", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
+      "checks": ["cards_short", "cards_no_holes", "h1_present", "docs_first_screen", "cta_consistent", "code_sample", "rate_limits_shown", "price_shown", "plan_highlighted", "claims_have_origin", "placeholder_data", "cancel_terms_shown", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "popup_dismissable", "popup_on_arrival", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["juridiq-api"]
     }
   ]

@@ -30,9 +30,9 @@ Tell your AI which page you want, what it sells and where it sits in your site o
 
 1. Your AI looks at what the project already has: the pages, the brand's look, the plans, the checkout and the payment provider.
 2. It asks, in a single message, only what is missing, each question with a suggestion: the product, the price, the plans, the trial period, the guarantee, the button text.
-3. It writes the page plan and sums it up in three lines. The plan covers the visual direction, the demo, the sections in order, how the purchase works, what to measure and the lines the law requires.
-4. It builds the page in your project, mobile first, and shows the real product whenever it can.
-5. It opens the finished page, looks at the photos and at the demo's frames, and checks every item of the type. You hear only what needs attention, and it fixes it.
+3. It writes the page plan: the headline, the figure of each section, the visual direction, the sections in order, how the purchase works, what to measure and the lines the law requires. In the chat you see three lines and pick the headline from the suggested one and two others.
+4. It builds the page in your project, mobile first, with figures that make sense without reading: a phone with the conversation, a calendar, the large window of the system.
+5. It opens the finished page, looks at the page with no letters on it, at the photos and at the demo's frames, and checks every item of the type. You hear only what needs attention, and it fixes it.
 
 ## What the app never does
 
@@ -42,5 +42,6 @@ Tell your AI which page you want, what it sells and where it sits in your site o
 - Show a struck-through price or a countdown unless you confirm they are real.
 - Show a discount or savings figure that does not add up.
 - Open a promotion window over the page the moment someone arrives.
-- Show in the demo what the product does not do yet.
+- Show in a figure what the product does not do yet.
+- Remove from a finished page what you chose, unless you ask.
 - State a number, a scarcity or a name without knowing where it came from.

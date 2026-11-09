@@ -9,12 +9,12 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | [Criativos para anúncios](#ad-creatives) | 1.2.2 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
 | [Medição e leitura de resultados](#ads-insights) | 1.0.1 | tool | escalar | — | — |
 | [Base de contatos e CRM](#contact-base) | 1.2.0 | workflow | vender | — | — |
-| [Páginas que vendem](#conversion-pages) | 1.1.0 | workflow | vender | `video-render` | — |
+| [Páginas que vendem](#conversion-pages) | 1.2.0 | workflow | vender | `video-render` | — |
 | [Pesquisa no Instagram](#instagram-research) | 1.1.0 | tool | planejar | `video-analysis` | `ad-creatives` |
 | [Plano de estratégia e mídia](#media-plan) | 1.1.1 | workflow | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.4 | skill | divulgar | `video-render` | — |
 | [Análise de vídeo](#video-analysis) | 1.0.2 | tool | planejar | — | `ad-creatives`, `instagram-research`, `youtube-script` |
-| [Motor de vídeo](#video-render) | 1.1.0 | tool | divulgar | — | `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio` |
+| [Motor de vídeo](#video-render) | 1.2.0 | tool | divulgar | — | `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio` |
 | [Estúdio de vídeo](#video-studio) | 1.1.2 | workflow | divulgar | `video-render` | — |
 | [Atendimento no WhatsApp com IA e equipe](#whatsapp-support) | 1.0.0 | workflow | construir | — | — |
 | [Pesquisa no YouTube](#youtube-research) | 1.2.0 | tool | planejar | — | `ad-creatives`, `youtube-script` |
@@ -111,7 +111,7 @@ Transforma a sua base antiga de contatos numa régua que pode ser enviada, sem t
 
 ## conversion-pages
 
-**Páginas que vendem** (Pages that sell) · versão 1.1.0 · workflow · trilha vender · testado em `claude_code`
+**Páginas que vendem** (Pages that sell) · versão 1.2.0 · workflow · trilha vender · testado em `claude_code`
 
 > Monta e confere páginas que vendem pelo tipo (página de vendas, planos e preços, API, order bump, upsell, downsell, cross-sell e obrigado) com a estratégia que o mercado usa e modelos reais analisados, e aponta o que corrigir antes de publicar.
 
@@ -267,7 +267,7 @@ Assiste a vídeos por você, com imagem e som, e entrega uma descrição com tem
 
 ## video-render
 
-**Motor de vídeo** (Video engine) · versão 1.1.0 · tool · trilha divulgar · testado em `claude_code`
+**Motor de vídeo** (Video engine) · versão 1.2.0 · tool · trilha divulgar · testado em `claude_code`
 
 > Transforma uma página animada em vídeo pronto para as redes, com trilha original e efeitos na batida, prévia, a marca do seu site e conferência antes de publicar: capa, texto, área segura, volume e, por rede, formato e duração. É o motor que outros apps usam para renderizar.
 

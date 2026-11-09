@@ -19,24 +19,30 @@ Junto vêm os modelos reais analisados. Cada um traz a fonte, a data em que foi 
 
 1. **O tipo:** a sua IA reconhece o tipo pelo seu pedido. Quando a página de vendas recebe um anúncio pago, ela é construída aqui, e a continuidade entre o anúncio e a página fica com o app de criativos para anúncios.
 2. **Os fatos:** num arquivo da página ficam o produto, para quem é, o preço, os planos, o período de teste, o preço normal se houver um riscado, a renovação, a garantia, o prazo, o texto dos botões e como cancelar.
-3. **O plano:** a direção visual, a demonstração, as seções na ordem, a mecânica, os eventos de medição, as linhas legais, a origem de cada número e uma lista para conferir lendo o código.
+3. **O plano:** o título, as figuras de cada seção, a direção visual, as seções na ordem, a mecânica, os eventos de medição, as linhas legais, a origem de cada número e uma lista para conferir lendo o código.
 4. **A construção:** no código do seu projeto, com os componentes e o visual que ele já tem.
 5. **A conferência:** a página pronta é aberta num navegador sem janela, no computador e no celular, e cada item do tipo volta ok, atenção ou não conferido.
-6. **O olhar:** a sua IA abre as fotos da página e as folhas de quadros da demonstração, e corrige primeiro a maior falha que vê, em até duas rodadas.
+6. **O olhar:** a conferência mede regras e não vê se a página se entende. Por isso, a sua IA abre a página sem nenhuma letra, as fotos e as folhas de quadros da demonstração, responde se cada figura ainda diz o que é e se o título soa como conversa, e corrige primeiro a maior falha que vê, em até duas rodadas. Numa página que já existia, ela fotografa antes de mexer e compara depois.
 
-## A demonstração
+## O título
 
-A página mostra o produto em uso numa cena curta. A imagem vem, nesta ordem, dos componentes de verdade do seu projeto com dados fixos, da tela real ou de uma réplica simplificada, quando não há código nem tela. A cena mostra só o que o produto faz hoje, e o que for inventado para ela leva a etiqueta "Exemplo fictício".
+O título promete o que muda para quem chegou, numa frase que alguém diria. A sua IA escreve pelo menos cinco, de formas diferentes, e testa cada um: em voz alta, trocando o nome do produto pelo de um concorrente, procurando palavras que só quem faz o produto usa e vendo se dá para imaginar a cena. Ela leva o sugerido e duas alternativas, e a escolha é sua. O exagero fica no interesse, nunca no fato.
 
-O guia traz as medidas: de 3 a 5 momentos em 10 a 16 segundos, poucos textos reais, um desenho próprio para o celular e uma capa que conta a história sozinha. A grade de recursos tem regras parecidas: um bloco lidera, e nem todo bloco é tela.
+## As figuras
 
-Se o seu projeto tem um manual de design, o manual decide o visual.
+Quem chega olha antes de ler. Cada seção mostra um objeto que se reconhece em três segundos: um telefone com a conversa, um calendário com os dias marcados, um gráfico, a janela grande do sistema. Um cartão com uma frase dentro não é figura.
+
+A figura é desenhada para quem nunca viu o produto, com as cores, a letra e as palavras dele. A tela real entra quando se entende no tamanho da página, e o componente do seu projeto, quando já é um objeto reconhecível. Tudo o que a figura mostra existe no produto hoje, e o que for inventado para ela leva a etiqueta "Exemplo fictício".
+
+O guia traz as medidas: até 15 palavras por frase dentro de uma figura, de 3 a 5 momentos em 10 a 16 segundos numa cena animada, um desenho próprio para o celular e uma capa que conta a história sozinha. Os recursos principais ganham uma linha cada, com a figura grande ao lado. Os menores terminam em até três cartões curtos.
+
+O visual segue, nesta ordem, o seu pedido, o manual de design do projeto e o modelo que você escolheu.
 
 ## Os padrões que a IA repete
 
-O app traz uma lista do que aparece quando a IA escreve sem ninguém pedir: número redondo sem origem, escassez inventada, ano de fundação como selo, três cartões iguais, título com degradê, brilho, mancha desfocada, verbos que servem para qualquer produto. Dado inventado sai da página. O resto vira um aviso com uma pergunta, e o que for escolha fica registrado no plano.
+O app traz uma lista do que aparece quando a IA escreve sem ninguém pedir: número redondo sem origem, escassez inventada, ano de fundação como selo, três cartões iguais, título com degradê, brilho, mancha desfocada, verbos que servem para qualquer produto. Dado inventado sai da página. O resto vira um aviso com uma pergunta, para a IA não acrescentar por reflexo. O que veio do seu pedido, do manual ou do modelo fica, e numa página que já existe nada sai sem você pedir.
 
-Tirar esses padrões deixa a página menos genérica, e só isso. Quem diz se ela vende é a medição do seu projeto.
+Quem diz se a página vende é a medição do seu projeto.
 
 ## Os itens da conferência
 
@@ -66,8 +72,11 @@ Tirar esses padrões deixa a página menos genérica, e só isso. Quem diz se el
 | linhas legais | privacidade, termos e o caminho do arrependimento |
 | imagens | texto alternativo nas imagens; no celular, imagem de até 500 KB e no tamanho em que aparece |
 | números e urgências | cada um com a origem registrada, e nenhum dado de exemplo esquecido |
+| título que promete | o título não abre com o nome da categoria sem falar com quem chegou |
+| figuras | cada figura do plano está marcada na página e não traz frase longa para ler |
+| cartões | nenhum pede mais de 32 palavras de leitura ou tem um buraco no meio; depoimentos, perguntas e planos ficam de fora |
 | demonstração | marcada, com texto alternativo, sem título dentro e com a etiqueta de exemplo; filmada no computador, no celular e parada com menos movimento |
-| padrões da IA | os que dá para ver na página pronta, fora os escolhidos no plano |
+| padrões da IA | os que dá para ver na página pronta, fora os escolhidos no plano, sempre como aviso |
 | chamados | no máximo dois textos para o mesmo pedido |
 | marca | as cores com matiz e as letras da página estão na marca registrada |
 | largura do celular | nada passa da largura da tela |
@@ -99,4 +108,4 @@ Uma página que só abre no meio de um pedido pode ser salva no navegador como p
 
 ## Privacidade
 
-Tudo fica no seu projeto: os fatos, o plano, a conferência e as telas capturadas. A captura de uma página salva com login pode trazer dados do pedido. Ela fica na pasta da página e não sai do projeto.
+Tudo fica no seu projeto: os fatos, o plano, a conferência e as telas capturadas. As fotos e as filmagens da conferência ficam fora dos commits. A captura de uma página salva com login pode trazer dados do pedido. Ela fica na pasta da página e não sai do projeto.

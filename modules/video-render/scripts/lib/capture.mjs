@@ -11,6 +11,7 @@ import { basename, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Browser } from "./browser.mjs";
+import { writeSheet } from "./sheet.mjs";
 import { startEncoder } from "./ffmpeg.mjs";
 import { AppError, clamp, ensureDir, fileUrl, isFile, mapLimit, round, sleep, slugify, writeFileAtomic, writeJson } from "./util.mjs";
 
@@ -812,6 +813,19 @@ export const FIXED_PER_PASS = 10;
 const ANATOMY_LIMITS = { maxText: PAGE_TEXT_MAX, maxSections: 120, maxCtas: 200, maxFixed: FIXED_PER_PASS, maxForms: 100, maxPrices: 100, maxAnimations: 200, maxTimers: 40, maxElements: 60000 };
 /** Below this, text counts as small: the size the Lighthouse legibility audit used (retired in Lighthouse 13), checked on 2026-11-08. */
 const SMALL_TEXT_PX = 12;
+/** From this many words on, a block of text is read, not seen at a glance. */
+const READ_BLOCK_WORDS = 8;
+const MAX_CARDS = 80;
+const FAQ_TITLE_PATTERN = /perguntas|duvidas|faq|frequent/;
+/** A band of the page in the no-letters sheet, in CSS pixels: about one screen on each device. */
+const NO_LETTERS_BAND = { desktop: 1100, mobile: 1200 };
+/** How far down the no-letters sheet goes. It is one image, so a longer page is cut and says so. */
+const NO_LETTERS_MAX = { desktop: 16000, mobile: 9600 };
+/**
+ * Paints no text and keeps everything else: the color stays, so icons that use currentColor stay too.
+ * What is left is what a person sees before reading anything.
+ */
+const NO_LETTERS_CSS = "*, *::before, *::after { -webkit-text-fill-color: transparent !important; text-shadow: none !important; text-decoration-color: transparent !important; caret-color: transparent !important; transition: none !important; } *::placeholder { -webkit-text-fill-color: transparent !important; color: transparent !important; } svg text { fill: transparent !important; stroke: transparent !important; }";
 /** WCAG 2.2, 2.5.8, level AA: the minimum target, checked on 2026-11-08. */
 const MIN_TARGET_PX = 24;
 /** WCAG 2.2, 1.4.3: large text is 18 pt, or 14 pt in bold (24 px and 18.66 px at 96 dpi). */
@@ -1238,7 +1252,7 @@ export function buildQuality({ desktop = null, mobile = null, weight = null } = 
   const smallText = mobile?.small_text ? { ...mobile.small_text, share: mobile.small_text.total_chars ? round(mobile.small_text.small_chars / mobile.small_text.total_chars, 3) : 0 } : null;
   return {
     desktop: desktop
-      ? { contrast: contrastFrom(desktop.contrast), controls: desktop.controls ?? null, demos: desktop.demos ?? null, defaults: desktop.defaults ?? null, errors: desktop.errors ?? [] }
+      ? { contrast: contrastFrom(desktop.contrast), controls: desktop.controls ?? null, demos: desktop.demos ?? null, defaults: desktop.defaults ?? null, figures: desktop.figures ?? null, cards: desktop.cards ?? null, errors: desktop.errors ?? [] }
       : null,
     mobile: mobile
       ? { overflow: mobile.overflow ?? null, small_text: smallText, tap_targets: mobile.tap_targets ?? null, controls: mobile.controls ?? null, images: imagesFrom(mobile.images, weight), weight: weight ? { total_bytes: weight.total_bytes, by_type: weight.by_type } : null, errors: mobile.errors ?? [] }
@@ -2631,6 +2645,125 @@ function anatomyInPage(options) {
     });
   });
 
+  // What there is to read inside an element, block by block: short labels are seen, sentences are read.
+  const wordCount = (text) => (String(text).match(/[\p{L}\p{N}][\p{L}\p{N}.,:/-]*/gu) || []).length;
+  const readingOf = (root) => {
+    const blocks = new Map();
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!/\S/.test(node.nodeValue)) continue;
+      const parent = node.parentElement;
+      if (!parent || parent.closest("script, style, noscript, template") || !shown(parent)) continue;
+      const box = parent.getBoundingClientRect();
+      if (box.width <= 2 || box.height <= 2) continue; // text kept for screen readers only
+      let block = parent;
+      while (block !== root && block.parentElement && /^(inline|contents|ruby)/.test(getComputedStyle(block).display)) block = block.parentElement;
+      blocks.set(block, `${blocks.get(block) || ""} ${node.nodeValue}`);
+    }
+    const counts = Array.from(blocks.values()).map(wordCount).filter(Boolean);
+    return {
+      words: counts.reduce((sum, count) => sum + count, 0),
+      read_words: counts.filter((count) => count >= options.readBlockWords).reduce((sum, count) => sum + count, 0),
+      longest: counts.length ? Math.max(...counts) : 0,
+      blocks: counts.length,
+    };
+  };
+  const PICTURE = "img, video, canvas, svg, picture";
+  const pictureShare = (root) => {
+    const own = root.getBoundingClientRect();
+    if (!own.width || !own.height) return 0;
+    const covered = Array.from(root.querySelectorAll(PICTURE))
+      .filter((el) => shown(el))
+      .map((el) => el.getBoundingClientRect())
+      .filter((box) => box.width >= 48 && box.height >= 48)
+      .reduce((sum, box) => sum + box.width * box.height, 0);
+    return Math.round(Math.min(1, covered / (own.width * own.height)) * 100) / 100;
+  };
+
+  // The figures a page marks, with what they ask to be read. A figure is looked at; a sentence inside it is not.
+  attempt("figures", () => {
+    const list = [];
+    for (const el of document.querySelectorAll("[data-figura], [data-demo]")) {
+      if (list.length >= 30 || !shown(el)) continue;
+      list.push({
+        name: el.getAttribute("data-figura") || el.getAttribute("data-demo") || null,
+        mark: el.hasAttribute("data-figura") ? "figura" : "demo",
+        ...boxOf(el),
+        section: sectionOf(el),
+        ...readingOf(el),
+        picture_share: pictureShare(el),
+      });
+    }
+    return list;
+  });
+
+  // Boxes side by side that hold text: how much each asks to be read, and the tallest empty stretch inside it.
+  attempt("cards", () => {
+    const boxed = (el) => {
+      const style = getComputedStyle(el);
+      const border = parseFloat(style.borderTopWidth) > 0 && style.borderTopStyle !== "none" && !isTransparent(style.borderTopColor);
+      return border || !isTransparent(style.backgroundColor) || style.boxShadow !== "none";
+    };
+    const FAQ_TITLE = re(options.faqTitle);
+    const QUOTE = /[“”"«][^\s]/;
+    const RATING = /(?<![a-z])(avaliacao|estrelas|stars?)(?![a-z])/;
+    const PRICE = re(options.price);
+    const cardKind = (el, text) => {
+      if (el.querySelector("input, textarea, select")) return "form";
+      if (el.querySelector("pre, code")) return "code";
+      if (el.matches("details, [aria-expanded]") || el.querySelector("details, [aria-expanded]")) return "faq";
+      const section = headings()[(sectionOf(el) || 1) - 1];
+      if (section && FAQ_TITLE.test(fold(section.innerText))) return "faq";
+      if (PRICE.test(joinCents(text))) return "priced";
+      if (el.querySelector("blockquote, q, cite") || QUOTE.test(text.slice(0, 120)) || RATING.test(fold(text.slice(0, 40)))) return "quote";
+      return "card";
+    };
+    const holeOf = (el) => {
+      const own = el.getBoundingClientRect();
+      if (!own.height) return 0;
+      const spans = [];
+      for (const node of el.querySelectorAll("*")) {
+        const solid = /^(img|video|canvas|svg|input|button|picture)$/.test(node.localName);
+        if (node.closest("svg") && node.localName !== "svg") continue;
+        if (!solid && node.children.length) continue;
+        if (!shown(node)) continue;
+        const box = node.getBoundingClientRect();
+        if (box.height >= own.height * 0.8) continue; // a layer behind the content
+        spans.push([box.top, box.bottom]);
+      }
+      spans.sort((a, b) => a[0] - b[0]);
+      let cursor = own.top;
+      let gap = 0;
+      for (const [top, bottom] of spans) {
+        if (top > cursor) gap = Math.max(gap, top - cursor);
+        cursor = Math.max(cursor, bottom);
+      }
+      return Math.round((Math.max(gap, own.bottom - cursor) / own.height) * 100) / 100;
+    };
+    const seen = new Set();
+    const list = [];
+    const all = document.querySelectorAll("body *");
+    for (let i = 0; i < all.length && i < options.maxElements && list.length < options.maxCards; i++) {
+      const parent = all[i];
+      if (parent.closest("nav, header, footer, script, style, noscript, template") || !shown(parent) || inFixed(parent)) continue;
+      const kids = Array.from(parent.children).filter((kid) => !seen.has(kid) && shown(kid) && boxed(kid));
+      const cards = kids.filter((kid) => {
+        const box = kid.getBoundingClientRect();
+        return box.width >= 160 && box.height >= 80 && box.width < innerWidth * 0.9;
+      });
+      if (cards.length < 2) continue;
+      for (const card of cards) {
+        const text = clean(card.innerText);
+        const reading = readingOf(card);
+        if (reading.words < 3) continue;
+        seen.add(card);
+        list.push({ text: text.slice(0, 60), kind: cardKind(card, text), ...boxOf(card), section: sectionOf(card), ...reading, hole: holeOf(card), picture_share: pictureShare(card) });
+      }
+    }
+    return list;
+  });
+
   // The defaults a model reaches for that a page shows in its styles. Each comes with a few examples.
   attempt("defaults", () => {
     const found = { gradient_text: [], glass: [], glow: [], blobs: [], equal_cards: [], status_dots: [] };
@@ -3004,6 +3137,9 @@ function anatomyOptions(parts, extra = {}) {
     ...ANATOMY_LIMITS,
     smallTextPx: SMALL_TEXT_PX,
     minTarget: MIN_TARGET_PX,
+    readBlockWords: READ_BLOCK_WORDS,
+    maxCards: MAX_CARDS,
+    faqTitle: asPattern(FAQ_TITLE_PATTERN),
     maxContrast: 60,
     demoLabel: asPattern(DEMO_LABEL_PATTERN),
     price: asPattern(PRICE_PATTERN),
@@ -3107,6 +3243,64 @@ async function fullPageScreenshot(page, { width, height, scale, mobile }) {
   }
 }
 
+/* eslint-disable no-undef */
+function noLettersOnInPage(css) {
+  const style = document.createElement("style");
+  style.id = "__flyee_no_letters";
+  style.textContent = css;
+  document.head.append(style);
+  // Text painted through its own background (a gradient title) would stay as letters.
+  const touched = [];
+  for (const el of document.querySelectorAll("body *")) {
+    const computed = getComputedStyle(el);
+    if (computed.webkitBackgroundClip !== "text" && computed.backgroundClip !== "text") continue;
+    touched.push([el, el.style.getPropertyValue("background-image"), el.style.getPropertyPriority("background-image")]);
+    el.style.setProperty("background-image", "none", "important");
+  }
+  window.__flyeeNoLetters = touched;
+  return touched.length;
+}
+
+function noLettersOffInPage() {
+  document.getElementById("__flyee_no_letters")?.remove();
+  for (const [el, value, priority] of window.__flyeeNoLetters ?? []) {
+    if (value) el.style.setProperty("background-image", value, priority);
+    else el.style.removeProperty("background-image");
+  }
+  window.__flyeeNoLetters = null;
+  return true;
+}
+/* eslint-enable no-undef */
+
+/**
+ * The page with no letter on it, in one sheet: what a person sees before reading anything. A figure
+ * that is an object still says what it is; a box with a sentence inside becomes an empty box. A photo
+ * that fails never fails the capture: the file stays null, with a warning.
+ */
+async function writeNoLetters({ browser, page, outDir, name, label, width, scale, band, max, warnings }) {
+  try {
+    await page.evaluate(inPage(noLettersOnInPage, NO_LETTERS_CSS), { awaitPromise: false });
+    await sleep(120);
+    const metrics = await page.send("Page.getLayoutMetrics");
+    const content = Math.ceil(metrics.cssContentSize?.height ?? metrics.contentSize?.height ?? band);
+    const full = Math.min(content, max);
+    const frames = [];
+    for (let top = 0; top < full; top += band) {
+      const height = Math.min(band, full - top);
+      const { data } = await page.send("Page.captureScreenshot", { format: "jpeg", quality: 72, fromSurface: true, captureBeyondViewport: true, clip: { x: 0, y: top, width, height, scale: 1 / scale } }, 60000);
+      frames.push({ bytes: Buffer.from(data, "base64"), label: `${top} px` });
+    }
+    await writeSheet(browser, frames, { title: `A página sem nenhuma letra, ${label}: ${width} px`, file: join(outDir, name), frameWidth: width });
+    if (content > max) warnings.push(`A foto sem letras (${label}) parou em ${max} px de uma página de ${content} px.`);
+    return name;
+  } catch (error) {
+    warnings.push(`A foto sem letras (${label}) falhou: ${error?.message ?? error}`);
+    return null;
+  } finally {
+    await page.evaluate(inPage(noLettersOffInPage), { awaitPromise: false }).catch(() => null);
+  }
+}
+
 /** A deterministic scroll from the top, eased, photographed frame by frame into an MP4. */
 async function recordScroll(page, { ffmpegPath, out, seconds, fps, width, height, scale, maxScroll, label, onProgress }) {
   const plan = scrollPlan(seconds * fps, maxScroll);
@@ -3150,13 +3344,13 @@ function unreachable(url, error) {
  * and saves everything into `outDir` with captura.json. `tools.ffmpeg` is optional: without it
  * the scroll videos are skipped with a warning. Returns the captura.json object.
  */
-export async function captureSite({ url: input, outDir, tools = {}, browserPath = null, mobileWidth = 390, desktopWidth = 1440, scrollSeconds = 6, fps = 30, assets = true, onProgress = () => {} }) {
+export async function captureSite({ url: input, outDir, tools = {}, browserPath = null, mobileWidth = 390, desktopWidth = 1440, scrollSeconds = 6, fps = 30, assets = true, noLetters = false, onProgress = () => {} }) {
   const url = normalizeUrl(input);
   const isLocal = url.startsWith("file:");
   const startedAt = Date.now();
   ensureDir(outDir);
   const warnings = [];
-  const files = { desktop: null, desktop_full: null, mobile: null, mobile_full: null, scroll_desktop: null, scroll_mobile: null, capture: "captura.json", text: null, assets: [] };
+  const files = { desktop: null, desktop_full: null, mobile: null, mobile_full: null, scroll_desktop: null, scroll_mobile: null, no_letters_desktop: null, no_letters_mobile: null, capture: "captura.json", text: null, assets: [] };
   const viewports = {
     desktop: { width: desktopWidth, height: DESKTOP_HEIGHT, scale: 1, full_height: null },
     mobile: { width: mobileWidth, height: MOBILE_HEIGHT, scale: MOBILE_SCALE, full_height: null },
@@ -3241,6 +3435,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     viewports.desktop.full_height = desktopFull.height;
     viewports.desktop.content_height = desktopFull.content_height;
     if (desktopFull.truncated) warnings.push(`A página tem ${desktopFull.content_height} px de altura; a foto inteira parou em ${desktopFull.height} px.`);
+    if (noLetters) files.no_letters_desktop = await writeNoLetters({ browser, page, outDir, name: "sem-letras.jpg", label: "computador", width: desktopWidth, scale: 1, band: NO_LETTERS_BAND.desktop, max: NO_LETTERS_MAX.desktop, warnings });
 
     onProgress("Lendo a página: marca, cores, fontes, textos e números…");
     raw = await page.evaluate(inPage(extractInPage, { maxElements: 6000, maxText: 60000 }), { timeoutMs: 60000 });
@@ -3250,7 +3445,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     try {
       anatomyReads.desktop = { ...(await readAnatomyDesktop(page)), arrival: arrivalDesktop };
       onProgress("Medindo a página no computador: contraste, botões e padrões visuais…");
-      anatomyReads.desktop.quality = await readQuality(page, ["controls", "contrast", "demos", "defaults"]);
+      anatomyReads.desktop.quality = await readQuality(page, ["controls", "contrast", "demos", "defaults", "figures", "cards"]);
     } catch (error) {
       anatomyFailure = error?.message ?? String(error);
     }
@@ -3287,6 +3482,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     viewports.mobile.full_height = mobileFull.height;
     viewports.mobile.content_height = mobileFull.content_height;
     layout.mobile = mobileLayout(positions, { fullHeight: mobileFull.height, viewportHeight: MOBILE_HEIGHT });
+    if (noLetters) files.no_letters_mobile = await writeNoLetters({ browser, page, outDir, name: "sem-letras-celular.jpg", label: "celular", width: mobileWidth, scale: MOBILE_SCALE, band: NO_LETTERS_BAND.mobile, max: NO_LETTERS_MAX.mobile, warnings });
     if (anatomyReads.desktop && !anatomyFailure) {
       try {
         anatomyReads.mobile = { ...(await readAnatomyMobile(page)), arrival: arrivalMobile };

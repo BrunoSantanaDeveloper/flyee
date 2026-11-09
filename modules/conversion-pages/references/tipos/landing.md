@@ -8,7 +8,7 @@
 
 ## A promessa
 
-- O título diz para quem é e o que muda na rotina, como no Juridiq: o escritório num lugar só, sem prazo perdido e sem planilha. Um verbo genérico como "revolucione" não diz nada a quem chegou agora.
+- O título diz para quem é e o que muda na rotina, como no Juridiq: o escritório num lugar só, sem prazo perdido e sem planilha. Um nome de categoria ("Plataforma de gestão para...") ou um verbo genérico como "revolucione" não dizem nada a quem chegou agora. Como escrever e testar: `../principios.md`, seção 17.
 - A frase de apoio diz o que o produto faz, com verbos concretos: monitora, controla, automatiza, responde.
 - Embaixo de cada chamado, uma linha de condições que tira o medo do próximo passo: a duração e o formato da demonstração, se o teste pede cartão, se a migração está incluída.
 - Cada número de prova tem origem: quantos clientes, quantos processos, desde quando. "Horas economizadas por semana" sem dizer como foi medido abre uma dúvida.
@@ -21,10 +21,10 @@
    - O título e a frase de apoio.
    - O chamado principal e o secundário, lado a lado, com a linha de condições embaixo.
    - Os números de uso, com origem, e os logos de quem usa ou de quem confia.
-   - O produto, embaixo ou ao lado: os componentes reais com dados fixos ou a tela real, cortados até o que se lê nesse tamanho.
-3. **O produto funcionando.** Uma demonstração curta, em vídeo ou animada, com o pedido, o resultado e a prova, seguindo `../demonstracao.md`. Ela mostra só o que o produto faz hoje, e dados de exemplo levam a etiqueta "Exemplo fictício", como no Juridiq.
-4. **A dor.** Três ou quatro cartões com a dor nas palavras do cliente. O JuriChat abre com "Reconhece o seu dia a dia?", e o Juridiq com a pergunta que o cliente do escritório repete. Depois vem a frase que liga a dor à solução.
-5. **Os recursos do dia a dia.** Um por bloco, com o resultado no título ("Seus prazos organizados sozinhos") e a tela ao lado. Quando viram uma grade, ela segue a seção 12 de `../demonstracao.md`: um bloco lidera, e nem todo bloco é tela.
+   - O produto, embaixo ou ao lado, grande: a janela de um sistema inteiro, ou um objeto que se reconhece sem ler. Guia em `../demonstracao.md`.
+3. **O produto funcionando.** Uma figura ou uma demonstração curta, em vídeo ou animada, com o pedido, o resultado e a prova. Ela mostra só o que o produto faz hoje, e dados de exemplo levam a etiqueta "Exemplo fictício", como no Juridiq.
+4. **A dor.** A frase que o cliente repete como título e um objeto grande que mostra o problema resolvido, como o telefone no centro do Juridiq, com três ou quatro cartões curtos em volta. O JuriChat abre com "Reconhece o seu dia a dia?". Depois vem a frase que liga a dor à solução.
+5. **Os recursos do dia a dia.** Uma linha por recurso, com o resultado no título ("Seus prazos organizados sozinhos"), até duas linhas de apoio e uma figura grande ao lado, alternando os lados. Os recursos menores terminam em até três cartões curtos. Veja a seção 13 de `../demonstracao.md`.
 6. **A diferença.** Por que este produto e não uma alternativa genérica: feito para quem, o que ninguém mais faz, o que já vem pronto.
 7. **A história de uso.** Um cliente de exemplo, do primeiro contato ao resultado, em passos numerados. O JuriChat conta a história de uma cliente numa conversa que fica presa na tela enquanto os passos sobem: ela chama, a consulta é marcada, o contrato é assinado pelo celular e ela acompanha o processo.
 8. **As integrações.** O que se conecta e o que depende do plano, escrito junto.
@@ -58,11 +58,11 @@ Quando há uma promoção, como a Black Friday dos modelos:
 
 ## O texto
 
-- O título fala do resultado para quem compra, não do produto.
-- Cada recurso tem o resultado no título e uma frase de como funciona.
+- O título fala do resultado para quem compra, não do produto, e passa nos testes da seção 17 de `../principios.md`.
+- Cada recurso tem o resultado no título e até duas linhas de como funciona. A figura explica o resto.
 - Os chamados dizem a ação: "Agendar demonstração", "Começar o teste".
-- Leia `../vicios.md` antes de escrever: número, nome e escassez precisam de origem, e o que a página usar da lista é escolha registrada.
-- Antes de entregar, revise o texto com a skill `texto-natural`, mantendo a voz da marca e sem acrescentar fato, número ou promessa.
+- Leia `../vicios.md` antes de escrever: número, nome e escassez precisam de origem.
+- Antes de entregar, revise o texto com a skill `texto-natural`, mantendo a voz da marca e sem acrescentar fato, número ou promessa. O título e os chamados perdem só o vício de escrita e mantêm a força: quem manda neles é a seção 17 de `../principios.md`.
 
 ## Movimento e mídia
 
@@ -91,7 +91,7 @@ Os detalhes estão em `../lei.md`.
 
 ## O que a conferência olha
 
-`cta_first_screen`, `cta_consistent`, `h1_present`, `numbers_not_zero`, `claims_have_origin`, `placeholder_data`, `trial_terms`, `promo_terms_shown`, `discount_math`, `reference_price_true`, `countdown_real`, `popup_dismissable`, `popup_on_arrival`, `sticky_cta_long_page`, `cancel_terms_shown`, `supplier_identified`, `legal_lines`, `demo_honest`, `demo_film`, `ai_defaults`, `off_brand`, `video_autoplay_ok`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
+`title_promises`, `figures_seen`, `cards_short`, `cards_no_holes`, `cta_first_screen`, `cta_consistent`, `h1_present`, `numbers_not_zero`, `claims_have_origin`, `placeholder_data`, `trial_terms`, `promo_terms_shown`, `discount_math`, `reference_price_true`, `countdown_real`, `popup_dismissable`, `popup_on_arrival`, `sticky_cta_long_page`, `cancel_terms_shown`, `supplier_identified`, `legal_lines`, `demo_honest`, `demo_film`, `ai_defaults`, `off_brand`, `video_autoplay_ok`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

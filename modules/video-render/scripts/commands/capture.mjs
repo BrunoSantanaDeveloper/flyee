@@ -9,7 +9,7 @@ import { checkTools } from "../lib/tools.mjs";
 import { parseNumber, round, usage } from "../lib/util.mjs";
 
 export const argSpec = {
-  flags: ["no-assets"],
+  flags: ["no-assets", "no-letters"],
   options: ["mobile", "desktop", "scroll"],
 };
 
@@ -20,6 +20,7 @@ export const help = `Opções de capture
   --scroll <s>                   Segundos da rolagem gravada no celular (padrão: 6; 0 desliga); o computador grava dois terços disso.
   --fps <n>                      Quadros por segundo das rolagens (padrão: 30).
   --no-assets                    Não guarda logo, ícones e imagem de compartilhamento em assets/.
+  --no-letters                   Grava também a página sem nenhuma letra, no computador e no celular (sem-letras.jpg, sem-letras-celular.jpg).
   --browser <caminho>            Outro navegador (Edge, Chrome ou Chromium).`;
 
 function describeScroll(scroll) {
@@ -70,6 +71,7 @@ export const commands = {
         scrollSeconds,
         fps,
         assets: !values["no-assets"],
+        noLetters: Boolean(values["no-letters"]),
         onProgress: ctx.progress,
       });
       return {

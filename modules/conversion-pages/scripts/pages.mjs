@@ -15,6 +15,8 @@ const APP_DIR = resolve(SCRIPTS_DIR, "..");
 const ROOT = projectRoot(SCRIPTS_DIR);
 const INTERFACE_VERSION = 1;
 const ENGINE_MIN = "1.1.0";
+const ENGINE_NO_LETTERS = "1.2.0";
+const NOT_CHECKED = "A conferência mede regras. Ela não vê se a página se entende nem se o texto vende: isso se responde olhando as fotos.";
 const CAPTURE_TIMEOUT_MS = 5 * 60 * 1000;
 const FILM_TIMEOUT_MS = 4 * 60 * 1000;
 const APP = { name: "conversion-pages", version: readJson(join(APP_DIR, "flyee.module.json"))?.version ?? "0.0.0" };
@@ -22,7 +24,7 @@ const TYPES = readJson(join(APP_DIR, "references", "tipos.json"));
 const CHECKS = readJson(join(APP_DIR, "references", "checks.json"));
 const MODELS = readJson(join(APP_DIR, "references", "modelos.json"));
 
-const ARG_SPEC = { flags: ["json"], options: ["type", "dir", "url", "capture"] };
+const ARG_SPEC = { flags: ["json", "before"], options: ["type", "dir", "url", "capture"] };
 
 const HELP = `Páginas que vendem (interface ${INTERFACE_VERSION})
 
@@ -34,6 +36,8 @@ const HELP = `Páginas que vendem (interface ${INTERFACE_VERSION})
   plan <pagina>                  refaz plano.md a partir de pagina.json
   audit <pagina> [--url <endereço ou arquivo .mhtml> | --capture <captura.json>]
                                  captura a página pronta e confere os itens do tipo
+  audit <pagina> --url <endereço> --before
+                                 fotografa a página como está, antes de mexer, para comparar depois
   status <pagina> · list · help
 
 Todos aceitam --json. Os comandos partem da raiz do projeto aberto.`;
@@ -187,6 +191,16 @@ function isFilePath(text) {
   return /\.(?:html?|mhtml?|mht)$/i.test(text) && !/^[a-z][a-z0-9+.-]*:\/\//i.test(text);
 }
 
+/** Photos and films are evidence for this machine, some of them heavy: they stay out of the project's commits. */
+function keepOutOfCommits(dir) {
+  try {
+    const file = join(dir, ".gitignore");
+    if (existsSync(dir) && !existsSync(file)) writeFileAtomic(file, "*\n");
+  } catch {
+    // a folder that cannot take the file still holds the capture
+  }
+}
+
 /**
  * Films the scene the page marks, through the Video engine. A film that fails never fails the audit:
  * the item comes back not checked, with the reason.
@@ -198,6 +212,7 @@ async function filmScene(url, selector, dir) {
   progress(`Filmando a cena ${selector} com o Motor de vídeo ${engine.version ?? ""}.`);
   try {
     const run = await runNode(engine.script, ["film", url, "--select", selector, "--out", outDir, "--json"], { cwd: ROOT, timeoutMs: FILM_TIMEOUT_MS, label: "A filmagem da cena" });
+    keepOutOfCommits(outDir);
     const answer = parseAnswer(run.stdout);
     if (!answer || answer.ok === false) return { error: `A cena não foi filmada: ${answer?.error?.message ?? "o Motor de vídeo não respondeu."}` };
     return { ...answer, sheets: (answer.passes ? Object.values(answer.passes) : []).map((pass) => pass.sheet).filter(Boolean).map((sheet) => toPosix(ROOT, join(outDir, sheet))) };
@@ -206,7 +221,52 @@ async function filmScene(url, selector, dir) {
   }
 }
 
+/** Captures a page through the Video engine into outDir. The audit needs the reading and the photos only: no scroll video (and no ffmpeg) and no logo downloads. */
+async function capturePage(url, outDir, engine) {
+  progress(`Capturando ${url} com o Motor de vídeo ${engine.version ?? ""}.`);
+  const args = ["capture", url, "--out", outDir, "--scroll", "0", "--no-assets"];
+  if (versionAtLeast(engine.version, ENGINE_NO_LETTERS)) args.push("--no-letters");
+  const run = await runNode(engine.script, [...args, "--json"], { cwd: ROOT, timeoutMs: CAPTURE_TIMEOUT_MS, label: "A captura da página" });
+  keepOutOfCommits(outDir);
+  const answer = parseAnswer(run.stdout);
+  if (!answer || answer.ok === false) {
+    const error = answer?.error ?? {};
+    throw new AppError(error.code ?? "capture_failed", error.message ?? "A captura da página falhou.", error.fix ?? "Confira se a página abre no navegador e tente de novo.");
+  }
+  const captureFile = join(outDir, "captura.json");
+  const capture = readJson(captureFile);
+  if (!capture) throw new AppError("capture_failed", "A captura terminou sem o arquivo captura.json.", "Tente de novo; se repetir, atualize o Motor de vídeo.");
+  return { capture, captureFile };
+}
+
+/** The photos of a capture, relative to the project root: the plain ones and the ones with no letters. */
+function photosOf(capture, captureFile) {
+  const shots = capture.files ?? {};
+  const paths = (names) => names.filter(Boolean).map((file) => toPosix(ROOT, join(dirname(captureFile), file)));
+  return { photos: paths([shots.desktop_full, shots.mobile_full]), no_letters: paths([shots.no_letters_desktop, shots.no_letters_mobile]) };
+}
+
+/** The page as it is, before anyone changes it, kept apart so the audit can compare later. */
+async function cmdBefore(name, values) {
+  const dir = findPage(name, values.dir);
+  const { facts } = readFacts(dir);
+  let url = values.url ?? facts.url;
+  if (!url) throw new AppError("url_missing", "Falta o endereço da página para a foto de antes.", "Passe --url com o endereço da página como ela está agora.");
+  if (isFilePath(url) && !isAbsolute(url)) url = resolve(ROOT, url);
+  const engine = findEngine(ROOT, APP_DIR);
+  if (!engine) throw new AppError("video_render_missing", "A foto de antes usa o Motor de vídeo, que não está instalado.", "Instale com npx --yes flyee@latest add video-render --yes --json e rode de novo.");
+  const { capture, captureFile } = await capturePage(url, join(dir, "antes"), engine);
+  return {
+    ok: true,
+    page: name,
+    before: true,
+    files: { capture: toPosix(ROOT, captureFile), ...photosOf(capture, captureFile) },
+    next_step: "A página de antes está guardada em antes/. Abra a foto sem letras para saber o que ela já tem de bom. Depois de mudar a página, rode audit sem --before e compare as duas.",
+  };
+}
+
 async function cmdAudit(name, values) {
+  if (values.before) return cmdBefore(name, values);
   const dir = findPage(name, values.dir);
   const { facts, type } = readFacts(dir);
   let capture;
@@ -223,18 +283,7 @@ async function cmdAudit(name, values) {
     if (isFilePath(url) && !isAbsolute(url)) url = resolve(ROOT, url);
     const engine = findEngine(ROOT, APP_DIR);
     if (!engine) throw new AppError("video_render_missing", "A conferência usa o Motor de vídeo, que não está instalado.", "Instale com npx --yes flyee@latest add video-render --yes --json e rode audit de novo.");
-    const outDir = join(dir, "captura");
-    progress(`Capturando ${url} com o Motor de vídeo ${engine.version ?? ""}.`);
-    // The audit needs the page reading only: no scroll video (and no ffmpeg) and no logo downloads.
-    const run = await runNode(engine.script, ["capture", url, "--out", outDir, "--scroll", "0", "--no-assets", "--json"], { cwd: ROOT, timeoutMs: CAPTURE_TIMEOUT_MS, label: "A captura da página" });
-    const answer = parseAnswer(run.stdout);
-    if (!answer || answer.ok === false) {
-      const error = answer?.error ?? {};
-      throw new AppError(error.code ?? "capture_failed", error.message ?? "A captura da página falhou.", error.fix ?? "Confira se a página abre no navegador e tente de novo.");
-    }
-    captureFile = join(outDir, "captura.json");
-    capture = readJson(captureFile);
-    if (!capture) throw new AppError("capture_failed", "A captura terminou sem o arquivo captura.json.", "Tente de novo; se repetir, atualize o Motor de vídeo.");
+    ({ capture, captureFile } = await capturePage(url, join(dir, "captura"), engine));
     if (facts.demo?.selector && capture.input_kind !== "mhtml") film = await filmScene(url, facts.demo.selector, dir);
   }
   // texto.md carries the whole page text, footer included; the anatomy keeps at most 4,000 characters per section.
@@ -257,12 +306,16 @@ async function cmdAudit(name, values) {
     summary: result.summary,
     items: result.items,
     film: film ? { sheets: film.sheets ?? [], error: film.error ?? null } : null,
+    not_checked: NOT_CHECKED,
   };
   writeJson(join(dir, "conferencia.json"), report);
   // The photos of the whole page, so whoever built it looks at it before delivering.
-  const shots = capture.files ?? {};
-  const photos = [shots.desktop_full, shots.mobile_full].filter(Boolean).map((file) => toPosix(ROOT, join(dirname(captureFile), file)));
-  const look = film?.sheets?.length ? "Abra as folhas de film.sheets e as fotos de files.photos e responda às perguntas de Conferir olhando em references/demonstracao.md." : "Abra as fotos de files.photos e leia a página pronta, no computador e no celular.";
+  const { photos, no_letters: noLetters } = photosOf(capture, captureFile);
+  const beforeFile = join(dir, "antes", "captura.json");
+  const beforeCapture = existsSync(beforeFile) ? readJson(beforeFile) : null;
+  const before = beforeCapture ? photosOf(beforeCapture, beforeFile) : null;
+  const first = noLetters.length ? "Abra primeiro a página sem letras (files.no_letters)" : "Abra as fotos de files.photos (a foto sem letras vem no Motor de vídeo 1.2.0 ou mais novo)";
+  const look = `${NOT_CHECKED} ${first} e responda às perguntas de Conferir olhando em references/demonstracao.md${before ? ", comparando com a página de antes (files.before)" : ""}${film?.sheets?.length ? ", e veja a cena em film.sheets" : ""}.`;
   return {
     ok: true,
     page: name,
@@ -272,12 +325,13 @@ async function cmdAudit(name, values) {
     items: result.items.map(({ id, status, detail }) => ({ id, status, detail })),
     say: result.say,
     film: film ? { sheets: film.sheets ?? [], mode: film.mode ?? null, error: film.error ?? null } : null,
-    files: { audit: toPosix(ROOT, join(dir, "conferencia.json")), capture: toPosix(ROOT, captureFile), photos },
+    not_checked: NOT_CHECKED,
+    files: { audit: toPosix(ROOT, join(dir, "conferencia.json")), capture: toPosix(ROOT, captureFile), photos, no_letters: noLetters, before },
     next_step: !result.anatomy
       ? "A captura veio sem a leitura completa: atualize o Motor de vídeo com npx --yes flyee@latest update video-render --yes --json e rode audit de novo."
       : result.summary.atencao
         ? `Corrija na página o que está em atenção, lendo também a lista de conferir à mão do plano, e rode audit de novo. ${look}`
-        : `Nada em atenção. ${look} Confira à mão os itens do plano e entregue o resumo em três linhas.`,
+        : `Nada em atenção, e isso não quer dizer que a página está boa. ${look} Confira à mão os itens do plano e só então entregue o resumo em três linhas.`,
   };
 }
 

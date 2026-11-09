@@ -30,9 +30,9 @@ Diga à sua IA qual página você quer, o que ela vende e onde entra no seu site
 
 1. A sua IA olha o que o projeto já tem: as páginas, o visual da marca, os planos, o checkout e o provedor de pagamento.
 2. Ela pergunta numa mensagem só o que falta, cada pergunta com uma sugestão: o produto, o preço, os planos, o período de teste, a garantia, o texto do botão.
-3. Ela escreve o plano da página, com a direção visual, a demonstração, as seções na ordem, como a compra funciona, o que medir e as linhas que a lei pede, e resume em três linhas.
-4. Ela constrói a página no seu projeto, pensando primeiro no celular, e mostra o produto de verdade sempre que possível.
-5. Ela abre a página pronta, olha as fotos e os quadros da demonstração e confere cada item do tipo. Você ouve só o que precisa de atenção, e ela corrige.
+3. Ela escreve o plano da página, com o título, as figuras de cada seção, a direção visual, as seções na ordem, como a compra funciona, o que medir e as linhas que a lei pede. No chat, você vê três linhas e escolhe o título entre o sugerido e duas alternativas.
+4. Ela constrói a página no seu projeto, pensando primeiro no celular, com figuras que se entendem sem ler: um telefone com a conversa, um calendário, a janela grande do sistema.
+5. Ela abre a página pronta, olha a página sem nenhuma letra, as fotos e os quadros da demonstração, e confere cada item do tipo. Você ouve só o que precisa de atenção, e ela corrige.
 
 ## O que o app nunca faz
 
@@ -42,5 +42,6 @@ Diga à sua IA qual página você quer, o que ela vende e onde entra no seu site
 - Mostrar preço riscado ou contador sem o seu sim de que são reais.
 - Mostrar uma conta de desconto ou de economia que não fecha.
 - Abrir uma janela de promoção por cima da página logo na chegada.
-- Mostrar na demonstração o que o produto ainda não faz.
+- Mostrar numa figura o que o produto ainda não faz.
+- Tirar de uma página pronta o que você escolheu, sem você pedir.
 - Afirmar um número, uma escassez ou um nome sem saber de onde veio.

@@ -10,7 +10,8 @@ Você pede uma página que vende: a página de vendas do produto, a de planos e 
 2. segue o roteiro desse tipo: as seções na ordem, a mecânica da compra, o texto, o movimento, a medição e as linhas da lei;
 3. usa como referência os modelos reais que o app traz;
 4. olha o que o seu projeto já tem e pergunta só o que falta;
-5. mostra o produto de verdade na demonstração, com os componentes do seu projeto sempre que possível, e só o que ele faz hoje.
+5. escreve um título que promete o que muda para quem chegou, e leva o sugerido e duas alternativas para você escolher;
+6. desenha cada figura para quem nunca viu o produto, de modo que ela se entenda sem ler, mostrando só o que ele faz hoje.
 
 Depois de construir, a sua IA abre a página pronta num navegador sem janela e confere cada item do tipo, por exemplo:
 
@@ -24,9 +25,10 @@ Depois de construir, a sua IA abre a página pronta num navegador sem janela e c
 - as linhas legais;
 - os números e as urgências da página com origem, e nenhum dado de exemplo esquecido;
 - a página no celular: nada passando da largura, texto legível, botões fáceis de tocar, contraste e imagens leves;
-- os padrões que a IA costuma repetir sem ninguém pedir.
+- cartões que se leem de relance, sem buraco, e figuras sem frases longas;
+- os padrões que a IA costuma repetir sem ninguém pedir, só como aviso: o que você escolheu fica.
 
-A sua IA também abre as fotos da página e, quando há uma demonstração, as folhas de quadros filmadas no computador, no celular e com menos movimento.
+A conferência mede regras e não vê se a página se entende. Por isso, a sua IA também olha: abre a página sem nenhuma letra, para ver se cada figura continua dizendo o que é, as fotos da página e, quando há uma demonstração, as folhas de quadros filmadas no computador, no celular e com menos movimento. Numa página que já existe, ela fotografa antes de mexer e compara depois.
 
 Você ouve só o que precisa de atenção.
 

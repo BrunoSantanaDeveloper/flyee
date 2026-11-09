@@ -64,7 +64,7 @@ Escritórios de advocacia que atendem clientes pelo WhatsApp, pelo Instagram e p
 
 ## O visual, em palavras
 
-- **O topo é claro,** num degradê azul bem leve, ao contrário do Juridiq.
+- **O topo é claro,** num degradê azul bem leve, ao contrário do Juridiq, com uma luz azul atrás do título e um brilho azul em volta da janela do produto.
 - **Acima do título,** uma pílula escura com a promoção.
 - **O título** tem a primeira parte em azul, sublinhada por uma barra azul, e o resto em preto.
 - **No celular,** os dois botões ocupam a largura toda: o principal azul, com seta, e o secundário branco, com borda.
@@ -78,6 +78,22 @@ Escritórios de advocacia que atendem clientes pelo WhatsApp, pelo Instagram e p
 - **A letra** é a mesma família do Juridiq.
 
 Na página do integrante, troque cores, letra e imagens pelas da marca dele; o que vale levar é o topo leve com o título destacado e a conversa que conta a história.
+
+Da lista de `vicios.md`, esta página usa `texto_degrade`, `vidro` e `mancha_desfocada`. Quem pede uma página no estilo dela está escolhendo esses padrões: registre em `visual.chosen` os que levar.
+
+## As figuras, seção por seção
+
+Sem nenhuma letra, esta página continua dizendo o que é:
+
+| Seção | O que se vê | O que se entende sem ler |
+|---|---|---|
+| O topo | a janela do sistema numa moldura de navegador, com um medidor colorido, um gráfico de pizza e cartões flutuando sobre as bordas | um painel de atendimento de verdade |
+| A consulta do processo | um telefone escuro grande, com a conversa, e cartões dos dois lados | o cliente consulta sozinho, pelo celular |
+| A história de uso | a conversa inteira, no fundo bege, com os balões verdes de um aplicativo de mensagens, presa na tela enquanto os passos sobem | do primeiro contato ao resultado, numa conversa |
+| O painel do atendente | uma janela com filas e barras azuis, e três cartões menores: números, um gráfico de barras e um alerta vermelho | quem atende sabe o que fazer agora |
+| A visão do gestor | um medidor, uma pizza, um gráfico de área e barras, grandes | o dono vê tudo em números |
+
+Os quatro cartões de dor, curtos e sem figura, vêm logo antes do telefone, e os seis cartões da diferença, logo antes da conversa: os trechos só de texto em caixa ficam entre duas figuras grandes.
 
 ## O que não repetir
 

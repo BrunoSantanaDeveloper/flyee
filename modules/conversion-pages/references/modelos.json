@@ -24,6 +24,7 @@
       "types": ["landing"],
       "file": "modelos/juridiq-pagina-de-vendas.md",
       "highlights": [
+        "cada seção tem um objeto que se entende sem ler: a janela grande do sistema, o telefone, o radar, as colagens de telas",
         "demonstração e teste no topo, com a linha de condições embaixo",
         "a janela da promoção abre na metade da página, nunca na chegada, com recusa visível",
         "barra fixa no celular quando o botão do topo sai da tela",

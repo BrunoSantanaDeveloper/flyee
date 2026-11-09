@@ -26,6 +26,8 @@ const QUALITY = {
     contrast: { checked: 12, unknown: {}, failing: [] },
     controls: { checked: 4, problems: [] },
     demos: [],
+    figures: [],
+    cards: [],
     defaults: { found: {}, counts: {}, mono_share: 0 },
     errors: [],
   },
@@ -87,10 +89,13 @@ test("the types that show the product have a demonstration in the plan, and the 
   const f = newFacts({ name: "x", type: "landing", today: "2026-11-08" });
   const landing = renderPlan({ facts: f, type: type("landing"), checks: CHECKS, models: [], today: "2026-11-08" });
   assert.match(landing, /## A direção visual/);
-  assert.match(landing, /## A demonstração/);
+  assert.match(landing, /## A figura principal/);
+  assert.match(landing, /## O título/);
+  assert.match(landing, /## As figuras/);
   assert.match(landing, /## Os números e as urgências/);
   assert.doesNotMatch(landing, /[–—!]/);
-  assert.doesNotMatch(renderPlan({ facts: f, type: type("obrigado"), checks: CHECKS, models: [], today: "2026-11-08" }), /## A demonstração/);
+  assert.doesNotMatch(renderPlan({ facts: f, type: type("obrigado"), checks: CHECKS, models: [], today: "2026-11-08" }), /## A figura principal/);
+  assert.doesNotMatch(renderPlan({ facts: f, type: type("planos"), checks: CHECKS, models: [], today: "2026-11-08" }), /## As figuras/);
   assert.deepEqual(missingFacts(f, type("planos")).filter((path) => path.startsWith("visual")), ["visual.direction"]);
   const filled = renderPlan({
     facts: { ...f, visual: { direction: "Um painel escuro, como o do sistema", chosen: ["texto_degrade"] }, brand: { colors: ["#0F62FE"], fonts: ["Inter"], source: "tailwind.config.ts" }, demo: { ...f.demo, kind: "componentes", action: "criar um prazo" }, claims: [{ text: "+500 escritórios", origin: "painel de clientes, outubro de 2026" }] },
@@ -104,6 +109,95 @@ test("the types that show the product have a demonstration in the plan, and the 
   assert.match(filled, /Escolhido de propósito da lista de vícios: texto_degrade/);
   assert.match(filled, /\| a única ação \| criar um prazo \|/);
   assert.match(filled, /\| \+500 escritórios \| painel de clientes, outubro de 2026 \|/);
+});
+
+test("the landing plan asks for the title and for what each section shows, before any code", () => {
+  const f = newFacts({ name: "x", type: "landing", today: "2026-11-08" });
+  const missing = missingFacts(f, type("landing"));
+  assert.ok(missing.includes("headline.chosen"), missing.join(" "));
+  assert.ok(missing.includes("figures"), "an empty list of figures is still missing");
+  const filled = {
+    ...f,
+    headline: { chosen: "Chega de paciente que marca e não aparece", options: ["Chega de paciente que marca e não aparece", "Sua agenda cheia, sem ninguém no telefone"] },
+    figures: [{ name: "atendimento", section: "A dor", object: "telefone com a conversa", says: "a paciente pergunta, e a resposta já chegou" }],
+  };
+  assert.ok(!missingFacts(filled, type("landing")).includes("figures"));
+  const plan = renderPlan({ facts: filled, type: type("landing"), checks: CHECKS, models: [], today: "2026-11-08" });
+  assert.match(plan, /Escolhido: Chega de paciente/);
+  assert.match(plan, /- Sua agenda cheia/);
+  assert.match(plan, /\| A dor \| telefone com a conversa \| a paciente pergunta, e a resposta já chegou \| `data-figura="atendimento"` \|/);
+});
+
+test("the guide puts the drawing first and never tells anyone to strip a chosen look", () => {
+  const guide = readFileSync(join(app, "references", "demonstracao.md"), "utf8");
+  assert.ok(guide.indexOf("| 1 | `replica`") > 0 && guide.indexOf("| 1 | `replica`") < guide.indexOf("| 3 | `componentes`"));
+  assert.match(guide, /files\.no_letters/);
+  const list = readFileSync(join(app, "references", "vicios.md"), "utf8");
+  assert.match(list, /nada sai por causa desta lista sem o integrante pedir/);
+  assert.doesNotMatch(CHECKS.checks.ai_defaults.fix, /sai da página/);
+  for (const model of ["juridiq-pagina-de-vendas", "jurichat-pagina-de-vendas"]) {
+    const body = readFileSync(join(app, "references", "modelos", `${model}.md`), "utf8");
+    assert.match(body, /## As figuras, seção por seção/, model);
+    assert.match(body, /`visual\.chosen`/, model);
+  }
+});
+
+test("a title that opens with the category is pointed out, and one that speaks to whoever arrived is not", () => {
+  const titled = (text) => page({ anatomy: { sections: [{ index: 1, heading: { tag: "h1", text }, y: 100, height: 800, text: "", words: 2 }] } });
+  for (const text of ["Automação com IA no contencioso de massa, do primeiro contato ao protocolo", "Plataforma de gestão para clínicas", "O sistema de agenda mais completo do Brasil", "Soluções em tecnologia para o varejo"]) {
+    assert.equal(item(run(titled(text)), "title_promises").status, "atencao", text);
+  }
+  for (const text of ["Seu escritório inteiro em um só lugar", "Sistema de agenda que enche a sua semana", "Chega de paciente que marca e não aparece", "Revolucione o atendimento do seu escritório", "Sistemática de vendas sem planilha"]) {
+    assert.equal(item(run(titled(text)), "title_promises").status, "ok", text);
+  }
+  assert.equal(item(run(page({ anatomy: { sections: [] } })), "title_promises").status, "nao_conferido");
+});
+
+// What the Video engine read on real pages on 2026-11-08: the cards that are neither a quote, a question nor a plan.
+const MEASURED = {
+  juridiq: [{ read_words: 25, height: 252, hole: 0.13 }, { read_words: 17, height: 228, hole: 0.14 }, { read_words: 16, height: 238, hole: 0.2 }, { read_words: 12, height: 92, hole: 0.51 }],
+  jurichat: [{ read_words: 31, height: 583, hole: 0.08, picture_share: 0.62 }, { read_words: 19, height: 326, hole: 0.31, picture_share: 0.59 }, { read_words: 19, height: 280, hole: 0.22 }, { read_words: 15, height: 93, hole: 0.54 }],
+  one_anterior: [{ read_words: 27, height: 157, hole: 0.05 }, { read_words: 23, height: 194, hole: 0.14 }, { read_words: 19, height: 199, hole: 0.16 }],
+  one_com_o_erro: [{ read_words: 55, height: 414, hole: 0.24 }, { read_words: 40, height: 362, hole: 0.15 }, { read_words: 22, height: 362, hole: 0.31 }, { read_words: 20, height: 414, hole: 0.46 }],
+};
+
+test("the limits of the cards separate the pages they were measured on", () => {
+  const read = (name) => run(page({ quality: { desktop: { cards: MEASURED[name].map((card, index) => ({ text: `cartão ${index}`, kind: "card", ...card })) } } }));
+  for (const name of ["juridiq", "jurichat", "one_anterior"]) {
+    assert.equal(item(read(name), "cards_short").status, "ok", name);
+    assert.equal(item(read(name), "cards_no_holes").status, "ok", name);
+  }
+  const wrong = read("one_com_o_erro");
+  assert.equal(item(wrong, "cards_short").status, "atencao");
+  assert.match(item(wrong, "cards_short").detail, /55 palavras, e mais 1 passa de 32/);
+  assert.equal(item(wrong, "cards_no_holes").status, "atencao");
+  assert.match(item(wrong, "cards_no_holes").detail, /46% da altura vazia, e mais 1/);
+});
+
+test("the cards meant to be read are left out, and a page with no cards says nothing", () => {
+  const long = { read_words: 80, height: 400, hole: 0.5, text: "um texto longo" };
+  for (const kind of ["quote", "faq", "priced", "form", "code"]) {
+    const result = run(page({ quality: { desktop: { cards: [{ ...long, kind }] } } }));
+    assert.equal(item(result, "cards_short").status, "skipped", kind);
+    assert.equal(item(result, "cards_no_holes").status, "skipped", kind);
+  }
+  assert.equal(item(run(page()), "cards_short").status, "skipped");
+  const old = run(page({ quality: { desktop: { cards: undefined, figures: undefined } } }));
+  assert.equal(item(old, "cards_short").status, "nao_conferido");
+  assert.equal(item(old, "figures_seen").status, "nao_conferido");
+});
+
+test("a figure that asks to be read is pointed out, and so is a planned figure the page does not mark", () => {
+  const figure = (over) => ({ name: "atendimento", mark: "figura", width: 400, height: 300, words: 10, read_words: 0, longest: 3, blocks: 4, picture_share: 0, ...over });
+  const planned = { figures: [{ name: "atendimento", section: "A dor", object: "telefone", says: "x" }, { name: "prazos", section: "Prazos", object: "calendário", says: "y" }] };
+  const seen = (figures, over = planned) => item(run(page({ quality: { desktop: { figures } } }), over), "figures_seen");
+
+  assert.equal(seen([figure({}), figure({ name: "prazos" })]).status, "ok");
+  assert.match(seen([figure({})]).detail, /"prazos"/);
+  assert.match(seen([figure({ longest: 34, read_words: 34 }), figure({ name: "prazos" })]).detail, /"atendimento" pede a leitura de 34 palavras, com uma frase de 34/);
+  assert.equal(seen([figure({ longest: 14, read_words: 40 }), figure({ name: "prazos" })]).status, "atencao");
+  assert.equal(seen([figure({ longest: 15, read_words: 30 }), figure({ name: "prazos" })]).status, "ok");
+  assert.equal(seen([], {}).status, "nao_conferido");
 });
 
 test("a pagina.json written before this round still plans, without showing rows for fields it never had", () => {
@@ -316,7 +410,24 @@ test("audit through the Video engine: a page with defects on purpose, and the sc
     assert.equal(result.film, null);
     assert.equal(result.files.photos.length, 2);
     assert.ok(result.files.photos.every((file) => existsSync(join(project, file))), result.files.photos.join(" "));
-    assert.match(result.next_step, /files\.photos/);
+    assert.equal(result.files.no_letters.length, 2);
+    assert.ok(result.files.no_letters.every((file) => existsSync(join(project, file))), result.files.no_letters.join(" "));
+    assert.match(result.next_step, /files\.no_letters/);
+    assert.match(result.not_checked, /não vê se a página se entende/);
+    assert.equal(result.files.before, null);
+    assert.match(read(join(project, "paginas", "defeitos", "conferencia.json")).not_checked, /não vê se a página se entende/);
+
+    // The photo of before stays apart, and the next audit shows it next to the new one.
+    const before = cli("audit", "defeitos", "--url", defects, "--before");
+    assert.equal(before.ok, true, JSON.stringify(before.error));
+    assert.equal(before.before, true);
+    assert.ok(before.files.no_letters.every((file) => /\/antes\//.test(file) && existsSync(join(project, file))), before.files.no_letters.join(" "));
+    const compared = cli("audit", "defeitos", "--url", defects);
+    assert.deepEqual(compared.files.before.no_letters, before.files.no_letters);
+    assert.match(compared.next_step, /files\.before/);
+
+    // The photos stay out of the project's commits.
+    for (const folder of ["captura", "antes"]) assert.equal(readFileSync(join(project, "paginas", "defeitos", folder, ".gitignore"), "utf8"), "*\n", folder);
 
     cli("new", "cena", "--type", "landing");
     const file = join(project, "paginas", "cena", "pagina.json");
@@ -332,6 +443,7 @@ test("audit through the Video engine: a page with defects on purpose, and the sc
     assert.ok(filmed.film.sheets.every((sheet) => existsSync(join(project, sheet))), filmed.film.sheets.join(" "));
     assert.match(filmed.next_step, /film\.sheets/);
     assert.deepEqual(read(join(project, "paginas", "cena", "conferencia.json")).film.sheets, filmed.film.sheets);
+    assert.equal(readFileSync(join(project, "paginas", "cena", "filme", ".gitignore"), "utf8"), "*\n");
 
     const missing = read(file);
     missing.demo.selector = "[data-nada]";

@@ -44,6 +44,7 @@ node .flyee/modules/video-render/scripts/render.mjs check --json
   node .flyee/modules/video-render/scripts/render.mjs capture https://www.exemplo.com.br --json
   ```
 - Uma parte de uma página rodando, como uma demonstração: `film <endereço> --select <seletor> --json` fotografa em tempo real, no computador, no celular e com menos movimento, e monta uma folha de quadros de cada. Abra as folhas e olhe.
+- O que uma página mostra antes de ser lida: `capture <endereço> --no-letters --json` grava também `sem-letras.jpg` e `sem-letras-celular.jpg`, com o texto apagado e o resto no lugar. Uma figura que continua dizendo o que é funciona; uma caixa vazia pedia leitura.
 - Vários formatos (9:16, 4:5, 3:4, 1:1, 16:9) saem da mesma página: veja `../../references/formatos.md`.
 
 ## Passo 2: o som, antes de animar

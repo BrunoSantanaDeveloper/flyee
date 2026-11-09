@@ -2,7 +2,7 @@
 
 **Objetivo:** quando o operador (ou um integrante) pedir à IA uma página de um tipo conhecido (página de vendas, planos e preços, página de API, order bump, upsell, downsell, cross-sell, página de obrigado), a IA segue o roteiro de mercado daquele tipo e os modelos reais analisados, constrói a página e a confere pela captura. O repertório cresce a cada modelo que o operador traz.
 
-> Conferido contra o código em 2026-11-08. A primeira rodada (Hostinger) está em a702826; a segunda (Juridiq, ÉPICO 5) está em 9b986bd e e859313; a terceira (ÉPICO 6) está em 4cc2280. As tags `video-render@1.1.0` e `conversion-pages@1.1.0` apontam para 4cc2280 e chegaram à plataforma como rascunho, com o SHA-256 da plataforma igual ao do pack. Publicar e marcar a versão de entrada (D7) continuam sendo cliques do operador. **⚠️ A terceira rodada piorou a página do ONE e não deve ser publicada; o ÉPICO 7 a corrige em `conversion-pages` 1.2.0 e `video-render` 1.2.0, ainda sem commit e sem tag.** Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
+> Conferido contra o código em 2026-11-08. A primeira rodada (Hostinger) está em a702826; a segunda (Juridiq, ÉPICO 5) está em 9b986bd e e859313; a terceira (ÉPICO 6) está em 4cc2280. As tags `video-render@1.1.0` e `conversion-pages@1.1.0` apontam para 4cc2280 e chegaram à plataforma como rascunho, com o SHA-256 da plataforma igual ao do pack. Publicar e marcar a versão de entrada (D7) continuam sendo cliques do operador. **⚠️ A terceira rodada piorou a página do ONE e não deve ser publicada; o ÉPICO 7 a corrige no commit b5535b0, com as tags `video-render@1.2.0` (`8b8ef9c2…`, run 42546822988) e `conversion-pages@1.2.0` (`a77b9581…`, run 42546875997), rascunhos com o SHA-256 da plataforma igual ao do pack.** Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
 
 ## Estado da implementação (2026-11-07)
 
@@ -12,7 +12,8 @@
 | T2.1 a T2.6 | ✅ | `conversion-pages` 1.0.0, em a702826: 19 regras, 14 testes, 3 casos de avaliação. É a candidata à versão de entrada (D7, D14) |
 | T5.1 a T5.6 | ✅ | A rodada do Juridiq, em 9b986bd e e859313, com o `video-render` 1.1.0 corrigido no lugar. Detalhes no ÉPICO 5 |
 | T6.1 a T6.7 | ✅ | A rodada da demonstração e das medições (2026-11-08), commitada em 4cc2280 junto com o som do motor: `conversion-pages` 1.1.0 e `video-render` 1.1.0, corrigidos no lugar antes das tags (D16). Detalhes no ÉPICO 6 |
-| T7.1 a T7.5 | ✅ na árvore, sem commit | A correção da rodada 6 (2026-11-08): detalhes no ÉPICO 7 |
+| T7.1 a T7.5 | ✅ | A correção da rodada 6 (2026-11-08), em b5535b0: detalhes no ÉPICO 7 |
+| T7.6 | 🟡 | A home refeita está no commit 5aadb0c do ONE, ainda sem push: detalhes no ÉPICO 7 |
 | ⚠️ CI do Windows | corrigido | `anatomy.test.mjs` falhava no Windows do GitHub desde a702826: o Windows Server desliga as animações do sistema, o navegador responde `prefers-reduced-motion: reduce`, e a página do teste para a animação. A captura e o render passam a fixar `no-preference` (T6.6). A CI de 4cc2280 passou no Linux e no Windows (run 42508159600) |
 | ⚠️ `appeared_after_scroll` | corrigido | `video-render/references/interface.md` dizia "só apareceu depois da rolagem". A captura rola a página para aquecer antes de ler, e uma janela que abre pela rolagem saía como presente na chegada. Agora há uma leitura na chegada, antes do aquecimento (T5.4) |
 | ⚠️ `above_fold.mobile` | corrigido | A interface dizia "pelo mesmo texto na mesma ordem". Um botão do menu escondido no celular tomava o par do botão de mesmo texto da página (no JuriChat, "Comece grátis" saía como ausente no celular). Agora o pareamento é primeiro pelo mesmo elemento (T5.4) |
@@ -443,22 +444,22 @@ O telefone contra a caixa branca não aparece em número nenhum: as duas seçõe
 
 ### T7.1: a foto sem letras e as leituras novas do motor
 
-**Estado: ✅ na árvore.** `capture --no-letters` grava `sem-letras.jpg` e `sem-letras-celular.jpg`, com o texto apagado e ícones, imagens, cores e formas no lugar (`writeNoLetters`, `scripts/lib/capture.mjs`; as folhas saíram de `film.mjs` para `scripts/lib/sheet.mjs`). `anatomy.quality.desktop` ganha `figures[]` e `cards[]` (`references/interface.md`).
+**Estado: ✅ em b5535b0.** `capture --no-letters` grava `sem-letras.jpg` e `sem-letras-celular.jpg`, com o texto apagado e ícones, imagens, cores e formas no lugar (`writeNoLetters`, `scripts/lib/capture.mjs`; as folhas saíram de `film.mjs` para `scripts/lib/sheet.mjs`). `anatomy.quality.desktop` ganha `figures[]` e `cards[]` (`references/interface.md`).
 - **Aceite:** `node --test modules/video-render/tests/quality.test.mjs`, com o caso "captureSite reads the cards and the figures, and photographs the page with no letters", que abre a foto e mede que o texto preto sumiu.
 
 ### T7.2: o guia reescrito
 
-**Estado: ✅ na árvore.** `references/demonstracao.md` abre com "A figura se entende sem ler"; a ordem é a de D21; o cartão branco com frase, o recorte de interface e o cartão com linhas estão entre os erros; a janela grande voltou a valer; os recursos principais ganham uma linha com figura grande, e a grade só entra a pedido. `references/vicios.md` segue D22. `references/principios.md` ganha a seção 17, o título que vende, com cinco formas e quatro testes e a regra do operador de 2026-10-30 ("exagere o interesse, nunca o fato"). Os modelos do Juridiq e do JuriChat ganham "As figuras, seção por seção", vistas sem letras, e os padrões da lista que usam.
+**Estado: ✅ em b5535b0.** `references/demonstracao.md` abre com "A figura se entende sem ler"; a ordem é a de D21; o cartão branco com frase, o recorte de interface e o cartão com linhas estão entre os erros; a janela grande voltou a valer; os recursos principais ganham uma linha com figura grande, e a grade só entra a pedido. `references/vicios.md` segue D22. `references/principios.md` ganha a seção 17, o título que vende, com cinco formas e quatro testes e a regra do operador de 2026-10-30 ("exagere o interesse, nunca o fato"). Os modelos do Juridiq e do JuriChat ganham "As figuras, seção por seção", vistas sem letras, e os padrões da lista que usam.
 - **Aceite:** o teste "the guide puts the drawing first and never tells anyone to strip a chosen look".
 
 ### T7.3: o plano, os itens novos e a foto de antes
 
-**Estado: ✅ na árvore.** `pagina.json` ganha `headline` e `figures`, que passam a ser fatos obrigatórios de `landing`; o plano mostra as duas tabelas. Quatro itens: `title_promises`, `figures_seen`, `cards_short` e `cards_no_holes`, com os limites de D24. `audit --before` guarda a página em `antes/`, e o `audit` seguinte devolve `files.before`. O resultado e `conferencia.json` trazem `not_checked`, que diz o que a conferência não vê, e `next_step` diz que "nada em atenção" não quer dizer página boa.
+**Estado: ✅ em b5535b0.** `pagina.json` ganha `headline` e `figures`, que passam a ser fatos obrigatórios de `landing`; o plano mostra as duas tabelas. Quatro itens: `title_promises`, `figures_seen`, `cards_short` e `cards_no_holes`, com os limites de D24. `audit --before` guarda a página em `antes/`, e o `audit` seguinte devolve `files.before`. O resultado e `conferencia.json` trazem `not_checked`, que diz o que a conferência não vê, e `next_step` diz que "nada em atenção" não quer dizer página boa.
 - **Aceite:** `node --test modules/conversion-pages/tests/pages.test.mjs modules/conversion-pages/tests/quality.test.mjs`: 45 passam, entre eles "the limits of the cards separate the pages they were measured on", com os números reais da tabela acima.
 
 ### T7.4: a skill que não deixa pular
 
-**Estado: ✅ na árvore.** Veio do segundo teste de construção, abaixo: a skill agora diz, antes das regras, que os seis passos não são opcionais, e a regra 11 diz que conferência em ok não é página boa. O passo 5 proíbe dizer que a página ficou boa porque a conferência passou.
+**Estado: ✅ em b5535b0.** Veio do segundo teste de construção, abaixo: a skill agora diz, antes das regras, que os seis passos não são opcionais, e a regra 11 diz que conferência em ok não é página boa. O passo 5 proíbe dizer que a página ficou boa porque a conferência passou.
 
 ### T7.5: as construções de verdade
 
@@ -483,14 +484,21 @@ O telefone contra a caixa branca não aparece em número nenhum: as duas seçõe
 
 ### T7.6: a home refeita no ONE
 
-**Estado: ✅ na árvore do ONE, sem commit.** O operador aprovou a página, ficou com o título sugerido ("Você advoga. O ONE faz o resto.") e pediu o brilho do topo de volta. A luz atrás do título (`mkt-aurora`, finita, parada com menos movimento) e o halo atrás da janela (`ProductFrame glow`) voltaram como eram em 7fdd3e8, primeiro na cópia. O pacote foi aplicado sobre aa15754, com outras sessões avisadas; o Prettier do projeto formatou `product-figures.tsx`; um comentário que citava o componente removido foi corrigido. O que chega ao ar depende do commit, que é do operador.
+**Estado: 🟡 commit 5aadb0c no ONE, sobre aa15754, ainda sem push.** O operador pediu para commitar e publicar. O Claude Code recusou o push para o `main` do ONE (classificador do modo automático, sem explicação), e o caminho alternativo de disparar o deploy pelo branch não foi tentado: a decisão voltou para o operador. O `main` do GitHub segue em 34e5b4f, e o push levará também aa15754, o commit do operador com as metas da controladoria. O operador aprovou a página, ficou com o título sugerido ("Você advoga. O ONE faz o resto.") e pediu o brilho do topo de volta. A luz atrás do título (`mkt-aurora`, finita, parada com menos movimento) e o halo atrás da janela (`ProductFrame glow`) voltaram como eram em 7fdd3e8, primeiro na cópia. O pacote foi aplicado sobre aa15754, com outras sessões avisadas; o Prettier do projeto formatou `product-figures.tsx`; um comentário que citava o componente removido foi corrigido. O commit leva só os 22 arquivos da home: as chaves de PDF de outra sessão ficaram fora, por `git apply --cached` nos trechos da home em `pt-BR.json`.
 - **Aceite:** no ONE, `git diff` mostra só os 22 arquivos da home além do que já estava em andamento; `conferencia.json` com 21 ok e 2 em atenção (CNPJ e reembolso, decisões de lançamento); `git status` não mostra `captura/` nem `filme/`.
 
-**O que rodou no próprio ONE:** o servidor do projeto (`next dev --turbopack`) abriu a home com o título e o brilho; `prune-messages --check`, limpo; ESLint nos arquivos da home, sem apontamentos; `.claude/hooks/marketing-lint.mjs` nos mesmos arquivos, calado, depois de provado numa violação de propósito na cópia; `vitest` em `src/components/marketing` e `src/lib/i18n`, 16 passam; `tsc -p apps/web`, um único erro, em `.next/types/validator.ts`, apontando para a página temporária `convite/prev-pdf` de outra sessão; as telas em 1440 px no modo escuro, 768 px e 390 px, com um `h1` e nada passando da largura; com menos movimento, o brilho sem animação. **O que não rodou:** o `next build` e os testes de navegador do ONE (`test:e2e`).
+**O que rodou no próprio ONE:** o servidor do projeto (`next dev --turbopack`) abriu a home com o título e o brilho; `prune-messages --check`, limpo; ESLint nos arquivos da home, sem apontamentos; `.claude/hooks/marketing-lint.mjs` nos mesmos arquivos, calado, depois de provado numa violação de propósito na cópia; `vitest` em `src/components/marketing` e `src/lib/i18n`, 16 passam; `tsc -p apps/web`, um único erro, em `.next/types/validator.ts`, apontando para a página temporária `convite/prev-pdf` de outra sessão; as telas em 1440 px no modo escuro, 768 px e 390 px, com um `h1` e nada passando da largura; com menos movimento, o brilho sem animação. 
+
+**A CI do ONE sobre 5aadb0c (run 42545115644, no branch temporário `ci/home-refeita`) reprovou por dois motivos sem relação com a página:** ⚠️ `tsc` estoura o limite de memória padrão do Node no servidor do GitHub (2 GB), e o `test:db:embedded` não acha a pasta do pgTAP, porque o npm novo não roda o script de instalação do `@embedded-postgres`. `ci.yml` só roda em PR ou à mão, e o histórico recente só mostra as execuções desta rodada. Harness, testes do harness, classes do MUI e lint passaram. O que vinha depois foi rodado aqui, numa cópia limpa do commit: `tsc` com 8 GB, 0 erros; `vitest` de `apps/web`, 992 passam, 128 pulados, 1 falha só no Windows (`standing.test.ts` procura `"case\n"` e a migração sai em CRLF; passa em LF); mensagens e referências ao banco, limpas; `next build`, passa em 270 s.
+
+**O que não rodou:** os testes de navegador do ONE (`test:e2e`), os pacotes fora de `apps/web` no `npm test` e o pgTAP. A home não mexe no banco.
 
 
 ### Verificação da rodada 7
 
+- `npm run ci:verify` no Windows, sobre o estado do commit: 193 testes da CLI (1 pulado), 75 do `module-tools` e 782 dos apps (2 pulados), nenhum falha;
+- a CI de b5535b0 passou no Linux e no Windows (run 42546183378);
+- as tags, uma por vez, com o motor primeiro: o log de cada uma diz "Platform sha256 …, the same as the pack";
 - `npm run validate`: 13 apps válidos; `pack` dá os ZIPs `a77b9581…` (`conversion-pages` 1.2.0, 33 arquivos) e `8b8ef9c2…` (`video-render` 1.2.0, 36 arquivos), e as cópias instaladas para o usuário são iguais à fonte;
 - `npm run test:apps`: 782 testes, 780 passam, 2 opcionais pulados, nenhum falha, com os 45 do `conversion-pages`; os 19 da regra de texto do `module-tools` passam;
 - `npm run harness:check` e `npm run apps -- catalog --check`: passam;

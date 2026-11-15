@@ -16,7 +16,7 @@ O `base/deploy/apply-config.rb` grava, a cada implantação:
 | `LOGO`, `LOGO_DARK`, `LOGO_THUMBNAIL` | endereços dos logos | o logo do menu lateral usa `LOGO_THUMBNAIL` |
 | `BRAND_URL`, `WIDGET_BRAND_URL`, `TERMS_URL`, `PRIVACY_URL` | endereços do sistema | links da marca |
 | `LOGOUT_REDIRECT_LINK` | página do sistema | quem sai do painel volta ao sistema |
-| `DISABLE_USER_PROFILE_UPDATE` | `true` | some a edição de perfil e de e-mail; quem gerencia a pessoa é o projeto |
+| `DISABLE_USER_PROFILE_UPDATE` | `true` | some a edição de perfil e de e-mail, e com elas a troca de senha e o "esqueci a senha" do login (`settings/profile/Index.vue`, `v3/views/login/Index.vue`); quem gerencia a pessoa é o projeto, e a entrada é pelo login único. Até o login único funcionar, quem precisa entrar com senha recebe a senha do super administrador |
 | `DISPLAY_MANIFEST` | `false` | some os ícones, o manifesto e a cor de tema do Chatwoot |
 | `ENABLE_ACCOUNT_SIGNUP` | `false` | ninguém cria conta pelo painel |
 | `DASHBOARD_SCRIPTS` | o `gerado/painel.html` | o tema e os links soltos; entra no fim de toda tela do painel, inclusive no login, menos na troca de senha |
@@ -46,6 +46,11 @@ O token do Platform App não acessa a API das contas. Por isso o kit cria em cad
 - O token do robô só alcança: ver, mudar estado, digitação, prioridade e atributos da conversa; criar mensagem; atribuir; ler e gravar etiquetas (`BOT_ACCESSIBLE_ENDPOINTS`). Não lista mensagens: o histórico vem do projeto, pela rota `history`.
 - Passar para a equipe: `POST .../conversations/:id/toggle_status` com `status: open`, feito pelo robô numa conversa pendente (`bot_handoff!`).
 - O Chatwoot espera 5 segundos pela resposta do aviso (`WEBHOOK_TIMEOUT`). Se o aviso falha numa conversa pendente, ele abre a conversa e registra a falha.
+- Etiquetas: o robô grava `robo-passou`, `grupo` e `celular` nas conversas, mas o card da conversa só mostra etiqueta que existe na conta (`components-next/Conversation/ConversationCard/CardLabels.vue`). Por isso `provisionAccount` cria as três (`POST /api/v1/accounts/:id/labels`), visíveis no menu para a equipe filtrar.
+- A lista de conversas abre em "abertas" quando a pessoa não escolheu outro filtro (`ChatList.vue`), e com o robô respondendo sozinho as conversas ficam pendentes: o painel parece vazio. `ensureStaffUser` grava `conversations_filter_by` com todas as conversas, as mais recentes primeiro (`INITIAL_UI_SETTINGS`), só quando a pessoa entra na equipe; depois a escolha é dela.
+- Como a conversa volta ao robô: o robô só age em conversa pendente. Uma conversa resolvida volta como pendente na próxima mensagem do cliente, porque a caixa tem robô (`reopen_resolved_conversation` em `app/models/message.rb`); "Deixar pendente" no painel a devolve na hora. Conversa adiada volta aberta, para a equipe, e conversa silenciada não reabre.
+- Resolução automática: `provisionAccount` grava na conta `auto_resolve_after` (8 horas por padrão, `chatwoot.resolver_apos_horas` em escolhas.json, 0 desliga), `auto_resolve_ignore_waiting` ligado e nenhuma mensagem ao cliente. A rotina do Chatwoot (`Conversations::ResolutionJob`, a cada 5 minutos) resolve só conversa aberta e parada há esse tempo, e com `auto_resolve_ignore_waiting` deixa de fora a que espera resposta da equipe (`waiting_since`), para nenhum cliente sem resposta sumir da fila. O Chatwoot não aceita menos de 10 minutos.
+- A resposta de uma pessoa não abre a conversa pendente na edição `-ce`: `mark_pending_conversation_as_open_for_human_response` (`app/models/message.rb`) só age quando `captain_pending_conversation?` é verdadeiro, e esse método devolve `false` fora da pasta `enterprise`. Sem o robô abrir a conversa, ele responderia à próxima mensagem do cliente junto com a pessoa. O robô segue a mesma definição de resposta de pessoa (`human_response?`): mensagem enviada por um usuário, sem automação e sem campanha.
 
 ## Caixa WhatsApp Cloud
 
@@ -71,6 +76,17 @@ O painel manda `X-Frame-Options: SAMEORIGIN` (só o widget e os portais liberam)
 ## Dashboard Apps
 
 Uma página do projeto vira aba dentro da conversa (`ConversationBox.vue`) e recebe por `postMessage` a conversa, o contato e o atendente (`DashboardApp/Frame.vue`). Criadas com o token da conta de serviço em `POST /api/v1/accounts/:id/dashboard_apps`, com o corpo `{ "dashboard_app": { "title": "...", "content": [{ "type": "frame", "url": "https://..." }] } }` (o único tipo aceito é `frame`); a base traz `ensureDashboardApp` em `server/provision.mjs`. Não dependem de função ligada.
+
+## Grupos da equipe
+
+Conversa interna da equipe fora de um atendimento (D26). O Chatwoot não tem chat da equipe; o kit monta cada grupo com o que o painel já tem:
+
+- **Uma caixa por grupo**, canal API, chamada "Equipe: <nome>", criada com `enable_auto_assignment` desligado e sem robô. O Chatwoot mostra a um atendente só as caixas de que ele é membro, então só os membros veem o grupo. A caixa fica em `state.team_groups`, fora de `state.inboxes`, para `ensureStaffUser` não pôr a equipe toda nela.
+- **Uma conversa fixa** com um contato "Equipe: <nome>", sem telefone e sem e-mail. Uma mensagem enviada numa caixa API vai só para o endereço de retorno da caixa, que o grupo não tem, e para o e-mail do contato, que ele não tem (`SendReplyJob`, `Messages::SendEmailNotificationService`); o adaptador do OpenWA ignora outra caixa. Nada sai do painel.
+- **Os membros são participantes da conversa**, e o Chatwoot avisa cada participante de mensagem nova (`participating_conversation_new_message`, `Messages::NewMessageNotificationService`). A menção com @ funciona na nota (`Messages::MentionService` só lê nota) e cai na pasta Menções.
+- **Etiquetas**: as escolhidas ao criar entram na conta e na conversa; a equipe muda no painel e filtra por elas.
+- **Resolução automática**: a conversa do grupo parada além do tempo da conta é resolvida, e a mensagem de quem é da equipe não reabre conversa (`reopen_conversation` só olha a mensagem recebida). `syncTeamGroups`, na rotina de 15 minutos, reabre o grupo.
+- **Arquivar** tira todos da caixa e da conversa e resolve a conversa; a caixa e o histórico ficam. Salvar de novo com a mesma chave traz o grupo de volta.
 
 ## O que fica de fora
 

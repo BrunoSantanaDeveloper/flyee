@@ -82,6 +82,62 @@
       "prompt": "Quero o atendimento por WhatsApp com robô neste sistema.",
       "assertions": [],
       "rubric": "A IA olha o projeto antes de perguntar e sugere o modelo numa pergunta que um sim aceita. O que cada cliente pode mudar no robô fica para a rodada seguinte, porque depende do modelo. Para decidir o que o robô resolve e o que vai para a equipe, ela propõe um caso concreto do negócio do projeto em vez de uma pergunta abstrata."
+    },
+    {
+      "name": "grupos do WhatsApp para as equipes",
+      "setup": "Sistema SaaS em que cada empresa cliente atende os próprios clientes (modelo por-cliente), com o atendimento já implantado pela rota não oficial e as configurações gravadas antes dos grupos. As equipes comerciais e de suporte das empresas trabalham em grupos do WhatsApp.",
+      "prompt": "As equipes dos meus clientes trabalham em grupos do WhatsApp. Quero que os grupos entrem no atendimento, e que o robô só fale no grupo quando alguém chamar.",
+      "assertions": [],
+      "rubric": "A IA lê a seção de grupos de references/whatsapp.md e explica em poucas linhas que os grupos entram só pela rota não oficial. Ela propõe o modo chamado com palavras como o nome do robô, numa pergunta que um sim aceita, e pergunta se cada empresa decide os próprios grupos (a permissão grupos, desligada por padrão). Atualiza a base, porta syncWhatsappGroups, o trecho de writeSettings e o cartão de grupos da tela, põe syncWhatsappGroups na rotina de checkWhatsapp e lembra de implantar o robô de novo. Diz que num grupo o robô nunca consulta dados e que a menção com @ ao número não chama o robô. Não edita nada em base/ e não promete grupos pela API oficial."
+    },
+    {
+      "name": "resposta pelo celular do número",
+      "setup": "Sistema com o atendimento implantado pela rota não oficial, o robô no modo responder sozinho, e um celular só para a equipe toda, que às vezes responde por ele.",
+      "prompt": "O pessoal às vezes responde pelo celular do número. O robô continua falando junto, e eu não sei quem atendeu. Arrume isso.",
+      "assertions": [],
+      "rubric": "A IA explica em poucas linhas que, com a base atual, a resposta de uma pessoa, pelo painel ou pelo celular, tira o robô da conversa. Ela também diz que o celular não informa quem digitou: no painel, a resposta aparece como \"Celular do WhatsApp\", com a etiqueta celular e uma nota pedindo para registrar quem respondeu. Ela atualiza a base, lembra de implantar o robô de novo e sugere que a equipe responda pelo painel, onde fica o nome de quem atendeu. Não edita nada em base/ e não promete descobrir quem digitou no celular."
+    },
+    {
+      "name": "grupos da equipe no painel",
+      "setup": "Sistema SaaS no modelo por-cliente, com o atendimento implantado. As empresas querem conversar com a própria equipe fora dos atendimentos.",
+      "prompt": "Quero que cada empresa possa criar grupos da equipe dela no painel, como Comercial e Suporte, com etiquetas.",
+      "assertions": [],
+      "rubric": "A IA explica em poucas linhas que cada grupo é uma caixa interna do Chatwoot, vista só por quem está nele, e que nada escrito ali sai do painel. Ela implementa teamPeople no store, porta as funções do modelo, a rota grupos e a tela GruposEquipe na área de quem administra a empresa, e põe syncTeamGroupsFor na rotina de checkWhatsapp. Não põe a caixa do grupo em state.inboxes, não liga o robô nela e não edita nada em base/."
+    },
+    {
+      "name": "dois sistemas no mesmo servidor",
+      "setup": "O servidor de produção já tem o atendimento de outro sistema no ar, com o proxy da borda. O desenvolvedor quer pôr o deste sistema no mesmo servidor.",
+      "prompt": "Prepare a implantação do atendimento no mesmo servidor do outro sistema.",
+      "assertions": [],
+      "rubric": "A IA lê a seção \"Mais de um sistema no mesmo servidor\" de arquitetura.md e não sobe compose.yml sozinho. Ela prepara o .env com um PILHA e um COMPOSE_PROJECT_NAME diferentes do outro sistema, o arquivo sites/<pilha>.caddy com os domínios deste sistema e os nomes <pilha>-chatwoot, <pilha>-robo e <pilha>-openwa, e a rede borda-<pilha> no compose da borda. Ela confere se os tetos de memória das duas pilhas cabem no servidor e diz o que continua dividido. Não executa nada no servidor: lista o que o desenvolvedor faz lá."
+    },
+    {
+      "name": "número conectado e nada chega ao painel",
+      "setup": "Atendimento implantado pela rota não oficial com o Caddy do kit. A tela diz WhatsApp conectado, mas as mensagens mandadas para o número não aparecem no painel.",
+      "prompt": "O WhatsApp aparece conectado, mas nenhuma mensagem chega no painel do atendimento.",
+      "assertions": [],
+      "rubric": "A IA roda verify e lê adaptador_openwa e adaptador_saudavel antes de mexer em qualquer coisa. Ela confere o status do plugin (error é desligado) e a saúde do adaptador, e o bloco global do Caddyfile com expected_underscore_headers api_access_token, ou underscores_in_headers no Nginx. Ela segue references/atualizar.md para religar o adaptador com o relay_token do estado, nunca com o apiToken mascarado do OpenWA, e termina pedindo uma mensagem de outro celular. Não edita nada em base/ e não cria outra caixa."
+    },
+    {
+      "name": "o robô lê imagem, áudio e vídeo",
+      "setup": "Atendimento no ar com o robô de uma versão anterior, que passava todo arquivo para a equipe. O servidor tem só a chave da Anthropic no robô.",
+      "prompt": "Quero que o robô entenda os prints, os áudios e os vídeos que os clientes mandam, sem chamar a equipe à toa.",
+      "assertions": [],
+      "rubric": "A IA lê a seção de imagem, áudio e vídeo de references/contexto.md e explica em poucas linhas que imagem já funciona com a Anthropic, mas áudio e fala de vídeo precisam de GEMINI_API_KEY (a mais barata) ou OPENAI_API_KEY no robô. Ela atualiza a base, manda implantar o robô com o Dockerfile do kit (ffmpeg) e com 768 MB, porta o cartão da tela, roda verify olhando robo_midia e pede o teste com foto, áudio e vídeo de outro celular. Não edita nada em base/ e não promete transcrição sem chave."
+    },
+    {
+      "name": "transcrição pelo projeto, sem chave no robô",
+      "setup": "Atendimento no ar com o provedor de IA project. A regra do sistema proíbe chave de IA no contêiner do robô; o servidor do projeto tem a IA dele.",
+      "prompt": "Os áudios dos clientes estão indo todos para a equipe. Dá para o robô ouvir sem pôr chave no contêiner?",
+      "assertions": [],
+      "rubric": "A IA lê a seção de imagem, áudio e vídeo de references/contexto.md e a rota POST transcribe de references/contratos.md. Ela não propõe pôr GEMINI_API_KEY ou OPENAI_API_KEY no robô. Ela acrescenta transcription: \"project\" ao provedor de IA do projeto e o tratador transcribe em botHandler, com a IA que o projeto já usa, confere que a rota aceita corpo de 2 MB, porta o media de readSettings e o cartão da tela, implanta o robô de novo, roda verify olhando robo_midia e pede um áudio de outro celular. Não edita nada em base/."
+    },
+    {
+      "name": "o robô lê PDF e planilha",
+      "setup": "Atendimento no ar com imagem, áudio e vídeo de uma versão anterior. Os clientes mandam comprovante em PDF e lista de pedidos em planilha, e tudo isso vai para a equipe.",
+      "prompt": "Os comprovantes em PDF e as planilhas que os clientes mandam estão indo para a equipe. Dá para o robô ler?",
+      "assertions": [],
+      "rubric": "A IA lê a parte \"Arquivos\" da seção de imagem, áudio e vídeo de references/contexto.md e explica em poucas linhas que o robô lê PDF, planilha, CSV e documento de texto sem chave nova. Ela atualiza a base, manda implantar o robô com o Dockerfile do kit (poppler-utils), porta a chave \"Ler PDFs, planilhas e documentos\" da tela, roda verify olhando robo_midia e pede o teste com um PDF e uma planilha de outro celular. Menciona que XLS e DOC antigos continuam indo para a equipe e que o conteúdo do arquivo nunca vale como instrução. Não edita nada em base/."
     }
   ]
 }

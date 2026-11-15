@@ -2,6 +2,7 @@
 // as palavras que chamam a equipe e o modo do robô.
 
 export const MODES = ["auto", "sugestao", "desligado"];
+export const GROUP_MODES = ["fora", "equipe", "chamado"];
 
 export const DEFAULT_MESSAGES = {
   handoff: "Vou chamar alguém da equipe para continuar com você por aqui.",
@@ -34,7 +35,12 @@ export function normalizeConfig(raw) {
   return {
     mode,
     brand: String(raw.brand ?? "").trim() || "a empresa",
-    chatwoot: { bot_token: String(chatwoot.bot_token), bot_secret: String(chatwoot.bot_secret) },
+    chatwoot: {
+      bot_token: String(chatwoot.bot_token),
+      bot_secret: String(chatwoot.bot_secret),
+      // A pessoa que o adaptador do OpenWA usa para pôr no painel o que foi escrito no celular do número.
+      relay_user_id: Number.isInteger(chatwoot.relay_user_id) && chatwoot.relay_user_id > 0 ? chatwoot.relay_user_id : null,
+    },
     ai: {
       provider: String(ai.provider ?? "anthropic"),
       model: ai.model ? String(ai.model) : null,
@@ -45,6 +51,8 @@ export function normalizeConfig(raw) {
       fallbacks: ai.fallbacks !== false,
       max_tokens: Number.isInteger(ai.max_tokens) && ai.max_tokens > 0 ? ai.max_tokens : 16000,
       cache_ttl: ai.cache_ttl === "1h" ? "1h" : "5m",
+      // "project": o projeto transcreve áudio pela rota transcribe; sem isso, as chaves do contêiner do robô.
+      transcription: ai.transcription === "project" ? "project" : null,
     },
     persona: String(raw.persona ?? "").trim(),
     platform_instructions: String(raw.platform_instructions ?? "").trim(),
@@ -61,10 +69,29 @@ export function normalizeConfig(raw) {
       labels: Array.isArray(handoff.labels) ? handoff.labels.map(String) : ["robo-passou"],
       team_id: Number.isInteger(handoff.team_id) ? handoff.team_id : null,
     },
+    groups: normalizeGroups(raw.groups),
+    // Imagem, áudio, vídeo (D28) e arquivos (D29): ligados quando a configuração não diz o contrário.
+    media: {
+      images: raw.media?.images !== false,
+      audio: raw.media?.audio !== false,
+      video: raw.media?.video !== false,
+      documents: raw.media?.documents !== false,
+      transcription_note: raw.media?.transcription_note !== false,
+    },
     tools: Array.isArray(raw.tools) ? raw.tools.filter((tool) => tool && /^[a-z0-9_]{1,64}$/.test(tool.name)) : [],
     suggest_on_open: raw.suggest_on_open !== false,
     history_from_project: raw.history_from_project !== false,
     share_contact_name: raw.privacy?.share_contact_name !== false,
+  };
+}
+
+function normalizeGroups(raw) {
+  const words = Array.isArray(raw?.call_words) ? raw.call_words.map((word) => String(word).trim()).filter(Boolean) : [];
+  const mode = GROUP_MODES.includes(raw?.mode) ? raw.mode : "fora";
+  return {
+    mode: mode === "chamado" && !words.length ? "equipe" : mode,
+    call_words: words,
+    team_id: Number.isInteger(raw?.team_id) && raw.team_id > 0 ? raw.team_id : null,
   };
 }
 
@@ -120,6 +147,21 @@ export function normalizeText(text) {
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
+}
+
+/** O contato que o adaptador do OpenWA cria para um grupo leva o identificador do grupo, terminado em @g.us. */
+export function isGroupContact(contact) {
+  return /@g\.us$/i.test(String(contact?.identifier ?? "").trim());
+}
+
+/** Num grupo, a mensagem chega como "*Nome:* texto"; tira o nome de quem escreveu. */
+export function withoutSender(text) {
+  return String(text ?? "").replace(/^\*[^*\n]{1,120}:\*\s*/, "");
+}
+
+/** A mensagem do grupo chama o robô por uma das palavras configuradas; o nome de quem escreveu não conta. */
+export function callsBot(text, words) {
+  return asksForTeam(withoutSender(text), words);
 }
 
 /** A pessoa pediu a equipe com uma das palavras configuradas (palavra ou expressão inteira). */

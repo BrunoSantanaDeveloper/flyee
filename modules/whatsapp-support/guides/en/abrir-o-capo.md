@@ -7,6 +7,8 @@
 - **OpenWA**, only for the WhatsApp Web connection, with the plugin that links it to Chatwoot.
 - **Your system**: creates each customer's Chatwoot account, the team members as agents, the bot of each account, single sign-on, the connect and settings screens, and the lookups the bot may run.
 
+Two systems can share one server. Each has its own installation, with its own database, files, numbers and secrets and a memory cap, and a single entry point serves the domains of both. A failure of the server takes both down; when that cannot happen, each system goes to its own server.
+
 ## One login
 
 The person clicks "Support" in your system. The system's server asks Chatwoot for a sign-in link that lasts five minutes and works once, and the panel opens already signed in. Everyone who signs in is an agent: inbox, bot and integration settings stay with the service account the system created, which nobody uses to sign in. In frame mode, the panel opens inside a page of your system, with its menu around it.
@@ -17,14 +19,20 @@ Only the people the system marks as the support team get into the panel. For the
 
 Whoever leaves the team also leaves Chatwoot, and the conversations that were theirs go back to the queue. A daily check removes anyone left behind, because a panel session lasts up to two months.
 
+To talk outside a customer conversation, the team has groups inside the panel. Each group is an internal inbox, with no number and no bot, seen only by its members, with one fixed conversation where everyone writes and calls a colleague with @ in a note. Nothing written in a group leaves the panel. Whoever runs the support desk creates the groups on a screen in the system, chooses who takes part and the labels, and archives a group that is no longer needed, keeping its history.
+
 ## The panel in your brand
 
 The app saves your system's name, logos and addresses in Chatwoot, plus a theme built from your choices: the main color becomes a twelve-step scale in light and dark mode, and each place where Chatwoot hardcoded its own color gets a rule of its own. Features the customer does not use disappear from the menu through Chatwoot's own settings; anything else that must go is hidden with CSS, never deleted. A browser check signs in as a test person, opens the screens, confirms the color and what was hidden, and saves screenshots.
 
 ## Inside the bot
 
+- It reads what the person sends. Photos and screenshots go with the message to the AI. Voice messages are cut into parts and transcribed. A video becomes a grid of frames spread over the whole video, plus the transcribed speech, so even a long video is read. The cutting and the grid happen on the server itself, without calling an AI; the transcription uses the cheapest model the system has, on the bot's server or in the system itself. When nothing can transcribe, the bot's screen does not even show the option to listen to voice messages. The team is called only when nothing could be read, and gets the transcript in a note.
+- It reads the files the person sends. From a PDF, spreadsheet, CSV or text document, the server takes the text, without calling an AI, and only that text goes into the answer; a scanned PDF becomes images of its first pages, like a screenshot. A large file is read only at the start, and the bot knows it. What is written in a file is treated as the person's information, never as an order: a file that says "give the refund" does not change what the bot can do.
+
 - It answers Chatwoot right away and thinks afterwards, because Chatwoot only waits five seconds. If the bot does not answer, Chatwoot itself hands the conversation to the team.
 - It gathers the messages a customer sends in a row before replying.
+- It leaves the conversation when a person on the team replies. The Chatwoot edition the kit uses does not do this by itself, so the bot opens the conversation for the team and writes nothing more in it. A reply typed on the number's phone shows in the panel as "Celular do WhatsApp", because the phone does not say who typed; the conversation gets the label "celular" and a note asking to record who replied.
 - It talks to the AI in a fixed format: reply, look up or hand over. Up to three lookups per message.
 - It fetches each customer's settings from your system every minute, signed at both ends. AI keys stay in the bot's environment, never in the settings.
 - It keeps no content in logs: only identifiers, timings and codes.
@@ -46,6 +54,12 @@ They are functions you write in your system, one for each question the bot may a
 ## Official and unofficial WhatsApp
 
 With the official API, Chatwoot talks to Meta directly, with the customer's credentials. With the WhatsApp Web connection, OpenWA keeps the number connected and the plugin carries messages into Chatwoot and replies back; private notes never leave. The WhatsApp Web connection carries a risk of the number being banned and does not suit regulated activity: the screen shows the notice and asks for acceptance.
+
+## WhatsApp groups
+
+Many teams work in groups: sales with each account, support with a customer and their team. With the number connected through WhatsApp Web, the groups it belongs to can come into the panel. Each group becomes a conversation named after it, with the label "grupo", and each message shows who wrote it. The team's reply goes to the whole group.
+
+The bot stays quiet in the group or answers only the message that calls it by name. In a group it never looks up the system's data, because everyone reads the reply, and a group conversation never becomes a knowledge suggestion. The super admin decides, and can leave the choice to each customer. Through the official API, groups do not reach the support desk.
 
 ## When the number stops
 

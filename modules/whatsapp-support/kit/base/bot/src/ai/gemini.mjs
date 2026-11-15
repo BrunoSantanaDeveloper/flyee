@@ -16,13 +16,19 @@ export function geminiSchema(schema) {
   return copy;
 }
 
+/** As partes neutras do robô no formato do Gemini: a imagem vai como inlineData. */
+export function geminiParts(content) {
+  if (typeof content === "string") return [{ text: content }];
+  return content.map((part) => (part.type === "image" ? { inlineData: { mimeType: part.mime, data: part.data } } : { text: part.text }));
+}
+
 export async function generate({ ai, system, messages, schema, keys, fetchImpl, timeoutMs = 60000 }) {
   if (!ai.model) throw new AiError("ai_model_missing", "falta ai.model para o Gemini");
   const key = providerKey(keys, ai.key_env || "GEMINI_API_KEY");
   if (!key) throw new AiError("ai_key_missing", "falta a chave do Gemini no ambiente do robô");
   const body = {
     systemInstruction: { parts: [{ text: systemText(system) }] },
-    contents: messages.map((message) => ({ role: message.role === "assistant" ? "model" : "user", parts: [{ text: message.content }] })),
+    contents: messages.map((message) => ({ role: message.role === "assistant" ? "model" : "user", parts: geminiParts(message.content) })),
     generationConfig: { responseMimeType: "application/json", responseSchema: geminiSchema(schema) },
   };
   const base = (ai.base_url || "https://generativelanguage.googleapis.com/v1beta").replace(/\/+$/, "");

@@ -38,14 +38,49 @@ Como o kit liga as peças, nesta ordem, porque o segredo só nasce no Chatwoot (
 
 1. cria a caixa API no Chatwoot e a pessoa de repasse (atendente, membro da caixa), cujo token o adaptador usa;
 2. cria o webhook da conta, com os eventos `message_created`, `conversation_updated` e `conversation_status_changed`, apontando para `https://wa.<domínio>/api/ingress/chatwoot-adapter/<sessão>/chatwoot`, e lê o segredo que o Chatwoot gerou;
-3. instala e liga o adaptador no OpenWA pelo catálogo, se faltar (o endereço do catálogo traz o hash do pacote, que o OpenWA exige em produção);
+3. instala o adaptador no OpenWA pelo catálogo, se faltar (o endereço do catálogo traz o hash do pacote, que o OpenWA exige em produção). O catálogo entrega a versão mais nova, não a de `kit/versoes.json`: a Atrupe recebeu a 0.9.17;
 4. cria e inicia a sessão do OpenWA;
 5. cria a instância do adaptador pela API, com o mesmo segredo do passo 2 e a configuração da caixa (a instância criada pelo painel do OpenWA ganha um segredo aleatório que nunca bate);
-6. liga o robô na caixa API.
+6. liga o adaptador (`startAdapter`): grava a configuração base do plugin com a desta conexão (`PUT /api/plugins/chatwoot-adapter/config`, corpo `{ config }`), liga e exige `GET /api/plugins/chatwoot-adapter/health` com `healthy: true`. A 0.9.17 confere a configuração base ao ligar, e ligada antes da instância fica em erro: o número conecta, a tela diz conectado e nenhuma mensagem chega ao painel. Num adaptador já saudável, nada muda. O OpenWA devolve o `apiToken` mascarado em toda leitura; ele vem do estado (`relay_token`);
+7. liga o robô na caixa API.
 
-Depois a tela pergunta o estado da sessão a cada 3 segundos e mostra o QR até o número conectar. Grupos ficam fora (`relayGroups` desligado): o atendimento é de pessoa para empresa.
+Na lista do OpenWA 0.29.1 (`GET /api/plugins`), cada plugin traz `status` (`installed`, `enabled`, `disabled`, `error`), e não `enabled`. Ligado também não basta: a conferência do número e `verify` leem a saúde do adaptador (`adaptador_com_erro`, `adaptador_saudavel`). A saúde fica falsa com mensagem perdida antes da fila, fila de reenvio cheia ou mensagem descartada depois das tentativas, e a contagem de descartadas só cresce enquanto o adaptador fica ligado. Por isso só descartadas é `atencao` (`adaptador_mensagens_perdidas`), com um aviso a cada vez que a contagem cresce, e o resto é `fora`. Depois de corrigir a causa, zere a contagem desligando e ligando o adaptador (`POST /api/plugins/chatwoot-adapter/disable` e depois `/enable`, ou pelo painel do OpenWA): ele volta num processo novo, e a fila de reenvio fica guardada. Para conferir de dentro do contêiner do OpenWA, use `node` com `fetch`: o `curl` da imagem não tem os certificados das autoridades (erro 77).
+
+Depois a tela pergunta o estado da sessão a cada 3 segundos e mostra o QR até o número conectar. Os grupos entram só quando a configuração do robô pede (seção "Grupos do WhatsApp", abaixo); até lá, `relayGroups` fica desligado.
 
 Quando o adaptador vê um atendente assumir a conversa no Chatwoot, ele cala os outros robôs do próprio OpenWA naquela conversa. O robô do kit não é um robô do OpenWA: ele para porque a conversa sai de pendente.
+
+### Resposta pelo celular do número
+
+Com `relayOwnMessages` ligado, o que alguém escreve no celular do número entra no painel como mensagem enviada, postada pela pessoa de repasse, que o kit chama de "Celular do WhatsApp". O celular não diz quem digitou. Por isso, na primeira resposta pelo celular em cada conversa, o robô põe a etiqueta `celular` e deixa uma nota interna pedindo para registrar quem respondeu. Ele reconhece a pessoa de repasse por `chatwoot.relay_user_id`, que vem do estado. Toda mensagem enviada pelo número fora do painel conta como celular, inclusive a de outro programa ligado ao mesmo OpenWA.
+
+Como qualquer resposta de pessoa, a do celular tira o robô da conversa (contratos.md, "Robô e Chatwoot"). Para o time saber quem atendeu sem depender da nota, o melhor é responder pelo painel, onde cada mensagem leva o nome de quem escreveu.
+
+## Grupos do WhatsApp
+
+Para as equipes que trabalham em grupos (comercial, suporte, atendimento de contas), o número pode trazer os grupos de que participa para o painel. Só na rota não oficial: pela API oficial, o Chatwoot 4.19.1 envia só para pessoas (`app/services/whatsapp/providers/whatsapp_cloud_service.rb`), e a API de grupos da Meta tem regras próprias que o kit não cobre.
+
+O superadmin escolhe na tela do robô, e no modelo `por-cliente` pode liberar a escolha para cada cliente (permissão "Grupos do WhatsApp", desligada por padrão):
+
+| Modo | O que acontece |
+|---|---|
+| `fora` (padrão) | os grupos não entram; só as conversas com uma pessoa |
+| `equipe` | cada grupo vira uma conversa aberta no painel, com o nome do grupo e a etiqueta `grupo`; o robô nunca escreve nele |
+| `chamado` | como `equipe`, e o robô responde só à mensagem que o chama por uma das palavras configuradas, como o nome dele |
+
+Como o grupo aparece no painel: o adaptador cria um contato por grupo, com o identificador do grupo (`<id>@g.us`), e põe o nome de quem escreveu antes de cada mensagem (`*Bruno:* bom dia`). A resposta da equipe vai para o grupo inteiro. O adaptador dá ao contato o nome `Group <id>@g.us` e nunca o troca; `syncOpenWAGroups` troca pelo nome do grupo no WhatsApp (`Grupo: Vendas`).
+
+Regras que valem em todo grupo:
+
+- O robô nunca escreve num grupo sem ser chamado, nem para avisar que passou a conversa ou que falhou.
+- Num grupo não há consulta aos dados do projeto: o contato é o grupo inteiro, e todos leem a resposta. O robô não recebe as consultas, e o projeto recusa a chamada que chegar assim (`group_chat`).
+- Conversa de grupo não vira sugestão de conhecimento.
+- Chamar o robô é escrever uma das palavras. A menção com @ ao número não conta, porque chega como números.
+- O que foi escrito no grupo antes de ligar não entra, como nas conversas com uma pessoa (`backfillLimit` 0). As mensagens enviadas pelo celular do número também aparecem no painel (`relayOwnMessages`).
+
+Quem liga e desliga: `syncWhatsappGroups(tenantId)` no projeto, que roda ao salvar a configuração e na mesma rotina de `checkWhatsapp`. Ela troca só `relayGroups` na configuração do adaptador (`PATCH /api/integration/plugins/chatwoot-adapter/instances/<sessão>`; o adaptador relê a configuração a cada mensagem) e renomeia os grupos novos. No modelo `por-cliente`, uma mudança na camada da plataforma chega ao número de cada cliente por essa rotina.
+
+Peso: cada grupo movimentado é uma conversa a mais no painel. Num número que participa de muitos grupos, prefira `equipe` com um time do Chatwoot para os grupos (`groups.team_id`), para não misturar com a fila das conversas com uma pessoa.
 
 ## Quando o número para
 

@@ -400,7 +400,7 @@ test("the command creates a page, plans it and audits a saved capture", () => {
     mkdirSync(join(project, "docs"));
     assert.equal(run("new", "obrigado", "--type", "obrigado").dir, "docs/paginas/obrigado");
     assert.equal(run("list").pages.length, 2);
-    assert.deepEqual(run("types").types.map((t) => t.id), ["upsell", "order-bump", "downsell", "cross-sell", "obrigado", "landing", "planos", "api"]);
+    assert.deepEqual(run("types").types.map((t) => t.id), ["upsell", "order-bump", "downsell", "cross-sell", "obrigado", "landing", "curso", "planos", "api"]);
     assert.deepEqual(run("models", "--type", "planos").models.map((m) => m.id), ["juridiq-planos", "jurichat-pagina-de-vendas"]);
     assert.deepEqual(run("models", "--type", "api").models.map((m) => m.id), ["juridiq-api"]);
   } finally {

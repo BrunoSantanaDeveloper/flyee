@@ -36,6 +36,12 @@ export function supportApi({ base = "/api/atendimento", fetchImpl = (...args) =>
     /** Perguntas e respostas sugeridas a partir das conversas que a equipe resolveu, esperando aprovação. */
     suggestions: (escopo = "cliente") => call("GET", scoped("sugestoes", escopo)),
     decideSuggestion: (id, decisao, values = {}) => call("POST", `sugestoes/${encodeURIComponent(id)}`, { decisao, ...values }),
+    /** Os grupos da equipe e as pessoas que podem entrar neles. */
+    teamGroups: () => call("GET", "grupos"),
+    /** Cria (sem chave) ou muda um grupo da equipe: { chave?, nome, membros, etiquetas }. */
+    saveTeamGroup: (grupo) => call("POST", "grupos", grupo),
+    /** Arquiva o grupo: todos saem dele e o histórico fica guardado. */
+    archiveTeamGroup: (chave) => call("DELETE", `grupos?chave=${encodeURIComponent(chave)}`),
     /** O que o robô passou para a equipe, agrupado por assunto. */
     gaps: (escopo = "cliente", dias = 30) => call("GET", scoped("lacunas", escopo, `&dias=${Number(dias) || 30}`)),
   };

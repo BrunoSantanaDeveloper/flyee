@@ -26,6 +26,17 @@ export function readEnv(source = process.env) {
     configTtlMs: number("CONFIG_TTL_MS", 60000),
     configStaleMs: number("CONFIG_STALE_MS", 600000),
     keys,
+    // Imagem, áudio e vídeo (media.mjs). O ffmpeg vem no Dockerfile do robô.
+    ffmpegPath: String(source.FFMPEG_PATH ?? "").trim() || "ffmpeg",
+    ffprobePath: String(source.FFPROBE_PATH ?? "").trim() || "ffprobe",
+    // PDF (documents.mjs). O poppler vem no Dockerfile do robô.
+    pdftotextPath: String(source.PDFTOTEXT_PATH ?? "").trim() || "pdftotext",
+    pdftoppmPath: String(source.PDFTOPPM_PATH ?? "").trim() || "pdftoppm",
+    mediaMaxBytes: number("MEDIA_MAX_MB", 100) * 1024 * 1024,
+    mediaMaxMinutes: number("MEDIA_MAX_MINUTES", 30),
+    mediaConcurrency: Math.max(1, number("MEDIA_CONCURRENCY", 2)),
+    geminiTranscribeModel: String(source.MEDIA_GEMINI_MODEL ?? "").trim() || "gemini-3.1-flash-lite",
+    openaiTranscribeModel: String(source.MEDIA_OPENAI_MODEL ?? "").trim() || "gpt-4o-mini-transcribe",
   };
 }
 
@@ -49,6 +60,11 @@ function readBody(request) {
 
 export function startServer({ env = readEnv(), logger = createLogger(), fetchImpl = fetch } = {}) {
   const bot = createBot({ env, logger, fetchImpl });
+  // Sem ffmpeg, imagem pequena ainda passa; áudio e vídeo não. O /health mostra o que foi conferido.
+  bot.checkMedia().then(
+    (ready) => logger.info({ event: "media", status: `${ready ? "ffmpeg" : "sem_ffmpeg"},${bot.health().media.pdf === false ? "sem_pdf" : "pdf"}` }),
+    () => logger.warn({ event: "media", status: "sem_ffmpeg" }),
+  );
   const send = (response, status, body) => {
     response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
     response.end(JSON.stringify(body));

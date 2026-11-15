@@ -1,0 +1,14 @@
+# Kit whatsapp-support: o proxy da borda. Os domínios de cada pilha ficam em sites/<pilha>.caddy; este
+# arquivo só junta todos. Depois de pôr ou mudar um arquivo em sites/, recarregue o Caddy.
+
+{
+	email {$ACME_EMAIL}
+	servers {
+		# Desde a 2.11.4, o Caddy descarta cabeçalhos com sublinhado. O adaptador do OpenWA chama a API do
+		# Chatwoot com o token em api_access_token: sem esta linha, ele leva 401 e a mensagem do WhatsApp nunca
+		# vira conversa. É o único que precisa passar (opção da 2.11.6).
+		expected_underscore_headers api_access_token
+	}
+}
+
+import sites/*.caddy

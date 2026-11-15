@@ -6,7 +6,18 @@
 
 import { useEffect, useState } from "react";
 
-import { DAYS, LIMITS, PERMISSION_GROUPS, validateSettings, type Day, type PermissionGroup, type PlatformSettings, type Scope } from "../atendimento/base/shared/settings.mjs";
+import {
+  DAYS,
+  LIMITS,
+  PERMISSION_GROUPS,
+  validateSettings,
+  type Day,
+  type GroupSettings,
+  type MediaSettings,
+  type PermissionGroup,
+  type PlatformSettings,
+  type Scope,
+} from "../atendimento/base/shared/settings.mjs";
 import { supportApi, type SettingsResponse } from "../atendimento/base/ui/client.mjs";
 import { Alert, Button, Card, Choice, Loading, Stack, Text, TextArea, TextField, Toggle } from "./primitives";
 
@@ -22,13 +33,17 @@ const GROUP_LABELS: Record<PermissionGroup, string> = {
   transferencia: "Quando passar para a equipe",
   consultas: "Quais consultas ao sistema ligar",
   modo: "Como o robô trabalha",
+  grupos: "Grupos do WhatsApp",
+  midia: "Imagens, áudios, vídeos e arquivos",
 };
+const SEM_GRUPOS: GroupSettings = { mode: "fora", call_words: [], team_id: null };
+const MIDIA_PADRAO: MediaSettings = { images: true, audio: true, video: true, documents: true, transcription_note: true };
 
 export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
   const [data, setData] = useState<SettingsResponse | null>(null);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [problemas, setProblemas] = useState<Record<string, string>>({});
-  const [aviso, setAviso] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
+  const [aviso, setAviso] = useState<{ tone: "success" | "info" | "danger"; text: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -60,8 +75,8 @@ export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
     }
     setSalvando(true);
     try {
-      await api.saveSettings(settings, escopo);
-      setAviso({ tone: "success", text: "Robô atualizado. Vale a partir da próxima mensagem, em até um minuto." });
+      const result = await api.saveSettings(settings, escopo);
+      setAviso(result.aviso ? { tone: "info", text: result.aviso } : { tone: "success", text: "Robô atualizado. Vale a partir da próxima mensagem, em até um minuto." });
     } catch (error) {
       setAviso({ tone: "danger", text: (error as Error).message });
     } finally {
@@ -78,6 +93,10 @@ export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
       .map((part) => part.split(/\s*(?:a|às|as)\s*/).slice(0, 2) as [string, string]);
     update({ hours: { ...hours, days: { ...hours.days, [day]: ranges } } });
   };
+  const grupos = settings.groups ?? SEM_GRUPOS;
+  const midia = settings.media ?? MIDIA_PADRAO;
+  // Sem quem transcreva, "Ouvir áudios" some: ligar não mudaria nada. Quando não se sabe (null), mostra tudo.
+  const semAudio = data.media?.audio === false;
   const toggleList = (list: string[] | null | undefined, name: string, on: boolean) => {
     const current = list ?? [];
     return on ? [...new Set([...current, name])] : current.filter((item) => item !== name);
@@ -247,6 +266,71 @@ export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
                 ))}
               </>
             ) : null}
+          </Stack>
+        </Card>
+      ) : null}
+
+      {can("midia") ? (
+        <Card title="Imagens, áudios, vídeos e arquivos">
+          <Stack gap={8}>
+            <Text tone="muted">O robô lê o que a pessoa manda e só passa para a equipe quando não consegue.</Text>
+            {semAudio ? (
+              <Text tone="muted">Áudios vão para a equipe, porque este atendimento ainda não transcreve o que é falado. Nos vídeos, o robô vê os quadros.</Text>
+            ) : null}
+            <Toggle label="Ler imagens e prints" checked={midia.images} onChange={(images) => update({ media: { ...midia, images } })} />
+            {semAudio ? null : <Toggle label="Ouvir áudios" checked={midia.audio} onChange={(audio) => update({ media: { ...midia, audio } })} />}
+            <Toggle
+              label="Ver vídeos"
+              hint={semAudio ? "O robô vê uma grade de quadros do vídeo, também em vídeo longo." : "O robô vê uma grade de quadros do vídeo e ouve a fala, também em vídeo longo."}
+              checked={midia.video}
+              onChange={(video) => update({ media: { ...midia, video } })}
+            />
+            <Toggle
+              label="Ler PDFs, planilhas e documentos"
+              hint="Comprovante, boleto, nota, planilha, CSV e documento de texto. Arquivo grande é lido só no começo."
+              checked={midia.documents !== false}
+              onChange={(documents) => update({ media: { ...midia, documents } })}
+            />
+            {semAudio ? null : (
+              <Toggle
+                label="Deixar a transcrição para a equipe"
+                hint="Uma nota interna com o que foi falado, para quem atende ler sem ouvir."
+                checked={midia.transcription_note}
+                onChange={(transcription_note) => update({ media: { ...midia, transcription_note } })}
+              />
+            )}
+          </Stack>
+        </Card>
+      ) : null}
+
+      {can("grupos") ? (
+        <Card title="Grupos do WhatsApp">
+          <Stack>
+            <Text tone="muted">Valem para o número conectado pelo WhatsApp Web. Pela API oficial, os grupos não chegam ao atendimento.</Text>
+            <Choice
+              label="O que fazer com os grupos de que o número participa"
+              value={grupos.mode}
+              onChange={(mode) => update({ groups: { ...grupos, mode } })}
+              options={[
+                { value: "fora", label: "Deixar fora do atendimento", hint: "Só as conversas com uma pessoa entram no painel." },
+                { value: "equipe", label: "A equipe atende e o robô fica calado", hint: "Cada grupo vira uma conversa no painel, com o nome do grupo. O robô nunca escreve nele." },
+                {
+                  value: "chamado",
+                  label: "O robô responde quando chamado",
+                  hint: "A equipe atende o grupo, e o robô responde só à mensagem que o chama por uma das palavras abaixo, sem consultar dados de ninguém.",
+                },
+              ]}
+            />
+            {grupos.mode === "chamado" ? (
+              <TextField
+                label="Palavras que chamam o robô no grupo"
+                hint="Separadas por vírgula, como o nome do robô. Chame pelo nome escrito: a menção com @ ao número não conta."
+                value={grupos.call_words.join(", ")}
+                error={problemas["groups.call_words"]}
+                onChange={(text) => update({ groups: { ...grupos, call_words: text.split(",").map((word) => word.trim()).filter(Boolean) } })}
+              />
+            ) : null}
+            {grupos.mode !== "fora" ? <Text tone="muted">As mensagens chegam a partir de agora; o que foi escrito antes no grupo não entra.</Text> : null}
           </Stack>
         </Card>
       ) : null}

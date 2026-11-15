@@ -1,6 +1,6 @@
 ---
 name: conversion-pages
-description: Monta e confere páginas que vendem pelo tipo (landing page, planos e preços, API, order bump, upsell, downsell, cross-sell e obrigado), com a estratégia de mercado e modelos reais analisados (Juridiq, JuriChat, Hostinger). Use quando pedirem uma dessas páginas, uma página no estilo de um desses modelos ou a revisão de uma delas. A continuidade entre anúncio e página é do ad-landing-page.
+description: Monta e confere páginas que vendem pelo tipo (landing page, venda de curso, planos, API, order bump, upsell, downsell, cross-sell, obrigado), com modelos reais analisados (Juridiq, JuriChat, Subido AI, Databricks, Hostinger). Use ao pedirem uma dessas páginas, uma no estilo de um modelo ou a revisão de uma delas. A continuidade entre anúncio e página é do ad-landing-page.
 ---
 
 # Páginas que vendem
@@ -36,6 +36,7 @@ Rode `check` uma vez por sessão e depois `types`. Reconheça o tipo pelo pedido
 | Pedido | Tipo |
 |---|---|
 | página de vendas, landing page, LP, página inicial do produto | `landing` |
+| página de vendas de curso, mentoria, formação ou comunidade, carta de vendas, página do lançamento, inscrições abertas | `curso` |
 | página de planos, de preços, tabela de preços, mensal e anual | `planos` |
 | página da API, para desenvolvedores, de integração, do servidor MCP | `api` |
 | caixa antes de pagar, item a mais no checkout | `order-bump` |
@@ -46,7 +47,7 @@ Rode `check` uma vez por sessão e depois `types`. Reconheça o tipo pelo pedido
 
 Um pedido "no estilo de" um modelo, como "a landing page no estilo do Juridiq", é um pedido do tipo desse modelo, com ele como referência principal: a estrutura, a mecânica e o efeito visual, traduzidos para a marca do projeto.
 
-Quando a página de vendas é o destino de uma campanha paga, construa-a como `landing`. A skill `ad-landing-page`, do app de criativos para anúncios, escreve o briefing a partir da campanha e confere a continuidade entre o anúncio e a página: use-a antes e depois, quando estiver instalada. Sem ela, avise que essa conferência ficou de fora.
+Quando a pessoa compra direto, lendo a página e se inscrevendo, sem demonstração nem teste, a página é `curso`; quando o próximo passo é marcar uma conversa ou testar, é `landing`. Quando a página de vendas é o destino de uma campanha paga, construa-a pelo tipo dela. A skill `ad-landing-page`, do app de criativos para anúncios, escreve o briefing a partir da campanha e confere a continuidade entre o anúncio e a página: use-a antes e depois, quando estiver instalada. Sem ela, avise que essa conferência ficou de fora.
 
 Um pedido que cobre um fluxo inteiro vira uma página por tipo, na ordem do fluxo: order bump, upsell, downsell e obrigado. Um site com página de vendas, planos e API também vira uma página por tipo, com o mesmo cabeçalho, a mesma faixa e o mesmo rodapé.
 
@@ -108,7 +109,7 @@ O `audit` usa o Motor de vídeo (`.flyee/modules/video-render/scripts/render.mjs
 
 Cada item volta `ok`, `atencao` ou `nao_conferido`. O que a captura não trouxe nunca é dado como reprovado. Corrija o que está em `atencao` e rode `audit` de novo. Confira também, lendo o código, a lista do que conferir à mão no plano.
 
-Depois, olhe. O `audit` grava a página sem nenhuma letra em `files.no_letters`, as fotos da página em `files.photos`, a página de antes em `files.before` e, quando `demo.selector` está preenchido, a figura principal filmada em `film.sheets`. Abra cada imagem, nunca o código, e responda às perguntas de "Conferir olhando" em `../../references/demonstracao.md`:
+Depois, olhe. O `audit` grava a página sem nenhuma letra em `files.no_letters` (numa página longa, várias folhas: abra todas, na ordem), as fotos da página em `files.photos`, a página de antes em `files.before` e, quando `demo.selector` está preenchido, a figura principal filmada em `film.sheets`. Abra cada imagem, nunca o código, e responda às perguntas de "Conferir olhando" em `../../references/demonstracao.md`:
 
 1. Sem as letras, o que é cada figura? A resposta precisa ser um objeto. Uma caixa vazia é uma figura que falhou.
 2. Lido em voz alta, o título é uma frase que alguém diria?

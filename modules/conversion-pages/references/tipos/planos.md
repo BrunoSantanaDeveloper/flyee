@@ -70,7 +70,7 @@ Os detalhes estão em `../lei.md`.
 
 ## O que a conferência olha
 
-`cards_no_holes`, `h1_present`, `prices_first_screen`, `plan_highlighted`, `discount_math`, `reference_price_true`, `renewal_shown`, `trial_terms`, `cancel_terms_shown`, `promo_terms_shown`, `countdown_real`, `popup_dismissable`, `popup_on_arrival`, `numbers_not_zero`, `claims_have_origin`, `placeholder_data`, `supplier_identified`, `legal_lines`, `ai_defaults`, `off_brand`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
+`cards_no_holes`, `h1_present`, `prices_first_screen`, `plan_highlighted`, `discount_math`, `cash_price_shown`, `reference_price_true`, `renewal_shown`, `trial_terms`, `cancel_terms_shown`, `promo_terms_shown`, `countdown_real`, `popup_dismissable`, `popup_on_arrival`, `numbers_not_zero`, `claims_have_origin`, `placeholder_data`, `supplier_identified`, `legal_lines`, `ai_defaults`, `off_brand`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

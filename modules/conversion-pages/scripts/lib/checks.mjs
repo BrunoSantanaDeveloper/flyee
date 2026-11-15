@@ -95,6 +95,75 @@ const FIGURE_SENTENCE_WORDS = 15;
 const FIGURE_READ_WORDS = 30;
 const GENERIC_FONT = /^(?:system-ui|ui-sans-serif|ui-serif|ui-monospace|sans-serif|serif|monospace|arial|helvetica|times new roman|-apple-system|blinkmacsystemfont|segoe ui|roboto)$/i;
 
+// A price in installments ("12x de R$ 797", "12x R$ 81,00"), read over line breaks: a page often splits the
+// count, the currency and the number into separate lines.
+const INSTALLMENT = /(?<![\p{L}\p{N}])(\d{1,2})\s*x\s*(?:de\s+)?R\$\s*(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:,\d{1,2})?)/giu;
+const INSTALLMENT_LINE = new RegExp(INSTALLMENT.source, "iu");
+// The price paid at once, or the total in installments, written near a number on the same line: "R$ 9.720 à
+// vista", "à vista: R$ 9.720", "À vista no PIX, por R$ 897", "ou R$ 9.720 no PIX", "total de R$ 9.564", "o total é
+// R$ 1.076,40", "Total a prazo R$ 9.564". A "Total" alone with the price on the next line is a value list, not this.
+const CASH_PRICE = /R\$\s*[\d.,]+[^\n]{0,20}?(?:à|a)\s+vista|R\$\s*[\d.,]+\s*(?:no\s+pix|em\s+1x)|(?<![\p{L}])(?:à|a)\s+vista[^\n]{0,30}?R\$|(?<![\p{L}])(?:no\s+pix|em\s+1x|pagamento\s+único)[^\n]{0,20}?R\$|(?<![\p{L}])(?:valor\s+)?total(?:\s+a\s+prazo|\s+parcelado|\s+no\s+cart[ãa]o)?[^\n\d]{0,15}?R\$|^\s*ou\s+R\$/imu;
+/** How far from the installments the cash price may be, in characters of the page text. */
+const CASH_WINDOW = 250;
+// The value list before the offer: lines that end in a price, under one heading, and a bare "Total" line.
+const TOTAL_LINE = /^\s*(?:valor\s+)?total\s*:?\s*(R\$\s?[\d.,]+)?\s*$/iu;
+const PRICE_ONLY_LINE = /^\s*R\$\s?[\d.,]+\s*$/u;
+const PRICE_AT_END = /R\$\s?(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:,\d{1,2})?)\s*$/u;
+/** At least this many priced items before a total make a list worth adding up. */
+const STACK_MIN_ITEMS = 3;
+/** A placeholder inside a sample the page labels as one ("Prévia ilustrativa", "Modelo de certificado") is on purpose. */
+const SAMPLE_LABEL = edge("pr[ée]via|ilustrativ[ao]s?|sem validade|modelo de|exemplo fict[íi]cio|fict[íi]ci[ao]s?|dados de exemplo|preview|sample|illustrative");
+const SAMPLE_LABEL_LINES = 6;
+
+/** Each price in installments in the page text, with the cash price or the total found near it or not. */
+export function installmentsIn(text) {
+  const source = String(text ?? "");
+  const found = [];
+  for (const match of source.matchAll(INSTALLMENT)) {
+    const count = Number(match[1]);
+    const value = parsePrice(match[2]);
+    if (!count || count < 2 || value === null) continue;
+    const near = source.slice(Math.max(0, match.index - CASH_WINDOW), match.index + match[0].length + CASH_WINDOW);
+    found.push({ count, value, text: `${count}x de R$ ${match[2]}`, cash_near: CASH_PRICE.test(near) });
+  }
+  return found;
+}
+
+/** The value lists that end in a "Total" line: the items above it under the same heading, and the total written. */
+export function stacksIn(text) {
+  const lines = String(text ?? "").split("\n");
+  const stacks = [];
+  lines.forEach((line, index) => {
+    const head = TOTAL_LINE.exec(line);
+    if (!head) return;
+    let totalText = head[1] ?? null;
+    if (!totalText) {
+      const next = lines.slice(index + 1, index + 3).find((candidate) => candidate.trim());
+      if (next && PRICE_ONLY_LINE.test(next)) totalText = next.trim();
+    }
+    const total = parsePrice(totalText);
+    if (total === null) return;
+    const items = [];
+    for (let up = index - 1; up >= 0 && up >= index - 80; up--) {
+      const above = lines[up];
+      if (/^\s*#{1,6}\s/.test(above) || TOTAL_LINE.test(above)) break;
+      if (INSTALLMENT_LINE.test(above) || /%/.test(above)) continue;
+      const end = PRICE_AT_END.exec(above);
+      if (end) items.push(parsePrice(end[1]));
+    }
+    if (items.length >= STACK_MIN_ITEMS) stacks.push({ total, total_text: totalText, items: items.reverse(), sum: Math.round(items.reduce((a, b) => a + b, 0) * 100) / 100 });
+  });
+  return stacks;
+}
+
+/** "12x de R$ 797" before a price in its context: the number of installments, or null. */
+function installmentCount(price) {
+  const shown = String(price.text ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
+  const match = new RegExp(`(\\d{1,2})\\s*x\\s*(?:de\\s+)?${shown}(?![\\d,])`, "i").exec(String(price.context ?? ""));
+  const count = match ? Number(match[1]) : null;
+  return count && count >= 2 ? count : null;
+}
+
 const kb = (bytes) => `${Math.round((bytes ?? 0) / 1024)} KB`;
 const quoted = (list, size = 40) => list.map((text) => `"${clip(text, size)}"`).join(", ");
 const percent = (share) => `${Math.round(share * 100)}%`;
@@ -132,7 +201,11 @@ export function findClaims(text) {
 /** Whether a stated claim is among the ones pagina.json gives an origin for. */
 export function claimHasOrigin(claim, claims) {
   const wanted = fold(claim).replace(/\s+/g, "");
-  return (Array.isArray(claims) ? claims : []).some((entry) => String(entry?.origin ?? "").trim() && fold(entry?.text ?? "").replace(/\s+/g, "").includes(wanted));
+  // The documented shape is { text, origin }; the AIs that built pages in the proof of 2026-11-09 also wrote
+  // { text, source } and { claim, source }. The origin is what matters, so all three count.
+  const said = (entry) => entry?.text ?? entry?.claim ?? "";
+  const from = (entry) => entry?.origin ?? entry?.source ?? entry?.fonte ?? "";
+  return (Array.isArray(claims) ? claims : []).some((entry) => String(from(entry)).trim() && fold(said(entry)).replace(/\s+/g, "").includes(wanted));
 }
 
 function rgbFromHex(hex) {
@@ -222,6 +295,9 @@ const RULES = {
     if (!cta) return ["atencao", "Não achei o botão principal da oferta. Registre o texto do botão em pagina.json (cta_text)."];
     const mobile = cta.above_fold?.mobile;
     if (mobile === true) return ["ok", `"${clip(cta.text, 60)}" aparece na primeira tela do celular.`];
+    // A long page often has the top button scroll down to the offer, the only one that goes to payment.
+    const opener = mobile === false ? (anatomy.ctas ?? []).find((c) => !c.in_fixed && c.above_fold?.mobile === true && isAnchorOnly(c.href, pageUrl) && (ACCEPT.test(c.text ?? "") || LEAD.test(c.text ?? ""))) : null;
+    if (opener) return ["ok", `"${clip(opener.text, 60)}" aparece na primeira tela do celular e rola até um ponto mais abaixo da página. Confira que esse ponto é a oferta, onde está "${clip(cta.text, 40)}".`];
     if (mobile === false) return ["atencao", `"${clip(cta.text, 60)}" só aparece depois de rolar a tela do celular.`];
     return ["nao_conferido", `A leitura do celular não achou "${clip(cta.text, 60)}".`];
   },
@@ -381,6 +457,12 @@ const RULES = {
   reduced_motion({ anatomy }) {
     const moving = (anatomy.motion?.running?.length ?? 0) > 0 || (anatomy.media?.videos ?? []).some((v) => v.autoplay);
     if (!moving) return null;
+    // Video engine 1.3.0 and newer read the page again with the request on: a rule that stops nothing is not enough.
+    const still = anatomy.motion?.reduced_still_running;
+    if (typeof still === "number") {
+      if (still > 0) return ["atencao", `Com o pedido de menos movimento, ${still === 1 ? "uma animação continua se mexendo sozinha" : `${still} animações continuam se mexendo sozinhas`}: ${(anatomy.motion.reduced_still_names ?? []).slice(0, 3).map((name) => `"${clip(name, 40)}"`).join(", ")}.`];
+      return ["ok", "Com o pedido de menos movimento, nada continua se mexendo sozinho."];
+    }
     if ((anatomy.motion?.reduced_motion_rules ?? 0) > 0) return ["ok", "A página tem a regra de menos movimento."];
     if ((anatomy.motion?.stylesheets_unread ?? 0) > 0) return ["nao_conferido", "Há animação ou vídeo automático, e parte do CSS não pôde ser lida para achar a regra de menos movimento."];
     return ["atencao", "Há animação ou vídeo automático e nenhuma regra de menos movimento."];
@@ -515,7 +597,14 @@ const RULES = {
       if (percent) {
         checked += 1;
         const expected = reference.value * (1 - Number(percent[1]) / 100);
-        if (Math.abs(expected - price.value) > Math.max(0.05, reference.value * 0.006)) problems.push(`${percent[1]}% de desconto sobre ${clip(reference.text, 20)} dá ${brl(expected)}, e a página mostra ${clip(price.text, 20)}`);
+        // "por 12x de R$ 797": what is paid is the twelve installments, not one of them.
+        const count = installmentCount(price);
+        const paid = count ? Math.round(count * price.value * 100) / 100 : price.value;
+        if (Math.abs(expected - paid) > Math.max(0.05, reference.value * 0.006)) {
+          problems.push(count
+            ? `${count}x de ${clip(price.text, 20)} somam ${brl(paid)}, e ${percent[1]}% de desconto sobre ${clip(reference.text, 20)} dá ${brl(expected)}`
+            : `${percent[1]}% de desconto sobre ${clip(reference.text, 20)} dá ${brl(expected)}, e a página mostra ${clip(price.text, 20)}`);
+        }
         return;
       }
       if (MONTHLY_AVERAGE.test(context)) {
@@ -610,10 +699,40 @@ const RULES = {
   },
 
   placeholder_data({ text, facts }) {
-    const match = PLACEHOLDER.exec(text);
-    if (!match) return ["ok", "Nenhum dado de exemplo esquecido no texto da página."];
-    if (facts?.product?.name && fold(facts.product.name).includes(fold(match[0]))) return ["ok", "Nenhum dado de exemplo esquecido no texto da página."];
-    return ["atencao", `A página traz "${clip(match[0], 30)}", que parece dado de exemplo esquecido.`];
+    const lines = String(text ?? "").split("\n");
+    const product = facts?.product?.name ? fold(facts.product.name) : null;
+    let labelled = 0;
+    for (let index = 0; index < lines.length; index++) {
+      const match = PLACEHOLDER.exec(lines[index]);
+      if (!match) continue;
+      if (product && product.includes(fold(match[0]))) continue;
+      // "Seu nome aqui" on a certificate the page calls "Prévia ilustrativa" is the sample, on purpose.
+      const around = lines.slice(Math.max(0, index - SAMPLE_LABEL_LINES), index + SAMPLE_LABEL_LINES + 1).join("\n");
+      if (SAMPLE_LABEL.test(around)) {
+        labelled += 1;
+        continue;
+      }
+      return ["atencao", `A página traz "${clip(match[0], 30)}", que parece dado de exemplo esquecido.`];
+    }
+    if (labelled) return ["ok", `Os dados de exemplo da página estão numa amostra com etiqueta, como "Prévia ilustrativa" (${labelled}).`];
+    return ["ok", "Nenhum dado de exemplo esquecido no texto da página."];
+  },
+
+  cash_price_shown({ text }) {
+    const found = installmentsIn(text);
+    if (!found.length) return null;
+    const bare = found.filter((item) => !item.cash_near);
+    if (!bare.length) return ["ok", `Junto das parcelas (${clip(found[0].text, 24)}) aparece o preço à vista ou o total.`];
+    const shown = [...new Set(bare.map((item) => item.text))].slice(0, 2).map((t) => `"${t}"`).join(" e ");
+    return ["atencao", `A página mostra o preço só em parcelas (${shown}), sem o preço à vista nem o total a prazo. Parcelas sem o total obrigam a pessoa a fazer a conta.`];
+  },
+
+  stack_sum({ text }) {
+    const stacks = stacksIn(text);
+    if (!stacks.length) return null;
+    const wrong = stacks.find((stack) => Math.abs(stack.sum - stack.total) > 1);
+    if (wrong) return ["atencao", `Os ${wrong.items.length} itens da lista somam ${brl(wrong.sum)}, e o total escrito é ${brl(wrong.total)}.`];
+    return ["ok", `O total da lista (${brl(stacks[0].total)}) é a soma dos ${stacks[0].items.length} itens.`];
   },
 
   demo_honest({ anatomy, facts }) {
@@ -624,8 +743,8 @@ const RULES = {
     const problems = [];
     if (demos.some((scene) => scene.headings > 0)) problems.push("há título (h1 a h6) dentro da cena, e ele entra no sumário da página");
     if (demos.some((scene) => !scene.has_name)) problems.push("a cena não tem um texto alternativo");
-    if (demo.sample_data === true && demos.some((scene) => !scene.label_near)) problems.push("os dados são de exemplo, e não há etiqueta perto da cena");
-    if (demo.sample_data !== true && demo.sample_data !== false) problems.push("pagina.json não diz se os dados da cena são inventados (demo.sample_data)");
+    if (demo.sample_data === true && demos.some((scene) => !scene.label_near)) problems.push("pagina.json marca os dados da cena como de exemplo (demo.sample_data: true), e não há etiqueta perto dela: ponha a etiqueta, ou marque false quando a cena só mostra o que existe, sem nome, valor ou resultado inventado");
+    if (demo.sample_data !== true && demo.sample_data !== false) problems.push("pagina.json não diz se os dados da cena são inventados (demo.sample_data: true com a etiqueta, ou false quando a cena só mostra o que existe)");
     if (problems.length) return ["atencao", `${problems.join("; ")}.`];
     return ["ok", demo.sample_data ? "A cena está marcada, com texto alternativo e a etiqueta de exemplo." : "A cena está marcada e com texto alternativo."];
   },

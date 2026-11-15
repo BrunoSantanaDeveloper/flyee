@@ -1,0 +1,36 @@
+# Kit whatsapp-support: o proxy da borda, um só por servidor com mais de um sistema. É o dono das portas 80
+# e 443 e faz o TLS de todos os domínios. Cada pilha entra com um arquivo em sites/ (modelo em
+# sites/pilha.caddy.exemplo) e com a rede borda-<pilha>, que precisa existir antes de subir este proxy.
+# Mora numa pasta do servidor que não é de nenhum dos sistemas; quem cuida do servidor cuida dele.
+
+name: borda
+
+services:
+  caddy:
+    image: caddy:2.11.9
+    restart: unless-stopped
+    env_file: ./borda.env
+    ports:
+      - "80:80"
+      - "443:443"
+    mem_limit: 256m
+    cpus: 0.5
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites:/etc/caddy/sites:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    # Uma rede por pilha: o proxy alcança cada uma, e uma pilha não alcança a outra.
+    networks:
+      - borda-sistema-a
+      - borda-sistema-b
+
+networks:
+  borda-sistema-a:
+    external: true
+  borda-sistema-b:
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:

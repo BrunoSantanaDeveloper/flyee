@@ -24,6 +24,8 @@ export interface SettingsResponse {
   /** Os grupos que esta pessoa pode editar nesta camada. */
   editable: string[];
   tools: Array<{ name: string; description: string }>;
+  /** audio false: o robô não tem quem transcreva, e a tela esconde "Ouvir áudios"; null: não se sabe. */
+  media?: { audio: boolean | null };
 }
 
 export interface Suggestion {
@@ -35,15 +37,29 @@ export interface Suggestion {
   tenant: string | null;
 }
 
+export interface TeamGroup {
+  chave: string;
+  nome: string;
+  /** As chaves (Person.key) de quem está no grupo. */
+  membros: string[];
+  etiquetas: string[];
+  arquivado: boolean;
+}
+
 export function supportApi(options?: { base?: string; fetchImpl?: typeof fetch }): {
   enter(): Promise<{ url: string }>;
   settings(escopo?: Scope): Promise<SettingsResponse>;
-  saveSettings(settings: BotSettings | PlatformSettings, escopo?: Scope): Promise<{ ok: true }>;
+  /** aviso: salvo, mas a mudança nos grupos fica para a próxima conferência (o WhatsApp não respondeu). */
+  saveSettings(settings: BotSettings | PlatformSettings, escopo?: Scope): Promise<{ ok: true; aviso?: string }>;
   whatsappStatus(): Promise<WhatsappStatus>;
   connectOfficial(values: Record<string, string>): Promise<{ metaWebhook: { callbackUrl: string | null; verifyToken: string | null } }>;
   connectUnofficial(): Promise<{ ok: true }>;
   reconnect(): Promise<{ ok: true; status: string }>;
   suggestions(escopo?: Scope): Promise<{ suggestions: Suggestion[] }>;
   decideSuggestion(id: string, decisao: "aprovar" | "descartar", values?: { q?: string; a?: string }): Promise<{ ok: true }>;
+  teamGroups(): Promise<{ grupos: TeamGroup[]; pessoas: Array<{ chave: string; nome: string }> }>;
+  /** fora: quem foi escolhido e não pôde entrar (fora da equipe do painel). */
+  saveTeamGroup(grupo: { chave?: string; nome: string; membros: string[]; etiquetas: string[] }): Promise<{ ok: true; chave: string; fora: string[] }>;
+  archiveTeamGroup(chave: string): Promise<{ ok: true }>;
   gaps(escopo?: Scope, dias?: number): Promise<{ groups: GapGroup[]; categories: Record<string, string> }>;
 };

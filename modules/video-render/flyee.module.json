@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "video-render",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "tool",
   "trail": "divulgar",
   "title": {
@@ -139,8 +139,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "A captura pode gravar também a página sem nenhuma letra, no computador e no celular, para ver o que se entende antes de ler, e passou a medir os cartões e as figuras: quantas palavras pedem leitura e onde há um buraco.",
-    "en": "The capture can also save the page with no letters on it, on desktop and on a phone, to see what makes sense before reading, and now measures cards and figures: how many words ask to be read and where there is a hole."
+    "pt-BR": "A página sem letras passa a ser fotografada uma tela por vez, depois que cada parte aparece na tela, e uma página longa vem em várias folhas. Antes, os blocos que só aparecem com a rolagem saíam como espaços vazios, e a foto parava no meio de uma página longa. A captura conta os blocos que esperam a rolagem e lê a página de novo com o pedido de menos movimento, para dizer o que continua se mexendo. O aviso de cookies que abre alguns segundos depois do carregamento é fechado antes das fotos, e na foto sem letras as janelas, os painéis de chat e os cartões presos nos cantos que flutuam sobre a página ficam escondidos, com um aviso dizendo o quê.",
+    "en": "The page with no letters is now photographed one screen at a time, after each part appears on screen, and a long page comes in several sheets. Before, blocks that only appear on scrolling came out as empty space, and the photo stopped halfway down a long page. The capture counts the blocks that wait for the scroll and reads the page again with reduced motion asked, to say what keeps moving. A cookie window that opens a few seconds after the load is closed before the photos, and in the photo with no letters the windows, chat panels and corner cards floating over the page are hidden, with a warning saying which."
   },
   "license": "member"
 }

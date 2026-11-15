@@ -9,6 +9,8 @@ export interface HealthFinding {
   fix: string;
   /** "quem_conecta" resolve na tela ou na Meta; "tecnico" é o servidor, de quem cuida da implantação. */
   fixBy: "quem_conecta" | "tecnico";
+  /** Quando existe, a memória dos avisos compara a chave no lugar do código (a contagem de mensagens perdidas). */
+  key?: string;
 }
 
 export interface InboxHealth {
@@ -61,6 +63,8 @@ export function classifySession(session: Record<string, unknown> | null): Health
 export function classifyCloudHealth(input?: { health?: Record<string, unknown> | null; error?: { type?: string; message?: string } | null }): HealthFinding[];
 
 export function openwaFailure(error: unknown): HealthFinding;
+/** A saúde do chatwoot-adapter em achado: null quando saudável; só descartadas é atencao; o resto é fora. */
+export function classifyAdapterHealth(health: { healthy?: boolean; message?: string } | null | undefined): HealthFinding | null;
 
 export function checkWhatsappHealth(input: {
   chatwootUrl: string;

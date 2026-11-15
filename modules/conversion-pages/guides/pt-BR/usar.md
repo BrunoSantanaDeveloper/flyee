@@ -8,6 +8,7 @@ Diga à sua IA qual página você quer, o que ela vende e onde entra no seu site
 
 - "Crie a página de vendas do sistema, com o agendamento da demonstração e o período de teste."
 - "Monte a página de planos com mensal e anual e a tabela comparativa."
+- "Faça a página de vendas da minha mentoria, com a oferta da Black em 12 parcelas e os bônus."
 - "Faça a página da nossa API para desenvolvedores, com os planos e a documentação."
 - "Crie a página de upsell que aparece depois do checkout, oferecendo a mentoria em grupo com 50% de desconto no primeiro mês."
 - "Coloque um order bump no checkout do curso com o checklist de lançamento por R$ 19,90."
@@ -18,6 +19,7 @@ Diga à sua IA qual página você quer, o que ela vende e onde entra no seu site
 | Tipo | Onde entra |
 |---|---|
 | Página de vendas | o endereço principal do produto, ou o destino das campanhas e dos links |
+| Página de vendas de curso | o endereço para onde os anúncios, a lista de e-mail e o lançamento mandam quem vai comprar |
 | Planos e preços | a página de planos, ou a seção de planos da página de vendas |
 | Página de API | a página para quem programa, ligada à documentação |
 | Order bump | uma caixa no checkout, logo acima do botão de pagar |

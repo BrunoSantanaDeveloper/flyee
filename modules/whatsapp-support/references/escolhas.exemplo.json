@@ -27,7 +27,8 @@
       "inbound_emails"
     ],
     "esconder": [],
-    "moldura": false
+    "moldura": false,
+    "resolver_apos_horas": 8
   },
   "acrescentar": {
     "links": []

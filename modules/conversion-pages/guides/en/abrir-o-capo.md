@@ -2,18 +2,22 @@
 
 ## The repertoire
 
-The app carries a playbook for each page type: sales page, plans and pricing, API page, order bump, upsell, downsell, cross-sell and thank-you page. Each playbook covers:
+The app carries a playbook for each page type: sales page, course sales page, plans and pricing, API page, order bump, upsell, downsell, cross-sell and thank-you page. Each playbook covers:
 
 - what the page is and when to use it;
 - the rule that never breaks;
 - the sections in order, the mechanics and the copy;
 - the motion, mobile, measurement and the legal lines.
 
-Real models come with it, analysed one by one. Each model records the source, the date it was seen, the page in order, the mechanics worth taking, the measured motion and what not to repeat. The app carries the analysis, never another company's full text. Today's models, all seen on November 7, 2026:
+Real models come with it, analysed one by one. Each model records the source, the date it was seen, the page in order, the mechanics worth taking, the measured motion and what not to repeat. The app carries the analysis, never another company's full text. Today's models:
 
 - Hostinger's post-purchase offer for its AI agent, with the second offer and the thank-you page;
 - the sales page, the plans page and the API page of Juridiq, software for law firms;
-- the sales page of JuriChat, the WhatsApp support product from the same group.
+- the sales page of JuriChat, the WhatsApp support product from the same group;
+- the sales page of Subido AI, a course with a platform, mentoring and tools, in both versions of its A/B test of the top, seen on November 9, 2026;
+- the product pages of Databricks, a data and AI platform, with demo graphics drawn from the product's own parts, its own icons and real logos, seen the same day.
+
+The first four were seen on November 7, 2026.
 
 ## The stages
 
@@ -53,7 +57,9 @@ What says whether the page sells is your project's own measurement.
 | one decision per page | on an offer, no other purchase action competes with it |
 | visible, neutral decline | there is a decline link, worded without shaming |
 | price, struck price and renewal | the registered amount shows; the struck price matches the real one; a subscription says how it renews |
-| discount math | the discount, the savings in reais and the monthly average add up with the page's prices |
+| discount math | the discount, the savings in reais, the monthly average and the installments' total add up with the page's prices |
+| cash price | the cash price or the total shows next to the installments, never the installment alone |
+| value list | the total written is the sum of the items |
 | plans | the prices on the first screen and one plan highlighted |
 | trial and promotion | the trial says how many days it lasts; the promotion says when it ends |
 | cancellation | the page says how to cancel and whether there is a lock-in |
@@ -68,7 +74,7 @@ What says whether the page sells is your project's own measurement.
 | checked box | no box with a price comes checked |
 | order bump near payment | the box sits right above the pay button |
 | API page | the documentation on the first screen, a request example and the usage limits in numbers |
-| video and motion | autoplay video is muted and has a cover image; the reduced motion rule is there |
+| video and motion | autoplay video is muted and has a cover image; with reduced motion asked, nothing keeps moving by itself |
 | legal lines | privacy, terms and how to withdraw |
 | images | alternative text on images; on a phone, images up to 500 KB and at the size they appear |
 | numbers and urgency | each with its origin recorded, and no sample data left behind |

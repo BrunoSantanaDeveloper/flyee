@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { signProjectRequest as botSign } from "../kit/base/bot/src/signature.mjs";
-import { createToolRunner, handleBotRequest } from "../kit/base/server/bot-contract.mjs";
+import { botHealthUrl, createToolRunner, handleBotRequest, mediaSupport, mediaSupportFrom } from "../kit/base/server/bot-contract.mjs";
 import { adapterIngressUrl } from "../kit/base/server/openwa.mjs";
 import {
   connectCloudApi,
@@ -19,9 +19,11 @@ import {
   provisionAccount,
   removeStaffUser,
   ssoUrl,
+  startAdapter,
   syncStaff,
   whatsappStatus,
 } from "../kit/base/server/provision.mjs";
+import { openwaClient } from "../kit/base/server/openwa.mjs";
 import { brPhoneVariants, contactPhone, phoneDigits, samePhone } from "../kit/base/shared/phone.mjs";
 import { summarizeGaps } from "../kit/base/shared/report.mjs";
 import {
@@ -178,7 +180,8 @@ test("configurações: padrões válidos, erros por campo e montagem da configur
     tools: [{ name: "consultar_pedido", description: "d", input_schema: {}, run() {} }, { name: "outra", description: "", input_schema: {} }],
     ai: { provider: "anthropic" },
   });
-  assert.deepEqual(config.chatwoot, { bot_token: "t", bot_secret: "s" });
+  assert.deepEqual(config.chatwoot, { bot_token: "t", bot_secret: "s", relay_user_id: null });
+  assert.equal(botConfig({ platform: null, state: { bot_token: "t", bot_secret: "s", relay_user_id: 41 } }).chatwoot.relay_user_id, 41, "o robô reconhece a pessoa de repasse");
   assert.deepEqual(config.tools.map((tool) => tool.name), ["consultar_pedido"]);
   assert.equal("run" in config.tools[0], false);
   assert.deepEqual(config.handoff.labels, ["robo-passou"]);
@@ -235,8 +238,9 @@ test("contrato: sem assinatura é 401; config, consulta e histórico respondem",
 
 // ---------- provisionamento contra Chatwoot e OpenWA falsos ----------
 
-function fakeServices() {
+function fakeServices({ plugins = [], healthy = false, healthyAfterEnable = true, accountsByEmail = {} } = {}) {
   const calls = [];
+  let adapterHealthy = healthy;
   const users = new Map();
   const members = new Map();
   let nextId = 100;
@@ -254,7 +258,11 @@ function fakeServices() {
         if (!users.has(body.email)) users.set(body.email, nextId++);
         return json(200, { id: users.get(body.email), email: body.email });
       }
-      if (method === "GET" && /^\/platform\/api\/v1\/users\/\d+$/.test(path)) return json(200, { id: Number(path.split("/").pop()), access_token: `token-${path.split("/").pop()}` });
+      if (method === "GET" && /^\/platform\/api\/v1\/users\/\d+$/.test(path)) {
+        const id = Number(path.split("/").pop());
+        const email = [...users].find(([, value]) => value === id)?.[0];
+        return json(200, { id, access_token: `token-${id}`, accounts: accountsByEmail[email] ?? [] });
+      }
       if (method === "PATCH" && /^\/platform\/api\/v1\/users\/\d+$/.test(path)) return json(200, {});
       if (method === "POST" && path === "/platform/api/v1/accounts/3/account_users") {
         members.set(Number(body.user_id), body.role);
@@ -292,10 +300,16 @@ function fakeServices() {
       }
     }
     if (target.host === "wa-interno.test") {
-      if (method === "GET" && path === "/api/plugins") return json(200, []);
+      if (method === "GET" && path === "/api/plugins") return json(200, plugins);
       if (method === "GET" && path === "/api/plugins/catalog") return json(200, [{ id: "chatwoot-adapter", download: "https://github.test/chatwoot-adapter.zip#sha256=abc" }]);
       if (method === "POST" && path === "/api/plugins/install-url") return json(201, { id: "chatwoot-adapter" });
-      if (method === "POST" && path === "/api/plugins/chatwoot-adapter/enable") return json(200, {});
+      if (method === "PUT" && path === "/api/plugins/chatwoot-adapter/config") return json(200, { success: true, message: "ok" });
+      if (method === "POST" && path === "/api/plugins/chatwoot-adapter/enable") {
+        adapterHealthy = healthyAfterEnable;
+        return json(200, { success: true, message: "ok" });
+      }
+      // Como o OpenWA 0.29.1: a falha vem com HTTP 200 e healthy false.
+      if (method === "GET" && path === "/api/plugins/chatwoot-adapter/health") return json(200, adapterHealthy ? { healthy: true } : { healthy: false, message: "missing/invalid config: baseUrl, apiToken, accountId, inboxId" });
       if (method === "POST" && path === "/api/sessions") return json(201, { id: "sess-1", name: body.name, status: "created" });
       if (method === "POST" && path === "/api/sessions/sess-1/start") return json(200, {});
       if (method === "POST" && path === "/api/integration/plugins/chatwoot-adapter/instances") {
@@ -340,7 +354,28 @@ test("equipe: sempre atendente, membro das caixas, com as preferências do paine
   const profile = calls.find((call) => call.method === "PUT" && call.path === "/api/v1/profile");
   assert.equal(profile.body.profile.ui_settings.color_scheme, "auto", "mantém o que a pessoa já tinha");
   assert.equal(profile.body.profile.ui_settings.is_macro_open, false);
+  assert.deepEqual(profile.body.profile.ui_settings.conversations_filter_by, { status: "all", order_by: "last_activity_at_desc" }, "quem entra vê todas as conversas, as do robô também");
+  const again = fakeServices();
+  await ensureStaffUser({ chatwootUrl: "https://chat.test", platformToken: "p", state: next, person: { key: "u1", email: "ana@cliente.test", name: "Ana" }, fetchImpl: again.fetchImpl });
+  const later = again.calls.find((call) => call.method === "PUT" && call.path === "/api/v1/profile");
+  assert.equal("conversations_filter_by" in later.body.profile.ui_settings, false, "depois, a escolha da pessoa fica");
+
+  // O e-mail do super administrador, que administra a conta criada na instalação, nunca vira atendente.
+  const admin = fakeServices({ accountsByEmail: { "dono@cliente.test": [{ id: 1, name: "Instalação", role: "administrator" }] } });
+  await assert.rejects(
+    ensureStaffUser({ chatwootUrl: "https://chat.test", platformToken: "p", state, person: { key: "u9", email: "dono@cliente.test", name: "Dono" }, fetchImpl: admin.fetchImpl }),
+    (error) => error.code === "staff_email_is_admin" && error.fix.length > 0,
+  );
+  assert.equal(admin.calls.some((call) => call.path.endsWith("/account_users")), false, "recusa antes de pôr na conta");
+  const agentElsewhere = fakeServices({ accountsByEmail: { "bia@cliente.test": [{ id: 9, name: "Outro cliente", role: "agent" }] } });
+  await ensureStaffUser({ chatwootUrl: "https://chat.test", platformToken: "p", state, person: { key: "u8", email: "bia@cliente.test", name: "Bia" }, fetchImpl: agentElsewhere.fetchImpl });
   assert.match(await ssoUrl({ chatwootUrl: "https://chat.test", platformToken: "p", userId, fetchImpl }), /sso_auth_token/);
+
+  // Invariante 17: a caixa de um grupo da equipe nunca recebe a equipe toda.
+  const withGroup = fakeServices();
+  const grouped = { ...state, team_groups: { "g-1": { inbox_id: 40, contact_id: 50, conversation_id: 60, name: "Comercial", members: [], labels: [], archived: false } } };
+  await ensureStaffUser({ chatwootUrl: "https://chat.test", platformToken: "p", state: grouped, person: { key: "u2", email: "bia@cliente.test", name: "Bia" }, fetchImpl: withGroup.fetchImpl });
+  assert.deepEqual(withGroup.calls.filter((call) => call.path.endsWith("/inbox_members")).map((call) => call.body.inbox_id), [11]);
 });
 
 test("quem entra no painel: equipe e superadmin na plataforma; equipe e administrador em cada cliente", () => {
@@ -449,10 +484,43 @@ test("rota não oficial: webhook antes da instância, o mesmo segredo dos dois l
   const instance = calls[instanceAt].body;
   assert.equal(instance.secret, "webhook-secret");
   assert.equal(instance.config.apiToken, `token-${result.state.relay_user_id}`, "o adaptador usa a pessoa de repasse, não a conta de serviço");
+  assert.equal(instance.config.relayGroups, false, "grupos ficam fora até a configuração pedir");
+  const relayUser = calls.find((call) => call.method === "POST" && call.path === "/platform/api/v1/users" && call.body.email === "repasse+a@one.test");
+  assert.equal(relayUser.body.name, "Celular do WhatsApp", "o que vem do celular aparece no painel com esse nome");
+  assert.equal(result.state.relay_name, "Celular do WhatsApp");
+  const withGroups = fakeServices();
+  await connectOpenWA({
+    chatwootUrl: "https://chat.test",
+    platformToken: "p",
+    state,
+    input: { sessionName: "cliente-a", relayEmail: "repasse+a@one.test", chatwootPublicUrl: "https://chat.test", openwaUrl: "https://wa-interno.test", openwaPublicUrl: "https://wa.test", openwaApiKey: "k", relayGroups: true },
+    fetchImpl: withGroups.fetchImpl,
+  });
+  assert.equal(withGroups.calls.find((call) => call.path === "/api/integration/plugins/chatwoot-adapter/instances").body.config.relayGroups, true);
   assert.ok(order.includes("POST /api/plugins/install-url"));
+  // O adaptador só liga depois da instância, com a configuração base, e precisa ficar saudável (Atrupe).
+  const configAt = order.indexOf("PUT /api/plugins/chatwoot-adapter/config");
+  const enableAt = order.indexOf("POST /api/plugins/chatwoot-adapter/enable");
+  assert.ok(instanceAt < configAt && configAt < enableAt, `ordem: instância, configuração, ligar (${instanceAt}, ${configAt}, ${enableAt})`);
+  assert.deepEqual(calls[configAt].body.config, instance.config, "a configuração base é a da instância, com o token do estado");
+  assert.equal(order.lastIndexOf("GET /api/plugins/chatwoot-adapter/health") > enableAt, true);
   assert.equal(calls.find((call) => call.path === "/api/v1/accounts/3/inboxes").body.channel.type, "api");
   const status = await whatsappStatus({ openwaUrl: "https://wa-interno.test", openwaApiKey: "k", sessionId: result.sessionId, fetchImpl });
   assert.equal(status.qrCode, "data:image/png;base64,AAA");
+});
+
+test("adaptador: já ligado e saudável fica como está; ligado e ainda em erro reprova a conexão", async () => {
+  const openwaFor = (services) => openwaClient({ url: "https://wa-interno.test", apiKey: "k", fetchImpl: services.fetchImpl });
+  const config = { baseUrl: "https://chat.test", apiToken: "relay", accountId: 3, inboxId: 12 };
+
+  const ready = fakeServices({ plugins: [{ id: "chatwoot-adapter", status: "enabled", version: "0.9.17" }], healthy: true });
+  assert.deepEqual(await startAdapter({ openwa: openwaFor(ready), config }), { started: false });
+  assert.equal(ready.calls.some((call) => call.method !== "GET"), false, "nada muda num adaptador que já funciona");
+
+  // OpenWA 0.29.1 lista status, não enabled: "error" é desligado para o kit.
+  const broken = fakeServices({ plugins: [{ id: "chatwoot-adapter", status: "error" }], healthyAfterEnable: false });
+  await assert.rejects(startAdapter({ openwa: openwaFor(broken), config }), (error) => error.code === "adapter_unhealthy" && /missing\/invalid config/.test(error.message) && error.fix.length > 0);
+  assert.ok(broken.calls.some((call) => call.method === "PUT" && call.path === "/api/plugins/chatwoot-adapter/config"));
 });
 
 test("rota não oficial: recusa endereço sem https", async () => {
@@ -530,6 +598,49 @@ test("verify: aponta tema ausente, moldura fechada e assinatura recusada, com a 
   assert.equal(byName.assinatura_robo_projeto.ok, false);
   assert.ok(byName.assinatura_robo_projeto.fix.length > 0);
   assert.equal(result.ok, false);
+  assert.equal(byName.instalacao_fechada.ok, true, "404 na página de instalação: fechada no proxy");
+});
+
+test("verify: o adaptador ligado mas em erro reprova, com o status que o OpenWA 0.29.1 manda", async () => {
+  const run = async (plugin, health) => {
+    const fetchImpl = async (url) => {
+      const path = new URL(url).pathname;
+      if (path === "/api/health") return json(200, { status: "ok" });
+      if (path === "/api/plugins") return json(200, [plugin]);
+      if (path === "/api/plugins/chatwoot-adapter/health") return json(200, health);
+      if (path === "/api/sessions") return json(200, []);
+      return json(404, {});
+    };
+    const result = await verify({ env: { OPENWA_PUBLIC_URL: "https://wa.test", OPENWA_API_KEY: "k" }, expected: { featuresOff: [], neverOff: [] }, fetchImpl });
+    return Object.fromEntries(result.checks.map((check) => [check.name, check]));
+  };
+  const broken = await run({ id: "chatwoot-adapter", status: "enabled", version: "0.9.17" }, { healthy: false, message: "missing/invalid config: baseUrl" });
+  assert.equal(broken.adaptador_openwa.ok, true);
+  assert.equal(broken.adaptador_saudavel.ok, false);
+  assert.ok(broken.adaptador_saudavel.seen.includes("missing/invalid config"));
+  const off = await run({ id: "chatwoot-adapter", status: "error", version: "0.9.17" }, { healthy: false });
+  assert.equal(off.adaptador_openwa.ok, false);
+  assert.ok(off.adaptador_openwa.seen.includes("error"));
+  assert.equal("adaptador_saudavel" in off, false);
+  assert.equal((await run({ id: "chatwoot-adapter", status: "enabled" }, { healthy: true })).adaptador_saudavel.ok, true);
+});
+
+test("verify: a página que cria o super administrador aberta reprova; fechada no proxy ou já usada passa", async () => {
+  const run = async (installation) => {
+    const fetchImpl = async (url) => {
+      const path = new URL(url).pathname;
+      if (path === "/api") return json(200, { version: "4.19.1" });
+      if (path === "/installation/onboarding") return installation();
+      return json(404, {});
+    };
+    const result = await verify({ env: { CHATWOOT_PUBLIC_URL: "https://chat.test" }, expected: { chatwootVersion: "4.19.1", featuresOff: [], neverOff: [] }, fetchImpl });
+    return result.checks.find((check) => check.name === "instalacao_fechada");
+  };
+  const open = await run(() => new Response("<form>", { status: 200 }));
+  assert.equal(open.ok, false);
+  assert.match(open.fix, /Feche \/installation no proxy/);
+  assert.equal((await run(() => new Response(null, { status: 302, headers: { location: "/" } }))).ok, true, "o Chatwoot manda embora quando já há super administrador");
+  assert.equal((await run(() => json(404, {}))).ok, true);
 });
 
 test("look: julga tema, cor, o que devia sumir e links do Chatwoot", () => {
@@ -658,4 +769,58 @@ test("contrato: eventos e sugestões chegam ao projeto assinados; sem tratador, 
   assert.deepEqual(saved, [["evento", 3, "frete"], ["sugestoes", 3, 1]]);
   assert.equal((await handleBotRequest(post("events", { account_id: 3 }), { ...handlers, saveEvent: undefined })).status, 404);
   assert.equal((await handleBotRequest(post("events", { topic: "sem conta" }), handlers)).status, 400);
+});
+
+test("contrato: a rota transcribe só existe com tratador e devolve o texto da parte", async () => {
+  const secret = "segredo";
+  const heard = [];
+  const handlers = {
+    secret,
+    getConfig: async () => null,
+    runTool: async () => null,
+    getHistory: async () => [],
+    transcribe: async (payload) => {
+      heard.push(payload);
+      return " quero o azul ";
+    },
+  };
+  const post = (body) => {
+    const raw = JSON.stringify(body);
+    const path = "/r/transcribe";
+    const headers = Object.fromEntries(Object.entries(sharedSign({ secret, method: "POST", pathWithQuery: path, body: raw })).map(([key, value]) => [key.toLowerCase(), value]));
+    return { method: "POST", pathWithQuery: path, route: "transcribe", query: {}, rawBody: raw, headers };
+  };
+  const part = { account_id: 3, conversation_id: 7, kind: "audio", mime: "audio/mpeg", seconds: 300, data: "QUJD", part: 1, parts: 2 };
+  assert.deepEqual((await handleBotRequest(post(part), handlers)).body, { ok: true, text: "quero o azul" });
+  assert.deepEqual(heard, [part]);
+  assert.equal((await handleBotRequest(post({ ...part, data: "" }), handlers)).body.code, "audio_missing");
+  const ceiling = await handleBotRequest(post(part), { ...handlers, transcribe: async () => ({ ok: false, code: "ceiling" }) });
+  assert.deepEqual([ceiling.status, ceiling.body], [200, { ok: false, code: "ceiling" }], "o projeto recusa a parte com um código");
+  const absent = await handleBotRequest(post(part), { ...handlers, transcribe: undefined });
+  assert.deepEqual([absent.status, absent.body.code], [404, "not_enabled"], "projeto sem a rota: o robô passa o áudio para a equipe");
+  const unsigned = await handleBotRequest({ ...post(part), headers: {} }, handlers);
+  assert.equal(unsigned.status, 401);
+});
+
+test("mídia na tela: \"Ouvir áudios\" some só quando se sabe que o robô não tem quem transcreva", async () => {
+  const health = (media) => ({ ok: true, media });
+  assert.deepEqual(mediaSupportFrom({ health: health({ ffmpeg: true, transcriber: "gemini" }) }), { audio: true });
+  assert.deepEqual(mediaSupportFrom({ health: health({ ffmpeg: true, transcriber: null }) }), { audio: false });
+  assert.deepEqual(mediaSupportFrom({ ai: { transcription: "project" }, health: health({ ffmpeg: true, transcriber: null }) }), { audio: true }, "o projeto transcreve");
+  assert.deepEqual(mediaSupportFrom({ ai: { transcription: "project" }, health: health({ ffmpeg: false, transcriber: null }) }), { audio: false }, "sem ffmpeg, nem o projeto ouve");
+  assert.deepEqual(mediaSupportFrom({ health: health({ ffmpeg: true }) }), { audio: null }, "robô de antes do campo");
+  assert.deepEqual(mediaSupportFrom({}), { audio: null }, "robô fora do ar");
+
+  assert.equal(botHealthUrl("https://atendimento.loja.test/robo/chatwoot/"), "https://atendimento.loja.test/robo/health");
+  const asked = [];
+  const fetchImpl = async (url) => {
+    asked.push(url);
+    return new Response(JSON.stringify(health({ ffmpeg: true, transcriber: null })), { headers: { "content-type": "application/json" } });
+  };
+  assert.deepEqual(await mediaSupport({ botUrl: "https://atendimento.loja.test/robo/chatwoot", fetchImpl }), { audio: false });
+  assert.deepEqual(asked, ["https://atendimento.loja.test/robo/health"]);
+  const down = async () => {
+    throw new Error("sem rede");
+  };
+  assert.deepEqual(await mediaSupport({ botUrl: "https://atendimento.loja.test/robo/chatwoot", fetchImpl: down }), { audio: null });
 });

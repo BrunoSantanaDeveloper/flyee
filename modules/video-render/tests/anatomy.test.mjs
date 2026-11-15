@@ -17,6 +17,7 @@ import {
   aboveFold,
   anatomyCounts,
   buildAnatomy,
+  reducedMotionReading,
   captureSite,
   countdownsFrom,
   finishAnatomy,
@@ -283,8 +284,24 @@ test("buildAnatomy assembles the documented shape from the page readings", () =>
   assert.deepEqual(anatomy.prices[0], { text: "R$ 49,99", value: 49.99, struck: true, context: "De R$ 49,99 por R$ 19,99", section: 1, y: 186 });
   assert.equal(anatomy.media.iframes[0].provider, "youtube");
   assert.deepEqual(anatomy.media.images, { count: 2, without_alt: 1 });
-  assert.deepEqual(Object.keys(anatomy.motion), ["running", "keyframes", "transitions", "reduced_motion_rules", "smooth_scroll", "scroll_snap", "stylesheets_unread"]);
+  assert.deepEqual(Object.keys(anatomy.motion), ["running", "keyframes", "transitions", "reduced_motion_rules", "smooth_scroll", "scroll_snap", "stylesheets_unread", "reduced_still_running", "reduced_still_names"]);
   assert.equal(anatomy.motion.running[0].name, "pulso");
+  // No reading with the request for less motion: the count stays null, never zero.
+  assert.equal(anatomy.motion.reduced_still_running, null);
+  assert.deepEqual(anatomy.motion.reduced_still_names, []);
+  const reduced = reducedMotionReading({ running: [
+    { kind: "css-animation", name: "letreiro", iterations: "infinite", target: "div.faixa" },
+    { kind: "css-animation", name: "letreiro", iterations: "infinite", target: "div.faixa" },
+    { kind: "css-transition", name: "opacity", iterations: 1, target: "div.bloco" },
+  ] });
+  assert.deepEqual(reduced, { reduced_still_running: 2, reduced_still_names: ["letreiro em div.faixa"] });
+  assert.deepEqual(reducedMotionReading({ running: [] }), { reduced_still_running: 0, reduced_still_names: [] });
+  // A row of logos moved by one long transition per lap keeps going too; a short transition is a change of state.
+  const row = reducedMotionReading({ running: [
+    { kind: "css-transition", name: "transform", iterations: 1, duration_ms: 63000, target: "div.swiper-wrapper" },
+    { kind: "css-transition", name: "opacity", iterations: 1, duration_ms: 500, target: "img" },
+  ] });
+  assert.deepEqual(row, { reduced_still_running: 1, reduced_still_names: ["transform em div.swiper-wrapper"] });
   assert.deepEqual(anatomy.countdowns, [{ text: "00:14:59", section: 1 }]);
   assert.deepEqual(anatomyCounts(anatomy), { sections: 2, ctas: 2, fixed: 3, forms: 1, prices: 1, videos: 1, animations: 1 });
   assert.equal(anatomyCounts(null), null);

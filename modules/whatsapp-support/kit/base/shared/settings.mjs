@@ -9,9 +9,14 @@
 export const MODES = ["auto", "sugestao", "desligado"];
 export const MODELS = ["por-cliente", "plataforma"];
 export const DAYS = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
+/**
+ * Grupos do WhatsApp, só na rota não oficial: "fora" (não entram), "equipe" (entram no painel e o robô
+ * nunca escreve neles) ou "chamado" (o robô responde só à mensagem que o chama por uma das palavras).
+ */
+export const GROUP_MODES = ["fora", "equipe", "chamado"];
 
 /** Grupos de campos que a plataforma pode liberar para o cliente editar. */
-export const PERMISSION_GROUPS = ["apresentacao", "instrucoes", "conhecimento", "horario", "mensagens", "transferencia", "consultas", "modo"];
+export const PERMISSION_GROUPS = ["apresentacao", "instrucoes", "conhecimento", "horario", "mensagens", "transferencia", "consultas", "modo", "grupos", "midia"];
 
 export const LIMITS = {
   persona: 2000,
@@ -23,6 +28,8 @@ export const LIMITS = {
   message: 500,
   keywords: 30,
   maxBotTurns: 50,
+  callWords: 20,
+  callWord: 40,
 };
 
 export function defaultSettings(brand = "") {
@@ -40,6 +47,9 @@ export function defaultSettings(brand = "") {
     messages: { handoff: "", handoff_fora_do_horario: "", erro: "", anexo: "" },
     handoff: { keywords: null, max_bot_turns: 8, team_id: null },
     tools_enabled: [],
+    groups: { mode: "fora", call_words: [], team_id: null },
+    // Imagem, áudio e vídeo que a pessoa manda (D28); a transcrição também vira nota interna para a equipe.
+    media: { images: true, audio: true, video: true, documents: true, transcription_note: true },
     suggest_on_open: true,
     share_contact_name: true,
   };
@@ -49,7 +59,7 @@ export function defaultSettings(brand = "") {
 export function defaultPlatformSettings(brand = "") {
   return {
     ...defaultSettings(brand),
-    client_permissions: { apresentacao: true, instrucoes: true, conhecimento: true, horario: true, mensagens: true, transferencia: true, consultas: true, modo: false },
+    client_permissions: { apresentacao: true, instrucoes: true, conhecimento: true, horario: true, mensagens: true, transferencia: true, consultas: true, modo: false, grupos: false, midia: false },
     tools_available: null,
     learning: { enabled: true },
     report: { enabled: true },
@@ -91,6 +101,8 @@ const GROUP_FIELDS = {
   transferencia: ["handoff", "suggest_on_open", "share_contact_name"],
   consultas: ["tools_enabled"],
   modo: ["mode"],
+  grupos: ["groups"],
+  midia: ["media"],
 };
 
 /** Grava do que o cliente mandou só os grupos liberados; o resto fica como estava. */
@@ -159,6 +171,25 @@ export function validateSettings(settings, { declaredTools = [], scope = "client
   const turns = handoff.max_bot_turns;
   if (!Number.isInteger(turns) || turns < 1 || turns > LIMITS.maxBotTurns) add("handoff.max_bot_turns", `O limite de respostas do robô vai de 1 a ${LIMITS.maxBotTurns}.`);
 
+  const groups = settings.groups;
+  if (groups !== undefined && groups !== null) {
+    if (!GROUP_MODES.includes(groups.mode)) add("groups.mode", "Escolha o que fazer com os grupos: deixar fora, só a equipe ou o robô quando chamado.");
+    const words = groups.call_words ?? [];
+    if (!Array.isArray(words) || words.length > LIMITS.callWords) add("groups.call_words", `São no máximo ${LIMITS.callWords} palavras que chamam o robô.`);
+    else if (words.some((word) => !String(word ?? "").trim() || String(word).length > LIMITS.callWord)) add("groups.call_words", `Cada palavra que chama o robô precisa de texto, com até ${LIMITS.callWord} caracteres.`);
+    else if (groups.mode === "chamado" && !words.length) add("groups.call_words", "Diga pelo menos uma palavra que chama o robô no grupo, como o nome dele.");
+    if (groups.team_id !== null && groups.team_id !== undefined && !(Number.isInteger(groups.team_id) && groups.team_id > 0)) add("groups.team_id", "O time do Chatwoot é um número.");
+  }
+
+  const media = settings.media;
+  if (media !== undefined && media !== null) {
+    for (const field of ["images", "audio", "video", "transcription_note"]) {
+      if (typeof media[field] !== "boolean") add(`media.${field}`, "Escolha sim ou não para imagem, áudio, vídeo e a nota com a transcrição.");
+    }
+    // Arquivos chegaram depois (D29): uma configuração salva antes não tem o campo e vale como ligado.
+    if (media.documents !== undefined && typeof media.documents !== "boolean") add("media.documents", "Escolha sim ou não para PDF, planilha e documento.");
+  }
+
   for (const name of settings.tools_enabled ?? []) {
     if (!declaredTools.includes(name)) add("tools_enabled", `A consulta ${name} não existe neste sistema.`);
   }
@@ -171,6 +202,30 @@ export function validateSettings(settings, { declaredTools = [], scope = "client
     }
   }
   return problems;
+}
+
+/**
+ * O que vale para os grupos de uma conta: a camada do cliente, se a plataforma liberou e ele salvou, senão
+ * a da plataforma. O projeto usa para ligar ou desligar o repasse dos grupos no OpenWA (syncOpenWAGroups).
+ */
+export function groupSettings({ model = "por-cliente", platform, client }) {
+  const base = { ...defaultPlatformSettings(), ...(platform ?? {}) };
+  const layer = model === "por-cliente" && client && clientPermissions(model, base).grupos ? client.groups : null;
+  const chosen = layer && GROUP_MODES.includes(layer.mode) ? layer : base.groups ?? {};
+  const mode = GROUP_MODES.includes(chosen.mode) ? chosen.mode : "fora";
+  const words = Array.isArray(chosen.call_words) ? chosen.call_words.map((word) => String(word).trim()).filter(Boolean) : [];
+  return {
+    mode: mode === "chamado" && !words.length ? "equipe" : mode,
+    call_words: words,
+    team_id: Number.isInteger(chosen.team_id) && chosen.team_id > 0 ? chosen.team_id : null,
+  };
+}
+
+/** Imagem, áudio e vídeo: a camada do cliente quando a plataforma liberou e ele escolheu; senão a da plataforma. */
+function mediaSettings({ platform, client }) {
+  const chosen = client?.media && typeof client.media === "object" ? client.media : platform?.media ?? {};
+  const on = (field) => chosen[field] !== false;
+  return { images: on("images"), audio: on("audio"), video: on("video"), documents: on("documents"), transcription_note: on("transcription_note") };
 }
 
 const filled = (value) => (Array.isArray(value) ? value.length > 0 : value !== null && value !== undefined && String(value).trim() !== "");
@@ -201,7 +256,7 @@ export function botConfig({ model = "por-cliente", platform, client, state, tool
     enabled: mode !== "desligado",
     mode,
     brand: (model === "plataforma" ? base.brand : pick("apresentacao", "brand")) || tenantName || base.brand,
-    chatwoot: { bot_token: state?.bot_token ?? null, bot_secret: state?.bot_secret ?? null },
+    chatwoot: { bot_token: state?.bot_token ?? null, bot_secret: state?.bot_secret ?? null, relay_user_id: state?.relay_user_id ?? null },
     ai: { ...ai, ...(base.ai ?? {}) },
     persona: pick("apresentacao", "persona"),
     platform_instructions: model === "plataforma" ? "" : base.instructions,
@@ -216,6 +271,8 @@ export function botConfig({ model = "por-cliente", platform, client, state, tool
       team_id: handoff.team_id ?? null,
       labels: ["robo-passou"],
     },
+    groups: groupSettings({ model, platform, client }),
+    media: mediaSettings({ model, platform: base, client: layer && permissions.midia ? layer : null }),
     tools: tools.filter((tool) => enabled.has(tool.name)).map(({ name, description, input_schema }) => ({ name, description, input_schema })),
     suggest_on_open: (permissions.transferencia && layer ? layer.suggest_on_open : base.suggest_on_open) !== false,
     history_from_project: true,

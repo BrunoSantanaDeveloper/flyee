@@ -7,6 +7,10 @@
 #   nao-oficial  OpenWA, para a conexão pelo WhatsApp Web
 #   proxy        Caddy com TLS, para servidor sem proxy próprio
 #   config       aplica a marca e o tema no Chatwoot (rodar uma vez a cada implantação)
+#
+# Servidor com mais de um sistema: não suba este arquivo sozinho em cada um. O nome do projeto abaixo é
+# fixo, e duas pilhas com o mesmo nome dividiriam contêineres e volumes, banco incluído. Use
+# compose.compartilhado.yml por cima deste, com o .env de compartilhado.env.example, e o proxy de borda/.
 
 name: atendimento
 
@@ -56,11 +60,11 @@ services:
     restart: unless-stopped
     env_file: ../../segredos/chatwoot.env
     environment:
-      POSTGRES_DB: chatwoot
+      POSTGRES_DB: chatwoot_production
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d chatwoot"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d chatwoot_production"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -93,7 +97,7 @@ services:
       - "2785"
 
   caddy:
-    image: caddy:2
+    image: caddy:2.11.9
     profiles: ["proxy"]
     restart: unless-stopped
     env_file: ../../segredos/proxy.env

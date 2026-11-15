@@ -10,7 +10,7 @@ import { dirname, join, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { audit, claimHasOrigin, findClaims } from "../scripts/lib/checks.mjs";
+import { audit, claimHasOrigin, findClaims, installmentsIn, stacksIn } from "../scripts/lib/checks.mjs";
 import { missingFacts, newFacts, renderPlan } from "../scripts/lib/plan.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -81,7 +81,7 @@ test("every playbook lists the checks its type runs", () => {
 });
 
 test("the types that show the product have a demonstration in the plan, and the others do not", () => {
-  assert.deepEqual(TYPES.types.filter((t) => t.demo).map((t) => t.id), ["upsell", "landing", "api"]);
+  assert.deepEqual(TYPES.types.filter((t) => t.demo).map((t) => t.id), ["upsell", "landing", "curso", "api"]);
   for (const t of TYPES.types.filter((candidate) => candidate.demo)) {
     assert.ok(t.facts.includes("demo.kind"), t.id);
     assert.ok(t.checks.includes("demo_honest") && t.checks.includes("demo_film"), t.id);
@@ -455,4 +455,78 @@ test("audit through the Video engine: a page with defects on purpose, and the sc
   } finally {
     rmSync(project, { recursive: true, force: true });
   }
+});
+
+// ----- the course sales page (1.3.0), measured on the Subido AI pages -----
+
+test("installments alone are pointed out, and installments next to the cash price or the total are not", () => {
+  const offer = "40% OFF\nDe R$ 16.200,00\npor 12x de\nR$\n797\nOferta da Black, sem previsão de nova turma.";
+  assert.deepEqual(installmentsIn(offer).map((i) => [i.count, i.value, i.cash_near]), [[12, 797, false]]);
+  const bare = item(run(page(), {}, { text: offer, id: "curso" }), "cash_price_shown");
+  assert.equal(bare.status, "atencao");
+  assert.match(bare.detail, /12x de R\$ 797/);
+  for (const text of [
+    "R$ 9.720 à vista\nou 12x de R$ 810",
+    "12x de R$ 810\nou R$ 9.720 no PIX",
+    "12x de R$ 81,00 sem juros\nTotal a prazo: R$ 972,00",
+    "À vista: R$ 9.720\n12x R$ 810",
+    // From a page built in the proof: the cash price and the total sit a few words away from the number.
+    "Como posso pagar?\nÀ vista no PIX, por R$ 897, ou em 12x de R$ 89,70 no cartão. No cartão, o total é R$ 1.076,40, com os juros da operadora.",
+  ]) assert.equal(item(run(page(), {}, { text, id: "curso" }), "cash_price_shown").status, "ok", text);
+  assert.equal(item(run(page(), {}, { text: "Cartão em até 12x, boleto ou PIX.", id: "curso" }), "cash_price_shown").status, "skipped", "a payment option is not a price");
+});
+
+test("the value list adds up to its total, and an item without a value of its own stays out", () => {
+  const list = (total) => `## Tudo o que você recebe\n\nFormação\nR$ 5.964\n25 soluções\nR$ 12.425\nR$ 497/cada\nConsultor\nN/A\nComunidade\nR$ 600\nR$ 50/mês\nTotal\n${total}\nO que vale de verdade`;
+  assert.deepEqual(stacksIn(list("R$ 18.989")).map((s) => [s.items.length, s.sum, s.total]), [[3, 18989, 18989]]);
+  assert.equal(item(run(page(), {}, { text: list("R$ 18.989"), id: "curso" }), "stack_sum").status, "ok");
+  const wrong = item(run(page(), {}, { text: list("R$ 19.492"), id: "curso" }), "stack_sum");
+  assert.equal(wrong.status, "atencao");
+  assert.match(wrong.detail, /somam R\$ 18\.989,00, e o total escrito é R\$ 19\.492,00/);
+  assert.equal(item(run(page(), {}, { text: "Plano anual\nR$ 1.200\nTotal no cartão R$ 1.200", id: "curso" }), "stack_sum").status, "skipped", "a plan's total is not a list");
+});
+
+test("a discount over installments counts the installments, not one of them", () => {
+  const offer = (installment) => page({ anatomy: { prices: [
+    { text: "R$ 16.200,00", value: 16200, struck: true, context: "40% OFF De R$ 16.200,00 por 12x de R$ 797", section: 1, y: 100 },
+    { text: `R$ ${installment}`, value: Number(installment), struck: false, context: `40% OFF De R$ 16.200,00 por 12x de R$ ${installment}`, section: 1, y: 140 },
+  ] } });
+  const off = item(run(offer("797"), {}, { id: "curso" }), "discount_math");
+  assert.equal(off.status, "atencao");
+  assert.match(off.detail, /12x de R\$ 797 somam R\$ 9\.564,00, e 40% de desconto sobre R\$ 16\.200,00 dá R\$ 9\.720,00/);
+  assert.equal(item(run(offer("810"), {}, { id: "curso" }), "discount_math").status, "ok");
+});
+
+test("a sample name inside a labelled sample is on purpose, and a loose one is still flagged", () => {
+  const certificate = "Modelo de certificado\nSeu nome aqui\nexemplo de formação concluída\nEmitido por\nViver de IA\nPrévia ilustrativa · sem validade";
+  assert.equal(item(run(page(), {}, { text: certificate }), "placeholder_data").status, "ok");
+  assert.equal(item(run(page(), {}, { text: `${certificate}\n\n${"Texto da página. ".repeat(10).trim().replace(/\. /g, ".\n")}\nSeu nome aqui` }), "placeholder_data").status, "atencao");
+});
+
+test("a top button that scrolls to the offer counts as the first screen's call", () => {
+  const ctas = (anchorOnTop) => [
+    { index: 0, kind: "link", text: "Quero faturar com IA", href: anchorOnTop ? "https://exemplo.com.br/#oferta" : "https://exemplo.com.br/sobre", y: 600, above_fold: { desktop: true, mobile: true }, in_fixed: false, section: 1 },
+    { index: 1, kind: "link", text: "Quero garantir a vaga", href: "https://pagamento.exemplo.com.br/", y: 20000, above_fold: { desktop: false, mobile: false }, in_fixed: false, section: 9 },
+  ];
+  const scrolls = item(run(page({ anatomy: { ctas: ctas(true) } }), { cta_text: "Quero garantir a vaga" }, { id: "curso" }), "cta_first_screen");
+  assert.equal(scrolls.status, "ok");
+  assert.match(scrolls.detail, /Confira que esse ponto é a oferta/);
+  assert.equal(item(run(page({ anatomy: { ctas: ctas(false) } }), { cta_text: "Quero garantir a vaga" }, { id: "curso" }), "cta_first_screen").status, "atencao");
+});
+
+test("with the request for less motion, a loop that keeps going is pointed out even when the rule exists", () => {
+  const motion = (over) => page({ anatomy: { motion: { running: [{ kind: "css-animation", name: "letreiro", iterations: "infinite" }], keyframes: [], transitions: 0, reduced_motion_rules: 1, smooth_scroll: false, scroll_snap: 0, stylesheets_unread: 0, ...over } } });
+  const still = item(run(motion({ reduced_still_running: 49, reduced_still_names: ["marq em div.tape-track"] })), "reduced_motion");
+  assert.equal(still.status, "atencao");
+  assert.match(still.detail, /49 animações continuam se mexendo sozinhas/);
+  assert.equal(item(run(motion({ reduced_still_running: 0, reduced_still_names: [] })), "reduced_motion").status, "ok");
+  assert.match(item(run(motion({})), "reduced_motion").detail, /tem a regra de menos movimento/, "an older capture still reads the rule");
+});
+
+test("a claim's origin counts under the names the AIs wrote in the proof, and never without an origin", () => {
+  assert.equal(claimHasOrigin("1.200 alunos", [{ text: "1.200 alunos em turmas presenciais", origin: "planilha" }]), true);
+  assert.equal(claimHasOrigin("1.200 alunos", [{ text: "1.200 alunos", source: "PRODUTO.md" }]), true);
+  assert.equal(claimHasOrigin("Desde 2019", [{ claim: "1.200 alunos, desde 2019", source: "PRODUTO.md" }]), true);
+  assert.equal(claimHasOrigin("1.200 alunos", [{ claim: "1.200 alunos", source: "" }]), false);
+  assert.equal(claimHasOrigin("1.200 alunos", [{ text: "outro número", origin: "planilha" }]), false);
 });

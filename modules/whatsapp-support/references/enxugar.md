@@ -22,6 +22,8 @@ Da forma mais segura para a mais frágil. Use a primeira que resolver.
 
 Nunca desligue: `api_and_webhooks` (sem ela, toda chamada por token falha, robô e projeto juntos), `agent_bots`, `inbox_management`, `agent_management`, `labels`. O provisionamento recusa (`feature_required`).
 
+`chatwoot.resolver_apos_horas` em escolhas.json: horas sem atividade até o Chatwoot resolver sozinho uma conversa aberta, que volta ao robô na próxima mensagem do cliente. O padrão é 8; 0 desliga; vai de 1 a 720. A conversa em que o cliente espera resposta nunca é resolvida assim (chatwoot.md).
+
 O exemplo de escolhas.json já desliga campanhas, central de ajuda, empresas e os canais que não são WhatsApp. Respostas prontas, macros e o gravador de voz costumam ajudar a equipe; desligue só se o cliente pedir.
 
 **Papel de atendente.** Tira quase toda a área de configurações. Atendente só vê conversas das caixas de que é membro e não abre os relatórios do Chatwoot, que são só de administrador (`app/policies/report_policy.rb`). Como a equipe é sempre atendente, ninguém do cliente vê esses relatórios no painel: não os prometa ao cliente.

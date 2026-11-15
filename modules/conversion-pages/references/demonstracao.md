@@ -60,8 +60,9 @@ A figura mostra só o que o produto faz hoje. O que a página mostra obriga quem
 
 - Antes de construir, ache no código onde está cada coisa que a figura mostra, ou pergunte ao integrante, e registre em `demo.real_today`. O que ainda não existe fica de fora.
 - Nome de cliente, processo, valor e resultado inventados são dados de exemplo: registre `demo.sample_data: true` e ponha a etiqueta "Exemplo fictício" no canto da figura ou logo abaixo dela, pequena, como no modelo do Juridiq. Uma etiqueta por seção basta.
+- Os dados de exemplo contam uma história só: o mesmo sistema tem a mesma permissão, a mesma pessoa tem o mesmo nome e o mesmo número tem o mesmo valor em todas as figuras da página. Duas figuras que se contradizem parecem defeito do produto, justo no que ele vende. O nome de um cliente de verdade nunca entra num exemplo fictício, porque vira um caso que não aconteceu.
 - Logo de cliente, número de uso e depoimento dentro da figura só quando forem verdade.
-- Nenhuma tela, logo ou ícone de outra empresa.
+- Nenhuma tela ou ícone de outra empresa como se fosse do produto. A logo de outra empresa entra só como ela é e quando é verdade: a de um cliente que autorizou e a de uma ferramenta com que o produto se integra hoje, com o arquivo oficial dela (seção 15).
 
 ## 4. A figura principal, antes do código
 
@@ -193,5 +194,46 @@ A conferência automática mede regra. Ela não vê se a página se entende nem 
 3. **Quem nunca viu.** Olhe a primeira tela como quem chegou agora: o que este produto faz, e para quem? Se a sua ferramenta abre um agente sem contexto, mostre a foto do topo a ele e pergunte isso, sem explicar nada. O que ele responder é o que a página diz.
 4. **Antes e depois (`files.before`).** Numa página que já existia, compare a foto sem letras de antes com a de agora. Se agora há menos figura, a página piorou, mesmo com a conferência toda em ok: volte.
 5. **A cena (`film.sheets`).** O que está cortado tem texto? Onde o olho pousa primeiro? É o resultado? Algo surge de repente? O fim leva ao começo? Com menos movimento, a capa conta a história?
+6. **Uma história só.** Compare os dados de exemplo de uma figura com os das outras: o que o diagrama do topo diz de cada sistema é o que a tabela mais abaixo mostra? Um nome, uma permissão ou um número que muda de uma figura para outra se corrige antes de entregar.
+7. **Os ícones sem os nomes.** Na foto sem letras, os ícones ficam sem os nomes: dá para dizer qual recurso cada um é? Algum objeto aparece em dois recursos? Troque o que não passa (seção 15).
 
 Corrija primeiro a maior falha visível e olhe de novo. Pare em duas rodadas de correção e diga ao integrante o que ficou, porque depois disso cada rodada muda pouco.
+
+## 15. Os diagramas, os ícones próprios e as logos reais
+
+Num produto que liga coisas (uma plataforma, uma integração, um fluxo de trabalho), a figura mais clara costuma ser um diagrama desenhado com as peças do próprio produto, como faz a Databricks (`modelos/databricks-pagina-de-produto.md`).
+
+**O diagrama do produto.** Uma das formas abaixo, desenhada para a página (`replica`):
+
+- **as camadas:** faixas empilhadas, do que a pessoa usa em cima ao que sustenta embaixo, cada uma com o nome e os ícones do que vive nela;
+- **o fluxo:** cartões com o ícone e o nome de cada peça, setas finas entre eles, cada fluxo com uma cor e o rótulo do lado ("pedidos", "respostas");
+- **o centro com raios:** a peça central no alto, com as capacidades em etiquetas, linhas descendo até o que ela conecta, e um último cartão de borda tracejada ("e mais…") só quando há mais de verdade;
+- **a órbita:** as ferramentas que o produto aceita em volta, com as palavras do ciclo (construir, usar, medir).
+
+O fundo é a superfície da seção, nunca branco puro; a cor de destaque fica só no fluxo e no que é ação; um brilho suave atrás da peça principal ajuda o olho a pousar nela. Cada peça desenhada existe hoje no produto (seção 3).
+
+O diagrama resume como as peças se ligam, mas não mostra o produto funcionando. Depois dele, cada recurso principal ainda ganha a sua figura numa linha própria (seção 13), nunca escondida numa aba: a tabela de permissões com as chaves, o gráfico do limite, o registro de cada ação.
+
+**A figura mostra o produto agindo.** Num produto que controla alguma coisa (gasto, prazo, permissão), a figura mais clara é a do momento em que ele age: no gráfico, a linha do limite, a barra que passa dela na cor de alerta e o aviso do que o produto fez ("agente pausado ao passar do limite do mês"); no registro, a ação que ele negou e o motivo. Barras sempre abaixo do teto mostram um número; a barra que passa e é parada mostra o recurso.
+
+**Os ícones próprios.** Cada recurso do produto ganha um ícone desenhado para ele, numa família só:
+
+- uma metáfora do resultado, não da tecnologia: uma lâmpada para o assistente que atende pedidos, um giroflex para o alerta;
+- a mesma grade e as mesmas duas cores do destaque da marca, em formas cheias e simples; os de conceito, maiores, em traço único;
+- o mesmo ícone no menu, nos cartões e dentro dos diagramas, para a pessoa aprender o símbolo uma vez;
+- antes de desenhar, faça a lista: cada recurso, o objeto do ícone e por que ele não serve a outro recurso da página. Num sistema de clínica, a agenda é um calendário com o dia marcado, o lembrete é um sino com um relógio, o prontuário é uma pasta com a cruz e o faturamento é um recibo. Uma moeda sozinha serviria ao faturamento, ao preço e ao repasse, então não diz qual é;
+- dois recursos nunca dividem o mesmo objeto. Uma pessoa, uma moeda, um gráfico de barras e pontos ligados por linhas servem a qualquer produto: sozinhos, não dizem nada;
+- cada ícone passa no teste sem o nome: se ele lembra outra coisa, troque. Um ponto de exclamação ou um X dentro do ícone de um recurso se lê como alerta ou erro;
+- os ícones de biblioteca ficam para a interface (busca, setas, fechar), nunca para os recursos do produto.
+
+**As logos reais.** Prova de quem usa ou do que se conecta é a logo, nunca o nome escrito imitando uma:
+
+- o arquivo oficial de cada empresa, tirado do kit de marca dela, com o nome no texto alternativo;
+- só a de um cliente que autorizou e a de uma ferramenta com que o produto se integra hoje; registre cada uma em `claims`, com a origem da autorização ou da integração;
+- sem o arquivo oficial, a ferramenta aparece pelo nome inteiro e pelo que o produto faz com ela ("Google Agenda: lê os horários livres e marca a consulta"). Uma sigla dentro de um quadrado parece logo improvisada;
+- uma legenda que diga o que elas são, com as palavras da autorização ("Empresas que usam o produto e autorizaram mostrar a logo");
+- todas inteiras e com a mesma altura: 24 px numa fileira, até 55 px a logo quadrada ou alta;
+- poucas logos, as que cabem numa largura de tela, ficam numa fileira parada: nenhuma repetida, nenhuma cortada ou esmaecida na borda;
+- a fileira que passa é para quando há mais logos do que a tela mostra: a mesma logo nunca aparece duas vezes na mesma vista, há um botão de pausa e, com menos movimento pedido, ela para;
+- numa cor só, apenas com o contraste do texto: preta sobre o claro, branca sobre o escuro, nunca um cinza claro. Poucas logos se leem melhor nas próprias cores. Dentro de um diagrama, a logo da ferramenta mantém as cores dela;
+- sem logos autorizadas, a fileira não existe: um número com origem ("usado por 1.200 escritórios") prova melhor que uma fileira de nomes.

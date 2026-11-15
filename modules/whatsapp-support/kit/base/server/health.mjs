@@ -3,7 +3,7 @@
 // correção e quem corrige. Aqui nada se grava: o projeto guarda a memória (healthAlerts) e escolhe o canal do aviso.
 
 import { chatwootAccount } from "./chatwoot.mjs";
-import { ADAPTER_ID, openwaClient } from "./openwa.mjs";
+import { ADAPTER_ID, adapterEnabled, openwaClient } from "./openwa.mjs";
 
 /** ok: funcionando. atencao: funciona, mas pede um olhar. fora: mensagens não chegam ou não saem. */
 export const LEVELS = ["ok", "atencao", "fora"];
@@ -207,13 +207,51 @@ async function unofficialFindings({ inbox, account, openwa, fetchImpl }) {
   const findings = classifySession(session);
   try {
     const adapter = (await client.plugins()).find((plugin) => plugin.id === ADAPTER_ID);
-    if (!adapter?.enabled) {
+    if (!adapterEnabled(adapter)) {
       findings.push(finding("fora", "adaptador_desligado", "A ponte entre o OpenWA e o painel está desligada: as mensagens não passam de um para o outro.", "Ligue o chatwoot-adapter no OpenWA ou conecte o número de novo.", "tecnico"));
+    } else {
+      // Ligado não basta: em erro de configuração, o número conecta e nenhuma mensagem chega ao painel.
+      const problem = classifyAdapterHealth(await client.pluginHealth(ADAPTER_ID));
+      if (problem) findings.push(problem);
     }
   } catch {
     // A sessão já foi lida; sem a lista de plugins, o achado da sessão continua valendo.
   }
   return { findings, phone: session?.phone ?? null };
+}
+
+/**
+ * A saúde do chatwoot-adapter (healthCheck do plugin). Ela é falsa com mensagem descartada depois das
+ * tentativas (dead-lettered), perdida antes da fila (LOST) ou com a fila de reenvio cheia. A contagem de
+ * descartadas só cresce enquanto o plugin fica ligado: uma mensagem perdida no passado deixaria o alarme
+ * para sempre, com as mensagens passando de novo (achado da Atrupe, 2026-11-12). Por isso perdida antes da
+ * fila, fila cheia ou erro sem explicação é "fora"; só descartadas é "atencao", com a contagem na chave da
+ * memória, para o aviso sair de novo quando ela crescer. Desligar e ligar o adaptador zera a contagem.
+ */
+export function classifyAdapterHealth(health) {
+  if (health?.healthy === true) return null;
+  const message = String(health?.message ?? "").slice(0, 200);
+  const deadLetters = /(\d+) dead-lettered/i.exec(message);
+  if (!deadLetters || /LOST|queue full/i.test(message)) {
+    return finding(
+      "fora",
+      "adaptador_com_erro",
+      `A ponte entre o OpenWA e o painel está ligada, mas com erro${message ? `: ${message}` : ""}. As mensagens não chegam ao painel.`,
+      "Confira os logs do OpenWA (chatwoot-adapter), a configuração base do plugin e se o Chatwoot responde pelo endereço público.",
+      "tecnico",
+    );
+  }
+  const count = Number(deadLetters[1]);
+  return {
+    ...finding(
+      "atencao",
+      "adaptador_mensagens_perdidas",
+      `${count === 1 ? "Uma mensagem do WhatsApp não chegou" : `${count} mensagens do WhatsApp não chegaram`} ao painel depois de todas as tentativas: ${message}.`,
+      "Corrija a causa pelo último erro, depois desligue e ligue o adaptador no OpenWA para zerar a contagem; a fila de reenvio fica guardada.",
+      "tecnico",
+    ),
+    key: `adaptador_mensagens_perdidas:${count}`,
+  };
 }
 
 /**
@@ -277,7 +315,8 @@ export function healthAlerts({ previous = {}, report, now = new Date(), remindHo
   for (const inbox of report.inboxes) {
     const key = String(inbox.inbox_id);
     const before = previous?.[key] ?? null;
-    const codes = inbox.findings.map((item) => item.code).sort();
+    // A chave de um achado, quando existe, entra no lugar do código: a contagem que cresce vira mudança.
+    const codes = inbox.findings.map((item) => item.key ?? item.code).sort();
     const unchanged = Boolean(before) && before.level === inbox.level && JSON.stringify(before.codes ?? []) === JSON.stringify(codes);
     const passing = codes.length > 0 && codes.every((code) => PASSING.has(code));
     let kind = null;

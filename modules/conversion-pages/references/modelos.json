@@ -76,6 +76,37 @@
         "o que depende do plano escrito junto do recurso",
         "o teste em destaque no topo e os 7 dias escritos nos planos"
       ]
+    },
+    {
+      "id": "subido-ai-pagina-de-vendas",
+      "title": "Subido AI: a página de vendas de um curso com plataforma, em teste A/B",
+      "source": "Subido AI by Viver de IA",
+      "seen_on": "2026-11-09",
+      "types": ["curso"],
+      "file": "modelos/subido-ai-pagina-de-vendas.md",
+      "highlights": [
+        "duas versões que mudam só o topo: com e sem o vídeo de quem apresenta",
+        "todos os botões levam à caixa da oferta, e só ela leva à inscrição",
+        "o número de mercado com o recorte da matéria, o jornal, o autor e a data",
+        "a lista do que se recebe, com o valor de cada item, antes do preço",
+        "duas ofertas na mesma caixa, a do público e a de quem já é cliente",
+        "a garantia logo abaixo do botão e os caminhos humanos para uma compra cara"
+      ]
+    },
+    {
+      "id": "databricks-pagina-de-produto",
+      "title": "Databricks: as páginas de produto de uma plataforma de dados e IA",
+      "source": "Databricks",
+      "seen_on": "2026-11-09",
+      "types": ["landing"],
+      "file": "modelos/databricks-pagina-de-produto.md",
+      "highlights": [
+        "gráficos de demonstração desenhados com as peças do produto: camadas, fluxo com cores, centro com raios, órbita de ferramentas",
+        "uma família de ícones próprios em duas cores do acento, repetida no menu, nos cartões e nos diagramas",
+        "logos reais na mesma altura e numa cor só, em fileira contínua, e as das ferramentas dentro dos diagramas",
+        "o mesmo esqueleto em todas as páginas de produto, com a barra de âncoras presa",
+        "três superfícies que se alternam, um acento só e botão de canto reto"
+      ]
     }
   ]
 }

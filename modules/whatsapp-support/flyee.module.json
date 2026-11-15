@@ -34,8 +34,10 @@
     "kit/base/bot/src/ai/project.mjs",
     "kit/base/bot/src/bot.mjs",
     "kit/base/bot/src/chatwoot.mjs",
+    "kit/base/bot/src/documents.mjs",
     "kit/base/bot/src/http.mjs",
     "kit/base/bot/src/log.mjs",
+    "kit/base/bot/src/media.mjs",
     "kit/base/bot/src/memory.mjs",
     "kit/base/bot/src/policy.mjs",
     "kit/base/bot/src/privacy.mjs",
@@ -67,13 +69,20 @@
     "kit/base/ui/connect.d.mts",
     "kit/base/ui/connect.mjs",
     "kit/modelos/implantacao/Caddyfile",
+    "kit/modelos/implantacao/borda/Caddyfile",
+    "kit/modelos/implantacao/borda/borda.env.example",
+    "kit/modelos/implantacao/borda/compose.yml",
+    "kit/modelos/implantacao/borda/sites/pilha.caddy.exemplo",
     "kit/modelos/implantacao/chatwoot.env.example",
+    "kit/modelos/implantacao/compartilhado.env.example",
+    "kit/modelos/implantacao/compose.compartilhado.yml",
     "kit/modelos/implantacao/compose.yml",
     "kit/modelos/implantacao/openwa.env.example",
     "kit/modelos/implantacao/proxy.env.example",
     "kit/modelos/implantacao/robo.env.example",
     "kit/modelos/next/app/api/atendimento/config/route.ts",
     "kit/modelos/next/app/api/atendimento/entrar/route.ts",
+    "kit/modelos/next/app/api/atendimento/grupos/route.ts",
     "kit/modelos/next/app/api/atendimento/lacunas/route.ts",
     "kit/modelos/next/app/api/atendimento/robo/[...rota]/route.ts",
     "kit/modelos/next/app/api/atendimento/sugestoes/[id]/route.ts",
@@ -82,6 +91,7 @@
     "kit/modelos/next/lib/atendimento.ts",
     "kit/modelos/react/AtendimentoBotao.tsx",
     "kit/modelos/react/ConectarWhatsApp.tsx",
+    "kit/modelos/react/GruposEquipe.tsx",
     "kit/modelos/react/LacunasRobo.tsx",
     "kit/modelos/react/PainelAtendimento.tsx",
     "kit/modelos/react/RoboAtendimento.tsx",
@@ -171,8 +181,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: robô de IA com qualquer provedor, que consulta só o que o sistema libera e passa para a equipe; contexto controlado pelo superadmin, para o suporte da própria plataforma ou para cada cliente atender os dele; sugestões de conhecimento com aprovação e relatório do que o robô não soube; painel do Chatwoot com o login e as cores do sistema; API oficial ou OpenWA; conferência do número a cada 15 minutos, com aviso quando ele para e o caminho de volta na mesma caixa.",
-    "en": "First version: an AI bot with any provider that looks up only what the system allows and hands over to the team; context controlled by the super admin, for the platform's own support or for each customer serving its own; knowledge suggestions with approval and a report of what the bot could not answer; the Chatwoot panel with the system's login and colors; official API or OpenWA; a check of the number every 15 minutes, with a notice when it stops and the way back in the same inbox."
+    "pt-BR": "Primeira versão: robô de IA com qualquer provedor, que consulta só o que o sistema libera e passa para a equipe; contexto controlado pelo superadmin, para o suporte da própria plataforma ou para cada cliente atender os dele; sugestões de conhecimento com aprovação e relatório do que o robô não soube; painel do Chatwoot com o login e as cores do sistema; API oficial ou OpenWA; conferência do número a cada 15 minutos, com aviso quando ele para e o caminho de volta na mesma caixa; grupos do WhatsApp na rota não oficial, com a equipe atendendo no painel e o robô calado ou só quando chamado pelo nome; quem responde, pelo painel ou pelo celular do número, assume a conversa e o robô sai dela, e a resposta pelo celular aparece como \"Celular do WhatsApp\", com a etiqueta e a nota para registrar quem respondeu; a conversa parada há 8 horas se resolve sozinha e volta ao robô, sem tirar da fila quem espera resposta; grupos da equipe dentro do painel, vistos só por quem está em cada um, com etiquetas e menção com @, criados numa tela do sistema; dois sistemas no mesmo servidor, cada um na sua instalação, com teto de memória e um proxy só na porta da frente; a página que cria o super administrador fechada no proxy, sem telemetria para o fornecedor do Chatwoot; o adaptador do WhatsApp Web ligado só depois da conexão e conferido pela saúde, com o proxy deixando passar o token dele; o robô lê fotos, prints, áudios e vídeos, também os longos, e a transcrição fica numa nota para a equipe; quem não deixa chave de IA no robô transcreve no próprio sistema, e a tela só mostra ouvir áudios quando há quem transcreva; o robô lê também PDF, planilha, CSV e documento de texto, sem custo de IA para tirar o texto.",
+    "en": "First version: an AI bot with any provider that looks up only what the system allows and hands over to the team; context controlled by the super admin, for the platform's own support or for each customer serving its own; knowledge suggestions with approval and a report of what the bot could not answer; the Chatwoot panel with the system's login and colors; official API or OpenWA; a check of the number every 15 minutes, with a notice when it stops and the way back in the same inbox; WhatsApp groups on the unofficial route, with the team working in the panel and the bot quiet or answering only when called by name; whoever replies, in the panel or on the number's phone, takes the conversation and the bot leaves it, and a reply from the phone shows as \"Celular do WhatsApp\", with the label and a note to record who replied; a conversation idle for 8 hours resolves itself and returns to the bot, without dropping anyone waiting for a reply; team groups inside the panel, seen only by their members, with labels and @ mentions, created on a screen in the system; two systems on one server, each in its own installation, with a memory cap and a single proxy at the front door; the page that creates the super admin closed at the proxy, with no telemetry to Chatwoot's vendor; the WhatsApp Web adapter started only after the connection and checked by its health, with the proxy letting its token through; the bot reads photos, screenshots, voice messages and videos, long ones too, and the transcript stays in a note for the team; a system that keeps AI keys out of the bot transcribes on its own side, and the screen shows voice messages only when something can transcribe them; the bot also reads PDF, spreadsheet, CSV and text documents, with no AI cost to extract the text."
   },
   "license": "member"
 }

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aviso de cookies que chega depois</title>
+<style>
+  body { margin: 0; font-family: Arial, sans-serif; background: #ffffff; color: #111111; }
+  section { height: 1000px; padding: 80px; }
+  h1 { font-size: 44px; }
+  /* The consent window covers the whole screen with a green layer, so a photo that still has it is obvious. */
+  #consentimento { position: fixed; inset: 0; background: rgba(0, 160, 0, 0.92); display: flex; align-items: center; justify-content: center; z-index: 50; }
+  #consentimento .caixa { background: #ffffff; padding: 32px; width: 420px; }
+</style>
+</head>
+<body>
+  <section><h1>Uma página com aviso de cookies que chega tarde</h1><p>O aviso abre 1,5 s depois do carregamento.</p></section>
+  <section><p>Mais conteúdo.</p></section>
+  <script>
+    setTimeout(() => {
+      const box = document.createElement("div");
+      box.id = "consentimento";
+      box.innerHTML = '<div class="caixa" role="dialog" aria-label="Cookies"><p>Usamos cookies para melhorar a navegação. By clicking Accept all cookies, you agree to the storing of cookies.</p><button id="recusar">Reject all cookies</button> <button id="aceitar">Accept all cookies</button></div>';
+      document.body.append(box);
+      box.querySelector("#aceitar").addEventListener("click", () => box.remove());
+    }, 1500);
+  </script>
+</body>
+</html>

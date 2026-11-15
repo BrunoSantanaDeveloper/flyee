@@ -25,8 +25,11 @@ Other requests:
 ## What your customer gets
 
 - A "Support" button in your system that opens the panel already signed in, with the system's name, logo and colors.
+- Internal talk about each conversation: in a private note, which the customer never sees, the team calls a colleague with @ and they get the notice in the panel.
+- Team groups in the panel, such as Sales or Support, to talk outside a customer conversation: each group is seen only by its members and has its own labels. Whoever runs the support desk creates the groups on a screen in the system.
 - One team per customer, with no limit on agents: only the people the system marks as the support team get into the panel, each customer sees only what is theirs, and whoever leaves the team leaves the panel.
 - A "Connect WhatsApp" screen: through the official API, with Meta credentials, or through WhatsApp Web, scanning a QR code after accepting the risk notice.
+- WhatsApp groups in the panel, if you want them: with the number connected through WhatsApp Web, each group it belongs to becomes a conversation named after the group, for the team to work in. The bot stays quiet in the group or answers only when called by name.
 - A notice when the number stops: the system checks the number every 15 minutes and tells whoever looks after it when it goes down, needs attention or comes back. The screen shows what happened and the way back, without losing the conversations.
 - A "Support bot" screen: introduction, instructions, questions and answers, team hours, when to hand over to the team and which system data the bot may look up.
 
@@ -41,6 +44,9 @@ Other requests:
 - It answers only about your customer's business, with what was configured and the lookups the system allows.
 - It sees data only from the person in the conversation.
 - It hands over to the team when the person asks, when it is not sure or when something fails. Outside working hours, it says the team will reply when they are back.
+- It reads photos, screenshots, voice messages, videos, long ones too, and files: PDF, spreadsheet, CSV and text document. It hands over to the team only when it cannot. A transcript of what was said stays in a note for whoever answers.
+- It comes back when the team resolves the conversation, or when the conversation sits idle for 8 hours: it resolves itself and the bot answers the customer's next message. A conversation where the customer is waiting for the team stays in the queue.
+- It leaves the conversation when someone on the team replies, in the panel or on the number's phone. What is answered on the phone shows in the panel as "Celular do WhatsApp", with a note asking to record who replied.
 - It can just suggest replies in a private note, for someone on the team to review and send.
 - It uses the AI you choose, including the system's own.
 - It learns from the team, with approval: what the team answered in a conversation the bot handed over becomes a suggested question and answer, with no personal data, which someone approves before it counts.

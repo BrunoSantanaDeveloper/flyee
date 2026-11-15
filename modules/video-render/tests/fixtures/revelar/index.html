@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blocos que aparecem ao rolar</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, sans-serif; background: #ffffff; color: #111111; }
+  section { height: 1200px; padding: 120px 80px; }
+  h1 { font-size: 48px; margin: 0 0 24px; }
+  p { font-size: 20px; max-width: 640px; }
+  /* A block that is hidden until it enters the screen, and hides again when it leaves. */
+  .rv { width: 600px; height: 300px; background: #e01b24; opacity: 0; transform: translateY(28px); transition: opacity 1s, transform 1.1s; }
+  .rv.on { opacity: 1; transform: none; }
+  /* Two loops: one respects the request for less motion, the other does not. */
+  .gira { width: 40px; height: 40px; background: #1c71d8; animation: gira 2s linear infinite; }
+  .pulsa { width: 40px; height: 40px; background: #26a269; animation: pulsa 1.5s ease-in-out infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  @keyframes pulsa { 50% { transform: scale(1.2); } }
+  @media (prefers-reduced-motion: reduce) { .pulsa { animation: none; } }
+</style>
+</head>
+<body>
+  <section><h1>Uma página longa</h1><p>Os blocos vermelhos aparecem quando entram na tela e somem quando saem.</p><div class="gira" aria-hidden="true"></div><div class="pulsa" aria-hidden="true"></div></section>
+  <section><div class="rv" id="b1"></div></section>
+  <section><div class="rv" id="b2"></div></section>
+  <section><div class="rv" id="b3"></div></section>
+  <section><div class="rv" id="b4"></div></section>
+  <section><div class="rv" id="b5"></div></section>
+  <script>
+    const watch = new IntersectionObserver((entries) => {
+      for (const entry of entries) entry.target.classList.toggle("on", entry.isIntersecting);
+    }, { threshold: 0.2 });
+    document.querySelectorAll(".rv").forEach((block) => watch.observe(block));
+  </script>
+</body>
+</html>

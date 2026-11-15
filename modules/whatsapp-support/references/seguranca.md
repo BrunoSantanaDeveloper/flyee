@@ -25,6 +25,7 @@ Por isso os avisos andam por endereços públicos e `SAFE_FETCH_ALLOW_PRIVATE_NE
 ## Quem pode o quê
 
 - A equipe do cliente é atendente. Administrador é só a conta de serviço, que ninguém usa para entrar.
+- Um grupo da equipe é visto só pelos membros dele, e nada escrito nele sai do painel (chatwoot.md, "Grupos da equipe"). Quem cria e muda os grupos é o superadmin no modelo `plataforma` e quem administra o cliente no `por-cliente`; o servidor confere.
 - Entra no painel só quem passa em `canEnterPanel`: no modelo `plataforma`, a equipe de suporte do sistema e o superadmin; no `por-cliente`, quem o cliente marcou como equipe de atendimento (`isSupportStaff`) e quem administra o cliente (`canConfigure`). O superadmin da plataforma não entra no painel dos clientes. A rota de entrar recusa o resto com 403; mostre o botão "Atendimento" só para quem entra.
 - Quem sai da equipe sai do Chatwoot. A sessão do painel dura até 2 meses, então o projeto chama `removeFromPanel` no ponto em que tira a permissão de atendimento, desativa ou apaga a pessoa, e roda `syncPanelStaff` numa rotina diária para cada cliente: ela tira da conta quem o kit pôs e não está mais em `listPanelPeople`, e aponta em `unknown` quem está na conta sem ter sido posto pelo kit. As conversas atribuídas a quem saiu voltam para a fila.
 - A pessoa de repasse do OpenWA é atendente e só da caixa API: se o OpenWA fosse comprometido, o token dele não mexe em configuração da conta.
@@ -32,12 +33,13 @@ Por isso os avisos andam por endereços públicos e `SAFE_FETCH_ALLOW_PRIVATE_NE
 
 ## Dados que vão para a IA
 
-O provedor de IA recebe as mensagens da conversa, o conhecimento e as instruções da conta, o primeiro nome do WhatsApp (dá para desligar em `privacy.share_contact_name`) e o resultado das consultas. O telefone não entra no texto da IA; vai só para o projeto, nas consultas.
+O provedor de IA recebe as mensagens da conversa, o conhecimento e as instruções da conta, o primeiro nome do WhatsApp (dá para desligar em `privacy.share_contact_name`) e o resultado das consultas. Com imagem, áudio e vídeo ligados (contexto.md), recebe também as imagens e a grade de quadros do vídeo, e o modelo de transcrição recebe o som (ou o próprio projeto, com `ai.transcription: "project"`, pela rota assinada `transcribe`); com `media.documents`, recebe o texto de PDF, planilha e documento, ou a imagem das páginas de um PDF escaneado; desligue em `media` o que o negócio não pode mandar a um provedor. O conteúdo de um arquivo chega à IA marcado como dado da pessoa, e o prompt proíbe seguir instrução escrita nele; mesmo que a IA obedecesse, as consultas continuam presas aos dados da pessoa da conversa, porque quem filtra é o projeto. O robô só baixa anexo do próprio Chatwoot (pela rede interna, ou pelo endereço assinado do armazenamento em https), apaga os arquivos depois de cada mídia e não guarda imagem na memória da conversa. O telefone não entra no texto da IA; vai só para o projeto, nas consultas.
 
 - Desenhe cada consulta para devolver o mínimo que responde à pergunta, e só da pessoa da conversa.
 - Para dado sensível, exija uma confirmação além do telefone ou passe para a equipe.
 - Confira o contrato de tratamento de dados com o provedor de IA escolhido. Quem precisa da IA sob o próprio controle usa o provedor `project`.
 - O robô trata o que vem do cliente e das consultas como dado, nunca como ordem (regra 8 do prompt), mas a defesa real é a consulta só devolver o que pode.
+- Num grupo do WhatsApp, todos leem o que o robô escreve e ninguém foi identificado: o robô só fala quando chamado, nunca consulta dados, e o projeto recusa consulta de conversa de grupo (`group_chat`). Conversa de grupo também não vira sugestão de conhecimento.
 
 ## Quem mexe no contexto
 
@@ -57,3 +59,9 @@ Assistente de IA de uso geral é proibido na API do WhatsApp desde 2026-01-15; a
 ## LGPD
 
 O kit não decide a base legal do atendimento; o projeto decide e registra. O que o kit garante: dados de clientes ficam no Chatwoot e no banco do projeto, o log do robô não tem conteúdo, e o histórico que o robô guarda some em até 24 horas ou quando ele reinicia.
+
+## Na primeira implantação
+
+- **A página que cria o super administrador.** Até alguém criar o super administrador, `/installation/onboarding` entrega a instalação a quem chegar primeiro, e o certificado novo do domínio aparece nos registros públicos de certificados minutos depois de emitido. O `Caddyfile` de modelo e o `sites/pilha.caddy.exemplo` da borda fecham `/installation` para quem não está em `INSTALACAO_IPS` (na borda, uma variável por pilha). Ponha ali o IP de quem vai criar o super administrador, crie, e tire o IP. `kit.mjs verify` reprova a página aberta (`instalacao_fechada`).
+- **A caixa "receber novidades" do formulário.** Marcada, ela manda o nome, o e-mail e a empresa de quem criou o super administrador ao fornecedor do Chatwoot (`Installation::OnboardingController#finish_onboarding`). Deixe desmarcada.
+- **Telemetria.** Sem `DISABLE_TELEMETRY`, o Chatwoot manda ao fornecedor as contagens de contas, pessoas, caixas, conversas e mensagens e os eventos da instalação (`lib/chatwoot_hub.rb`). O `chatwoot.env.example` já traz `DISABLE_TELEMETRY=true`. Basta a variável existir, até com `false`. A conferência de versão continua mandando o identificador e a versão da instalação.

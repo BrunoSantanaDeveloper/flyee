@@ -91,7 +91,7 @@ Os detalhes estão em `../lei.md`.
 
 ## O que a conferência olha
 
-`title_promises`, `figures_seen`, `cards_short`, `cards_no_holes`, `cta_first_screen`, `cta_consistent`, `h1_present`, `numbers_not_zero`, `claims_have_origin`, `placeholder_data`, `trial_terms`, `promo_terms_shown`, `discount_math`, `reference_price_true`, `countdown_real`, `popup_dismissable`, `popup_on_arrival`, `sticky_cta_long_page`, `cancel_terms_shown`, `supplier_identified`, `legal_lines`, `demo_honest`, `demo_film`, `ai_defaults`, `off_brand`, `video_autoplay_ok`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
+`title_promises`, `figures_seen`, `cards_short`, `cards_no_holes`, `cta_first_screen`, `cta_consistent`, `h1_present`, `numbers_not_zero`, `claims_have_origin`, `placeholder_data`, `trial_terms`, `promo_terms_shown`, `discount_math`, `cash_price_shown`, `reference_price_true`, `countdown_real`, `popup_dismissable`, `popup_on_arrival`, `sticky_cta_long_page`, `cancel_terms_shown`, `supplier_identified`, `legal_lines`, `demo_honest`, `demo_film`, `ai_defaults`, `off_brand`, `video_autoplay_ok`, `reduced_motion`, `mobile_fits`, `text_legible`, `tap_targets`, `contrast_ok`, `controls_fit`, `images_light`, `images_alt`.
 
 ## Modelos
 

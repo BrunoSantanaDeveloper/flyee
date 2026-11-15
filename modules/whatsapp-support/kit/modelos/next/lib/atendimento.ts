@@ -17,6 +17,7 @@ import {
   defaultPlatformSettings,
   defaultSettings,
   editableGroups,
+  groupSettings,
   knowledgeOwner,
   validateSettings,
   type BotSettings,
@@ -24,9 +25,17 @@ import {
   type PlatformSettings,
   type Scope,
 } from "../atendimento/base/shared/settings.mjs";
-import { createToolRunner, handleBotRequest, type BotRequest, type GapEventPayload, type ProjectTool } from "../atendimento/base/server/bot-contract.mjs";
+import {
+  createToolRunner,
+  handleBotRequest,
+  mediaSupport,
+  type BotRequest,
+  type GapEventPayload,
+  type ProjectTool,
+} from "../atendimento/base/server/bot-contract.mjs";
 import { checkWhatsappHealth, currentInbox, healthAlerts, type WhatsappAlert } from "../atendimento/base/server/health.mjs";
 import {
+  archiveTeamGroup,
   connectCloudApi,
   connectOpenWA,
   conversationHistory,
@@ -34,8 +43,11 @@ import {
   provisionAccount,
   reconnectOpenWA,
   removeStaffUser,
+  saveTeamGroup,
   ssoUrl,
+  syncOpenWAGroups,
   syncStaff,
+  syncTeamGroups,
   updateCloudApi,
   whatsappStatus,
   type SupportState,
@@ -109,6 +121,11 @@ export interface SupportStore {
    */
   listPanelPeople(tenantId: string): Promise<string[]>;
   /**
+   * As mesmas pessoas de listPanelPeople, com nome e e-mail, para escolher quem entra num grupo da equipe.
+   * Quem ainda não entrou no painel entra na equipe do Chatwoot quando é posto num grupo.
+   */
+  teamPeople(tenantId: string): Promise<Array<{ key: string; name: string; email: string }>>;
+  /**
    * Avisa que o WhatsApp do atendimento parou, pede atenção ou voltou, pelo canal que o projeto já tem
    * (e-mail, notificação no sistema). Cada aviso traz title e text prontos, sem segredo. Mande para quem
    * conecta o número (no modelo plataforma, o superadmin; no por-cliente, quem administra o cliente) e,
@@ -141,6 +158,7 @@ export const store: SupportStore = {
   saveState: adapt("grave o estado do atendimento do cliente, cifrado"),
   tenantByAccount: adapt("encontre o cliente pela conta do Chatwoot (account_id do estado)"),
   listPanelPeople: adapt("liste as chaves de quem pode atender neste cliente hoje"),
+  teamPeople: adapt("liste quem pode atender neste cliente hoje, com chave, nome e e-mail"),
   alertWhatsapp: adapt("avise quem conecta o número e, quando fixBy for tecnico, quem cuida do servidor"),
   loadPlatformSettings: adapt("leia a camada da plataforma"),
   savePlatformSettings: adapt("grave a camada da plataforma"),
@@ -176,7 +194,11 @@ export const tools: ProjectTool[] = [
 
 const declaredTools = tools.map((tool) => tool.name);
 
-/** O provedor de IA padrão do projeto; o superadmin pode trocar na camada da plataforma (ai). */
+/**
+ * O provedor de IA padrão do projeto; o superadmin pode trocar na camada da plataforma (ai). Um projeto
+ * que não põe chave de IA no robô usa provider "project" e transcription "project", e implementa as rotas
+ * generate e transcribe em botHandler (references/contratos.md, "Rotas que o projeto expõe ao robô").
+ */
 export const defaultAi = { provider: "anthropic", model: "claude-opus-5-5", effort: "low" } as const;
 
 async function platformSettings(): Promise<PlatformSettings> {
@@ -210,6 +232,8 @@ export async function ensureAccount(tenantId: string): Promise<SupportState> {
       name: MODEL === "plataforma" ? (await platformSettings()).brand || "Suporte" : await store.tenantName(tenantId),
       locale: "pt_BR",
       featuresOff: escolhas.chatwoot.features_off,
+      // Conversa parada volta ao robô depois deste tempo (padrão 8 horas, 0 desliga).
+      autoResolveHours: (escolhas.chatwoot as { resolver_apos_horas?: number | null }).resolver_apos_horas,
       serviceEmail: `atendimento+${tenantId}@${env.serviceEmailDomain()}`,
       botName: escolhas.robo?.nome ?? "Assistente virtual",
       botUrl: env.botPublicUrl(),
@@ -296,6 +320,112 @@ export async function checkWhatsapp(tenantId: string) {
   return { skipped: null, report, alerts };
 }
 
+/** O que vale para os grupos do WhatsApp deste cliente: a camada dele, se liberada, senão a da plataforma. */
+async function groupsFor(tenantId: string) {
+  const platform = await platformSettings();
+  const client = MODEL === "por-cliente" ? await store.loadSettings(tenantId) : null;
+  return groupSettings({ model: MODEL, platform, client });
+}
+
+/**
+ * Grupos do WhatsApp (só na rota não oficial): liga ou desliga o repasse dos grupos no OpenWA conforme a
+ * configuração do robô e dá a cada grupo no painel o nome que ele tem no WhatsApp. Já roda ao salvar a
+ * configuração. ADAPTE: rode na mesma rotina de checkWhatsapp, para cada cliente com atendimento: é ela que
+ * leva ao número de cada cliente uma mudança feita na camada da plataforma e nomeia os grupos novos.
+ */
+export async function syncWhatsappGroups(tenantId: string) {
+  const state = await store.loadState(tenantId);
+  if (!state?.account_id || !(state.inboxes ?? []).some((inbox) => inbox.route === "nao_oficial")) return { skipped: "no_unofficial" as const };
+  const groups = await groupsFor(tenantId);
+  const result = await syncOpenWAGroups({
+    chatwootUrl: env.chatwootUrl(),
+    state,
+    openwaUrl: env.openwaUrl(),
+    openwaApiKey: env.openwaApiKey(),
+    relay: groups.mode !== "fora",
+  });
+  return { skipped: null, mode: groups.mode, ...result };
+}
+
+/** Quem cria e muda os grupos da equipe (D26): o superadmin no modelo plataforma, quem administra o cliente no por-cliente. */
+function canManageGroups(person: Person | null): boolean {
+  if (!person) return false;
+  return MODEL === "plataforma" ? person.isSuperadmin : person.canConfigure;
+}
+
+/** Os grupos da equipe deste cliente e as pessoas que podem entrar neles, para a tela GruposEquipe. */
+export async function teamGroups(request: Request) {
+  const person = await store.currentPerson(request);
+  if (!canManageGroups(person)) return null;
+  const tenantId = tenantOf(person!);
+  const [state, people] = await Promise.all([store.loadState(tenantId), store.teamPeople(tenantId)]);
+  return {
+    grupos: Object.entries(state?.team_groups ?? {}).map(([chave, group]) => ({
+      chave,
+      nome: group.name,
+      membros: group.members,
+      etiquetas: group.labels,
+      arquivado: group.archived,
+    })),
+    pessoas: people.map(({ key, name }) => ({ chave: key, nome: name })),
+  };
+}
+
+/** Cria ou muda um grupo da equipe. Sem chave, cria um grupo novo. */
+export async function saveTeamGroupFor(request: Request, body: { chave?: string; nome?: string; membros?: string[]; etiquetas?: string[] }) {
+  const person = await store.currentPerson(request);
+  if (!canManageGroups(person)) return { status: 403, body: { code: "forbidden", message: "Você não pode mudar os grupos da equipe." } };
+  const tenantId = tenantOf(person!);
+  const people = new Map((await store.teamPeople(tenantId)).map((item) => [item.key, item]));
+  // Só entra num grupo quem pode atender neste cliente (canEnterPanel, pela lista do projeto).
+  const members = (body.membros ?? []).filter((key) => people.has(key));
+  let state = await ensureAccount(tenantId);
+  for (const key of members) {
+    if (state.staff?.[key]) continue;
+    const item = people.get(key)!;
+    state = (await ensureStaffUser({ chatwootUrl: env.chatwootUrl(), platformToken: env.platformToken(), state, person: { key, email: item.email, name: item.name } })).state;
+  }
+  await store.saveState(tenantId, state);
+  const chave = body.chave?.trim() || `g-${crypto.randomUUID().slice(0, 8)}`;
+  const result = await saveTeamGroup({ chatwootUrl: env.chatwootUrl(), state, group: { key: chave, name: body.nome ?? "", members, labels: body.etiquetas ?? [] } });
+  await store.saveState(tenantId, result.state);
+  return { status: 200, body: { ok: true, chave, fora: result.missing } };
+}
+
+/** Arquiva um grupo: todos saem dele e o histórico fica guardado. */
+export async function archiveTeamGroupFor(request: Request, chave: string) {
+  const person = await store.currentPerson(request);
+  if (!canManageGroups(person)) return { status: 403, body: { code: "forbidden", message: "Você não pode mudar os grupos da equipe." } };
+  const tenantId = tenantOf(person!);
+  const state = await store.loadState(tenantId);
+  if (!state?.team_groups?.[chave]) return { status: 404, body: { code: "not_found", message: "Este grupo não existe." } };
+  const result = await archiveTeamGroup({ chatwootUrl: env.chatwootUrl(), state, key: chave });
+  await store.saveState(tenantId, result.state);
+  return { status: 200, body: { ok: true } };
+}
+
+/**
+ * A rotina dos grupos da equipe: reabre o grupo que a resolução automática fechou e tira da lista quem saiu
+ * da equipe. ADAPTE: rode na mesma rotina de checkWhatsapp, a cada 15 minutos, para cada cliente com atendimento.
+ */
+export async function syncTeamGroupsFor(tenantId: string) {
+  const state = await store.loadState(tenantId);
+  if (!state?.team_groups || !state.account_id) return { skipped: "no_groups" as const, reopened: [], pruned: [] };
+  const result = await syncTeamGroups({ chatwootUrl: env.chatwootUrl(), state });
+  if (result.pruned.length) await store.saveState(tenantId, result.state);
+  return { skipped: null, reopened: result.reopened, pruned: result.pruned };
+}
+
+/** Depois de salvar uma mudança nos grupos: aplica na hora; se o OpenWA não responder, a rotina aplica depois. */
+async function applyGroups(tenantId: string): Promise<string | null> {
+  try {
+    await syncWhatsappGroups(tenantId);
+    return null;
+  } catch {
+    return "A configuração foi salva. A mudança nos grupos vale na próxima conferência, porque o WhatsApp não respondeu agora.";
+  }
+}
+
 export async function readSettings(request: Request, scope: Scope) {
   const person = await store.currentPerson(request);
   if (!canEdit(person, scope)) return null;
@@ -303,12 +433,18 @@ export async function readSettings(request: Request, scope: Scope) {
   const settings = scope === "plataforma" ? platform : (await store.loadSettings(person!.tenantId)) ?? defaultSettings(await store.tenantName(person!.tenantId));
   const offered = Array.isArray(platform.tools_available) ? platform.tools_available : declaredTools;
   const visibleTools = scope === "plataforma" ? tools : tools.filter((tool) => offered.includes(tool.name));
+  const editable = editableGroups(scope, MODEL, platform);
+  // A tela esconde "Ouvir áudios" quando o robô não tem quem transcreva (o /health dele e ai.transcription).
+  const media = editable.includes("midia")
+    ? await mediaSupport({ ai: { ...defaultAi, ...(platform.ai ?? {}) }, botUrl: env.botPublicUrl() })
+    : { audio: null };
   return {
     model: MODEL,
     scope,
     settings,
-    editable: editableGroups(scope, MODEL, platform),
+    editable,
     tools: visibleTools.map(({ name, description }) => ({ name, description })),
+    media,
   };
 }
 
@@ -318,8 +454,12 @@ export async function writeSettings(request: Request, scope: Scope, incoming: un
   if (scope === "plataforma") {
     const problems = validateSettings(incoming, { declaredTools, scope });
     if (problems.length) return { status: 422, body: { code: "invalid", message: "Confira os campos marcados.", problems } };
+    const before = await platformSettings();
     await store.savePlatformSettings(incoming as PlatformSettings);
-    return { status: 200, body: { ok: true } };
+    // No por-cliente, a mudança chega ao número de cada cliente pela rotina (syncWhatsappGroups).
+    const changed = JSON.stringify(before.groups ?? null) !== JSON.stringify((incoming as PlatformSettings).groups ?? null);
+    const aviso = changed && MODEL === "plataforma" ? await applyGroups(PLATFORM_TENANT) : null;
+    return { status: 200, body: { ok: true, ...(aviso ? { aviso } : {}) } };
   }
   const platform = await platformSettings();
   const current = await store.loadSettings(person!.tenantId);
@@ -327,7 +467,8 @@ export async function writeSettings(request: Request, scope: Scope, incoming: un
   const problems = validateSettings(next, { declaredTools, scope });
   if (problems.length) return { status: 422, body: { code: "invalid", message: "Confira os campos marcados.", problems } };
   await store.saveSettings(person!.tenantId, next);
-  return { status: 200, body: { ok: true } };
+  const aviso = JSON.stringify(current?.groups ?? null) !== JSON.stringify(next.groups ?? null) ? await applyGroups(person!.tenantId) : null;
+  return { status: 200, body: { ok: true, ...(aviso ? { aviso } : {}) } };
 }
 
 /** As sugestões de conhecimento que esta pessoa revisa. */
@@ -418,6 +559,7 @@ export async function connectWhatsapp(request: Request, body: Record<string, str
       openwaUrl: env.openwaUrl(),
       openwaPublicUrl: env.openwaPublicUrl(),
       openwaApiKey: env.openwaApiKey(),
+      relayGroups: (await groupsFor(tenantId)).mode !== "fora",
     },
   });
   await store.saveState(tenantId, result.state);

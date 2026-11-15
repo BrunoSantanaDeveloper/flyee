@@ -817,10 +817,32 @@ const SMALL_TEXT_PX = 12;
 const READ_BLOCK_WORDS = 8;
 const MAX_CARDS = 80;
 const FAQ_TITLE_PATTERN = /perguntas|duvidas|faq|frequent/;
-/** A band of the page in the no-letters sheet, in CSS pixels: about one screen on each device. */
-const NO_LETTERS_BAND = { desktop: 1100, mobile: 1200 };
-/** How far down the no-letters sheet goes. It is one image, so a longer page is cut and says so. */
-const NO_LETTERS_MAX = { desktop: 16000, mobile: 9600 };
+/**
+ * The no-letters photo goes one screen at a time, each band ON the screen after what it reveals has
+ * appeared: blocks that wait for the scroll (an observer adds a class) never show in a photo taken
+ * beyond the screen. Bands overlap by a tenth, so a fixed top bar never hides the same strip twice.
+ */
+const NO_LETTERS_STEP = 0.9;
+/** Screens per photo: 48 cover about 39,000 px on a computer; a longer page stops and says so. */
+const NO_LETTERS_MAX_BANDS = 48;
+/** Screens per sheet image: more would shrink each one below what the eye reads. */
+const NO_LETTERS_PER_SHEET = 12;
+/** After each scroll: first the wait for observers to fire, then for the animations that end to end. */
+const BAND_SETTLE_MS = { min: 350, max: 1500 };
+/** The warm-up's pause per step: short when nothing waits for the scroll, longer when blocks appear on entering the screen. */
+const WARM_UP_STEP_MS = { plain: 60, reveal: 250 };
+/** Time for the request for less motion to reach the page's styles and scripts. */
+const REDUCED_SETTLE_MS = 600;
+/**
+ * A transition this long is not a change of state but motion that keeps going: a row of logos that a
+ * script moves with one long transition per lap (databricks.com, 54 s to 99 s a lap, 2026-11-09).
+ */
+const AMBIENT_TRANSITION_MS = 5000;
+
+/** Motion that keeps going by itself: a loop, or a transition long enough to be one. */
+export function isAmbientMotion(animation) {
+  return animation?.iterations === "infinite" || (animation?.kind === "css-transition" && (animation.duration_ms ?? 0) >= AMBIENT_TRANSITION_MS);
+}
 /**
  * Paints no text and keeps everything else: the color stays, so icons that use currentColor stay too.
  * What is left is what a person sees before reading anything.
@@ -1121,10 +1143,22 @@ export function buildAnatomy({ desktop, mobile = null, viewports = {} }) {
       smooth_scroll: Boolean(motion.smooth_scroll),
       scroll_snap: motion.scroll_snap ?? 0,
       stylesheets_unread: motion.stylesheets_unread ?? 0,
+      ...reducedMotionReading(desktop?.reduced),
     },
     countdowns: countdownsFrom(top.timers, desktop?.again?.timer_texts),
     quality: buildQuality({ desktop: desktop?.quality ?? null, mobile: mobile?.quality ?? null, weight: mobile?.weight ?? null }),
   };
+}
+
+/**
+ * What still loops with the request for less motion on: null when nothing looped to begin with or the
+ * reading failed, so an old capture and a still page read the same.
+ */
+export function reducedMotionReading(reduced) {
+  if (!reduced || !Array.isArray(reduced.running)) return { reduced_still_running: null, reduced_still_names: [] };
+  const loops = reduced.running.filter(isAmbientMotion);
+  const names = [...new Set(loops.map((animation) => `${animation.name ?? "animação"}${animation.target ? ` em ${animation.target}` : ""}`))];
+  return { reduced_still_running: loops.length, reduced_still_names: names.slice(0, 12) };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -3101,22 +3135,42 @@ export async function setMetrics(page, { width, height, scale, mobile }) {
   await page.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: scale, mobile, screenWidth: width, screenHeight: height });
 }
 
-/** Scrolls through the page once so lazy images and sections load before the photos. */
+/** How many animations that end are still running: a block on its way in, a counter, a slide. */
+const FINITE_RUNNING = 'typeof document.getAnimations === "function" ? document.getAnimations().filter((a) => a.playState === "running" && Number.isFinite(a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming().endTime : Infinity)).length : 0';
+
+/** Waits for what a scroll sets off: the observers first, then the animations that end, up to a limit. */
+async function settleAfterScroll(page, { min = BAND_SETTLE_MS.min, max = BAND_SETTLE_MS.max } = {}) {
+  await sleep(min);
+  const deadline = Date.now() + Math.max(0, max - min);
+  while (Date.now() < deadline) {
+    const busy = await page.evaluate(FINITE_RUNNING, { awaitPromise: false }).catch(() => 0);
+    if (!busy) return;
+    await sleep(120);
+  }
+}
+
+/**
+ * Scrolls through the page once so lazy images and sections load before the photos. When blocks wait
+ * for the scroll to appear, each step pauses long enough for them to start, and the end waits for them.
+ */
 async function warmUp(page) {
   const state = await page.evaluate(inPage(pageStateInPage), { awaitPromise: false });
+  const hidden = await page.evaluate(inPage(hiddenBlocksInPage), { awaitPromise: false }).catch(() => null);
+  const pause = hidden ? WARM_UP_STEP_MS.reveal : WARM_UP_STEP_MS.plain;
   const max = Math.min(Math.max(0, state.scroll_height - state.inner_height), MAX_FULL_HEIGHT);
   if (max > 0) {
     const step = Math.max(200, Math.floor(state.inner_height * 0.8));
     for (let y = step; y <= max; y += step) {
       await page.evaluate(`window.scrollTo({ top: ${y}, left: 0, behavior: "instant" }); 0`, { awaitPromise: false });
-      await sleep(60);
+      await sleep(pause);
     }
     await page.evaluate(`window.scrollTo({ top: ${max}, left: 0, behavior: "instant" }); 0`, { awaitPromise: false });
-    await sleep(120);
+    await sleep(Math.max(120, pause));
     await page.evaluate('window.scrollTo({ top: 0, left: 0, behavior: "instant" }); 0', { awaitPromise: false });
-    await sleep(200);
+    if (hidden) await settleAfterScroll(page);
+    else await sleep(200);
   }
-  return state;
+  return { ...state, hidden_blocks: hidden };
 }
 
 export async function dismissCookies(page) {
@@ -3126,6 +3180,18 @@ export async function dismissCookies(page) {
   await sleep(400);
   const hidden = await page.evaluate(inPage(cookieButtonHiddenInPage), { awaitPromise: false }).catch(() => null);
   return { dismissed: true, button: result.text, hidden_after_click: hidden, candidates: result.candidates ?? 0 };
+}
+
+/**
+ * A consent window that a script opens a few seconds after the load (OneTrust on databricks.com, 2026-11-09)
+ * is not there on the first try, and then sits over every photo. After the warm-up, try once more.
+ */
+export async function dismissLateCookies(page, first, onProgress = () => {}) {
+  if (first?.dismissed) return first;
+  const again = await dismissCookies(page);
+  if (!again.dismissed) return first ?? again;
+  onProgress(`Aviso de cookies fechado depois do carregamento ("${again.button}")`);
+  return { ...again, late: true };
 }
 
 const SCROLL_TOP = 'window.scrollTo({ top: 0, left: 0, behavior: "instant" }); 0';
@@ -3170,6 +3236,20 @@ async function readAnatomyDesktop(page) {
   await page.evaluate(SCROLL_END, { awaitPromise: false });
   await sleep(SCROLL_SETTLE_MS);
   const end = await readAnatomy(page, ["fixed", "running"], { timeoutMs: 30000 });
+  // A rule for less motion may exist and stop nothing: with the request on, read what still loops.
+  let reduced = null;
+  if ((end?.running ?? []).some(isAmbientMotion)) {
+    try {
+      await page.setReducedMotion(true);
+      await sleep(REDUCED_SETTLE_MS);
+      reduced = await readAnatomy(page, ["running"], { timeoutMs: 30000 });
+    } catch {
+      reduced = null;
+    } finally {
+      await page.setReducedMotion(false);
+      await sleep(150);
+    }
+  }
   let again = null;
   const timers = Array.isArray(top?.timers) ? top.timers : [];
   if (timers.length) {
@@ -3179,7 +3259,7 @@ async function readAnatomyDesktop(page) {
   }
   await page.evaluate(SCROLL_TOP, { awaitPromise: false });
   await sleep(150);
-  return { top, end, again };
+  return { top, end, again, reduced };
 }
 
 /** A measurement of the finished page, read apart from the anatomy: what fails here stays null, with the reason in `errors`. */
@@ -3244,6 +3324,79 @@ async function fullPageScreenshot(page, { width, height, scale, mobile }) {
 }
 
 /* eslint-disable no-undef */
+/**
+ * The blocks that take space and are not painted yet: their own opacity is zero. Only the outermost of
+ * a chain counts. A page that reveals its sections on scrolling has dozens; a still page has none.
+ */
+function hiddenBlocksInPage() {
+  if (!document.body) return 0;
+  let count = 0;
+  for (const el of document.body.querySelectorAll("*")) {
+    const style = getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) > 0.05) continue;
+    const box = el.getBoundingClientRect();
+    if (box.width < 40 || box.height < 20) continue;
+    let inner = false;
+    for (let up = el.parentElement; up && up !== document.body; up = up.parentElement) {
+      if (Number(getComputedStyle(up).opacity) <= 0.05) {
+        inner = true;
+        break;
+      }
+    }
+    if (!inner) count += 1;
+  }
+  return count;
+}
+
+/**
+ * Hides, for the photo with no letters only, what floats over the page and is not the page: a window or
+ * its backdrop (a fixed element taller and wider than a quarter of the screen), an open dialog, or a
+ * chat panel with a text box. A thin bar at the top or the bottom stays. Returns what it hid, once each.
+ */
+function hideOverlaysInPage() {
+  const hidden = (window.__flyeeOverlays ??= []);
+  const fresh = [];
+  // A chat widget often lives in a component's own shadow tree: walk the open ones too.
+  const all = [];
+  const walk = (root) => {
+    for (const el of root.querySelectorAll("*")) {
+      all.push(el);
+      if (el.shadowRoot) walk(el.shadowRoot);
+    }
+  };
+  // From the root, not the body: some widgets (the Qualified chat on databricks.com) hang from <html> itself.
+  walk(document.documentElement);
+  for (const el of all) {
+    if (el.hasAttribute("data-flyee-overlay")) continue;
+    const style = getComputedStyle(el);
+    if (style.position !== "fixed" || style.display === "none" || style.visibility === "hidden" || Number(style.opacity) < 0.05) continue;
+    const box = el.getBoundingClientRect();
+    const tall = box.height >= innerHeight * 0.25 && box.width >= innerWidth * 0.25;
+    const dialog = (el.getAttribute("role") === "dialog" || el.getAttribute("aria-modal") === "true") && box.width * box.height >= innerWidth * innerHeight * 0.05;
+    const chat = box.width >= 220 && box.height >= 240 && (el.tagName === "IFRAME" || el.querySelector("input, textarea, [contenteditable='true'], iframe"));
+    // A panel docked in a bottom corner (a chat that opens after a while, a promotion card): not the page.
+    const corner = box.width >= 200 && box.height >= 200 && box.bottom >= innerHeight - 48 && (box.right >= innerWidth - 48 || box.left <= 48);
+    if (!tall && !dialog && !chat && !corner) continue;
+    el.setAttribute("data-flyee-overlay", el.style.getPropertyValue("display") + "|" + el.style.getPropertyPriority("display"));
+    el.style.setProperty("display", "none", "important");
+    const text = (el.innerText || el.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim().slice(0, 60);
+    hidden.push(el);
+    fresh.push(`${Math.round(box.width)}x${Math.round(box.height)}${text ? ` "${text}"` : ""}`);
+  }
+  return fresh;
+}
+
+function restoreOverlaysInPage() {
+  for (const el of window.__flyeeOverlays ?? []) {
+    const [value, priority] = String(el.getAttribute("data-flyee-overlay") ?? "|").split("|");
+    if (value) el.style.setProperty("display", value, priority);
+    else el.style.removeProperty("display");
+    el.removeAttribute("data-flyee-overlay");
+  }
+  window.__flyeeOverlays = [];
+  return true;
+}
+
 function noLettersOnInPage(css) {
   const style = document.createElement("style");
   style.id = "__flyee_no_letters";
@@ -3273,31 +3426,53 @@ function noLettersOffInPage() {
 /* eslint-enable no-undef */
 
 /**
- * The page with no letter on it, in one sheet: what a person sees before reading anything. A figure
- * that is an object still says what it is; a box with a sentence inside becomes an empty box. A photo
- * that fails never fails the capture: the file stays null, with a warning.
+ * The page with no letter on it: what a person sees before reading anything. A figure that is an
+ * object still says what it is; a box with a sentence inside becomes an empty box. The page goes one
+ * screen at a time, each band photographed on the screen after what it reveals has appeared, and the
+ * bands go into sheets of up to 12. Returns the sheet files in order; a photo that fails never fails
+ * the capture: what was written stays, with a warning.
  */
-async function writeNoLetters({ browser, page, outDir, name, label, width, scale, band, max, warnings }) {
+async function writeNoLetters({ browser, page, outDir, name, label, width, height, warnings }) {
+  const parts = [];
   try {
     await page.evaluate(inPage(noLettersOnInPage, NO_LETTERS_CSS), { awaitPromise: false });
     await sleep(120);
     const metrics = await page.send("Page.getLayoutMetrics");
-    const content = Math.ceil(metrics.cssContentSize?.height ?? metrics.contentSize?.height ?? band);
-    const full = Math.min(content, max);
+    const content = Math.ceil(metrics.cssContentSize?.height ?? metrics.contentSize?.height ?? height);
+    const last = Math.max(0, content - height);
+    const step = Math.max(200, Math.round(height * NO_LETTERS_STEP));
+    const stops = [];
+    for (let top = 0; top < last; top += step) stops.push(top);
+    stops.push(last);
     const frames = [];
-    for (let top = 0; top < full; top += band) {
-      const height = Math.min(band, full - top);
-      const { data } = await page.send("Page.captureScreenshot", { format: "jpeg", quality: 72, fromSurface: true, captureBeyondViewport: true, clip: { x: 0, y: top, width, height, scale: 1 / scale } }, 60000);
-      frames.push({ bytes: Buffer.from(data, "base64"), label: `${top} px` });
+    const overlays = [];
+    for (const top of stops.slice(0, NO_LETTERS_MAX_BANDS)) {
+      await page.evaluate(`window.scrollTo({ top: ${top}, left: 0, behavior: "instant" }); 0`, { awaitPromise: false });
+      await settleAfterScroll(page);
+      // A window can open late (a region picker after the cookies, a chat panel after a few seconds): look at every band.
+      overlays.push(...((await page.evaluate(inPage(hideOverlaysInPage), { awaitPromise: false }).catch(() => [])) ?? []));
+      const at = await page.evaluate("Math.round(window.scrollY)", { awaitPromise: false }).catch(() => top);
+      frames.push({ bytes: await page.screenshot({ format: "jpeg", quality: 72 }), label: `${at} px` });
     }
-    await writeSheet(browser, frames, { title: `A página sem nenhuma letra, ${label}: ${width} px`, file: join(outDir, name), frameWidth: width });
-    if (content > max) warnings.push(`A foto sem letras (${label}) parou em ${max} px de uma página de ${content} px.`);
-    return name;
+    if (overlays.length) warnings.push(`Na foto sem letras (${label}), ${overlays.length === 1 ? "uma janela foi escondida" : `${overlays.length} janelas foram escondidas`} para mostrar a página: ${overlays.slice(0, 3).join("; ")}.`);
+    const sheets = Math.ceil(frames.length / NO_LETTERS_PER_SHEET);
+    for (let i = 0; i < sheets; i++) {
+      const chunk = frames.slice(i * NO_LETTERS_PER_SHEET, (i + 1) * NO_LETTERS_PER_SHEET);
+      const file = i === 0 ? name : name.replace(/\.jpg$/, `-${i + 1}.jpg`);
+      const title = sheets > 1 ? `A página sem nenhuma letra, ${label}: ${width} px, folha ${i + 1} de ${sheets} (${chunk[0].label} a ${chunk.at(-1).label})` : `A página sem nenhuma letra, ${label}: ${width} px`;
+      await writeSheet(browser, chunk, { title, file: join(outDir, file), frameWidth: width });
+      parts.push(file);
+    }
+    if (stops.length > NO_LETTERS_MAX_BANDS) warnings.push(`A foto sem letras (${label}) parou em ${NO_LETTERS_MAX_BANDS} telas, a ${frames.at(-1).label} de uma página de ${content} px.`);
+    return parts;
   } catch (error) {
     warnings.push(`A foto sem letras (${label}) falhou: ${error?.message ?? error}`);
-    return null;
+    return parts.length ? parts : null;
   } finally {
     await page.evaluate(inPage(noLettersOffInPage), { awaitPromise: false }).catch(() => null);
+    await page.evaluate(inPage(restoreOverlaysInPage), { awaitPromise: false }).catch(() => null);
+    await page.evaluate('window.scrollTo({ top: 0, left: 0, behavior: "instant" }); 0', { awaitPromise: false }).catch(() => null);
+    await sleep(150);
   }
 }
 
@@ -3350,7 +3525,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
   const startedAt = Date.now();
   ensureDir(outDir);
   const warnings = [];
-  const files = { desktop: null, desktop_full: null, mobile: null, mobile_full: null, scroll_desktop: null, scroll_mobile: null, no_letters_desktop: null, no_letters_mobile: null, capture: "captura.json", text: null, assets: [] };
+  const files = { desktop: null, desktop_full: null, mobile: null, mobile_full: null, scroll_desktop: null, scroll_mobile: null, no_letters_desktop: null, no_letters_mobile: null, no_letters_desktop_parts: null, no_letters_mobile_parts: null, capture: "captura.json", text: null, assets: [] };
   const viewports = {
     desktop: { width: desktopWidth, height: DESKTOP_HEIGHT, scale: 1, full_height: null },
     mobile: { width: mobileWidth, height: MOBILE_HEIGHT, scale: MOBILE_SCALE, full_height: null },
@@ -3427,6 +3602,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     const arrivalDesktop = await readArrival(page);
     state = await warmUp(page);
     await waitForNetworkQuiet(network, { timeoutMs: 1500 });
+    cookieBanner = await dismissLateCookies(page, cookieBanner, onProgress);
 
     onProgress("Fotografando a tela e a página inteira (computador)…");
     files.desktop = write("desktop.png", await page.screenshot({ format: "png" }));
@@ -3434,8 +3610,13 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     files.desktop_full = write("desktop-full.png", desktopFull.png);
     viewports.desktop.full_height = desktopFull.height;
     viewports.desktop.content_height = desktopFull.content_height;
+    viewports.desktop.hidden_until_scroll = state.hidden_blocks ?? null;
     if (desktopFull.truncated) warnings.push(`A página tem ${desktopFull.content_height} px de altura; a foto inteira parou em ${desktopFull.height} px.`);
-    if (noLetters) files.no_letters_desktop = await writeNoLetters({ browser, page, outDir, name: "sem-letras.jpg", label: "computador", width: desktopWidth, scale: 1, band: NO_LETTERS_BAND.desktop, max: NO_LETTERS_MAX.desktop, warnings });
+    if (noLetters) {
+      cookieBanner = await dismissLateCookies(page, cookieBanner, onProgress);
+      files.no_letters_desktop_parts = await writeNoLetters({ browser, page, outDir, name: "sem-letras.jpg", label: "computador", width: desktopWidth, height: DESKTOP_HEIGHT, warnings });
+      files.no_letters_desktop = files.no_letters_desktop_parts?.[0] ?? null;
+    }
 
     onProgress("Lendo a página: marca, cores, fontes, textos e números…");
     raw = await page.evaluate(inPage(extractInPage, { maxElements: 6000, maxText: 60000 }), { timeoutMs: 60000 });
@@ -3473,6 +3654,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     const arrivalMobile = await readArrival(page);
     const mobileState = await warmUp(page);
     await waitForNetworkQuiet(network, { timeoutMs: 1500 });
+    mobileCookieBanner = await dismissLateCookies(page, mobileCookieBanner, onProgress);
 
     onProgress("Fotografando a tela e a página inteira (celular)…");
     files.mobile = write("mobile.png", await page.screenshot({ format: "png" }));
@@ -3481,8 +3663,13 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     files.mobile_full = write("mobile-full.png", mobileFull.png);
     viewports.mobile.full_height = mobileFull.height;
     viewports.mobile.content_height = mobileFull.content_height;
+    viewports.mobile.hidden_until_scroll = mobileState.hidden_blocks ?? null;
     layout.mobile = mobileLayout(positions, { fullHeight: mobileFull.height, viewportHeight: MOBILE_HEIGHT });
-    if (noLetters) files.no_letters_mobile = await writeNoLetters({ browser, page, outDir, name: "sem-letras-celular.jpg", label: "celular", width: mobileWidth, scale: MOBILE_SCALE, band: NO_LETTERS_BAND.mobile, max: NO_LETTERS_MAX.mobile, warnings });
+    if (noLetters) {
+      mobileCookieBanner = await dismissLateCookies(page, mobileCookieBanner, onProgress);
+      files.no_letters_mobile_parts = await writeNoLetters({ browser, page, outDir, name: "sem-letras-celular.jpg", label: "celular", width: mobileWidth, height: MOBILE_HEIGHT, warnings });
+      files.no_letters_mobile = files.no_letters_mobile_parts?.[0] ?? null;
+    }
     if (anatomyReads.desktop && !anatomyFailure) {
       try {
         anatomyReads.mobile = { ...(await readAnatomyMobile(page)), arrival: arrivalMobile };

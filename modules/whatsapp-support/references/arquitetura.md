@@ -33,14 +33,17 @@ Os avisos do Chatwoot vão por esses endereços públicos e assinados. `SAFE_FET
 
 ## Proxy
 
-O `Caddyfile` de modelo faz tudo acima. Com Traefik (labels de Docker ou Swarm):
+O `Caddyfile` de modelo faz tudo acima e ainda fecha `/installation`, a página que cria o super administrador, para quem não está em `INSTALACAO_IPS` (seguranca.md). Com Traefik (labels de Docker ou Swarm):
 
 - `chatwoot-rails`: regra `Host(atendimento.<domínio>)`, porta 3000.
 - `robo`: regra `Host(atendimento.<domínio>) && PathPrefix(/robo)`, middleware `stripPrefix` com `/robo`, porta 8080, prioridade maior que a do Chatwoot.
 - `openwa`: regra `Host(wa.<domínio>) && PathPrefix(/api)`, porta 2785.
+- `/installation`: um roteador com `Host(atendimento.<domínio>) && PathPrefix(/installation)` e prioridade maior que a do Chatwoot, com o middleware `ipAllowList` (`sourceRange` com o IP de quem cria o super administrador). Com Nginx, um `location /installation { allow <IP>; deny all; proxy_pass ...; }`.
 - Modo moldura: middleware `headers` no roteador do Chatwoot com `customResponseHeaders.X-Frame-Options` vazio (remove) e `contentSecurityPolicy` igual a `frame-ancestors 'self' https://<sistema>`.
 
-Com Nginx: `location /robo/ { proxy_pass http://robo:8080/; }` antes de `location / { proxy_pass http://chatwoot-rails:3000; }`, com os cabeçalhos de WebSocket (`Upgrade`, `Connection`) para `/cable`, e `proxy_hide_header X-Frame-Options;` mais `add_header Content-Security-Policy "frame-ancestors 'self' https://<sistema>";` no modo moldura. O Nginx descarta cabeçalhos com sublinhado por padrão; o kit manda o token também em `Authorization: Bearer`, que passa.
+Com Nginx: `location /robo/ { proxy_pass http://robo:8080/; }` antes de `location / { proxy_pass http://chatwoot-rails:3000; }`, com os cabeçalhos de WebSocket (`Upgrade`, `Connection`) para `/cable`, e `proxy_hide_header X-Frame-Options;` mais `add_header Content-Security-Policy "frame-ancestors 'self' https://<sistema>";` no modo moldura. O Nginx descarta cabeçalhos com sublinhado por padrão, e o adaptador do OpenWA manda o token do Chatwoot só em `api_access_token`: ponha `underscores_in_headers on;` no bloco do painel, ou as mensagens do WhatsApp levam 401 e nunca viram conversa. O projeto e o robô mandam o token também em `Authorization: Bearer`, que passa.
+
+**Cabeçalho com sublinhado.** O Caddy 2.11.4 em diante também descarta esses cabeçalhos. Os Caddyfiles do kit (o de servidor único e o da borda) trazem `expected_underscore_headers api_access_token` no bloco global, opção da 2.11.6, e a imagem fica fixada em `caddy:2.11.9` (`kit/versoes.json`). O Traefik mantém o cabeçalho. Para testar um token pelo endereço público, use `Authorization: Bearer`.
 
 ## Teste local
 
@@ -49,3 +52,20 @@ Para testar na máquina do desenvolvedor, sem domínio público: suba o compose 
 ## Tamanho do servidor
 
 Regra de bolso, não medição: o Chatwoot com Postgres e Redis pede ao menos 2 vCPU e 4 GB de RAM para uma operação pequena. Na rota não oficial, cada sessão do OpenWA com `whatsapp-web.js` usa de 300 a 500 MB (Chromium), e com `baileys` de 30 a 80 MB, segundo o README do OpenWA (lido em 2026-11-04). O robô usa pouca memória; o que pesa nele é o tempo de resposta do provedor de IA.
+
+## Mais de um sistema no mesmo servidor
+
+Cada sistema tem a sua instalação do Chatwoot: a marca e o tema que o kit grava (`InstallationConfig`, `DASHBOARD_SCRIPTS`) valem para a instalação inteira, então dois sistemas com marcas diferentes nunca dividem um Chatwoot. Num servidor só, cada sistema sobe a sua pilha, e um proxy só atende as portas 80 e 443.
+
+- **A pilha de cada sistema**: `modelos/implantacao/compose.yml` com `compose.compartilhado.yml` por cima, escolhidos pelo `.env` da pasta (modelo em `compartilhado.env.example`). O `.env` dá a cada pilha o seu `PILHA` e o seu `COMPOSE_PROJECT_NAME`. Sem isso, as duas pilhas teriam o nome fixo de `compose.yml` (`atendimento`) e dividiriam contêineres e volumes, banco incluído; a variante para com erro quando falta `PILHA`.
+- **O que fica separado**: contêineres, rede interna, banco, Redis, anexos, sessões do WhatsApp, segredos, domínios e o super administrador do Chatwoot.
+- **O proxy da borda** (`modelos/implantacao/borda/`): um Caddy só por servidor, numa pasta que não é de nenhum dos sistemas, dono das portas 80 e 443 e do TLS. Cada pilha entra com um arquivo `sites/<pilha>.caddy` (modelo em `sites/pilha.caddy.exemplo`) e com a rede `borda-<pilha>`, criada antes de subir a pilha e ligada ao proxy em `borda/compose.yml`. Pela rede da borda, o proxy alcança só o painel, o robô e o OpenWA de cada pilha, com os nomes `<pilha>-chatwoot`, `<pilha>-robo` e `<pilha>-openwa`; uma pilha não alcança a outra. Quem já tem Traefik ou Nginx na porta da frente faz o mesmo com as regras da seção "Proxy".
+- **Tetos de memória e CPU** em cada serviço, no `.env` de cada pilha, para uma pilha não sufocar a outra. Os padrões somam 6,9 GB por pilha, pensados para duas pilhas numa VPS de 16 GB; o robô tem 768 MB porque o ffmpeg dele trabalha com imagem, áudio e vídeo.
+
+O que continua dividido, e por isso não é igual a dois servidores: o sistema operacional e o disco (uma pane, um disco cheio ou um reinício derruba as duas pilhas), quem tem o acesso de administrador do servidor, o endereço IP (todos os números do WhatsApp Web saem dele; o OpenWA aceita um proxy por sessão) e o backup da máquina, que copia tudo junto. Faça o backup do banco de cada pilha à parte, guardado fora do servidor. Quando uma falha ou uma invasão num sistema não pode alcançar o outro, são dois servidores.
+
+Tamanho, regra de bolso: numa VPS de 16 GB, duas pilhas pequenas e uns 7 GB para os números do WhatsApp Web, de 14 a 20 números somados com `whatsapp-web.js`. O primeiro sinal de aperto é a memória do OpenWA chegando ao teto.
+
+## O ffmpeg do robô
+
+O Dockerfile do robô instala o ffmpeg e o poppler-utils (`apk add ffmpeg poppler-utils`) para imagem, áudio, vídeo e PDF (contexto.md, "Imagem, áudio e vídeo"). O `/robo/health` mostra se eles estão no contêiner (`media.ffmpeg` e `media.pdf`), e `kit.mjs verify` traz a linha `robo_midia`. Sem o ffmpeg, imagem pequena ainda passa, e áudio e vídeo vão para a equipe; sem o poppler, PDF vai para a equipe, e planilha, CSV e documento de texto continuam lidos. Os caminhos mudam por `PDFTOTEXT_PATH` e `PDFTOPPM_PATH`.

@@ -22,7 +22,16 @@ export function systemBlocks(system, ttl = "5m") {
   return blocks;
 }
 
-export async function generate({ ai, system, messages, schema, keys, fetchImpl, timeoutMs = 60000 }) {
+/** As partes neutras do robô ({ type: "text" } e { type: "image", mime, data }) no formato da API de Mensagens. */
+export function anthropicContent(content) {
+  if (typeof content === "string") return content;
+  return content.map((part) =>
+    part.type === "image" ? { type: "image", source: { type: "base64", media_type: part.mime, data: part.data } } : { type: "text", text: part.text },
+  );
+}
+
+export async function generate({ ai, system, messages: input, schema, keys, fetchImpl, timeoutMs = 60000 }) {
+  const messages = input.map((message) => ({ role: message.role, content: anthropicContent(message.content) }));
   const key = providerKey(keys, ai.key_env || "ANTHROPIC_API_KEY");
   if (!key) throw new AiError("ai_key_missing", "falta a chave da Anthropic no ambiente do robô");
   const model = ai.model || DEFAULT_MODEL;

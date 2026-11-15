@@ -2,18 +2,22 @@
 
 ## O repertório
 
-O app traz um roteiro para cada tipo de página: página de vendas, planos e preços, página de API, order bump, upsell, downsell, cross-sell e página de obrigado. Cada roteiro diz:
+O app traz um roteiro para cada tipo de página: página de vendas, página de vendas de curso, planos e preços, página de API, order bump, upsell, downsell, cross-sell e página de obrigado. Cada roteiro diz:
 
 - o que a página é e quando usar;
 - a regra que não se quebra;
 - as seções na ordem, a mecânica e o texto;
 - o movimento, o celular, a medição e as linhas legais.
 
-Junto vêm os modelos reais analisados. Cada um traz a fonte, a data em que foi visto, a página na ordem, a mecânica que vale levar, o movimento medido e o que não repetir. O app traz a análise, nunca o texto completo de outra empresa. Os modelos de hoje, todos vistos em 7 de novembro de 2026:
+Junto vêm os modelos reais analisados. Cada um traz a fonte, a data em que foi visto, a página na ordem, a mecânica que vale levar, o movimento medido e o que não repetir. O app traz a análise, nunca o texto completo de outra empresa. Os modelos de hoje:
 
 - a oferta pós-compra do agente de IA da Hostinger, com a segunda oferta e o obrigado;
 - a página de vendas, a de planos e a da API do Juridiq, um software para escritórios de advocacia;
-- a página de vendas do JuriChat, o atendimento por WhatsApp do mesmo grupo.
+- a página de vendas do JuriChat, o atendimento por WhatsApp do mesmo grupo;
+- a página de vendas da Subido AI, um curso com plataforma, mentorias e ferramentas, nas duas versões do teste A/B do topo, vista em 9 de novembro de 2026;
+- as páginas de produto da Databricks, uma plataforma de dados e IA, com os gráficos de demonstração desenhados com as peças do produto, os ícones próprios e as logos reais, vistas no mesmo dia.
+
+Os quatro primeiros foram vistos em 7 de novembro de 2026.
 
 ## As etapas
 
@@ -53,7 +57,9 @@ Quem diz se a página vende é a medição do seu projeto.
 | uma decisão por página | numa oferta, nenhuma outra ação de compra compete com ela |
 | recusa visível e neutra | existe um link de recusa, em palavras que não constrangem |
 | preço, preço riscado e renovação | o valor registrado aparece; o riscado bate com o preço real; a assinatura diz como renova |
-| contas de desconto | o desconto, a economia em reais e a média mensal fecham com os preços da página |
+| contas de desconto | o desconto, a economia em reais, a média mensal e o total das parcelas fecham com os preços da página |
+| preço à vista | junto das parcelas aparecem o preço à vista ou o total, nunca só a parcela |
+| lista do que se recebe | o total escrito é a soma dos itens |
 | planos | os preços na primeira tela e um plano em destaque |
 | período de teste e promoção | o teste diz quantos dias dura; a promoção diz até quando vale |
 | cancelamento | a página diz como cancelar e se há fidelidade |
@@ -68,7 +74,7 @@ Quem diz se a página vende é a medição do seu projeto.
 | caixa marcada | nenhuma caixa com preço vem marcada |
 | order bump perto do pagamento | a caixa fica logo acima do botão de pagar |
 | página de API | a documentação na primeira tela, um exemplo de chamada e os limites de uso em número |
-| vídeo e movimento | vídeo automático sem som, com capa; a regra de menos movimento |
+| vídeo e movimento | vídeo automático sem som, com capa; com o pedido de menos movimento, nada continua se mexendo sozinho |
 | linhas legais | privacidade, termos e o caminho do arrependimento |
 | imagens | texto alternativo nas imagens; no celular, imagem de até 500 KB e no tamanho em que aparece |
 | números e urgências | cada um com a origem registrada, e nenhum dado de exemplo esquecido |

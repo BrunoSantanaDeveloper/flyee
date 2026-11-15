@@ -11,7 +11,7 @@ O painel do Chatwoot 4.19.1 pinta quase tudo com variáveis CSS (`app/javascript
 | `marca.cor_principal_escuro` | a primária do tema escuro, se o design system tem uma; senão `null` |
 | `marca.fonte.familia` | a fonte do design system; `null` mantém a Inter do Chatwoot |
 | `marca.fonte.css` | endereço https do CSS da fonte (do próprio sistema ou do Google Fonts) |
-| `marca.logo`, `logo_escuro`, `icone` | endereços https; o ícone é quadrado, 512 px |
+| `marca.logo`, `logo_escuro`, `icone` | endereços https; o ícone precisa ser quadrado, 512 px: o painel o desenha num quadrado sem `object-fit` (`LOGO_THUMBNAIL` em `Logo.vue`, `size-4` e `size-7`), e um ícone de 75 por 86 sai achatado |
 | `marca.site`, `termos`, `privacidade`, `saida` | endereços https do sistema; `saida` é para onde vai quem sai do painel |
 
 ## O que o tema troca

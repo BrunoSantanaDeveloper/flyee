@@ -8,6 +8,7 @@ Tell your AI which page you want, what it sells and where it sits in your site o
 
 - "Create the product's sales page, with demo booking and the trial period."
 - "Build the plans page with monthly and yearly billing and the comparison table."
+- "Make the sales page for my mentoring program, with the Black Friday offer in 12 installments and the bonuses."
 - "Make our API page for developers, with the plans and the documentation."
 - "Create the upsell page shown after checkout, offering the group mentoring at 50% off the first month."
 - "Add an order bump to the course checkout with the launch checklist for R$ 19.90."
@@ -18,6 +19,7 @@ Tell your AI which page you want, what it sells and where it sits in your site o
 | Type | Where it goes |
 |---|---|
 | Sales page | the product's main address, or where campaigns and links point |
+| Course sales page | the address that ads, the email list and the launch send buyers to |
 | Plans and pricing | the plans page, or the plans section of the sales page |
 | API page | the page for developers, tied to the documentation |
 | Order bump | a box in the checkout, right above the pay button |

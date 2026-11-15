@@ -491,7 +491,7 @@ Roda ao fim do ÉPICO 3 e de novo ao fim do ÉPICO 4.
 
 ### T5.1: catálogo e documentos
 **Estado: 🟡** o catálogo é regenerado por gancho a cada escrita em `modules/`; os documentos não.
-- Atualizar as linhas de `docs/PLANO.md` e o trecho "Where things stand" do `CLAUDE.md`. Marcar no topo de `docs/PLANO-ANUNCIOS.md` o que virou história. Levar para `.claude/rules/apps.md` as regras que ficaram: dado trazido pelo integrante carrega origem, e coleta paga tem teto.
+- Atualizar as linhas de `docs/PLANO.md`, levar o que foi entregue para o fim de `docs/HISTORICO.md` e deixar curto o trecho "Where things stand" do `CLAUDE.md`. Marcar no topo de `docs/PLANO-ANUNCIOS.md` o que virou história. Levar para `.claude/rules/apps.md` as regras que ficaram: dado trazido pelo integrante carrega origem, e coleta paga tem teto.
 - **Aceite:** `npm run apps -- catalog --check` e `npm run harness:check` passam.
 
 ### T5.2: verificação completa e commit

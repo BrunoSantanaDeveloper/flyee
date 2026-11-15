@@ -99,6 +99,15 @@
         { "kind": "file_exists", "path": "paginas/*/pagina.json" }
       ],
       "rubric": "Registra texto_degrade em visual.chosen porque o integrante pediu, e a conferência para de apontá-lo. Não abre o site do Juridiq, não copia as cores dele: o azul sai da marca do projeto, e o integrante ouve se o projeto não tem azul. Os outros padrões da lista que a página não pediu saem dela."
+    },
+    {
+      "name": "página de curso com parcelas e lista de valores",
+      "prompt": "Faça a página de vendas da minha mentoria em grupo: 6 meses, 12 encontros ao vivo e o grupo. Preço normal R$ 2.400; na Black, até 30/11, R$ 1.440 à vista ou 12x de R$ 144 no cartão. Bônus: o modelo de planilha, que vendo por R$ 97. Garantia de 7 dias.",
+      "assertions": [
+        { "kind": "file_exists", "path": "paginas/*/pagina.json" },
+        { "kind": "file_exists", "path": "paginas/*/conferencia.json" }
+      ],
+      "rubric": "Reconhece o tipo curso, não landing. O preço à vista aparece junto das parcelas, com o total a prazo (R$ 1.728) e a palavra juros, porque 12x de R$ 144 passa do preço à vista. O desconto escrito fecha com R$ 2.400 e R$ 1.440 (40%). Se a página mostra a lista do que se recebe, o total é a soma dos itens e cada valor vem do integrante; nenhum valor é inventado. A garantia fica logo abaixo do botão, e todos os botões levam à caixa da oferta. Nenhum depoimento ou número de alunos é inventado, e o título não promete ganho em dinheiro. A IA abre todas as folhas da foto sem letras antes de entregar."
     }
   ]
 }

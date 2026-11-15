@@ -82,7 +82,7 @@ test("saúde da Meta: o aviso precisa chegar a este painel, mesmo vindo pelo end
   assert.deepEqual(codesOf(classifyCloudHealth({ health: { status: "CONNECTED" } })), [], "sem o dado, não acusa nada");
 });
 
-function fakeStack({ session = { status: "ready", phone: "5511999990000", engineLoaded: true }, plugins = [{ id: "chatwoot-adapter", enabled: true }], health = { status: "CONNECTED", quality_rating: "GREEN" }, inbox = {}, down = [] } = {}) {
+function fakeStack({ session = { status: "ready", phone: "5511999990000", engineLoaded: true }, plugins = [{ id: "chatwoot-adapter", status: "enabled" }], adapterHealth = { healthy: true }, health = { status: "CONNECTED", quality_rating: "GREEN" }, inbox = {}, down = [] } = {}) {
   const calls = [];
   const fetchImpl = async (url, init = {}) => {
     const target = new URL(url);
@@ -102,6 +102,7 @@ function fakeStack({ session = { status: "ready", phone: "5511999990000", engine
       if (target.pathname === "/api/sessions/sess-1/qr") return json(200, { qrCode: "data:image/png;base64,AAA" });
       if (target.pathname === "/api/sessions/sess-1") return session ? json(200, session) : json(404, {});
       if (target.pathname === "/api/plugins") return json(200, plugins);
+      if (target.pathname === "/api/plugins/chatwoot-adapter/health") return json(200, adapterHealth);
     }
     return json(404, {});
   };
@@ -152,6 +153,13 @@ test("conferência, rota não oficial: número ligado, ponte desligada, OpenWA f
   assert.deepEqual(codesOf((await check({ session: { status: "qr_ready" } })).inboxes[0].findings), ["numero_desconectado"]);
   assert.deepEqual(codesOf((await check({ plugins: [{ id: "chatwoot-adapter", enabled: false }] })).inboxes[0].findings), ["adaptador_desligado"]);
   assert.deepEqual(codesOf((await check({ plugins: [] })).inboxes[0].findings), ["adaptador_desligado"]);
+  // OpenWA 0.29.1: a lista traz status, e enabled não existe. Em erro, o número conecta e nada chega (Atrupe).
+  assert.deepEqual(codesOf((await check({ plugins: [{ id: "chatwoot-adapter", status: "error" }] })).inboxes[0].findings), ["adaptador_desligado"]);
+  const unhealthy = await check({ adapterHealth: { healthy: false, message: "missing/invalid config: baseUrl" } });
+  assert.deepEqual(codesOf(unhealthy.inboxes[0].findings), ["adaptador_com_erro"]);
+  assert.equal(unhealthy.level, "fora");
+  assert.ok(unhealthy.inboxes[0].findings[0].detail.includes("missing/invalid config"));
+  assert.equal(unhealthy.inboxes[0].findings[0].fixBy, "tecnico");
   assert.deepEqual(codesOf((await check({ down: ["wa.test"] })).inboxes[0].findings), ["openwa_fora_do_ar"]);
   assert.deepEqual(codesOf((await check({ session: null })).inboxes[0].findings), ["sessao_ausente"]);
   assert.deepEqual(codesOf((await check({ inbox: json(404, {}) })).inboxes[0].findings), ["caixa_ausente"]);
@@ -371,4 +379,29 @@ test("verify: sem sessão ainda não reprova; chave recusada e OpenWA fora do ar
   });
   assert.equal(named(offline.checks).ok, false);
   assert.equal(named(offline.checks).seen, "sem resposta");
+});
+
+// Achado da Atrupe (2026-11-12): a contagem de descartadas do chatwoot-adapter só cresce enquanto ele fica
+// ligado; uma mensagem perdida no passado não pode virar alarme de número parado para sempre.
+test("adaptador: descartadas é atenção com a contagem na chave; perdida antes da fila e fila cheia é fora", async () => {
+  const { classifyAdapterHealth, healthAlerts } = await import("../kit/base/server/health.mjs");
+  assert.equal(classifyAdapterHealth({ healthy: true }), null);
+  const lost = classifyAdapterHealth({ healthy: false, message: "1 dead-lettered after 5 attempts; last error: POST /conversations -> 401" });
+  assert.equal(lost.level, "atencao");
+  assert.equal(lost.code, "adaptador_mensagens_perdidas");
+  assert.equal(lost.key, "adaptador_mensagens_perdidas:1");
+  assert.ok(lost.detail.startsWith("Uma mensagem do WhatsApp não chegou"));
+  assert.ok(lost.fix.includes("desligue e ligue o adaptador"));
+  for (const message of ["2 inbound message(s) pending retry, queue full, dropping oldest", "1 LOST (could not be queued)", "3 dead-lettered after 5 attempts; 1 LOST (could not be queued)", "missing/invalid config: baseUrl", ""]) {
+    assert.equal(classifyAdapterHealth({ healthy: false, message }).level, "fora", message || "sem mensagem");
+  }
+
+  const report = (finding) => ({ inboxes: [{ inbox_id: 12, route: "nao_oficial", phone: "5511999990000", level: finding.level, findings: [finding] }] });
+  const first = healthAlerts({ previous: {}, report: report(lost), now: new Date("2026-11-12T10:00:00Z") });
+  assert.deepEqual(first.alerts.map((alert) => alert.kind), ["novo"]);
+  const same = healthAlerts({ previous: first.health, report: report(lost), now: new Date("2026-11-13T12:00:00Z") });
+  assert.deepEqual(same.alerts, [], "a mesma contagem não avisa de novo, nem um dia depois");
+  const more = classifyAdapterHealth({ healthy: false, message: "2 dead-lettered after 5 attempts; last error: timeout" });
+  const grew = healthAlerts({ previous: same.health, report: report(more), now: new Date("2026-11-13T12:15:00Z") });
+  assert.deepEqual(grew.alerts.map((alert) => alert.kind), ["novo"], "a contagem que cresce avisa de novo");
 });

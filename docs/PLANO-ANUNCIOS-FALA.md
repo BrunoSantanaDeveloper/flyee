@@ -236,7 +236,7 @@ O que o documento afirma e o código contradiz. Os arquivos a corrigir estão na
 
 ### T16.2: documentos, pacote e entrega
 **Estado: ⬜**
-- ⚠️ Corrigir `docs/PLANO-ANUNCIOS.md` onde diz que peça com pessoa falando fica fora (`:97`, `:184`, `:187`, `:403`, `:624`, `:691`, `:723`) e `docs/PLANO-VIDEO.md:15` se a D35 for aceita; atualizar `CLAUDE.md` ("Where things stand").
+- ⚠️ Corrigir `docs/PLANO-ANUNCIOS.md` onde diz que peça com pessoa falando fica fora (`:97`, `:184`, `:187`, `:403`, `:624`, `:691`, `:723`) e `docs/PLANO-VIDEO.md:15` se a D35 for aceita; levar o que foi entregue para o fim de `docs/HISTORICO.md` e deixar curto o trecho "Where things stand" do `CLAUDE.md`.
 - `npm run ci:verify`, `pack` de cada app, commit pelo operador, tags e rascunhos na plataforma; publicar continua sendo o clique do operador.
 - **Aceite:** `npm run ci:verify` verde; cada rascunho na plataforma com o SHA-256 igual ao do `pack`; os sete trechos de `docs/PLANO-ANUNCIOS.md` corrigidos.
 

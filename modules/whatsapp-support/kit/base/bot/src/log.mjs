@@ -19,6 +19,8 @@ const ALLOWED = new Set([
   "tool",
   "version",
   "port",
+  "group",
+  "phone",
 ]);
 
 export function createLogger({ write = (line) => process.stdout.write(`${line}\n`), clock = () => new Date() } = {}) {

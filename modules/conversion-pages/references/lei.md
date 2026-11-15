@@ -27,6 +27,17 @@ Artigos conferidos em 2026-11-07, no texto publicado pela Presidência da Repúb
 
 O §2 do art. 5 vale para toda oferta acrescentada ao pedido. Quem desiste do pedido principal desfaz também o order bump e o upsell, sem custo.
 
+## O preço à vista e as parcelas
+
+Conferidos em 2026-11-09, no texto publicado pela Presidência da República.
+
+| Norma | O que diz | Na página de oferta |
+|---|---|---|
+| Lei 10.962/2004, art. 2, III (incluído pela Lei 13.543/2017) | no comércio eletrônico, o preço à vista é divulgado em destaque, junto da imagem ou da descrição, com letra de pelo menos 12 | o preço à vista aparece ao lado das parcelas, e não só no checkout |
+| Lei 10.962/2004, art. 5-A (incluído pela Lei 13.455/2017) | o desconto que depende do prazo ou da forma de pagamento é informado em local visível | o desconto no PIX ou à vista aparece na oferta |
+| Decreto 5.903/2006, art. 3 | o preço é informado com o total à vista; no parcelamento, também o total a pagar, o número, a periodicidade e o valor das parcelas, os juros e os acréscimos | "R$ 9.720 à vista ou 12x de R$ 810, sem juros, total de R$ 9.720" |
+| Decreto 5.903/2006, art. 9, IV | é infração informar o preço só em parcelas, obrigando a pessoa a calcular o total | parcelas sozinhas nunca são o preço |
+
 ## O que vira conferência
 
 | O que a conferência olha | Item |
@@ -39,7 +50,9 @@ O §2 do art. 5 vale para toda oferta acrescentada ao pedido. Quem desiste do pe
 | sem o CNPJ ou o CPF, o endereço e um contato de quem vende (art. 2, I e II) | `supplier_identified` |
 | uma promoção sem a data em que termina (art. 2, V e VI) | `promo_terms_shown` |
 | um teste grátis sem a duração (art. 31 do CDC; art. 2, V) | `trial_terms` |
-| um desconto, uma economia ou uma média mensal que não fecha com os preços (art. 37, §1) | `discount_math` |
+| um desconto, uma economia, uma média mensal ou um total de parcelas que não fecha com os preços (art. 37, §1) | `discount_math` |
+| parcelas sem o preço à vista nem o total (Decreto 5.903/2006, art. 9, IV) | `cash_price_shown` |
+| uma lista de valores cujo total não é a soma dos itens (art. 37, §1) | `stack_sum` |
 | preços sem como cancelar e sem dizer se há fidelidade (art. 6, III) | `cancel_terms_shown` |
 | um número de uso, uma escassez ou uma data sem origem registrada (art. 37, §1) | `claims_have_origin` |
 | um nome ou um texto de exemplo esquecido na página (art. 37, §1) | `placeholder_data` |

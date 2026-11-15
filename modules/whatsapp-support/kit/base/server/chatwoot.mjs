@@ -39,7 +39,7 @@ export function chatwootAccount({ url, token, accountId, fetchImpl = fetch }) {
   const call = (method, path, body) => requestJson(`${root}/${path}`, { method, headers: chatwootAuth(token), body, fetchImpl, service: "chatwoot" });
   return {
     inboxes: async () => (await call("GET", "inboxes"))?.payload ?? [],
-    createInbox: ({ name, channel }) => call("POST", "inboxes", { name, channel }),
+    createInbox: ({ name, channel, ...fields }) => call("POST", "inboxes", { name, channel, ...fields }),
     /** provider_config só vem para administradores, como a conta de serviço. */
     inbox: (id) => call("GET", `inboxes/${Number(id)}`),
     updateInbox: (id, fields) => call("PATCH", `inboxes/${Number(id)}`, fields),
@@ -58,6 +58,33 @@ export function chatwootAccount({ url, token, accountId, fetchImpl = fetch }) {
     createDashboardApp: ({ title, url: target }) => call("POST", "dashboard_apps", { dashboard_app: { title, content: [{ type: "frame", url: target }] } }),
     /** Mensagens de uma conversa (message_type numérico: 0 recebida, 1 enviada, 2 atividade, 3 modelo). */
     messages: async (conversationId) => (await call("GET", `conversations/${Number(conversationId)}/messages`))?.payload ?? [],
+    /**
+     * Configurações da conta, só para administradores (AccountPolicy#update?). Aceita, entre outras,
+     * auto_resolve_after, auto_resolve_message, auto_resolve_ignore_waiting e auto_resolve_label.
+     */
+    updateSettings: (fields) => requestJson(root, { method: "PATCH", headers: chatwootAuth(token), body: fields, fetchImpl, service: "chatwoot" }),
+    /** As etiquetas da conta. O painel só mostra numa conversa a etiqueta que existe aqui (CardLabels.vue). */
+    labels: async () => (await call("GET", "labels"))?.payload ?? [],
+    createLabel: ({ title, description, color, show_on_sidebar }) => call("POST", "labels", { label: { title, description, color, show_on_sidebar } }),
+    /** Busca no nome, e-mail, telefone e identificador, 15 por página; more diz se há outra página. */
+    searchContacts: async (q, page = 1) => {
+      const result = await call("GET", `contacts/search?q=${encodeURIComponent(q)}&page=${Number(page)}`);
+      return { contacts: result?.payload ?? [], more: result?.meta?.has_more === true };
+    },
+    updateContact: (id, fields) => call("PUT", `contacts/${Number(id)}`, fields),
+    /** Contato novo já ligado à caixa (contact_inbox); devolve o contato. */
+    createContact: async (fields) => (await call("POST", "contacts", fields))?.payload?.contact ?? null,
+    /** Conversa nova entre o contato e a caixa (o Chatwoot cria o contact_inbox se faltar). */
+    createConversation: ({ inbox_id, contact_id, status = "open" }) => call("POST", "conversations", { inbox_id, contact_id, status }),
+    conversation: (id) => call("GET", `conversations/${Number(id)}`),
+    setConversationStatus: (id, status) => call("POST", `conversations/${Number(id)}/toggle_status`, { status }),
+    setConversationLabels: (id, labels) => call("POST", `conversations/${Number(id)}/labels`, { labels }),
+    /** Troca a lista de quem acompanha a conversa (avisos de mensagem nova). */
+    setParticipants: (id, userIds) => call("PATCH", `conversations/${Number(id)}/participants`, { user_ids: userIds }),
+    removeParticipants: (id, userIds) => call("DELETE", `conversations/${Number(id)}/participants`, { user_ids: userIds }),
+    /** Troca a lista de membros da caixa: quem não está nela não vê a caixa. */
+    setInboxMembers: (inboxId, userIds) => call("PATCH", "inbox_members", { inbox_id: inboxId, user_ids: userIds }),
+    removeInboxMembers: (inboxId, userIds) => call("DELETE", "inbox_members", { inbox_id: inboxId, user_ids: userIds }),
   };
 }
 

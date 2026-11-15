@@ -7,6 +7,6 @@
   "openwa": "0.29.1",
   "openwa_image": "ghcr.io/rmyndharis/openwa:0.29.1",
   "chatwoot_adapter": "0.9.15",
-  "caddy_image": "caddy:2",
+  "caddy_image": "caddy:2.11.9",
   "bot_node_image": "node:22-alpine"
 }

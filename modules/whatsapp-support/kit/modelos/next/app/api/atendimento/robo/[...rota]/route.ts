@@ -1,4 +1,5 @@
-// As rotas que o robô chama: config, tools/<nome> e history. Sem sessão do projeto: a assinatura
+// As rotas que o robô chama: config, tools/<nome>, history, events, suggestions e, quando o projeto gera
+// a resposta ou transcreve o áudio com a IA dele, generate e transcribe. Sem sessão do projeto: a assinatura
 // HMAC com SUPPORT_BOT_SECRET é a autenticação. PROJECT_URL do robô aponta para .../api/atendimento/robo.
 
 import { botHandler } from "@/lib/atendimento";

@@ -3,10 +3,26 @@
 
 {
 	email {$ACME_EMAIL}
+	servers {
+		# Desde a 2.11.4, o Caddy descarta cabeçalhos com sublinhado. O adaptador do OpenWA chama a API do
+		# Chatwoot com o token em api_access_token: sem esta linha, ele leva 401 e a mensagem do WhatsApp nunca
+		# vira conversa. É o único que precisa passar (opção da 2.11.6).
+		expected_underscore_headers api_access_token
+	}
 }
 
 {$CHATWOOT_HOST} {
 	encode gzip
+
+	# A página que cria o super administrador fica fechada para quem não está em INSTALACAO_IPS: quem chegar
+	# primeiro vira super administrador, e o domínio novo aparece nos registros públicos de certificados.
+	@instalacao {
+		path /installation /installation/*
+		not remote_ip {$INSTALACAO_IPS:127.0.0.1/32}
+	}
+	handle @instalacao {
+		respond 404
+	}
 
 	# O robô recebe os avisos do Chatwoot em https://<CHATWOOT_HOST>/robo/chatwoot.
 	handle_path /robo/* {

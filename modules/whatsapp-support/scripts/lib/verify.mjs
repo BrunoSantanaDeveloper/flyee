@@ -4,7 +4,8 @@
 
 import { createHmac } from "node:crypto";
 
-import { classifySession, worstLevel } from "../../kit/base/server/health.mjs";
+import { classifyAdapterHealth, classifySession, worstLevel } from "../../kit/base/server/health.mjs";
+import { adapterEnabled } from "../../kit/base/server/openwa.mjs";
 
 const CHECK_TIMEOUT = 15000;
 
@@ -81,6 +82,20 @@ export async function verify({ env, expected, fetchImpl = fetch }) {
     } catch (error) {
       add("chatwoot_no_ar", false, error?.name === "TimeoutError" ? "sem resposta" : "falha de rede", "Confira o endereço, o DNS e o TLS do painel.");
     }
+    // A página de instalação dá o super administrador a quem chegar primeiro (seguranca.md).
+    try {
+      const install = await fetchText(`${chatwoot}/installation/onboarding`, { fetchImpl });
+      const closed = install.status === 404 || install.status === 403;
+      const done = install.status >= 300 && install.status < 400;
+      add(
+        "instalacao_fechada",
+        closed || done,
+        closed ? "fechada no proxy" : done ? "o painel já tem super administrador" : `status ${install.status}: a página que cria o super administrador está aberta`,
+        "Feche /installation no proxy (Caddyfile do kit) e termine a criação do super administrador. Se o seu IP está liberado no proxy, a página aparece só para você.",
+      );
+    } catch (error) {
+      add("instalacao_fechada", false, error?.name === "TimeoutError" ? "sem resposta" : "falha de rede", "Confira o endereço do painel.");
+    }
     try {
       const login = await fetchText(`${chatwoot}/app/login`, { fetchImpl });
       if (login.status >= 300 && login.status < 400) {
@@ -136,6 +151,23 @@ export async function verify({ env, expected, fetchImpl = fetch }) {
       const health = await fetchText(botUrl.replace(/\/chatwoot$/, "/health"), { fetchImpl });
       const body = jsonOf(health.text);
       add("robo_no_ar", health.status === 200 && body?.ok === true, `status ${health.status}${body?.version ? `, versão ${body.version}` : ""}`, "Confira o contêiner do robô e a rota /robo no proxy.");
+      // Imagem, áudio e vídeo (D28): sem o ffmpeg do Dockerfile do kit, áudio e vídeo vão para a equipe.
+      if (body?.ok === true && body.media && body.media.ffmpeg !== null) {
+        // Quem transcreve: a chave do contêiner; sem ela, só o projeto que declara ai.transcription "project".
+        const heard = !("transcriber" in body.media)
+          ? ""
+          : body.media.transcriber
+            ? `; transcreve com ${body.media.transcriber}`
+            : "; sem chave de transcrição no robô, o áudio depende da rota transcribe do projeto";
+        // O leitor de PDF (poppler) chegou depois (D29): um robô antigo não manda o campo, e isso não reprova.
+        const pdf = body.media.pdf === false ? "; sem o leitor de PDF" : body.media.pdf === true ? "; lê PDF" : "";
+        add(
+          "robo_midia",
+          body.media.ffmpeg === true && body.media.pdf !== false,
+          (body.media.ffmpeg ? "o ffmpeg está no contêiner do robô" : "sem o ffmpeg no contêiner do robô") + pdf + heard,
+          "Implante o robô com o Dockerfile do kit, que instala o ffmpeg e o poppler-utils; sem eles, áudio, vídeo e PDF vão para a equipe.",
+        );
+      }
     } catch {
       add("robo_no_ar", false, "sem resposta", "Confira o contêiner do robô e a rota /robo no proxy.");
     }
@@ -160,7 +192,21 @@ export async function verify({ env, expected, fetchImpl = fetch }) {
       if (env.OPENWA_API_KEY) {
         const plugins = await fetchText(`${openwa}/api/plugins`, { headers: { "X-API-Key": env.OPENWA_API_KEY }, fetchImpl });
         const adapter = (jsonOf(plugins.text) ?? []).find?.((plugin) => plugin.id === "chatwoot-adapter");
-        add("adaptador_openwa", Boolean(adapter?.enabled), adapter ? `versão ${adapter.version ?? "?"}, ${adapter.enabled ? "ligado" : "desligado"}` : "não instalado", "A primeira conexão não oficial instala o adaptador; ou instale pelo painel do OpenWA.");
+        const on = adapterEnabled(adapter);
+        const state = adapter?.status ?? (adapter?.enabled ? "enabled" : "desligado");
+        add("adaptador_openwa", on, adapter ? `versão ${adapter.version ?? "?"}, ${state}` : "não instalado", "A primeira conexão não oficial instala e liga o adaptador; com status error, conecte o número de novo ou confira a configuração base do plugin.");
+        if (on) {
+          // Ligado não basta: em erro de configuração, o número conecta e nenhuma mensagem chega ao painel.
+          const health = await fetchText(`${openwa}/api/plugins/chatwoot-adapter/health`, { headers: { "X-API-Key": env.OPENWA_API_KEY }, fetchImpl });
+          // A mesma régua da conferência do número: mensagem perdida no passado aparece, mas não reprova.
+          const problem = classifyAdapterHealth(jsonOf(health.text));
+          add(
+            "adaptador_saudavel",
+            problem?.level !== "fora",
+            problem ? (problem.level === "fora" ? `não saudável: ${problem.detail}` : `saudável para as mensagens novas; ${problem.detail} ${problem.fix}`) : "saudável",
+            problem?.fix ?? "",
+          );
+        }
       }
     } catch {
       add("openwa_no_ar", false, "sem resposta", "Confira o contêiner do OpenWA e o host wa no proxy.");

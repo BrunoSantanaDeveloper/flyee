@@ -239,11 +239,15 @@ async function capturePage(url, outDir, engine) {
   return { capture, captureFile };
 }
 
-/** The photos of a capture, relative to the project root: the plain ones and the ones with no letters. */
+/**
+ * The photos of a capture, relative to the project root: the plain ones and the ones with no letters.
+ * A long page has its no-letters photo in several sheets (Video engine 1.3.0 and newer): all of them, in order.
+ */
 function photosOf(capture, captureFile) {
   const shots = capture.files ?? {};
   const paths = (names) => names.filter(Boolean).map((file) => toPosix(ROOT, join(dirname(captureFile), file)));
-  return { photos: paths([shots.desktop_full, shots.mobile_full]), no_letters: paths([shots.no_letters_desktop, shots.no_letters_mobile]) };
+  const sheets = (parts, first) => (Array.isArray(parts) && parts.length ? parts : [first]);
+  return { photos: paths([shots.desktop_full, shots.mobile_full]), no_letters: paths([...sheets(shots.no_letters_desktop_parts, shots.no_letters_desktop), ...sheets(shots.no_letters_mobile_parts, shots.no_letters_mobile)]) };
 }
 
 /** The page as it is, before anyone changes it, kept apart so the audit can compare later. */

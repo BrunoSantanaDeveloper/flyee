@@ -1,6 +1,6 @@
 {
   "format_version": 1,
-  "checked_on": "2026-11-08",
+  "checked_on": "2026-11-09",
   "types": [
     {
       "id": "upsell",
@@ -217,10 +217,70 @@
         "Os exemplos de código e as telas batem com o produto e com a documentação",
         "As regras da promoção são as mesmas na faixa, na seção, na janela, nos planos e nas perguntas frequentes",
         "Os depoimentos falam deste produto e vêm de clientes diferentes",
-        "O que depende do plano está escrito perto do recurso"
+        "O que depende do plano está escrito perto do recurso",
+        "As logos da página são os arquivos oficiais de clientes que autorizaram e de ferramentas com que o produto se integra hoje, inteiras, na mesma altura e com uma legenda do que são; poucas logos ficam numa fileira parada",
+        "Os dados de exemplo contam uma história só: o mesmo sistema, a mesma pessoa e o mesmo número são iguais em todas as figuras",
+        "Cada recurso tem o seu ícone, numa família só, igual no menu, nos cartões e nos diagramas"
       ],
-      "checks": ["title_promises", "figures_seen", "cards_short", "cards_no_holes", "cta_first_screen", "cta_consistent", "h1_present", "numbers_not_zero", "claims_have_origin", "placeholder_data", "trial_terms", "promo_terms_shown", "discount_math", "reference_price_true", "countdown_real", "popup_dismissable", "popup_on_arrival", "sticky_cta_long_page", "cancel_terms_shown", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "video_autoplay_ok", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
-      "models": ["juridiq-pagina-de-vendas", "jurichat-pagina-de-vendas"]
+      "checks": ["title_promises", "figures_seen", "cards_short", "cards_no_holes", "cta_first_screen", "cta_consistent", "h1_present", "numbers_not_zero", "claims_have_origin", "placeholder_data", "trial_terms", "promo_terms_shown", "discount_math", "cash_price_shown", "reference_price_true", "countdown_real", "popup_dismissable", "popup_on_arrival", "sticky_cta_long_page", "cancel_terms_shown", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "video_autoplay_ok", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
+      "models": ["juridiq-pagina-de-vendas", "jurichat-pagina-de-vendas", "databricks-pagina-de-produto"]
+    },
+    {
+      "id": "curso",
+      "label": "Página de vendas de curso",
+      "asks": ["página de vendas do curso", "página da mentoria", "página da formação", "página do lançamento", "carta de vendas", "página de inscrição", "inscrições abertas", "página do infoproduto"],
+      "where": "o endereço para onde os anúncios, a lista de e-mail e o lançamento mandam quem vai comprar",
+      "file": "tipos/curso.md",
+      "demo": true,
+      "facts": ["product.name", "product.what", "audience", "cta_text", "headline.chosen", "offer.price", "offer.installments", "offer.guarantee_days", "visual.direction", "demo.kind", "figures"],
+      "sections": [
+        "A faixa de cima, só com uma promoção de verdade: o que ela dá, até quando vale e o botão que leva à oferta",
+        "O topo: um título que promete o que a pessoa passa a conseguir fazer e se diz em voz alta, a frase com o que é o produto e para quem, o botão que leva à caixa da oferta, a linha de condições e a figura do topo, o vídeo de quem ensina ou um objeto que se reconhece sem ler",
+        "Quem ensina e por que ouvir: os números de prova com origem e as pessoas com nome e foto, cada número com uma figura quando der",
+        "A oportunidade ou a dor, com a fonte à vista: o número de mercado com a matéria ou a pesquisa de onde ele vem, e a frase que liga isso à pessoa",
+        "O que é o produto: o método em etapas e a janela da área de membros, grande, como ela é hoje",
+        "O que tem dentro, parte por parte do método: aulas, mentorias, ferramentas, materiais e certificados, cada parte com o resultado no título, até duas linhas e a figura",
+        "A prova do que dá para fazer: modelos, exemplos e casos com origem, e depoimentos com nome, foto e o que a pessoa fez",
+        "Os bônus, cada um com o que é, quanto vale e até quando vale",
+        "Para quem é e para quem não é, em duas listas curtas e honestas",
+        "Tudo o que você recebe: o valor só no item vendido sozinho por esse preço hoje, e o total igual à soma; sem preço próprio, a lista vem sem valores",
+        "A caixa da oferta: o preço riscado só se for o praticado, o preço à vista em destaque, as parcelas com os juros e o total, nenhuma média por mês num pagamento único, a garantia logo abaixo do botão e o que acontece depois do clique",
+        "A objeção do preço na frase que a pessoa pensa, respondida com conta e sem prometer ganho",
+        "O caminho humano para uma compra cara: o WhatsApp ou uma conversa marcada",
+        "As perguntas frequentes por perfil de quem compra, mais as de compra: tempo de acesso, limites, pagamento, garantia e como pedir o reembolso, certificado",
+        "A caixa da oferta de novo, só numa página longa; numa curta, o último chamado leva de volta à caixa",
+        "O último chamado e o rodapé com quem vende: empresa, CNPJ, endereço, contato, privacidade, termos e o caminho do reembolso"
+      ],
+      "mechanics": [
+        "Todos os botões levam à caixa da oferta, na própria página, e só a caixa leva à inscrição",
+        "Uma barra fixa com a promoção e o botão, no topo ou embaixo no celular",
+        "Em página longa, uma marca fixa mostra em que parte do método a leitura está",
+        "Teste A/B com uma mudança por vez, cada versão no seu endereço, e o resultado lido na medição com a amostra mínima",
+        "Nenhuma janela na chegada: a urgência fica na faixa e na caixa da oferta",
+        "O vídeo do topo começa sem som, com legenda e capa, e a barra dele mostra o tempo de verdade",
+        "Os blocos que aparecem ao rolar já estão no HTML, e nada se mexe sozinho com o pedido de menos movimento"
+      ],
+      "events": ["page_view", "section_view", "cta_click", "video_play", "offer_view", "checkout_start", "whatsapp_click", "meeting_request"],
+      "legal": [
+        "O preço à vista em destaque e, nas parcelas, o número, o valor, os juros e o total (Lei 10.962/2004, art. 2, III; Decreto 5.903/2006, art. 3 e art. 9, IV)",
+        "Quem vende, com CNPJ e endereço, as condições da oferta e as restrições dela, incluindo até quando vale (Decreto 7.962/2013, art. 2)",
+        "Preço riscado, desconto, contador e vagas só quando são verdade (CDC, art. 37, §1)",
+        "Sete dias para desistir da compra pela internet, com o dinheiro de volta (CDC, art. 49)",
+        "O que a página promete sobre preço, prazo e condições entra no contrato (CDC, art. 30)"
+      ],
+      "manual": [
+        "O título passa nos testes de references/principios.md, seção 17, e nenhum ganho em dinheiro aparece sem origem",
+        "O preço à vista, as parcelas e o total são os mesmos nas duas caixas da oferta, nas perguntas frequentes e na inscrição",
+        "A lista do que se recebe soma o total escrito, e cada valor é um preço praticado hoje, nunca uma estimativa",
+        "Os bônus dizem o que são, quanto valem e até quando valem",
+        "Os números de alunos e de resultados têm origem, e os depoimentos falam deste curso",
+        "Sem as letras, cada figura continua sendo um objeto, e a seção de quem ensina não virou só caixas",
+        "A janela da área de membros mostra o que existe hoje, e os dados de exemplo levam a etiqueta",
+        "A garantia, o caminho do reembolso e o tempo de acesso são os mesmos em toda a página",
+        "Todos os botões levam à caixa da oferta, e o botão da caixa leva à inscrição certa"
+      ],
+      "checks": ["title_promises", "figures_seen", "cards_short", "cards_no_holes", "cta_first_screen", "cta_consistent", "h1_present", "numbers_not_zero", "claims_have_origin", "placeholder_data", "price_shown", "cash_price_shown", "discount_math", "stack_sum", "reference_price_true", "guarantee_near_cta", "promo_terms_shown", "countdown_real", "popup_dismissable", "popup_on_arrival", "sticky_cta_long_page", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "video_autoplay_ok", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
+      "models": ["subido-ai-pagina-de-vendas"]
     },
     {
       "id": "planos",
@@ -264,7 +324,7 @@
         "O chamado de cada plano leva ao cadastro com o plano escolhido",
         "A tabela comparativa fica legível no celular"
       ],
-      "checks": ["cards_no_holes", "h1_present", "prices_first_screen", "plan_highlighted", "discount_math", "reference_price_true", "renewal_shown", "trial_terms", "cancel_terms_shown", "promo_terms_shown", "countdown_real", "popup_dismissable", "popup_on_arrival", "numbers_not_zero", "claims_have_origin", "placeholder_data", "supplier_identified", "legal_lines", "ai_defaults", "off_brand", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
+      "checks": ["cards_no_holes", "h1_present", "prices_first_screen", "plan_highlighted", "discount_math", "cash_price_shown", "reference_price_true", "renewal_shown", "trial_terms", "cancel_terms_shown", "promo_terms_shown", "countdown_real", "popup_dismissable", "popup_on_arrival", "numbers_not_zero", "claims_have_origin", "placeholder_data", "supplier_identified", "legal_lines", "ai_defaults", "off_brand", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
       "models": ["juridiq-planos", "jurichat-pagina-de-vendas"]
     },
     {

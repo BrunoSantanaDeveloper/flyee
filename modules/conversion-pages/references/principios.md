@@ -74,6 +74,8 @@ Um número contado com animação já está no HTML com o valor final. Sem isso,
 
 Número de uso, escassez, ano de fundação, nome de cliente e depoimento vêm do projeto ou do integrante, com a origem registrada em `pagina.json` (`claims`). Sem origem, saem da página. A IA preenche o vazio com o que parece provável, e o que a página afirma obriga quem vende (veja `lei.md`).
 
+Vale também para a frase sem número. "Nenhuma ferramenta nova para aprender" e "funciona com tudo" são afirmações, e o próprio produto costuma desmenti-las: ele mesmo é uma ferramenta nova. Escreva o que pode ser conferido ("usa o WhatsApp, o Gmail e o Slack que a equipe já usa").
+
 ## 15. A página tem a cara deste produto
 
 O plano traz a direção visual em uma frase, que diga o que torna a página deste produto, e as cores e as letras da marca. Quando o integrante escolheu um modelo, o efeito visual dele faz parte da direção. Os padrões que a IA repete sem ninguém pedir estão em `vicios.md`: a lista evita acrescentar por reflexo, e nunca tira o que o integrante escolheu.

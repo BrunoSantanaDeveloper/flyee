@@ -36,6 +36,10 @@ function bridgeFor(skill, sourcePath) {
 // ("Where things stand") last. The rules alone must fit in the default.
 const CODEX_DEFAULT_DOC_BYTES = 32 * 1024;
 const STATE_HEADING = "## Where things stand";
+// Every Claude session loads CLAUDE.md whole, so the build log lives in
+// docs/HISTORICO.md and the state keeps to a few lines.
+const CLAUDE_MAX_CHARS = 40_000;
+const STATE_MAX_CHARS = 3_000;
 
 function readSource(relativePath) {
   const path = join(repoRoot, relativePath);
@@ -159,6 +163,24 @@ for (const [skill, bridge] of expected) {
 const removed = skillNames(targetRoot).filter((skill) => !expected.has(skill));
 if (!checkOnly) removed.forEach(removeGeneratedSkill);
 
+const claudeText = readSource("CLAUDE.md");
+const stateChars = splitState(claudeText).state.length;
+if (stateChars > STATE_MAX_CHARS) {
+  console.error(
+    `CLAUDE.md: "Where things stand" has ${stateChars} characters, more than ${STATE_MAX_CHARS}. ` +
+      `Move what a round delivered to the end of docs/HISTORICO.md and keep its state in the plan's table.`,
+  );
+  process.exit(1);
+}
+
+if (claudeText.length > CLAUDE_MAX_CHARS) {
+  console.error(
+    `CLAUDE.md has ${claudeText.length} characters, more than ${CLAUDE_MAX_CHARS}. Every session loads it whole: ` +
+      `move history to docs/HISTORICO.md and keep the state to a few lines.`,
+  );
+  process.exit(1);
+}
+
 if (rulesBytes > CODEX_DEFAULT_DOC_BYTES) {
   console.error(
     `AGENTS.md: the rules (CLAUDE.md without "Where things stand", plus the hand-written .claude/rules) take ` +
@@ -177,6 +199,6 @@ if (checkOnly && (stale.length || removed.length)) {
 
 console.log(
   checkOnly
-    ? `Codex harness is synchronized (${sourceSkills.length} skills).`
-    : `Codex harness synchronized (${sourceSkills.length} skills).`,
+    ? `Codex harness is synchronized (${sourceSkills.length} skills; rules ${rulesBytes} bytes, state ${stateChars} characters).`
+    : `Codex harness synchronized (${sourceSkills.length} skills; rules ${rulesBytes} bytes, state ${stateChars} characters).`,
 );

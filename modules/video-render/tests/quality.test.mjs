@@ -306,6 +306,94 @@ test("captureSite reads the cards and the figures, and photographs the page with
   }
 });
 
+const REVEAL_PAGE = fileURLToPath(new URL("./fixtures/revelar/index.html", import.meta.url));
+
+/** How many pixels of the sheets match a color: the red blocks of the reveal page, once revealed. */
+async function countColor(files, match) {
+  const instance = await Browser.launch({ path: browser?.path, width: 800, height: 600 });
+  try {
+    const page = await instance.newPage({ width: 800, height: 600 });
+    await page.goto("about:blank");
+    let total = 0;
+    for (const file of files) {
+      const src = `data:image/jpeg;base64,${readFileSync(file).toString("base64")}`;
+      total += await page.evaluate(`new Promise((done, fail) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const paint = canvas.getContext("2d");
+          paint.drawImage(img, 0, 0);
+          const data = paint.getImageData(0, 0, img.width, img.height).data;
+          const m = ${JSON.stringify(match)};
+          let hits = 0;
+          for (let i = 0; i < data.length; i += 4) if (data[i] >= m.r[0] && data[i] <= m.r[1] && data[i + 1] >= m.g[0] && data[i + 1] <= m.g[1] && data[i + 2] >= m.b[0] && data[i + 2] <= m.b[1]) hits++;
+          done(hits);
+        };
+        img.onerror = () => fail(new Error("the image did not open"));
+        img.src = ${JSON.stringify(src)};
+      })`, { timeoutMs: 30000 });
+    }
+    return total;
+  } finally {
+    await instance.close();
+  }
+}
+
+test("the page with no letters shows the blocks that appear on scrolling, and the capture says what still moves with less motion", { skip: noBrowser }, async () => {
+  const out = fresh("revelar");
+  const capture = await captureSite({ url: REVEAL_PAGE, outDir: out, scrollSeconds: 0, assets: false, noLetters: true });
+
+  // Five blocks wait for the scroll; the capture counts them.
+  assert.ok(capture.viewports.desktop.hidden_until_scroll >= 5, `hidden ${capture.viewports.desktop.hidden_until_scroll}`);
+
+  // Each band is photographed on the screen, after its blocks appear: the red blocks are in the sheets.
+  const parts = capture.files.no_letters_desktop_parts;
+  assert.ok(Array.isArray(parts) && parts.length >= 1, JSON.stringify(capture.files));
+  assert.equal(parts[0], capture.files.no_letters_desktop);
+  const red = { r: [170, 255], g: [0, 90], b: [0, 90] };
+  // A block is 600 x 300 px, drawn at 540/1440 of its size in the sheet: about 25,000 pixels.
+  const seen = await countColor(parts.map((part) => join(out, part)), red);
+  assert.ok(seen >= 4 * 25000 * 0.6, `red pixels ${seen}`);
+  const phone = await countColor(capture.files.no_letters_mobile_parts.map((part) => join(out, part)), red);
+  assert.ok(phone > 0, `red pixels on the phone ${phone}`);
+
+  // With less motion asked, the loop that ignores the request is still running; the one that respects it is not.
+  assert.equal(capture.anatomy.motion.reduced_still_running, 1, JSON.stringify(capture.anatomy.motion));
+  assert.match(capture.anatomy.motion.reduced_still_names[0], /gira/);
+});
+
+test("a cookie window that opens seconds after the load is closed before the photos", { skip: noBrowser }, async () => {
+  const out = fresh("cookies-tarde");
+  const page = fileURLToPath(new URL("./fixtures/cookies-tarde/index.html", import.meta.url));
+  const capture = await captureSite({ url: page, outDir: out, scrollSeconds: 0, assets: false, noLetters: true });
+  assert.equal(capture.cookie_banner.desktop.dismissed, true, JSON.stringify(capture.cookie_banner));
+  assert.equal(capture.cookie_banner.desktop.late, true);
+  assert.equal(capture.cookie_banner.mobile.dismissed, true, JSON.stringify(capture.cookie_banner));
+  // The green layer of the window is not in the photo with no letters.
+  const green = await countColor(capture.files.no_letters_desktop_parts.map((part) => join(out, part)), { r: [0, 60], g: [120, 200], b: [0, 60] });
+  assert.ok(green < 2000, `green pixels ${green}`);
+});
+
+test("the photo with no letters hides the windows and the chat panel over the page, and keeps its thin bars", { skip: noBrowser }, async () => {
+  const out = fresh("janelas");
+  const page = fileURLToPath(new URL("./fixtures/janelas/index.html", import.meta.url));
+  const capture = await captureSite({ url: page, outDir: out, scrollSeconds: 0, assets: false, noLetters: true });
+  const sheets = capture.files.no_letters_desktop_parts.map((part) => join(out, part));
+  const purple = await countColor(sheets, { r: [90, 150], g: [0, 40], b: [130, 190] });
+  const orange = await countColor(sheets, { r: [230, 255], g: [110, 170], b: [0, 40] });
+  const teal = await countColor(sheets, { r: [0, 40], g: [100, 150], b: [100, 150] });
+  const blue = await countColor(sheets, { r: [0, 40], g: [60, 120], b: [220, 255] });
+  assert.ok(purple < 2000, `purple pixels ${purple}`);
+  assert.ok(orange < 2000, `orange pixels ${orange}`);
+  assert.ok(blue < 2000, `blue pixels of the widget in a shadow tree ${blue}`);
+  const magenta = await countColor(sheets, { r: [170, 230], g: [0, 40], b: [90, 150] });
+  assert.ok(magenta < 2000, `magenta pixels of the widget hanging from <html> ${magenta}`);
+  assert.ok(teal > 5000, `teal pixels ${teal}`);
+  assert.ok(capture.warnings.some((w) => /foram escondidas/.test(w)), JSON.stringify(capture.warnings));
+});
+
 test("a capture does not photograph the page with no letters unless asked", { skip: noBrowser }, async () => {
   const capture = await captureSite({ url: CARDS_PAGE, outDir: fresh("cartoes-sem-pedido"), scrollSeconds: 0, assets: false });
   assert.equal(capture.files.no_letters_desktop, null);

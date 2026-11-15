@@ -1,0 +1,61 @@
+# Kit whatsapp-support: servidor com mais de um sistema. Cada sistema sobe a sua pilha com este arquivo por
+# cima de compose.yml (COMPOSE_FILE no .env, veja compartilhado.env.example), e um proxy só, o da borda
+# (pasta borda/), atende as portas 80 e 443 para todos. Não use o perfil proxy de compose.yml aqui.
+#
+# O que fica separado por pilha: o nome do projeto (e com ele contêineres, volumes e a rede interna), o
+# banco, o Redis, os anexos, as sessões do WhatsApp e os segredos. O proxy da borda alcança só três serviços
+# de cada pilha, pela rede borda-<pilha>, que nenhuma outra pilha usa.
+#
+# Os tetos de memória e CPU são regra de bolso para duas pilhas numa VPS de 16 GB, não medição: somados,
+# ficam em 14 GB, e o resto é do sistema e do proxy. Ajuste no .env de cada pilha. O que mais pesa é o
+# OpenWA: de 300 a 500 MB por número conectado com o motor whatsapp-web.js.
+
+name: atendimento-${PILHA:?Defina PILHA no .env da pilha, por exemplo sistema-a}
+
+services:
+  chatwoot-rails:
+    mem_limit: ${LIMITE_CHATWOOT_RAILS:-1200m}
+    cpus: ${CPU_CHATWOOT_RAILS:-1.0}
+    networks:
+      default: {}
+      borda:
+        aliases:
+          - ${PILHA:?Defina PILHA no .env da pilha}-chatwoot
+
+  chatwoot-sidekiq:
+    mem_limit: ${LIMITE_CHATWOOT_SIDEKIQ:-1000m}
+    cpus: ${CPU_CHATWOOT_SIDEKIQ:-1.0}
+
+  postgres:
+    mem_limit: ${LIMITE_POSTGRES:-768m}
+    cpus: ${CPU_POSTGRES:-1.0}
+
+  redis:
+    mem_limit: ${LIMITE_REDIS:-256m}
+    cpus: ${CPU_REDIS:-0.5}
+
+  robo:
+    # O ffmpeg do robô trabalha aqui (imagem, áudio e vídeo), até duas mídias de cada vez.
+    mem_limit: ${LIMITE_ROBO:-768m}
+    cpus: ${CPU_ROBO:-1.0}
+    networks:
+      default: {}
+      borda:
+        aliases:
+          - ${PILHA:?Defina PILHA no .env da pilha}-robo
+
+  openwa:
+    mem_limit: ${LIMITE_OPENWA:-3g}
+    cpus: ${CPU_OPENWA:-1.5}
+    networks:
+      default: {}
+      borda:
+        aliases:
+          - ${PILHA:?Defina PILHA no .env da pilha}-openwa
+
+networks:
+  default: {}
+  # Criada uma vez por pilha, antes de subir, e ligada ao proxy da borda (borda/compose.yml).
+  borda:
+    name: borda-${PILHA:?Defina PILHA no .env da pilha}
+    external: true

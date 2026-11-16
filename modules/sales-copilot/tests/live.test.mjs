@@ -103,6 +103,29 @@ async function gone(pid) {
   return false;
 }
 
+/**
+ * Ends the live process if it is still there, closes the fake service and removes the project. On Windows a
+ * process that has not exited yet holds its folder (EBUSY); the cleanup waits for it and never hides the
+ * test's own failure behind that error.
+ */
+async function cleanup(root, pids, fake) {
+  for (const pid of [pids].flat().filter(Boolean)) {
+    if (await gone(pid)) continue;
+    try {
+      process.kill(pid);
+    } catch {
+      // already gone
+    }
+    await gone(pid);
+  }
+  await fake.close();
+  try {
+    rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 });
+  } catch (error) {
+    if (error.code !== "EBUSY" && error.code !== "EPERM") throw error;
+  }
+}
+
 test("without the key the live mode says how to get one, and nothing starts", async () => {
   const fake = await fakeOpenRouter();
   const { root, run } = project(fake, "");
@@ -113,8 +136,7 @@ test("without the key the live mode says how to get one, and nothing starts", as
     assert.match(start.error.openrouter_setup.command, /key set OPENROUTER_API_KEY --browser --json$/);
     assert.equal(existsSync(join(root, "copiloto-de-vendas")), false);
   } finally {
-    await fake.close();
-    rmSync(root, { recursive: true, force: true });
+    await cleanup(root, null, fake);
   }
 });
 
@@ -207,9 +229,7 @@ test("a live call: guards, turns, audio, the wrong speaker, the ceiling and the 
     assert.equal(saved.usage.max_usd, 0.05);
     assert.doesNotMatch(JSON.stringify(saved), /test-key/, "the key is never written");
   } finally {
-    if (pid) await gone(pid);
-    await fake.close();
-    rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    await cleanup(root, pid, fake);
   }
 });
 
@@ -239,9 +259,7 @@ test("a key the service refuses stops the questions, keeps the turns, and an emp
     assert.equal(existsSync(join(root, "copiloto-de-vendas", "calls", empty.id)), false);
     assert.ok(await gone(pids[1]));
   } finally {
-    for (const pid of pids) await gone(pid);
-    await fake.close();
-    rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    await cleanup(root, pids, fake);
   }
 });
 
@@ -281,9 +299,7 @@ test("with a Gemini key the audio is heard by Gemini, outside the OpenRouter cei
     assert.doesNotMatch(JSON.stringify(saved), /g-key|test-key/, "no key is ever written");
     assert.ok(await gone(pid));
   } finally {
-    if (pid) await gone(pid);
-    await fake.close();
-    rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    await cleanup(root, pid, fake);
   }
 });
 
@@ -303,8 +319,6 @@ test("a Gemini key the service refuses hands the hearing over to OpenRouter", as
     await post(start.url, "end", {});
     assert.ok(await gone(pid));
   } finally {
-    if (pid) await gone(pid);
-    await fake.close();
-    rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    await cleanup(root, pid, fake);
   }
 });

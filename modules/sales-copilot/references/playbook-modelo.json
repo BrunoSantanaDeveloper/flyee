@@ -1,0 +1,287 @@
+{
+  "version": 1,
+  "note": "O playbook do negócio: o que se vende, as jogadas e as frases de cada uma, e o roteiro da call. `when` e `not_when` são lidos por quem escolhe a jogada; `title`, `explain` e `lines` são o que o vendedor lê. As frases abaixo servem a qualquer negócio; troque pelas suas, na sua voz. Um número numa frase só entra se estiver em `business`.",
+  "business": {
+    "offer": { "value": null, "origin": null, "date": null },
+    "price": { "value": null, "origin": null, "date": null },
+    "next_step": { "value": null, "origin": null, "date": null },
+    "alternatives": { "value": null, "origin": null, "date": null }
+  },
+  "moves": [
+    {
+      "id": "ask_how_it_works_today",
+      "title": "Pergunte como funciona hoje",
+      "explain": "Começo da conversa, ou você ainda não sabe como o cliente trabalha. Faça uma pergunta aberta e deixe ele contar.",
+      "when": "Early in the call, or the client's present way of working and their problems are still unknown. The seller should ask an open question so the client describes how things are done today.",
+      "not_when": "The problem is already clearly described, or the client has just raised a doubt that needs an answer first.",
+      "lines": [
+        "Antes de eu te mostrar qualquer coisa, me conta como isso funciona hoje aí, do começo ao fim.",
+        "O que te fez marcar esta conversa agora, e não daqui a alguns meses?",
+        "Qual parte desse trabalho mais te incomoda hoje?"
+      ]
+    },
+    {
+      "id": "size_the_impact",
+      "title": "Meça o tamanho do problema",
+      "explain": "O cliente disse o que incomoda, mas não disse quanto custa. Peça um número ou uma consequência, nas palavras dele.",
+      "when": "The client has named a problem, but what it costs in hours, money, sales or clients has not been said. The seller should ask for a quantity or a consequence.",
+      "not_when": "No problem has been named yet, or the client has already said what it costs.",
+      "lines": [
+        "E quanto isso te custa? Pode ser em horas por semana ou em vendas que não acontecem.",
+        "Com que frequência isso acontece num mês comum?",
+        "Quando isso acontece, o que deixa de ser feito?"
+      ]
+    },
+    {
+      "id": "ask_the_value",
+      "title": "Faça o cliente dizer o ganho",
+      "explain": "O problema e o custo estão claros. Quem fala do ganho é o cliente: pergunte o que mudaria com isso resolvido.",
+      "when": "The problem and its cost are clear, but the client has not said in their own words what solving it would change or be worth.",
+      "not_when": "The client has already described the gain, or no problem has been named yet.",
+      "lines": [
+        "Se isso estivesse resolvido, o que mudaria no seu dia a dia?",
+        "Com esse tempo de volta, onde você colocaria a energia?",
+        "O que isso resolvido te deixaria fazer que hoje não dá?"
+      ]
+    },
+    {
+      "id": "ask_about_money",
+      "title": "Pergunte sobre o investimento",
+      "explain": "Existe uma necessidade real e nada se sabe do orçamento. Descubra se há dinheiro reservado ou quanto ele gasta hoje com isso.",
+      "when": "The client has a real need, nothing is known about their budget or what they pay today, and no doubt is open.",
+      "not_when": "Money has already been talked about, the client has just objected to the price, or no problem has been named yet.",
+      "lines": [
+        "Hoje você já investe em alguma coisa para resolver isso? Quanto, mais ou menos?",
+        "Você já separou um valor para isso, ou a gente monta essa conta junto?",
+        "Para caber no seu momento, que faixa de investimento fica confortável?"
+      ]
+    },
+    {
+      "id": "confirm_who_decides",
+      "title": "Confirme quem decide",
+      "explain": "O cliente está interessado, mas não está claro quem aprova a compra. Pergunte antes de falar de preço.",
+      "when": "The client is interested, but who decides the purchase or how it gets approved is unknown.",
+      "not_when": "The client has already said who decides, or the client is still describing the problem.",
+      "lines": [
+        "Além de você, mais alguém participa dessa decisão?",
+        "Como uma decisão dessas costuma ser tomada aí?",
+        "Se fizer sentido para você, qual é o caminho até a aprovação?"
+      ]
+    },
+    {
+      "id": "ask_the_timing",
+      "title": "Pergunte o prazo",
+      "explain": "Você não sabe para quando o cliente quer isso funcionando. O prazo diz o tamanho da urgência.",
+      "when": "The need is clear, but when the client wants to decide or have this working has not been said.",
+      "not_when": "The client has already given a timing, or the client has just raised a doubt.",
+      "lines": [
+        "Para quando você gostaria de ter isso funcionando?",
+        "Existe alguma data que torna isso mais urgente?",
+        "Se a gente começasse, qual seria o melhor momento para você?"
+      ]
+    },
+    {
+      "id": "link_offer_to_problem",
+      "title": "Mostre a solução ligada ao que ele disse",
+      "explain": "O problema, o custo e o ganho já apareceram. Apresente só a parte da oferta que resolve o que o cliente contou, e confirme se faz sentido.",
+      "when": "The problem, its cost and the gain have been said by the client, and the seller has not yet shown how the offer solves them.",
+      "not_when": "The seller still does not understand the client's situation, or a doubt is open and unanswered.",
+      "lines": [
+        "Posso te mostrar como a gente resolveria exatamente isso que você contou?",
+        "Vou ligar isso ao que você disse no começo, e você me diz se faz sentido.",
+        "Dessa parte que te mostrei, o que mais resolve o seu caso?"
+      ]
+    },
+    {
+      "id": "state_the_price",
+      "title": "Diga o preço com clareza",
+      "explain": "O cliente perguntou o preço, ou a conversa chegou nele. Diga o valor sem rodeio, o que está incluído, e pare para ouvir.",
+      "when": "The client has asked the price, or the value of solving the problem is clear and the price has not been stated.",
+      "not_when": "The client has not yet named a problem, or the price has already been stated and a doubt about it is open.",
+      "lines": [
+        "Vou ser direto sobre o investimento e já te digo o que está incluído.",
+        "Antes do valor, deixa eu resumir o que entra, para o número fazer sentido.",
+        "O investimento é esse. Como isso bate com o que você esperava?"
+      ]
+    },
+    {
+      "id": "answer_price_objection",
+      "title": "Responda ao preço com o custo do problema",
+      "explain": "O cliente achou caro. Volte ao que ele mesmo disse que o problema custa, sem dar desconto de saída.",
+      "when": "The client has objected to the price or to the value for money, and the doubt is still open.",
+      "not_when": "The client's doubt is about timing, about who decides or about trust, or no doubt is open.",
+      "lines": [
+        "Faz sentido olhar com cuidado. Posso comparar com o que você disse que isso te custa hoje?",
+        "O que você precisaria ver para esse valor ficar tranquilo?",
+        "Caro comparado com o quê? Quero entender a sua régua."
+      ]
+    },
+    {
+      "id": "answer_timing_objection",
+      "title": "Entenda o que muda com o tempo",
+      "explain": "O cliente disse que agora não é o momento. Descubra o que precisa acontecer antes, e o que custa esperar.",
+      "when": "The client has said that now is a bad time or asked to come back later, and the doubt is still open.",
+      "not_when": "The client's doubt is about price, about who decides or about trust.",
+      "lines": [
+        "Entendo. O que precisa acontecer para este virar o momento certo?",
+        "Se a gente deixar para depois, o que continua acontecendo até lá?",
+        "O que te prende agora: o tempo para começar ou a decisão em si?"
+      ]
+    },
+    {
+      "id": "bring_in_the_decider",
+      "title": "Traga quem decide para a conversa",
+      "explain": "O cliente não decide sozinho. Em vez de mandar material, combine uma conversa com quem aprova.",
+      "when": "The client has said that someone else must approve, and that person is not on the call.",
+      "not_when": "The client decides alone, or the doubt is about price, timing or trust.",
+      "lines": [
+        "Faz sentido a gente fazer a próxima conversa já com essa pessoa?",
+        "O que essa pessoa costuma querer ver antes de aprovar?",
+        "Posso preparar um resumo para você levar, e a gente marca com ela na sequência?"
+      ]
+    },
+    {
+      "id": "answer_trust_objection",
+      "title": "Reduza o risco de começar",
+      "explain": "O cliente duvida que funcione para ele ou teme o trabalho de mudar. Pergunte qual é o medo e mostre como o começo é pequeno.",
+      "when": "The client doubts that the offer will work for them, doubts the seller, or fears the risk or the work of changing.",
+      "not_when": "The doubt is about price, timing or who decides, or the client is simply asking how something works.",
+      "lines": [
+        "Qual é a sua maior preocupação se a gente começar?",
+        "O que você precisaria ver funcionando para ficar seguro?",
+        "Posso te mostrar como são as primeiras semanas, para você ver o tamanho do passo?"
+      ]
+    },
+    {
+      "id": "compare_with_alternative",
+      "title": "Entenda a comparação",
+      "explain": "Apareceu outro fornecedor ou outro jeito de resolver. Pergunte o que o cliente gosta lá e o que ainda falta.",
+      "when": "The client has mentioned another supplier or another way of solving the problem that they use or are weighing.",
+      "not_when": "No alternative has been mentioned, or the client is asking about tools that are part of the seller's own offer.",
+      "lines": [
+        "O que você gosta nessa outra opção, e o que ainda falta nela?",
+        "Na hora de escolher, o que pesa mais para você?",
+        "Se as duas custassem o mesmo, qual você escolheria e por quê?"
+      ]
+    },
+    {
+      "id": "explain_simply",
+      "title": "Explique de novo, mais simples",
+      "explain": "O cliente não acompanhou. Volte um passo, use um exemplo do dia a dia dele e confirme antes de seguir.",
+      "when": "The client has shown that they did not follow what the seller said.",
+      "not_when": "The client understood and is asking about something new.",
+      "lines": [
+        "Deixa eu dizer isso de um jeito mais simples, com um exemplo do seu dia a dia.",
+        "Acho que fui rápido. Qual parte ficou confusa?",
+        "Em uma frase: é isso aqui que muda para você. Fez sentido?"
+      ]
+    },
+    {
+      "id": "stop_and_ask",
+      "title": "Pare de falar e pergunte",
+      "explain": "Você está falando há muito tempo. Devolva a palavra com uma pergunta aberta.",
+      "when": "The seller has been talking for a long stretch, or listing what the offer does without the client taking part.",
+      "not_when": "The client asked for a detailed explanation and is following it with questions.",
+      "lines": [
+        "Falei bastante. O que você achou até aqui?",
+        "Deixa eu parar um pouco: isso tem a ver com o que acontece aí?",
+        "Antes de eu seguir, o que você quer ver primeiro?"
+      ]
+    },
+    {
+      "id": "recap_and_check",
+      "title": "Resuma e confirme",
+      "explain": "Muita coisa foi dita. Repita em poucas frases o que você entendeu e peça a correção do cliente.",
+      "when": "Several facts have been established and the seller has not yet repeated them back, or the call is moving from discovery to the offer.",
+      "not_when": "Little has been said so far, or a doubt has just been raised and needs an answer.",
+      "lines": [
+        "Deixa eu ver se entendi direito, e você me corrige onde eu errar.",
+        "Resumindo o que ouvi até aqui, com as suas palavras.",
+        "Ficou faltando alguma coisa importante nesse resumo?"
+      ]
+    },
+    {
+      "id": "ask_for_the_decision",
+      "title": "Peça a decisão",
+      "explain": "O cliente deu sinais claros e não há objeção aberta. Pergunte se seguimos, sem rodeio.",
+      "when": "The client has shown clear interest, the price has been stated, no doubt is open, and the seller has not yet asked for the decision.",
+      "not_when": "A doubt is open, the price has not been stated, or who decides is unknown.",
+      "lines": [
+        "Pelo que conversamos, faz sentido a gente começar?",
+        "Tem alguma coisa que ainda te impede de dizer sim hoje?",
+        "Posso te mandar os próximos passos para a gente começar?"
+      ]
+    },
+    {
+      "id": "set_next_step",
+      "title": "Marque o próximo passo com data",
+      "explain": "A conversa está terminando sem data combinada. Proponha um passo com dia e hora.",
+      "when": "The call is near its end, or the client asked for time or material, and no specific next step with a date has been agreed.",
+      "not_when": "A next step with a date has already been agreed, or the client has just committed to buying.",
+      "lines": [
+        "Para não ficar solto, que tal já deixarmos a próxima conversa marcada, com dia e hora?",
+        "Eu te mando o resumo hoje. Podemos revisar juntos em qual dia?",
+        "Qual é o melhor dia para a gente retomar com a sua resposta?"
+      ]
+    },
+    {
+      "id": "bring_the_client_back",
+      "title": "Traga o cliente de volta",
+      "explain": "O cliente está se afastando. Reconheça, pare de apresentar e pergunte o que mudou.",
+      "when": "The client is trying to end the call, answering in single words, or asking only for material with no date.",
+      "not_when": "The client is asking real questions or has accepted a next step.",
+      "lines": [
+        "Senti que isso perdeu um pouco o sentido para você. O que mudou?",
+        "Antes de eu te mandar qualquer material: o que você precisa ver nele?",
+        "Posso ser direto? Isso é uma prioridade para você agora, ou não?"
+      ]
+    }
+  ],
+  "roadmap": [
+    {
+      "id": "situation",
+      "title": "Situação",
+      "goal": "Entender como o cliente trabalha hoje, com poucas perguntas.",
+      "checks": [{ "label": "Cenário atual", "fact": "situation_known", "ask": "Me conta como isso funciona hoje aí, do começo ao fim." }]
+    },
+    {
+      "id": "problem",
+      "title": "Problema",
+      "goal": "O cliente diz, com as palavras dele, o que não funciona.",
+      "checks": [{ "label": "Problema dito pelo cliente", "fact": "problem_named", "ask": "Qual parte desse trabalho mais te incomoda hoje?" }]
+    },
+    {
+      "id": "impact",
+      "title": "Impacto",
+      "goal": "O tamanho do problema em tempo, dinheiro ou vendas perdidas.",
+      "checks": [{ "label": "Tamanho do problema", "fact": "impact_sized", "ask": "E quanto isso te custa, em horas ou em vendas que não acontecem?" }]
+    },
+    {
+      "id": "value",
+      "title": "Valor",
+      "goal": "O cliente diz o que ganha com o problema resolvido.",
+      "checks": [{ "label": "Valor de resolver", "fact": "value_stated", "ask": "Se isso estivesse resolvido, o que mudaria no seu dia a dia?" }]
+    },
+    {
+      "id": "proposal",
+      "title": "Proposta",
+      "goal": "Mostrar a oferta ligada ao que o cliente contou e ouvir se faz sentido.",
+      "checks": [
+        { "label": "Solução apresentada", "stage_seen": ["presentation"], "ask": "Posso te mostrar como a gente resolveria isso que você contou?" },
+        { "label": "Cliente mostrou interesse", "seen": "interest", "ask": "Isso faz sentido para o seu momento?" }
+      ]
+    },
+    {
+      "id": "closing",
+      "title": "Fechamento",
+      "goal": "Quem decide, para quando, o preço dito, as objeções respondidas e uma data marcada.",
+      "checks": [
+        { "label": "Quem decide", "fact": "decider_known", "ask": "Além de você, mais alguém participa dessa decisão?" },
+        { "label": "Prazo", "fact": "timing_known", "ask": "Para quando você gostaria de ter isso funcionando?" },
+        { "label": "Preço dito", "stage_seen": ["price"], "ask": "Vou ser direto sobre o investimento e já te digo o que está incluído." },
+        { "label": "Objeções respondidas", "objections_clear": true, "ask": "O que você precisaria ver para ficar tranquilo com essa decisão?" },
+        { "label": "Próximo passo com data", "fact": "next_step_set", "ask": "Que tal já deixarmos a próxima conversa marcada, com dia e hora?" }
+      ]
+    }
+  ]
+}

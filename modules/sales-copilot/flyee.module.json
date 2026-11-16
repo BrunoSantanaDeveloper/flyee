@@ -1,0 +1,135 @@
+{
+  "manifest_version": 1,
+  "name": "sales-copilot",
+  "version": "1.0.0",
+  "type": "tool",
+  "trail": "vender",
+  "title": {
+    "pt-BR": "Copiloto de vendas",
+    "en": "Sales copilot"
+  },
+  "summary": {
+    "pt-BR": "Acompanha as suas calls de vendas pelo seu playbook: revê uma call já feita, treina com você e, ao vivo, mostra a etapa, a objeção em aberto, o que falta perguntar e a próxima jogada, com um sinal de 0 a 100 de para que lado a conversa anda.",
+    "en": "Follows your sales calls by your own playbook: reviews a call you have had, practises with you and, live, shows the stage, the open objection, what is still to be asked and the next move, with a 0 to 100 signal of which way the talk is going."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.11.0",
+  "entry": "skills/sales-copilot/SKILL.md",
+  "files": [
+    "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
+    "references/interface.md",
+    "references/perguntas.json",
+    "references/pesos.json",
+    "references/playbook-modelo.json",
+    "scripts/copilot.mjs",
+    "scripts/lib/engine.mjs",
+    "scripts/lib/judge.mjs",
+    "scripts/lib/live.mjs",
+    "scripts/lib/playbook.mjs",
+    "scripts/lib/report.mjs",
+    "scripts/lib/store.mjs",
+    "scripts/lib/transcript.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/live/page.html",
+    "skills/sales-copilot/SKILL.md"
+  ],
+  "external_credentials": [
+    {
+      "name": "Chave do OpenRouter",
+      "env": "OPENROUTER_API_KEY",
+      "url": "https://openrouter.ai/settings/keys",
+      "required": false,
+      "purpose": {
+        "pt-BR": "Opcional, só para o modo ao vivo: um modelo de decisões lê cada fala em menos de um segundo. Sem a chave do Gemini, ela também transcreve o áudio, e para isso o OpenRouter pede um saldo mínimo na conta. A revisão de uma call e o treino funcionam sem a chave, com a sua IA.",
+        "en": "Optional, only for the live mode: a decisions model reads each turn in under a second. Without the Gemini key it also transcribes the audio, and for that OpenRouter requires a minimum balance on the account. Reviewing a call and practising work without the key, with your AI."
+      }
+    },
+    {
+      "name": "Chave da API do Gemini",
+      "env": "GEMINI_API_KEY",
+      "url": "https://aistudio.google.com/apikey",
+      "required": false,
+      "purpose": {
+        "pt-BR": "Opcional, só para o modo ao vivo com áudio: o Gemini transcreve o seu microfone e o áudio da reunião. Sem ela, a transcrição vai pelo OpenRouter, ou as falas são digitadas na página.",
+        "en": "Optional, only for the live mode with audio: Gemini transcribes your microphone and the audio of the meeting. Without it, transcription goes through OpenRouter, or the turns are typed on the page."
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/sales-copilot/scripts/copilot.mjs",
+      "reason": {
+        "pt-BR": "O script do app lê a transcrição, confere as respostas, faz a conta do sinal, grava o documento da call e abre a página da call ao vivo.",
+        "en": "The app's script reads the transcript, checks the answers, computes the signal, writes the call's document and opens the live call page."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "127.0.0.1",
+      "reason": {
+        "pt-BR": "No modo ao vivo, a página da call abre num endereço do seu próprio computador, de uso único, e fecha sozinha no fim.",
+        "en": "In the live mode, the call page opens at a one-use address on your own computer and closes by itself at the end."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "openrouter.ai",
+      "reason": {
+        "pt-BR": "Só no modo ao vivo, com a chave: envia as últimas falas da call para o modelo de decisões e, sem a chave do Gemini e com o áudio ligado, os trechos de fala para transcrever.",
+        "en": "Only in the live mode, with the key: sends the latest turns of the call to the decisions model and, without the Gemini key and with the audio on, the stretches of speech to be transcribed."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "generativelanguage.googleapis.com",
+      "reason": {
+        "pt-BR": "Só no modo ao vivo, com a chave do Gemini e o áudio ligado: envia cada trecho de fala para ser transcrito.",
+        "en": "Only in the live mode, with the Gemini key and the audio on: sends each stretch of speech to be transcribed."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "as transcrições que você indicar",
+      "reason": {
+        "pt-BR": "Lê a transcrição da call que você pediu para rever.",
+        "en": "Reads the transcript of the call you asked to review."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "~/.flyee/keys.json (só as chaves OPENROUTER_API_KEY e GEMINI_API_KEY)",
+      "reason": {
+        "pt-BR": "Lê as chaves do OpenRouter e do Gemini que você salvou na página que a sua IA abriu no navegador, quando elas existem.",
+        "en": "Reads the OpenRouter and Gemini keys you saved in the page your AI opened in your browser, when they exist."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "./copiloto-de-vendas/",
+      "reason": {
+        "pt-BR": "Grava o playbook do seu negócio, as falas de cada call, a leitura e o documento, dentro do projeto.",
+        "en": "Writes your business playbook, each call's turns, the reading and the document, inside the project."
+      }
+    },
+    {
+      "kind": "env",
+      "scope": "OPENROUTER_API_KEY, GEMINI_API_KEY",
+      "reason": {
+        "pt-BR": "Lê as chaves das variáveis de ambiente, se você preferir defini-las assim; elas têm prioridade sobre as salvas no flyee. Nunca são pedidas no chat, gravadas ou mostradas.",
+        "en": "Reads the keys from the environment variables, if you prefer to set them that way; they take precedence over the ones saved in flyee. Never asked for in the chat, written or shown."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: o playbook do seu negócio, a revisão de uma call a partir da transcrição, o treino com a sua IA no papel do cliente e a call ao vivo numa página do seu computador, com o seu microfone e o áudio da reunião.",
+    "en": "First version: your business playbook, the review of a call from its transcript, practice with your AI playing the client, and the live call on a page on your own computer, with your microphone and the meeting's audio."
+  },
+  "license": "member"
+}

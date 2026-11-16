@@ -1,0 +1,15 @@
+{
+  "pt-BR": {
+    "request": "Reveja esta call de vendas: transcricoes/call-clinica.txt. O vendedor sou eu, Rafael.",
+    "reply": [
+      { "label": "Sinal da call", "text": "63,7 de 100 (começou em 30, foi de 29,1 a 63,7). É uma regra de bolso, não uma previsão." },
+      { "label": "Pesou contra · 02:20", "text": "A fala do cliente: \"Nossa, achei caro. Mil e duzentos por mês é muito para uma agenda.\" O que contou: objeção em aberto." },
+      { "label": "Faltou no roteiro", "text": "Cliente mostrou interesse, Prazo." },
+      { "label": "Objeção · 02:20", "text": "Preço. Como terminou: respondida, o cliente aceitou, em 02:40 (fala 14)." },
+      { "label": "Jogada indicada", "text": "Responda ao preço com o custo do problema. Uma frase do seu playbook: \"Faz sentido olhar com cuidado. Posso comparar com o que você disse que isso te custa hoje?\"" },
+      { "label": "Quem falou", "text": "O vendedor falou 70 por cento das palavras. Uma fala do vendedor passou de 70 palavras seguidas." }
+    ],
+    "saved": "Salvo em copiloto-de-vendas/calls/2026-11-15-call-clinica-1681/relatorio.md"
+  },
+  "en": null
+}

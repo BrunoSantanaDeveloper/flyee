@@ -1,0 +1,19 @@
+{
+  "turns": [
+    { "i": 0, "stage": "opening", "signals": { "open_question": 0.9 } },
+    { "i": 1, "stage": "discovery", "facts": { "situation_known": 0.95, "problem_named": 0.95 }, "scores": { "tone": 1, "participation": 2, "urgency": 1 }, "move": "size_the_impact" },
+    { "i": 2, "stage": "discovery", "signals": { "open_question": 0.8 } },
+    { "i": 3, "stage": "discovery", "facts": { "impact_sized": 0.95 }, "scores": { "tone": 1, "participation": 2, "urgency": 1 }, "move": "ask_the_value" },
+    { "i": 4, "stage": "discovery", "signals": { "open_question": 0.9 } },
+    { "i": 5, "stage": "discovery", "facts": { "value_stated": 0.9 }, "scores": { "tone": 2, "participation": 2, "urgency": 1 }, "move": "link_offer_to_problem" },
+    { "i": 6, "stage": "presentation" },
+    { "i": 8, "stage": "presentation", "signals": { "feature_dump": 0.95 } },
+    { "i": 9, "stage": "price", "signals": { "asked_price": 1 }, "scores": { "tone": 1, "participation": 1, "urgency": 1 }, "move": "state_the_price" },
+    { "i": 10, "stage": "price", "facts": { "money_discussed": 1 } },
+    { "i": 11, "stage": "objection", "signals": { "objection": 0.95 }, "objection_kind": "price", "scores": { "tone": 1, "participation": 1, "urgency": 1 }, "move": "answer_price_objection" },
+    { "i": 12, "stage": "objection" },
+    { "i": 13, "stage": "objection", "signals": { "agreement": 0.8, "objection": 0.7 }, "objection_kind": "authority", "facts": { "decider_known": 0.9 }, "scores": { "tone": 1, "participation": 2, "urgency": 1 }, "move": "bring_in_the_decider" },
+    { "i": 14, "stage": "next_steps", "signals": { "step_offered": 0.95 } },
+    { "i": 15, "stage": "next_steps", "signals": { "step_accepted": 0.95, "agreement": 0.8 }, "scores": { "tone": 2, "participation": 2, "urgency": 1 }, "move": "set_next_step" }
+  ]
+}

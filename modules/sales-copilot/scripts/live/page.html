@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Copiloto de vendas · call ao vivo</title>
+<style>
+  :root { --bg:#f6f5f1; --card:#fff; --ink:#1d1d1b; --soft:#6b6a65; --line:#e3e1da; --up:#177a45; --down:#b3261e; --mark:#ffd400; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161615; --card:#222220; --ink:#f1f0ec; --soft:#a3a29c; --line:#34332f; --up:#5fd08f; --down:#ff8a80; } }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); }
+  header h1 { font-size:16px; margin:0; flex:1 1 200px; }
+  header .meta { color:var(--soft); font-size:13px; }
+  main { display:grid; grid-template-columns:minmax(260px,1fr) minmax(300px,1.3fr) minmax(280px,1.2fr); gap:14px; padding:14px 16px 120px; }
+  @media (max-width: 980px) { main { grid-template-columns:1fr; } }
+  section { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  h2 { font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); margin:0 0 8px; }
+  .big { font-size:54px; font-weight:700; line-height:1; }
+  .big small { font-size:16px; font-weight:400; color:var(--soft); }
+  .up { color:var(--up); } .down { color:var(--down); }
+  svg { width:100%; height:90px; display:block; margin:10px 0 6px; }
+  ul { list-style:none; margin:0; padding:0; }
+  .movers li, .road li { display:flex; justify-content:space-between; gap:10px; padding:3px 0; }
+  .line { font-size:20px; line-height:1.35; margin:8px 0; padding:10px 12px; border-left:4px solid var(--mark); background:color-mix(in srgb, var(--mark) 12%, transparent); border-radius:0 8px 8px 0; }
+  .soft { color:var(--soft); }
+  .tag { display:inline-block; padding:2px 8px; border-radius:99px; border:1px solid var(--line); font-size:12px; }
+  .warn { border-color:var(--down); color:var(--down); }
+  .road .done { color:var(--up); } .road .todo { color:var(--soft); }
+  .turns { max-height:60vh; overflow:auto; }
+  .turns li { padding:6px 0; border-bottom:1px solid var(--line); }
+  .turns b { font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  .turns .seller b { color:var(--soft); }
+  footer { position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1px solid var(--line); padding:10px 16px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  button, select, input { font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 12px; }
+  button { cursor:pointer; } button.on { background:var(--mark); color:#1d1d1b; border-color:var(--mark); }
+  button.end { margin-left:auto; border-color:var(--down); color:var(--down); }
+  input[type=text] { flex:1 1 240px; }
+  .note { font-size:13px; color:var(--soft); margin:6px 0 0; }
+  #notice { padding:8px 16px; background:color-mix(in srgb, var(--down) 12%, transparent); display:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Copiloto de vendas · <span id="name">call ao vivo</span></h1>
+  <span class="meta" id="clock"></span>
+  <span class="meta" id="cost"></span>
+  <span class="meta" id="status">conectando</span>
+</header>
+<div id="notice"></div>
+<main>
+  <div>
+    <section>
+      <h2>Sinal da call</h2>
+      <div class="big"><span id="signal">30</span> <small>de 100 <span id="change"></span></small></div>
+      <svg id="chart" viewBox="0 0 300 90" preserveAspectRatio="none" aria-label="Sinal da call fala a fala"></svg>
+      <ul class="movers" id="movers"></ul>
+      <p class="note">Regra de bolso para mostrar para que lado a conversa anda. Não é previsão de venda.</p>
+    </section>
+    <section style="margin-top:14px">
+      <h2>Agora</h2>
+      <p style="margin:0 0 6px">Etapa: <b id="stage">abertura</b></p>
+      <p style="margin:0 0 6px" id="objection" class="soft">Nenhuma objeção em aberto.</p>
+      <p style="margin:0" id="talk" class="soft"></p>
+    </section>
+  </div>
+  <div>
+    <section>
+      <h2>Próxima jogada</h2>
+      <div id="move"><p class="soft">Ouvindo. A jogada aparece depois das primeiras falas.</p></div>
+    </section>
+    <section style="margin-top:14px">
+      <h2>Roteiro</h2>
+      <p id="ask" class="soft" style="margin:0 0 8px"></p>
+      <ul class="road" id="road"></ul>
+    </section>
+  </div>
+  <section>
+    <h2>Falas</h2>
+    <ul class="turns" id="turns"></ul>
+    <p class="note"><button id="flip" type="button">A última fala era da outra pessoa</button></p>
+  </section>
+</main>
+<footer>
+  <button id="mic" type="button">Ligar o meu microfone</button>
+  <button id="tab" type="button">Ouvir o cliente pelo áudio da reunião</button>
+  <label class="soft"><input type="checkbox" id="shared"> Um microfone para os dois (tecla S troca quem fala)</label>
+  <select id="who" aria-label="Quem fala"><option value="seller">Vendedor</option><option value="client">Cliente</option></select>
+  <input type="text" id="text" placeholder="Ou digite a fala e aperte Enter" autocomplete="off">
+  <button id="end" class="end" type="button">Encerrar a call</button>
+</footer>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const base = location.pathname.endsWith("/") ? location.pathname : location.pathname + "/";
+const started = Date.now();
+let ended = false;
+let minutesLeft = null;
+
+const comma = (n) => String(n).replace(".", ",");
+const signed = (n) => (n > 0 ? "+" : "") + comma(n);
+const el = (tag, text, cls) => { const node = document.createElement(tag); if (text !== undefined) node.textContent = text; if (cls) node.className = cls; return node; };
+
+function notice(text) { const box = $("notice"); box.textContent = text || ""; box.style.display = text ? "block" : "none"; }
+
+async function call(path, body) {
+  const response = await fetch(base + path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return response.json();
+}
+
+function drawChart(curve) {
+  const svg = $("chart");
+  const points = [30].concat(curve);
+  const step = points.length > 1 ? 300 / (points.length - 1) : 300;
+  const path = points.map((value, index) => (index ? "L" : "M") + (index * step).toFixed(1) + " " + (88 - value * 0.86).toFixed(1)).join(" ");
+  svg.innerHTML = '<line x1="0" y1="45" x2="300" y2="45" stroke="currentColor" stroke-opacity=".15" stroke-dasharray="3 4"/><path d="' + path + '" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+}
+
+function render(data) {
+  if (!data || !data.now) return;
+  const now = data.now, meta = data.meta || {};
+  $("signal").textContent = comma(now.signal);
+  const change = $("change");
+  change.textContent = now.change ? "(" + signed(now.change) + ")" : "";
+  change.className = now.change > 0 ? "up" : now.change < 0 ? "down" : "";
+  drawChart(now.curve || []);
+  const movers = $("movers"); movers.replaceChildren();
+  (now.movers || []).forEach((mover) => { const li = el("li"); li.append(el("span", mover.label), el("span", signed(mover.points), mover.points > 0 ? "up" : "down")); movers.append(li); });
+  $("stage").textContent = now.stage ? now.stage.label.toLowerCase() : "abertura";
+  const objection = $("objection");
+  if (now.objection) { objection.textContent = "Objeção em aberto: " + now.objection.label + ". O cliente disse: “" + now.objection.text + "”"; objection.className = "down"; }
+  else { objection.textContent = "Nenhuma objeção em aberto."; objection.className = "soft"; }
+  const share = Math.round((now.talk_share || 0) * 100);
+  $("talk").textContent = now.turns ? "Você falou " + share + " por cento das palavras." + ((now.flags || []).includes("monologue") ? " A última fala foi longa: devolva a palavra." : "") : "";
+  const move = $("move"); move.replaceChildren();
+  if (now.move) { move.append(el("b", now.move.title)); if (now.move.line) move.append(el("p", now.move.line, "line")); move.append(el("p", now.move.explain, "soft")); }
+  else move.append(el("p", "Ouvindo. A jogada aparece quando a leitura da fala for firme.", "soft"));
+  $("ask").textContent = now.next_ask ? "Falta: " + now.next_ask.label + ". Pergunte: “" + now.next_ask.ask + "”" : (now.turns ? "Roteiro cumprido." : "");
+  const road = $("road"); road.replaceChildren();
+  (now.roadmap || []).forEach((part) => part.checks.forEach((check) => { const li = el("li", undefined, check.done ? "done" : "todo"); li.append(el("span", part.title + " · " + check.label), el("span", check.done ? "feito" : "falta")); road.append(li); }));
+  if (meta.name) $("name").textContent = meta.name;
+  if (typeof meta.spent_usd === "number") $("cost").textContent = (meta.transcriber === "gemini" ? "Áudio pelo Gemini · " : "") + "Gasto no OpenRouter: US$ " + comma(meta.spent_usd.toFixed(3)) + " de " + comma(Number(meta.max_usd).toFixed(2)) + (meta.cost_estimated ? " (estimado)" : "");
+  minutesLeft = meta.minutes_left;
+  if (meta.capped) notice("O teto de gasto desta call foi atingido. As falas continuam sendo gravadas, sem leitura. Depois da call, a sua IA lê as que faltaram.");
+  else if (meta.last_error && data.error) notice(meta.last_error.message + (meta.last_error.fix ? " " + meta.last_error.fix : ""));
+  $("status").textContent = ended ? "encerrada" : "conectada";
+}
+
+function addTurn(turn) {
+  if (!turn) return;
+  const li = el("li", undefined, turn.speaker);
+  li.append(el("b", turn.speaker === "seller" ? "Vendedor" : "Cliente"), document.createTextNode(" " + turn.text));
+  $("turns").append(li);
+  li.scrollIntoView({ block: "nearest" });
+}
+
+function handle(data) {
+  if (data.ended && !data.now) { finished(data); return; }
+  if (data.turn) addTurn(data.turn);
+  if (!data.ok && data.error) notice(data.error.message + (data.error.fix ? " " + data.error.fix : ""));
+  else if (data.ok && !(data.meta && data.meta.capped)) notice("");
+  render(data);
+}
+
+async function sendText(speaker, text) { if (!ended && text.trim()) handle(await call("turn", { speaker, text })); }
+
+// ---- audio: record while someone speaks, cut at each pause, send the stretch to be transcribed ----
+const listeners = {};
+function listen(name, stream, speakerOf, button, label) {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new AudioCtx();
+  if (ctx.state === "suspended") ctx.resume();
+  const analyser = ctx.createAnalyser(); analyser.fftSize = 1024;
+  ctx.createMediaStreamSource(stream).connect(analyser);
+  const samples = new Float32Array(analyser.fftSize);
+  const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((type) => window.MediaRecorder && MediaRecorder.isTypeSupported(type));
+  if (!mime) { notice("Este navegador não grava áudio. Digite as falas, ou abra a página no Chrome ou no Edge."); return; }
+  const format = mime.startsWith("audio/mp4") ? "m4a" : "webm";
+  let recorder = null, chunks = [], voiced = 0, quiet = 0, floor = 0.005, begun = 0, keep = false, speaker = "seller", stopped = false;
+  function start() {
+    if (stopped) return;
+    chunks = []; voiced = 0; quiet = 0; keep = false; begun = performance.now();
+    recorder = new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 32000 });
+    recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+    recorder.onstop = async () => {
+      const blob = new Blob(chunks, { type: mime }), seconds = (performance.now() - begun) / 1000, who = speaker, send = keep;
+      start();
+      if (!send || ended) return;
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      let binary = ""; for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      try { handle(await call("audio", { speaker: who, format, seconds, data: btoa(binary) })); } catch (error) { notice("Não consegui enviar o áudio. A call segue; dá para digitar a fala."); }
+    };
+    recorder.start();
+  }
+  const timer = setInterval(() => {
+    if (!recorder || recorder.state !== "recording") return;
+    analyser.getFloatTimeDomainData(samples);
+    let sum = 0; for (let i = 0; i < samples.length; i++) sum += samples[i] * samples[i];
+    const level = Math.sqrt(sum / samples.length), talking = level > Math.max(0.012, floor * 3);
+    if (!talking) floor = floor * 0.95 + level * 0.05;
+    if (talking) { if (!voiced) speaker = speakerOf(); voiced += 50; quiet = 0; } else quiet += 50;
+    const length = performance.now() - begun;
+    if (voiced >= 300 && (quiet >= 800 || length >= 25000)) { keep = true; recorder.stop(); }
+    else if (!voiced && length >= 10000) { keep = false; recorder.stop(); }
+  }, 50);
+  listeners[name] = { stop() { stopped = true; clearInterval(timer); if (recorder && recorder.state === "recording") { keep = voiced >= 300; recorder.stop(); } stream.getTracks().forEach((track) => track.stop()); ctx.close(); button.classList.remove("on"); button.textContent = label; delete listeners[name]; } };
+  stream.getAudioTracks()[0].addEventListener("ended", () => listeners[name] && listeners[name].stop());
+  button.classList.add("on");
+  start();
+}
+
+$("mic").addEventListener("click", async () => {
+  if (listeners.mic) return listeners.mic.stop();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    listen("mic", stream, () => ($("shared").checked ? $("who").value : "seller"), $("mic"), "Ligar o meu microfone");
+    $("mic").textContent = "Microfone ligado";
+  } catch (error) { notice("O navegador não liberou o microfone. Libere no cadeado ao lado do endereço, ou digite as falas."); }
+});
+
+$("tab").addEventListener("click", async () => {
+  if (listeners.tab) return listeners.tab.stop();
+  try {
+    const shared = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+    if (!shared.getAudioTracks().length) { shared.getTracks().forEach((track) => track.stop()); notice("O compartilhamento veio sem áudio. Escolha a aba da reunião e marque a opção de compartilhar o áudio da aba."); return; }
+    listen("tab", new MediaStream(shared.getAudioTracks().concat(shared.getVideoTracks())), () => "client", $("tab"), "Ouvir o cliente pelo áudio da reunião");
+    $("tab").textContent = "Ouvindo o cliente";
+    notice("Use fone de ouvido, para o seu microfone não captar a voz do cliente.");
+  } catch (error) { notice("O compartilhamento foi cancelado. O cliente só é ouvido com o áudio da aba da reunião compartilhado."); }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.target === $("text")) { if (event.key === "Enter") { const text = $("text").value; $("text").value = ""; sendText($("who").value, text); } return; }
+  if (event.key === "s" || event.key === "S") $("who").value = $("who").value === "seller" ? "client" : "seller";
+});
+$("flip").addEventListener("click", async () => { if (ended) return; const data = await call("flip", {}); const list = $("turns"); if (data.ok && list.lastChild) list.lastChild.remove(); handle(data); });
+$("end").addEventListener("click", async () => { if (ended || !confirm("Encerrar a call e gravar a leitura?")) return; Object.values(listeners).forEach((listener) => listener.stop()); finished(await call("end", {})); });
+
+function finished(data) {
+  ended = true;
+  $("status").textContent = "encerrada";
+  document.querySelectorAll("footer button, footer input, footer select, #flip").forEach((node) => { node.disabled = true; });
+  notice(((data && data.say) || ["A call foi encerrada."]).join(" ") + " Pode fechar esta página e voltar à conversa com a sua IA.");
+}
+
+setInterval(() => {
+  const seconds = Math.floor((Date.now() - started) / 1000);
+  $("clock").textContent = String(Math.floor(seconds / 60)).padStart(2, "0") + ":" + String(seconds % 60).padStart(2, "0") + (minutesLeft !== null && minutesLeft <= 10 ? " · faltam " + minutesLeft + " min" : "");
+}, 1000);
+
+(async () => {
+  try { const data = await call("state"); (data.turns || []).forEach(addTurn); render(data); }
+  catch (error) { $("status").textContent = "sem conexão"; notice("Esta página não está mais ligada ao app. Peça à sua IA para abrir a call ao vivo de novo."); }
+})();
+setInterval(async () => { if (ended) return; try { const data = await call("state"); minutesLeft = data.meta.minutes_left; } catch (error) { ended = true; finished({ say: ["O tempo da call terminou e a leitura foi gravada."] }); } }, 30000);
+</script>
+</body>
+</html>

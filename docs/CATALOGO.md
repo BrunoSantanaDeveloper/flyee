@@ -13,6 +13,7 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | [Pesquisa no Instagram](#instagram-research) | 1.1.0 | tool | planejar | `video-analysis` | `ad-creatives` |
 | [Plano de estratégia e mídia](#media-plan) | 1.1.1 | workflow | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.4 | skill | divulgar | `video-render` | — |
+| [Copiloto de vendas](#sales-copilot) | 1.0.0 | tool | vender | — | — |
 | [Análise de vídeo](#video-analysis) | 1.0.2 | tool | planejar | — | `ad-creatives`, `instagram-research`, `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.3.0 | tool | divulgar | — | `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio` |
 | [Estúdio de vídeo](#video-studio) | 1.1.2 | workflow | divulgar | `video-render` | — |
@@ -228,6 +229,42 @@ Transforma um tema em um carrossel para o Instagram em que cada slide é um víd
 - fs:read: ~/.codex/generated_images (só as imagens que o Codex acabou de gerar para o carrossel)
 - env: GEMINI_API_KEY, CODEX_HOME
 - fs:read: media-plan/marca.md, roteiros/canal.md e estudio-de-video/marcas/, quando existem
+
+## sales-copilot
+
+**Copiloto de vendas** (Sales copilot) · versão 1.0.0 · tool · trilha vender · testado em `claude_code`
+
+> Acompanha as suas calls de vendas pelo seu playbook: revê uma call já feita, treina com você e, ao vivo, mostra a etapa, a objeção em aberto, o que falta perguntar e a próxima jogada, com um sinal de 0 a 100 de para que lado a conversa anda.
+
+Acompanha as suas calls de vendas pelo seu playbook: revê uma call já feita, treina com você e, ao vivo, mostra o que perguntar e o que responder enquanto a conversa acontece.
+
+**Skills**
+
+- `sales-copilot`: Acompanha calls de vendas pelo playbook do negócio. Revê uma call a partir da transcrição, treina com o integrante fazendo o papel do cliente e abre a call ao vivo numa página com etapa, objeção em aberto, roteiro e próxima jogada. Use quando pedirem para rever ou analisar uma call de vendas, treinar uma call, montar o playbook de vendas ou acompanhar uma call ao vivo.
+
+**Chaves externas**
+
+- `OPENROUTER_API_KEY` (Chave do OpenRouter), opcional
+- `GEMINI_API_KEY` (Chave da API do Gemini), opcional
+
+**Serve outros apps**
+
+- Guia: `modules/sales-copilot/references/interface.md`, interface v1
+- Entrada: `node .flyee/modules/sales-copilot/scripts/copilot.mjs <comando> --json`
+- Comandos nos exemplos: `call`
+
+**Usa** — · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/sales-copilot/scripts/copilot.mjs
+- network: 127.0.0.1
+- network: openrouter.ai
+- network: generativelanguage.googleapis.com
+- fs:read: as transcrições que você indicar
+- fs:read: ~/.flyee/keys.json (só as chaves OPENROUTER_API_KEY e GEMINI_API_KEY)
+- fs:write: ./copiloto-de-vendas/
+- env: OPENROUTER_API_KEY, GEMINI_API_KEY
 
 ## video-analysis
 

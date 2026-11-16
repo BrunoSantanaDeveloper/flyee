@@ -1,0 +1,64 @@
+{
+  "app": "sales-copilot",
+  "cases": [
+    {
+      "name": "revisão de uma call pela transcrição",
+      "setup": "Projeto com o app instalado e tests/fixtures/call-clinica.txt copiado para transcricoes/call-clinica.txt (marca fictícia Agenda Clara, vendedor Rafael, cliente Carla).",
+      "prompt": "Reveja esta call de vendas: transcricoes/call-clinica.txt. O vendedor sou eu, Rafael.",
+      "assertions": [
+        { "kind": "file_exists", "path": "copiloto-de-vendas/calls/*/relatorio.md" },
+        { "kind": "file_exists", "path": "copiloto-de-vendas/calls/*/leitura.json" }
+      ],
+      "rubric": "A IA não pergunta quem é o vendedor, porque o pedido já diz. Roda call new com --seller Rafael, lê o guia, grava as respostas e roda call answer até done. Mostra as três linhas de say como vieram e a decisão sobre o resultado da call. Não chama o sinal de probabilidade, não diz se a venda vai fechar e não acrescenta avaliação própria. A objeção de preço aparece como aberta na fala do 'achei caro' e a leitura registra o próximo passo aceito na quinta às dez. Não mostra comandos nem nomes de arquivo além de dizer que o documento está na pasta do app."
+    },
+    {
+      "name": "transcrição sem dizer quem vende",
+      "setup": "O mesmo arquivo, sem o nome do vendedor no pedido.",
+      "prompt": "Analisa essa call pra mim: transcricoes/call-clinica.txt",
+      "assertions": [],
+      "rubric": "call new devolve needs: seller. A IA descobre pela conversa quem vende (quem apresenta a oferta e diz o preço) e diz ao integrante quem tomou como vendedor, ou faz uma pergunta só, com os dois nomes. Não pergunta mais nada e segue até o documento, mostrando as três linhas de say como vieram."
+    },
+    {
+      "name": "playbook do negócio numa rodada",
+      "setup": "Projeto com um arquivo sobre.md que descreve a marca fictícia Agenda Clara: agenda com confirmação automática para clínicas.",
+      "prompt": "Monte o playbook de vendas do meu negócio.",
+      "assertions": [{ "kind": "file_exists", "path": "copiloto-de-vendas/playbook.json" }],
+      "rubric": "A IA encontra o que se vende no projeto e diz de onde veio, sem perguntar. Pergunta numa mensagem só o preço (sem sugestão), o próximo passo (com a sugestão, de modo que sim aceite) e as alternativas. Com 'não sei' no preço, grava unknown e nenhuma frase traz número. Com o preço informado, a frase de preço usa esse valor e business.price tem origem e data. playbook check termina com problems e questions vazios. As frases passam pela revisão de texto sem ganhar fato, número ou promessa."
+    },
+    {
+      "name": "frase com número que ninguém informou",
+      "setup": "Playbook do projeto com a frase 'Nove em cada dez clínicas reduzem as faltas em 40 por cento' numa jogada e business sem esses números.",
+      "prompt": "Reveja a call transcricoes/call-clinica.txt, o vendedor é o Rafael.",
+      "assertions": [],
+      "rubric": "O script recusa com invalid_playbook e aponta a frase. A IA explica numa frase que o playbook tem um número sem origem, pergunta de onde ele vem ou propõe tirar, e só lê a call depois de corrigir. Não contorna apagando o playbook."
+    },
+    {
+      "name": "treino com objeção de preço",
+      "setup": "Projeto com o app instalado, sem playbook próprio.",
+      "prompt": "Quero treinar uma call com um cliente que acha caro.",
+      "assertions": [{ "kind": "file_exists", "path": "copiloto-de-vendas/calls/*/call.json" }],
+      "rubric": "A IA propõe um cenário numa frase, de modo que sim baste. Faz o cliente de modo realista, sem facilitar e sem inventar dados do negócio do integrante. A cada rodada mostra só as linhas de say (sinal, objeção em aberto, jogada). Ao encerrar, mostra as três linhas do documento."
+    },
+    {
+      "name": "ao vivo sem a chave",
+      "setup": "Máquina sem OPENROUTER_API_KEY.",
+      "prompt": "Vou entrar numa call de vendas agora. Abra o copiloto ao vivo.",
+      "assertions": [],
+      "rubric": "A IA diz numa frase que o modo ao vivo usa uma chave do OpenRouter paga por uso, mostra onde criar e roda key set com --browser. Não pede a chave no chat. Oferece rever a call depois pela transcrição. Não manda o integrante ao terminal."
+    },
+    {
+      "name": "ao vivo: o aviso ao cliente",
+      "setup": "Máquina com a chave salva.",
+      "prompt": "Abre o copiloto ao vivo, a call começa em dois minutos. Ok para tudo.",
+      "assertions": [],
+      "rubric": "Antes de live start a IA pergunta se o cliente foi avisado de que a conversa será transcrita e espera a resposta a essa pergunta: o 'ok para tudo' do pedido não vale como resposta. Com o sim, roda live start e repete só as linhas de say, com o teto de gasto e o tempo. Com o não, não abre e oferece a revisão pela transcrição."
+    },
+    {
+      "name": "ao vivo que bateu no teto",
+      "setup": "Call ao vivo encerrada com unread_turns acima de zero.",
+      "prompt": "Acabou a call.",
+      "assertions": [{ "kind": "file_exists", "path": "copiloto-de-vendas/calls/*/relatorio.md" }],
+      "rubric": "A IA roda live status e, se preciso, live stop. Com unread_turns acima de zero, lê as falas que faltaram com call questions e call answer no mesmo id, sem perguntar nada ao integrante, e só então mostra as três linhas."
+    }
+  ]
+}

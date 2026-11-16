@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "note": "As perguntas que se faz sobre cada fala de uma call de vendas. `label` é o que o integrante lê; `question`, `yes`, `no` e `means` são o que lê quem responde (a IA do integrante na revisão e no treino, o modelo de decisões no modo ao vivo). Quem responde só dá valores: toda conta é do script.",
+  "signals": [
+    {
+      "id": "interest",
+      "who": "client",
+      "label": "Cliente mostrou interesse",
+      "question": "In this turn, does the client show they want to go ahead with what is being offered?",
+      "yes": "Asks how to begin, how the rollout or the contract works, asks to see or try it, or says it fits their case.",
+      "no": "Gives information, asks how one part works, raises a doubt, or makes small talk."
+    },
+    {
+      "id": "commitment",
+      "who": "client",
+      "label": "Cliente se comprometeu",
+      "question": "In this turn, does the client say in plain words that they will buy, sign or start paying?",
+      "yes": "Agrees to the purchase, asks for the contract or the payment link, or accepts a paid trial.",
+      "no": "Shows interest only, accepts only another meeting, or still has a doubt."
+    },
+    {
+      "id": "step_accepted",
+      "who": "client",
+      "label": "Cliente aceitou o próximo passo",
+      "question": "In this turn, does the client accept a specific next step with the seller?",
+      "yes": "Accepts a day and time, asks for the proposal to be sent for review, agrees to bring another person to the next talk, or accepts a trial.",
+      "no": "Asks only for material with no date, says they will think and call back, asks a question, or raises a doubt."
+    },
+    {
+      "id": "objection",
+      "who": "client",
+      "label": "Cliente levantou uma objeção",
+      "question": "In this turn, does the client hold back, doubt or push against buying?",
+      "yes": "Says it costs too much, that now is a bad time, that someone else has to approve, that they may not need it, that it may not work for them, or that they prefer another supplier.",
+      "no": "Asks a neutral question about what is included or how it works, describes their own situation, agrees, or makes small talk."
+    },
+    {
+      "id": "agreement",
+      "who": "client",
+      "label": "Cliente concordou com o vendedor",
+      "question": "In this turn, does the client accept as reasonable what the seller has just said?",
+      "yes": "Says it makes sense, that the point is fair, or that it would work for them.",
+      "no": "Disagrees, brings a new doubt, asks a neutral question, or changes the subject."
+    },
+    {
+      "id": "pulling_away",
+      "who": "client",
+      "label": "Cliente se afastando",
+      "question": "In this turn, does the client try to end the call early or put the seller off?",
+      "yes": "Asks for material by message instead of talking, says they have to leave, says they will think and come back with no date, says it is not a priority, or answers in single dismissive words.",
+      "no": "Asks real questions, describes their situation in detail, or accepts a next step."
+    },
+    {
+      "id": "confusion",
+      "who": "client",
+      "label": "Cliente não entendeu",
+      "question": "In this turn, does the client show that they did not follow what the seller said?",
+      "yes": "Asks the seller to repeat or explain, asks what a word means, says they are lost, or asks something the seller's previous turn had already answered.",
+      "no": "Asks a clear question about something new, states something, or agrees."
+    },
+    {
+      "id": "asked_price",
+      "who": "client",
+      "label": "Cliente perguntou o preço",
+      "question": "In this turn, does the client ask what it costs, which plans exist or how it is charged?",
+      "yes": "Asks for the price, the plans, the payment terms or the charging model.",
+      "no": "Does not ask about price in this turn."
+    },
+    {
+      "id": "open_question",
+      "who": "seller",
+      "label": "Vendedor fez pergunta aberta",
+      "question": "Is this turn an open question from the seller that invites the client to describe their situation, how they work, what bothers them, what they want, or how they decide?",
+      "yes": "A question that cannot be answered with yes or no and is about the client's side.",
+      "no": "A yes or no question, a statement, a description of the offer, a price, or a proposal of a meeting."
+    },
+    {
+      "id": "feature_dump",
+      "who": "seller",
+      "label": "Vendedor despejando recursos",
+      "question": "In this turn, does the seller list what the offer does or its benefits without the client having asked, and end without a question to the client?",
+      "yes": "Describes resources, how it works or advantages on the seller's own initiative, with no question at the end.",
+      "no": "Answers something the client asked, asks the client a question, talks about the client's situation, states a price, or proposes a next step."
+    },
+    {
+      "id": "step_offered",
+      "who": "seller",
+      "label": "Vendedor propôs o próximo passo",
+      "question": "In this turn, does the seller propose a specific next step?",
+      "yes": "Proposes a meeting with a day or time, sending the proposal, a trial, or bringing in another person from the client's side.",
+      "no": "Describes the offer, asks about the client's situation, or only says they will keep in touch."
+    },
+    {
+      "id": "alternative_mentioned",
+      "who": "any",
+      "label": "Outra opção na mesa",
+      "question": "Does this turn mention another supplier or another way of solving the problem that the client uses or is weighing instead of buying from the seller?",
+      "yes": "Names a competing company or service, says they are talking to others, or says they already pay someone else for this.",
+      "no": "Mentions only the seller's offer, the client's manual way of working, or tools that are part of the seller's offer."
+    }
+  ],
+  "facts": [
+    {
+      "id": "situation_known",
+      "label": "Cenário atual",
+      "question": "Up to this turn, has the client described how they work today: the process, the team, the tools or the channels?",
+      "yes": "The client has told how the work is done today, in their own words.",
+      "no": "Only greetings so far, or only the seller has talked about processes."
+    },
+    {
+      "id": "problem_named",
+      "label": "Problema dito pelo cliente",
+      "question": "Up to this turn, has the client named a specific problem, waste or annoyance they live with today?",
+      "yes": "The client has said what does not work, what takes too long, what gets lost or what they pay for without return.",
+      "no": "Only the seller has talked about problems in general, or the client says all is well."
+    },
+    {
+      "id": "impact_sized",
+      "label": "Tamanho do problema",
+      "question": "Up to this turn, has the client said what the problem costs them: hours, money, sales or clients lost, or what it stops them from doing?",
+      "yes": "The client has given a quantity, a frequency or a consequence of the problem.",
+      "no": "The problem was only named, or only the seller talked about its cost."
+    },
+    {
+      "id": "value_stated",
+      "label": "Valor de resolver",
+      "question": "Up to this turn, has the client said in their own words what would change or what it would be worth to have the problem solved?",
+      "yes": "The client has described the gain: time back, growth without hiring, a worry removed.",
+      "no": "Only the seller described benefits, or the client has not talked about the gain."
+    },
+    {
+      "id": "money_discussed",
+      "label": "Dinheiro na conversa",
+      "question": "Up to this turn, has money been talked about: the price of the offer, the client's budget, or what the client pays today?",
+      "yes": "The seller stated the price, or the client stated a budget, a range, a current cost, or whether money is set aside.",
+      "no": "Nobody has mentioned the price of the offer or the client's budget."
+    },
+    {
+      "id": "decider_known",
+      "label": "Quem decide",
+      "question": "Up to this turn, has the client said who decides the purchase or how it gets approved?",
+      "yes": "The client said they decide alone, named a person or a role, or described the approval path.",
+      "no": "Nothing was said about who decides or approves."
+    },
+    {
+      "id": "timing_known",
+      "label": "Prazo",
+      "question": "Up to this turn, has the client said when they want to decide, buy or have this working?",
+      "yes": "The client gave a date, a month, a season or said it is not for now.",
+      "no": "The client has given no timing for the decision or the start."
+    }
+  ],
+  "scores": [
+    {
+      "id": "tone",
+      "who": "any",
+      "label": "Clima da conversa",
+      "question": "How is the tone between the two people in the recent turns? Judge the human tone, not whether the sale is going well.",
+      "levels": [
+        { "label": "tenso", "means": "Short answers, irritation, irony, or one talking over the other." },
+        { "label": "neutro", "means": "Polite and factual, with no personal remark or humor." },
+        { "label": "próximo", "means": "Humor or personal remarks, each one acknowledging the other, relaxed language." }
+      ]
+    },
+    {
+      "id": "participation",
+      "who": "client",
+      "label": "Participação do cliente",
+      "question": "How much is the client taking part, judging only by the client's recent turns?",
+      "levels": [
+        { "label": "ausente", "means": "One word or one line, deflects, or tries to end the call." },
+        { "label": "responde", "means": "Answers what is asked and adds nothing, with no question back." },
+        { "label": "ativo", "means": "Asks questions, gives detail about their situation, or brings ideas unprompted." }
+      ]
+    },
+    {
+      "id": "urgency",
+      "who": "client",
+      "label": "Urgência do cliente",
+      "question": "How urgent is it for the client to solve the problem, judging only by the client's recent turns?",
+      "levels": [
+        { "label": "sem pressa", "means": "Exploring, curious, with no deadline or pressure." },
+        { "label": "incomoda", "means": "The problem hurts and goes on, and they want it fixed, with no deadline." },
+        { "label": "urgente", "means": "A deadline, a season, an order from above or a renewal is named, or they are losing clients or people now." }
+      ]
+    }
+  ],
+  "stages": [
+    { "id": "opening", "label": "Abertura", "means": "Greetings, small talk, agreeing on the agenda. Nothing yet about the client's problem.", "not": "Turns that describe the client's process or problems." },
+    { "id": "discovery", "label": "Descoberta", "means": "The seller asks about, or the client describes, how they work today, their problems, team or goals.", "not": "Budget, who decides or deadlines, and talk about the offer itself." },
+    { "id": "qualification", "label": "Qualificação", "means": "Budget, who decides, how approval works, or when they want to decide or start.", "not": "The problem itself, or what the offer does." },
+    { "id": "presentation", "label": "Apresentação", "means": "The seller explains or shows what the offer does and how it would work for this client.", "not": "Turns where the client pushes back or asks the price." },
+    { "id": "objection", "label": "Objeções", "means": "The client has raised a doubt or pushed back, and the seller is answering it.", "not": "Neutral questions about how the offer works." },
+    { "id": "price", "label": "Preço", "means": "The price, the plans, discounts or contract terms of what is being sold.", "not": "The client's budget in general." },
+    { "id": "closing", "label": "Fechamento", "means": "The seller asks for the decision, or the client says yes to buying, signing or starting.", "not": "Setting up a further meeting or a demonstration." },
+    { "id": "next_steps", "label": "Próximos passos", "means": "Agreeing what happens after the call: another meeting, a trial, sending the proposal, bringing other people.", "not": "Asking for the purchase itself." }
+  ],
+  "objection_kinds": [
+    { "id": "price", "label": "preço", "means": "It costs too much or the value is hard to justify." },
+    { "id": "timing", "label": "momento", "means": "Now is a bad time: too busy, in the middle of something, come back later." },
+    { "id": "authority", "label": "decisão de outra pessoa", "means": "The client cannot decide alone and someone else has to approve." },
+    { "id": "need", "label": "necessidade", "means": "The client doubts they have the problem, or thinks the present way is good enough." },
+    { "id": "trust", "label": "confiança", "means": "Doubts about the seller, about it working for them, or about the risk and the work of changing." },
+    { "id": "alternative", "label": "outra opção", "means": "The client prefers, uses or is weighing another supplier instead." },
+    { "id": "none", "label": "nenhuma", "means": "The client has raised no doubt about buying." }
+  ]
+}

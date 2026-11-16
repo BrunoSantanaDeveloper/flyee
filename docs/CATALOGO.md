@@ -13,7 +13,7 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 | [Pesquisa no Instagram](#instagram-research) | 1.1.0 | tool | planejar | `video-analysis` | `ad-creatives` |
 | [Plano de estratégia e mídia](#media-plan) | 1.1.1 | workflow | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.4 | skill | divulgar | `video-render` | — |
-| [Ligação com o Orkestree](#orkestree-link) | 1.0.2 | tool | escalar | `ad-creatives` | — |
+| [Ligação com o Orkestree](#orkestree-link) | 1.0.3 | tool | escalar | `ad-creatives` | — |
 | [Copiloto de vendas](#sales-copilot) | 1.0.0 | tool | vender | — | — |
 | [Análise de vídeo](#video-analysis) | 1.0.2 | tool | planejar | — | `ad-creatives`, `instagram-research`, `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.3.0 | tool | divulgar | — | `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio` |
@@ -233,7 +233,7 @@ Transforma um tema em um carrossel para o Instagram em que cada slide é um víd
 
 ## orkestree-link
 
-**Ligação com o Orkestree** (Orkestree link) · versão 1.0.2 · tool · trilha escalar · testado em `claude_code`
+**Ligação com o Orkestree** (Orkestree link) · versão 1.0.3 · tool · trilha escalar · testado em `claude_code`
 
 > Liga o seu projeto ao Orkestree: traz os pedidos de peças que ele fez para a sua campanha, deixa o pedido na pasta para o app de criativos produzir e devolve a entrega conferida, com a impressão digital de cada arquivo.
 

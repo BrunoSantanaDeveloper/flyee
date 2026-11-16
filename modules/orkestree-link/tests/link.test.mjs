@@ -271,6 +271,21 @@ test("video only as MP4, image only as PNG or JPEG, and the bytes have to be wha
   assert.equal(fake.state.deliveries.length, 0);
 });
 
+test("a button outside the list the Orkestree checked stops here: See menu is not a Meta button", async (t) => {
+  const fake = await fakeOrkestree();
+  t.after(fake.close);
+  const root = project();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  await run(root, ["take", "po-7", "--url", fake.url]);
+  const cards = join(root, "anuncios", CAMPAIGN, "conceitos.json");
+  const data = JSON.parse(readFileSync(cards, "utf8"));
+  data.concepts[0].copy.cta = "Ver cardápio";
+  writeFileSync(cards, JSON.stringify(data));
+  const sent = await run(root, ["deliver", CAMPAIGN, "--declare", "--url", fake.url]);
+  assert.deepEqual(sent.json.problems.map((problem) => `${problem.code}:${problem.field}`), ["button_unknown:button"]);
+  assert.equal(fake.state.deliveries.length, 0);
+});
+
 test("only a fake on this machine may replace the Orkestree address", async (t) => {
   const root = project();
   t.after(() => rmSync(root, { recursive: true, force: true }));

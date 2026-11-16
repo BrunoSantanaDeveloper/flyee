@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "orkestree-link",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "tool",
   "trail": "escalar",
   "title": {
@@ -92,8 +92,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Antes de enviar, o app confere o tipo de cada arquivo como o Orkestree passou a exigir: vídeo só em MP4, imagem só em PNG ou JPEG, e o conteúdo de cada arquivo igual ao que o nome diz. Quando o Orkestree pede para esperar, o app diz quanto tempo.",
-    "en": "Before sending, the app checks each file's type as the Orkestree now requires: video only as MP4, image only as PNG or JPEG, and each file's content matching what its name says. When the Orkestree asks to wait, the app says for how long."
+    "pt-BR": "A lista de botões passa a ser a que o Orkestree conferiu na referência da Meta: o botão Ver cardápio saiu, porque a Meta não o oferece para anúncios. Um anúncio com ele para aqui, antes de enviar, e a sua IA pede outro botão.",
+    "en": "The button list is now the one the Orkestree checked against Meta's reference: the See menu button left, because Meta does not offer it for ads. An ad with it stops here, before sending, and your AI asks for another button."
   },
   "license": "member"
 }

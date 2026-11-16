@@ -140,7 +140,9 @@ async function deliverCommand(positionals, values) {
   const order = readJson(orderFile(campaign));
   if (!order) throw new AppError("order_missing", `A campanha ${campaign} não tem pedido do Orkestree na pasta.`, `Pegue o pedido antes: ${command("orders")}.`);
   checkOrder(order);
-  const producer = { client: APP.name, client_version: APP.version, app: "ad-creatives", app_version: readJson(join(ROOT, ".flyee", "modules", "ad-creatives", "flyee.module.json"))?.version ?? null };
+  // The version that made the delivery: the one the creatives app wrote in its report, else the one installed.
+  const producedBy = readJson(join(campaignDir(campaign), "relatorio.json"))?.app?.version ?? readJson(join(ROOT, ".flyee", "modules", "ad-creatives", "flyee.module.json"))?.version ?? null;
+  const producer = { client: APP.name, client_version: APP.version, app: "ad-creatives", app_version: typeof producedBy === "string" ? producedBy : null };
   const { manifest, uploads, problems } = await buildDelivery({ root: ROOT, campaignDir: campaignDir(campaign), order, buttons: BUTTONS, producer, declared: Boolean(values.declare) });
   const manifestPath = join(campaignDir(campaign), "entrega", "manifesto.json");
   writeJson(manifestPath, { order: order.id, ...manifest });

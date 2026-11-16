@@ -97,6 +97,8 @@ function project({ headline = "Café antes de acordar" } = {}) {
   writeFileSync(join(campaign, "entrega", "manha-feed-cafe-v1.mp4"), Buffer.from("video de feed de teste"));
   writeFileSync(join(campaign, "entrega", "nomes.json"), JSON.stringify({ version: 1, campaign: CAMPAIGN, ads: [{ ad_name: "manha-reels-cafe-v1", concept: "manha", angle: "manha", files: [{ file: "manha-reels-cafe-v1.mp4", placement: "vertical", format: "9:16", kind: "video" }, { file: "manha-feed-cafe-v1.mp4", placement: "feed", format: "4:5", kind: "video" }] }] }));
   writeFileSync(join(campaign, "conceitos.json"), JSON.stringify({ version: 1, concepts: [{ key: "manha", angle: "manha", hook: { text: "O café chega antes de você acordar" }, copy: { primary_text: "O café chega antes de você acordar. Assinatura a partir de R$ 59 por mês.", headline, description: "Torra fresca", cta: "Assinar" } }] }));
+  // The creatives app writes its own name and version in the delivery report.
+  writeFileSync(join(campaign, "relatorio.json"), JSON.stringify({ app: { name: "ad-creatives", version: "1.3.0" }, campaign: CAMPAIGN }));
   return root;
 }
 
@@ -219,6 +221,29 @@ test("without the token the order comes from the portal's file and the checked d
   const manifest = JSON.parse(readFileSync(join(root, "anuncios", CAMPAIGN, "entrega", "manifesto.json"), "utf8"));
   assert.equal(manifest.order, "po-7");
   assert.equal(manifest.ads[0].files.length, 2);
+});
+
+test("what the Orkestree would refuse stops here first: the producer's version, another angle, more ads than per_concept, a file name it does not accept", async (t) => {
+  const fake = await fakeOrkestree();
+  t.after(fake.close);
+  const root = project();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  await run(root, ["take", "po-7", "--url", fake.url]);
+  const campaign = join(root, "anuncios", CAMPAIGN);
+  rmSync(join(campaign, "relatorio.json"));
+  writeFileSync(join(campaign, "entrega", "Manha Extra.mp4"), Buffer.from("x"));
+  writeFileSync(join(campaign, "entrega", "nomes.json"), JSON.stringify({ version: 1, campaign: CAMPAIGN, ads: [
+    { ad_name: "manha-reels-cafe-v1", concept: "manha", angle: "noite", files: [{ file: "manha-reels-cafe-v1.mp4", placement: "vertical", format: "9:16", kind: "video" }] },
+    { ad_name: "manha-reels-cafe-v2", concept: "manha", angle: "manha", files: [{ file: "Manha Extra.mp4", placement: "vertical", format: "9:16", kind: "video" }] },
+  ] }));
+  const sent = await run(root, ["deliver", CAMPAIGN, "--declare", "--url", fake.url]);
+  assert.equal(sent.json.ok, false);
+  const found = sent.json.problems.map((problem) => `${problem.code}:${problem.field}`);
+  assert.ok(found.includes("producer_unknown:producer.app_version"), found.join(" "));
+  assert.ok(found.includes("outside_order:angle"), found.join(" "));
+  assert.ok(found.includes("outside_order:concept"), "per_concept is 1 and the delivery has 2 ads of the concept");
+  assert.ok(found.includes("outside_order:files"), "a file name with a space and capitals is refused");
+  assert.equal(fake.state.deliveries.length, 0);
 });
 
 test("only a fake on this machine may replace the Orkestree address", async (t) => {

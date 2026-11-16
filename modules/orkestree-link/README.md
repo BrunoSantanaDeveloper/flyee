@@ -44,4 +44,5 @@ O pedido vem pelo arquivo que o portal do Orkestree dá: salve na pasta do proje
 
 ## O que há de novo
 
+- 1.0.1: a entrega diz qual versão do app de criativos a produziu, e o app confere antes de enviar o que o Orkestree recusaria: o ângulo de cada anúncio, quantas peças por conceito, nomes repetidos e o nome de cada arquivo.
 - 1.0.0: primeira versão. Pedidos de peças de anúncio, entrega conferida com a impressão digital de cada arquivo, modo sem token pelo portal.

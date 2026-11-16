@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "orkestree-link",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "tool",
   "trail": "escalar",
   "title": {
@@ -92,8 +92,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Primeira versão: lista os pedidos de peças do Orkestree, grava o pedido na pasta da campanha para o app de criativos e envia a entrega conferida, com a impressão digital e o tamanho de cada arquivo, a declaração de que nenhuma peça traz pessoa gerada por IA e os textos dentro dos limites do pedido.",
-    "en": "First version: lists the Orkestree's piece orders, writes the order into the campaign folder for the ad creatives app and sends the checked delivery, with each file's fingerprint and size, the declaration that no piece carries a person made by AI and the texts within the order's limits."
+    "pt-BR": "A entrega diz qual versão do app de criativos a produziu, lida do relatório da campanha. Antes de enviar, o app confere também o que o Orkestree recusaria: o ângulo de cada anúncio igual ao do conceito no pedido, no máximo as peças por conceito que o pedido pede, nome de anúncio sem repetição e nome de arquivo simples, em minúsculas e com extensão.",
+    "en": "The delivery says which version of the ad creatives app produced it, read from the campaign report. Before sending, the app also checks what the Orkestree would refuse: each ad keeps the angle of its concept in the order, no more pieces per concept than the order asks, no repeated ad name and a simple file name, lowercase and with an extension."
   },
   "license": "member"
 }

@@ -40,6 +40,8 @@ export function returnedNames(order) {
   return new Set(order.returned.reasons.map((reason) => reason.ad_name).filter(Boolean));
 }
 
+/** The file names the contract accepts in a delivery (section 6). */
+const FILE_NAME = /^[a-z0-9][a-z0-9._-]{0,119}\.[a-z0-9]{2,5}$/;
 const EMAIL = /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/u;
 const PHONE = /(?:\+?55\s?)?\(?\d{2}\)?\s?9?\d{4}[\s.-]?\d{4}/;
 
@@ -59,9 +61,13 @@ export async function buildDelivery({ root, campaignDir, order, buttons, produce
   const wanted = returnedNames(order);
   const formats = order.formats;
   const limits = order.text_limits ?? {};
+  const angles = new Map((order.concepts ?? []).map((concept) => [concept.key, concept.angle ?? null]));
+  const perConcept = new Map();
+  const adNames = new Set();
   const seen = new Set();
   const ads = [];
   const uploads = [];
+  if (!isText(producer?.app_version)) problems.push({ ad_name: null, field: "producer.app_version", code: "producer_unknown", say: "A entrega não diz qual versão do app de criativos a produziu. Monte a entrega com o app de criativos e rode de novo." });
 
   for (const ad of names.ads) {
     if (wanted && !wanted.has(ad.ad_name)) continue;
@@ -71,6 +77,12 @@ export async function buildDelivery({ root, campaignDir, order, buttons, produce
       continue;
     }
     if (!allowed.has(ad.concept)) problems.push({ ...where("concept"), code: "outside_order", say: `O conceito ${ad.concept} não está no pedido.` });
+    if (adNames.has(ad.ad_name)) problems.push({ ...where("ad_name"), code: "outside_order", say: `O nome ${ad.ad_name} aparece duas vezes na entrega.` });
+    adNames.add(ad.ad_name);
+    const ordered = angles.get(ad.concept);
+    if (ordered && ad.angle && ordered !== ad.angle) problems.push({ ...where("angle"), code: "outside_order", say: `O ângulo ${ad.angle} não é o do conceito no pedido, que é ${ordered}.` });
+    perConcept.set(ad.concept, (perConcept.get(ad.concept) ?? 0) + 1);
+    if (Number.isInteger(order.per_concept) && perConcept.get(ad.concept) === order.per_concept + 1) problems.push({ ...where("concept"), code: "outside_order", say: `O conceito ${ad.concept} tem mais anúncios do que os ${order.per_concept} que o pedido pede.` });
     const card = byKey.get(ad.concept);
     const copy = card?.copy ?? {};
     const button = copy.cta ? buttons[fold(copy.cta)] ?? null : buttons["saiba mais"];
@@ -96,6 +108,10 @@ export async function buildDelivery({ root, campaignDir, order, buttons, produce
         continue;
       }
       const name = basename(path);
+      if (!FILE_NAME.test(name)) {
+        problems.push({ ...where("files"), code: "outside_order", say: `O nome do arquivo ${name} precisa ser simples: letras minúsculas sem acento, números, ponto, hífen ou sublinhado, e a extensão.` });
+        continue;
+      }
       if (seen.has(name)) {
         problems.push({ ...where("files"), code: "file_twice", say: `Dois arquivos da entrega têm o mesmo nome, ${name}.` });
         continue;

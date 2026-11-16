@@ -3182,16 +3182,28 @@ export async function dismissCookies(page) {
   return { dismissed: true, button: result.text, hidden_after_click: hidden, candidates: result.candidates ?? 0 };
 }
 
+/** How long after the load a consent window may still open: OneTrust took about 3 s on databricks.com. */
+export const LATE_COOKIE_WINDOW_MS = 4000;
+
 /**
  * A consent window that a script opens a few seconds after the load (OneTrust on databricks.com, 2026-11-09)
- * is not there on the first try, and then sits over every photo. After the warm-up, try once more.
+ * is not there on the first try, and then sits over every photo. After the warm-up, keep looking until
+ * `windowMs` have passed since the load (`loadedAt`), so a fast machine does not give up before the window
+ * opens; past that moment, one more look. A page with no window waits at most until the end of that time.
  */
-export async function dismissLateCookies(page, first, onProgress = () => {}) {
+export async function dismissLateCookies(page, first, onProgress = () => {}, { loadedAt = null, windowMs = LATE_COOKIE_WINDOW_MS } = {}) {
   if (first?.dismissed) return first;
-  const again = await dismissCookies(page);
-  if (!again.dismissed) return first ?? again;
-  onProgress(`Aviso de cookies fechado depois do carregamento ("${again.button}")`);
-  return { ...again, late: true };
+  const deadline = loadedAt === null ? 0 : loadedAt + windowMs;
+  for (;;) {
+    const again = await dismissCookies(page);
+    if (again.dismissed) {
+      onProgress(`Aviso de cookies fechado depois do carregamento ("${again.button}")`);
+      return { ...again, late: true };
+    }
+    const left = deadline - Date.now();
+    if (left <= 0) return first ?? again;
+    await sleep(Math.min(250, left));
+  }
 }
 
 const SCROLL_TOP = 'window.scrollTo({ top: 0, left: 0, behavior: "instant" }); 0';
@@ -3570,6 +3582,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
       if (error instanceof AppError && error.code === "page_load_failed") throw unreachable(url, error);
       throw error;
     }
+    const desktopLoadedAt = Date.now();
     await waitForNetworkQuiet(network);
     let state = await page.evaluate(inPage(pageStateInPage), { awaitPromise: false });
     finalUrl = state.url;
@@ -3602,7 +3615,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     const arrivalDesktop = await readArrival(page);
     state = await warmUp(page);
     await waitForNetworkQuiet(network, { timeoutMs: 1500 });
-    cookieBanner = await dismissLateCookies(page, cookieBanner, onProgress);
+    cookieBanner = await dismissLateCookies(page, cookieBanner, onProgress, { loadedAt: desktopLoadedAt });
 
     onProgress("Fotografando a tela e a página inteira (computador)…");
     files.desktop = write("desktop.png", await page.screenshot({ format: "png" }));
@@ -3613,7 +3626,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     viewports.desktop.hidden_until_scroll = state.hidden_blocks ?? null;
     if (desktopFull.truncated) warnings.push(`A página tem ${desktopFull.content_height} px de altura; a foto inteira parou em ${desktopFull.height} px.`);
     if (noLetters) {
-      cookieBanner = await dismissLateCookies(page, cookieBanner, onProgress);
+      cookieBanner = await dismissLateCookies(page, cookieBanner, onProgress, { loadedAt: desktopLoadedAt });
       files.no_letters_desktop_parts = await writeNoLetters({ browser, page, outDir, name: "sem-letras.jpg", label: "computador", width: desktopWidth, height: DESKTOP_HEIGHT, warnings });
       files.no_letters_desktop = files.no_letters_desktop_parts?.[0] ?? null;
     }
@@ -3649,12 +3662,13 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
       if (error instanceof AppError && error.code === "page_load_failed") throw unreachable(finalUrl, error);
       throw error;
     }
+    const mobileLoadedAt = Date.now();
     await waitForNetworkQuiet(network);
     mobileCookieBanner = await dismissCookies(page);
     const arrivalMobile = await readArrival(page);
     const mobileState = await warmUp(page);
     await waitForNetworkQuiet(network, { timeoutMs: 1500 });
-    mobileCookieBanner = await dismissLateCookies(page, mobileCookieBanner, onProgress);
+    mobileCookieBanner = await dismissLateCookies(page, mobileCookieBanner, onProgress, { loadedAt: mobileLoadedAt });
 
     onProgress("Fotografando a tela e a página inteira (celular)…");
     files.mobile = write("mobile.png", await page.screenshot({ format: "png" }));
@@ -3666,7 +3680,7 @@ export async function captureSite({ url: input, outDir, tools = {}, browserPath 
     viewports.mobile.hidden_until_scroll = mobileState.hidden_blocks ?? null;
     layout.mobile = mobileLayout(positions, { fullHeight: mobileFull.height, viewportHeight: MOBILE_HEIGHT });
     if (noLetters) {
-      mobileCookieBanner = await dismissLateCookies(page, mobileCookieBanner, onProgress);
+      mobileCookieBanner = await dismissLateCookies(page, mobileCookieBanner, onProgress, { loadedAt: mobileLoadedAt });
       files.no_letters_mobile_parts = await writeNoLetters({ browser, page, outDir, name: "sem-letras-celular.jpg", label: "celular", width: mobileWidth, height: MOBILE_HEIGHT, warnings });
       files.no_letters_mobile = files.no_letters_mobile_parts?.[0] ?? null;
     }

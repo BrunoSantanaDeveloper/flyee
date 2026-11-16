@@ -16,7 +16,7 @@ const SCRIPT = resolve(HERE, "..", "scripts", "insights.mjs");
 const NAMES = "anuncios/black-friday-2026/entrega/nomes.json";
 
 /** A project with the approved plan, the delivered names and the exports in the inbox. */
-function project({ plan = true } = {}) {
+function project({ plan = true, inbox = true } = {}) {
   const root = mkdtempSync(join(tmpdir(), "ai-projeto-"));
   mkdirSync(join(root, "ads-insights", "entrada"), { recursive: true });
   mkdirSync(join(root, "anuncios", "black-friday-2026", "entrega"), { recursive: true });
@@ -24,7 +24,7 @@ function project({ plan = true } = {}) {
     mkdirSync(join(root, "media-plan", "black-friday-2026"), { recursive: true });
     cpSync(join(FIXTURES, "plano-aprovado.json"), join(root, "media-plan", "black-friday-2026", "plano.json"));
   }
-  for (const file of ["export-meta-pt.csv", "export-meta-en.csv", "export-meta-sem-video.csv", "export-google-termos-pt.csv", "export-meta-dia.csv", "leads.csv", "pagina-com-tags.html", "pagina-vazia.html"]) cpSync(join(FIXTURES, file), join(root, "ads-insights", "entrada", file));
+  if (inbox) for (const file of ["export-meta-pt.csv", "export-meta-en.csv", "export-meta-sem-video.csv", "export-google-termos-pt.csv", "export-meta-dia.csv", "leads.csv", "pagina-com-tags.html", "pagina-vazia.html"]) cpSync(join(FIXTURES, file), join(root, "ads-insights", "entrada", file));
   cpSync(join(FIXTURES, "nomes.json"), join(root, NAMES));
   return root;
 }
@@ -66,14 +66,18 @@ async function ready(root) {
   return run(root, ["contract"]);
 }
 
-test("check on a fresh project points to the contract; help prints the commands", async () => {
-  const root = project();
+test("check on a fresh project points to the contract, or to the intake when an export is already in the inbox; help prints the commands", async () => {
+  const root = project({ inbox: false });
   const check = await run(root, ["check"]);
   assert.equal(check.status, 0, JSON.stringify(check.json));
   assert.equal(check.json.ready, true);
   assert.equal(check.json.contract, null);
   assert.equal(check.json.plan.plan, "black-friday-2026");
   assert.equal(check.json.next_step.action, "contract");
+  const withExport = await run(project(), ["check"]);
+  assert.equal(withExport.json.next_step.action, "intake", "a campaign that already ran is read without waiting for the contract");
+  assert.ok(withExport.json.exports_in_inbox.some((item) => item.file === "ads-insights/entrada/export-meta-pt.csv" && item.source === "meta" && item.level === "ad"));
+  assert.ok(!withExport.json.exports_in_inbox.some((item) => item.file.endsWith("leads.csv")), "a sign-up list is not an export");
   const help = await run(root, ["help"], { json: false });
   assert.match(help.stdout, /weekly/);
   const unknown = await run(root, ["dance"]);

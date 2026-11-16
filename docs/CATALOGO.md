@@ -6,13 +6,14 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 | App | Versão | Tipo | Trilha | Usa | Usado por |
 |---|---|---|---|---|---|
-| [Criativos para anúncios](#ad-creatives) | 1.2.2 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | — |
-| [Medição e leitura de resultados](#ads-insights) | 1.0.1 | tool | escalar | — | — |
+| [Criativos para anúncios](#ad-creatives) | 1.3.0 | workflow | divulgar | `instagram-research`, `video-analysis`, `video-render`, `youtube-research` | `orkestree-link` |
+| [Medição e leitura de resultados](#ads-insights) | 1.1.0 | tool | escalar | — | — |
 | [Base de contatos e CRM](#contact-base) | 1.2.0 | workflow | vender | — | — |
 | [Páginas que vendem](#conversion-pages) | 1.3.0 | workflow | vender | `video-render` | — |
 | [Pesquisa no Instagram](#instagram-research) | 1.1.0 | tool | planejar | `video-analysis` | `ad-creatives` |
 | [Plano de estratégia e mídia](#media-plan) | 1.1.1 | workflow | planejar | — | — |
 | [Carrossel animado](#motion-carousel) | 1.1.4 | skill | divulgar | `video-render` | — |
+| [Ligação com o Orkestree](#orkestree-link) | 1.0.0 | tool | escalar | `ad-creatives` | — |
 | [Copiloto de vendas](#sales-copilot) | 1.0.0 | tool | vender | — | — |
 | [Análise de vídeo](#video-analysis) | 1.0.2 | tool | planejar | — | `ad-creatives`, `instagram-research`, `youtube-script` |
 | [Motor de vídeo](#video-render) | 1.3.0 | tool | divulgar | — | `ad-creatives`, `conversion-pages`, `motion-carousel`, `video-studio` |
@@ -23,7 +24,7 @@ Material do operador: nunca é distribuído. Cada app aparece com o que entrega,
 
 ## ad-creatives
 
-**Criativos para anúncios** (Ad creatives) · versão 1.2.2 · workflow · trilha divulgar · testado em `claude_code`
+**Criativos para anúncios** (Ad creatives) · versão 1.3.0 · workflow · trilha divulgar · testado em `claude_code`
 
 > Prepara os criativos da sua campanha de tráfego pago na Meta (Instagram e Facebook): pesquisa os anúncios dos concorrentes, propõe três conceitos com a evidência de cada um e entrega os vídeos e as imagens conferidos, os textos dos anúncios e a conta da verba.
 
@@ -42,7 +43,7 @@ Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook
 
 - Guia: `modules/ad-creatives/references/interface.md`
 
-**Usa** `instagram-research`, `video-analysis`, `video-render`, `youtube-research` · **Usado por** —
+**Usa** `instagram-research`, `video-analysis`, `video-render`, `youtube-research` · **Usado por** `orkestree-link`
 
 **Permissões declaradas**
 
@@ -62,7 +63,7 @@ Prepara os criativos da sua campanha de tráfego pago no Instagram e no Facebook
 
 ## ads-insights
 
-**Medição e leitura de resultados** (Measurement and results reading) · versão 1.0.1 · tool · trilha escalar · testado em `claude_code`
+**Medição e leitura de resultados** (Measurement and results reading) · versão 1.1.0 · tool · trilha escalar · testado em `claude_code`
 
 > Deixa a medição pronta antes do primeiro real e lê os resultados depois: o contrato do que conta, as tags da página, a regra única de link, a planilha de origem sem dado pessoal, o veredito de cada anúncio com a amostra que ele tem e a leitura da semana com o que fazer.
 
@@ -82,7 +83,7 @@ Deixa a medição pronta antes do primeiro real e lê os resultados depois, com 
 
 - shell: node .flyee/modules/ads-insights/scripts/insights.mjs
 - network: a página de destino do integrante, só leitura do HTML público
-- fs:read: ads-insights/entrada/, anuncios/*/entrega/nomes.json e media-plan/*/plano.json
+- fs:read: ads-insights/entrada/, anuncios/*/entrega/nomes.json, anuncios/*/verba.json e media-plan/*/plano.json
 - fs:write: ./ads-insights/
 
 ## contact-base
@@ -229,6 +230,33 @@ Transforma um tema em um carrossel para o Instagram em que cada slide é um víd
 - fs:read: ~/.codex/generated_images (só as imagens que o Codex acabou de gerar para o carrossel)
 - env: GEMINI_API_KEY, CODEX_HOME
 - fs:read: media-plan/marca.md, roteiros/canal.md e estudio-de-video/marcas/, quando existem
+
+## orkestree-link
+
+**Ligação com o Orkestree** (Orkestree link) · versão 1.0.0 · tool · trilha escalar · testado em `claude_code`
+
+> Liga o seu projeto ao Orkestree: traz os pedidos de peças que ele fez para a sua campanha, deixa o pedido na pasta para o app de criativos produzir e devolve a entrega conferida, com a impressão digital de cada arquivo.
+
+Quando a sua empresa usa o Orkestree para gerir os anúncios, ele lê os resultados, decide o que testar e encomenda as peças. Este app traz o pedido até o seu projeto, onde a sua IA produz as peças com o app de criativos, no seu plano de IA, e devolve a entrega conferida. Este texto é o guia dentro do projeto; a página do app no flyee.club lê os guias em `guides/`.
+
+**Skills**
+
+- `orkestree-link`: Traz os pedidos de peças de anúncio que o Orkestree fez para a empresa, grava o pedido na pasta da campanha para o app de criativos produzir e envia a entrega conferida de volta. Use quando pedirem "o que o Orkestree pediu?", "tem pedido do Orkestree?", "produza o pedido do Orkestree" ou "envie a entrega para o Orkestree".
+
+**Chaves externas**
+
+- `ORKESTREE_TOKEN` (Token de produção do Orkestree), opcional
+
+**Usa** `ad-creatives` · **Usado por** —
+
+**Permissões declaradas**
+
+- shell: node .flyee/modules/orkestree-link/scripts/link.mjs
+- network: www.orkestree.com e os endereços de envio que o Orkestree der para cada arquivo
+- fs:read: anuncios/<campanha>/: pedido.json, conceitos.json, entrega/ e pecas/<conceito>/final/aceite.json
+- fs:read: ~/.flyee/keys.json (só o token ORKESTREE_TOKEN)
+- fs:write: anuncios/<campanha>/pedido.json, anuncios/<campanha>/entrega/manifesto.json e anuncios/<campanha>/entrega/envio.json
+- env: ORKESTREE_TOKEN
 
 ## sales-copilot
 

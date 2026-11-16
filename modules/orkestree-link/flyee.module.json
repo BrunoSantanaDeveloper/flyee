@@ -1,0 +1,99 @@
+{
+  "manifest_version": 1,
+  "name": "orkestree-link",
+  "version": "1.0.0",
+  "type": "tool",
+  "trail": "escalar",
+  "title": {
+    "pt-BR": "Ligação com o Orkestree",
+    "en": "Orkestree link"
+  },
+  "summary": {
+    "pt-BR": "Liga o seu projeto ao Orkestree: traz os pedidos de peças que ele fez para a sua campanha, deixa o pedido na pasta para o app de criativos produzir e devolve a entrega conferida, com a impressão digital de cada arquivo.",
+    "en": "Links your project to the Orkestree: brings the piece orders it made for your campaign, leaves the order in the folder for the ad creatives app to produce, and sends back the checked delivery, with each file's fingerprint."
+  },
+  "compatible_ais": [
+    "claude_code"
+  ],
+  "min_core": ">=1.11.0",
+  "entry": "skills/orkestree-link/SKILL.md",
+  "files": [
+    "README.md",
+    "guides/en/abrir-o-capo.md",
+    "guides/en/usar.md",
+    "guides/pt-BR/abrir-o-capo.md",
+    "guides/pt-BR/usar.md",
+    "references/botoes.json",
+    "scripts/lib/client.mjs",
+    "scripts/lib/manifest.mjs",
+    "scripts/lib/util.mjs",
+    "scripts/link.mjs",
+    "skills/orkestree-link/SKILL.md"
+  ],
+  "external_credentials": [
+    {
+      "name": "Token de produção do Orkestree",
+      "env": "ORKESTREE_TOKEN",
+      "required": false,
+      "purpose": {
+        "pt-BR": "Opcional. Traz os pedidos da sua empresa e envia a entrega sozinho. Você cria o token no portal do Orkestree. Sem ele, o pedido vem pelo arquivo que o portal dá, e a entrega conferida fica na pasta para você subir lá.",
+        "en": "Optional. Brings your company's orders and sends the delivery on its own. You create the token in the Orkestree portal. Without it, the order comes through the file the portal gives, and the checked delivery stays in the folder for you to upload there."
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "kind": "shell",
+      "scope": "node .flyee/modules/orkestree-link/scripts/link.mjs",
+      "reason": {
+        "pt-BR": "O script do app lista os pedidos, grava o pedido na pasta da campanha, confere a entrega arquivo por arquivo e envia ao Orkestree.",
+        "en": "The app's script lists the orders, writes the order into the campaign folder, checks the delivery file by file and sends it to the Orkestree."
+      }
+    },
+    {
+      "kind": "network",
+      "scope": "www.orkestree.com e os endereços de envio que o Orkestree der para cada arquivo",
+      "reason": {
+        "pt-BR": "Só com o token: lê os pedidos da sua empresa e envia as peças prontas para o endereço que o Orkestree der a cada arquivo. Nenhum outro dado do projeto sai da máquina.",
+        "en": "Only with the token: reads your company's orders and sends the finished pieces to the address the Orkestree gives each file. No other project data leaves the machine."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "anuncios/<campanha>/: pedido.json, conceitos.json, entrega/ e pecas/<conceito>/final/aceite.json",
+      "reason": {
+        "pt-BR": "O pedido, os textos de cada anúncio, as peças da entrega e as conferências do app de criativos, para montar e conferir a entrega.",
+        "en": "The order, each ad's texts, the delivered pieces and the ad creatives app's checks, to build and check the delivery."
+      }
+    },
+    {
+      "kind": "fs:read",
+      "scope": "~/.flyee/keys.json (só o token ORKESTREE_TOKEN)",
+      "reason": {
+        "pt-BR": "Lê o token de produção que você salvou na página que a sua IA abriu no navegador, quando ele existe.",
+        "en": "Reads the production token you saved in the page your AI opened in your browser, when there is one."
+      }
+    },
+    {
+      "kind": "fs:write",
+      "scope": "anuncios/<campanha>/pedido.json, anuncios/<campanha>/entrega/manifesto.json e anuncios/<campanha>/entrega/envio.json",
+      "reason": {
+        "pt-BR": "Grava o pedido na pasta da campanha, o manifesto da entrega e o registro do envio, com a impressão digital de cada arquivo.",
+        "en": "Writes the order into the campaign folder, the delivery manifest and the record of the sending, with each file's fingerprint."
+      }
+    },
+    {
+      "kind": "env",
+      "scope": "ORKESTREE_TOKEN",
+      "reason": {
+        "pt-BR": "Lê o token da variável de ambiente, se você preferir defini-lo assim; ele tem prioridade sobre o salvo no flyee. Nunca é pedido no chat, gravado ou mostrado.",
+        "en": "Reads the token from the environment variable, if you prefer to set it that way; it takes precedence over the one saved in flyee. Never asked for in the chat, written or shown."
+      }
+    }
+  ],
+  "changelog": {
+    "pt-BR": "Primeira versão: lista os pedidos de peças do Orkestree, grava o pedido na pasta da campanha para o app de criativos e envia a entrega conferida, com a impressão digital e o tamanho de cada arquivo, a declaração de que nenhuma peça traz pessoa gerada por IA e os textos dentro dos limites do pedido.",
+    "en": "First version: lists the Orkestree's piece orders, writes the order into the campaign folder for the ad creatives app and sends the checked delivery, with each file's fingerprint and size, the declaration that no piece carries a person made by AI and the texts within the order's limits."
+  },
+  "license": "member"
+}

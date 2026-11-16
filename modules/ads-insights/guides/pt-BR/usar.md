@@ -33,7 +33,8 @@ Antes de gastar o primeiro real, a sua IA deixa a medição pronta: o que conta 
 
 ## Dicas
 
-- Exporte sempre o período inteiro da campanha, no nível de anúncio, com as colunas de impressões, cliques no link, visualizações da página, reproduções de 3 segundos e resultados. O que faltar fica em branco, nunca em zero.
+- Exporte o período inteiro da campanha, no nível de anúncio, do jeito que a tabela vier. Se faltar uma coluna que muda um veredito, a IA pede só essa e diz onde fica. O que faltar fica em branco, nunca em zero.
+- Para conferir o que a Meta conta, bastam dois números do seu sistema: quantas vendas ou cadastros entraram no período e quantos vieram dos anúncios. A lista com a origem de cada um mostra mais, mas não é obrigatória.
 - Guarde o export em ads-insights/entrada antes de pedir a leitura; uma lista com dados pessoais só é lida de lá.
 - Quando a IA mostrar as duas leituras de um anúncio no limiar, a escolha é sua: ela não decide em silêncio.
 - Depois de mexer num conjunto, espere a data em que o movimento fica legível antes de mexer de novo.

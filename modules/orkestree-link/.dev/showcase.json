@@ -1,0 +1,22 @@
+{
+  "pt-BR": {
+    "request": "Tem pedido do Orkestree para mim?",
+    "reply": [
+      { "label": "Pedido", "text": "Campanha de novembro do Café Aurora: 2 peças do conceito manhã, em 9:16 e 4:5, até 23/11. Os conceitos já vêm aprovados pela empresa." },
+      { "label": "Do pedido", "text": "Página, evento, oferta de R$ 59 por mês, datas de 24 a 30/11 e o padrão do nome vieram do pedido e não voltam como pergunta." },
+      { "label": "Falta", "text": "Só o que o pedido não traz: o nome da marca no anúncio, o produto numa frase, para quem é e se há termos proibidos." },
+      { "label": "Entrega", "text": "Com o seu sim à declaração, as peças vão conferidas, cada arquivo com a impressão digital. Uma pessoa da empresa aprova antes de ir ao ar." }
+    ],
+    "saved": "Salvo em anuncios/cafe-aurora-novembro/pedido.json"
+  },
+  "en": {
+    "request": "Is there an Orkestree order for me?",
+    "reply": [
+      { "label": "Order", "text": "Café Aurora's November campaign: 2 pieces of the morning concept, in 9:16 and 4:5, by Nov 23. The concepts come already approved by the company." },
+      { "label": "From the order", "text": "Page, event, the R$ 59 a month offer, the dates from Nov 24 to 30 and the name pattern came from the order and do not come back as questions." },
+      { "label": "Missing", "text": "Only what the order does not carry: the brand name on the ad, the product in one sentence, who it is for and any forbidden terms." },
+      { "label": "Delivery", "text": "With your yes to the declaration, the pieces go checked, each file with its fingerprint. A person of the company approves before it goes live." }
+    ],
+    "saved": "Saved to anuncios/cafe-aurora-novembro/pedido.json"
+  }
+}

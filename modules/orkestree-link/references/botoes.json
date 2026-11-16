@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "checked_on": null,
+  "note": "Os botões que o app de criativos escreve em português e o valor que a entrega leva ao Orkestree, pelos nomes da lista de chamadas para ação da API de anúncios da Meta. Ainda não conferido na documentação da Meta: o Orkestree confere o botão quando recebe a entrega, e um botão fora desta lista volta como pergunta.",
+  "buttons": {
+    "saiba mais": "LEARN_MORE",
+    "comprar agora": "SHOP_NOW",
+    "cadastre-se": "SIGN_UP",
+    "assinar": "SUBSCRIBE",
+    "baixar": "DOWNLOAD",
+    "pedir cotacao": "GET_QUOTE",
+    "pedir agora": "ORDER_NOW",
+    "fale conosco": "CONTACT_US",
+    "ligar agora": "CALL_NOW",
+    "candidate-se": "APPLY_NOW",
+    "assistir mais": "WATCH_MORE",
+    "ouvir agora": "LISTEN_NOW",
+    "ver cardapio": "SEE_MENU",
+    "como chegar": "GET_DIRECTIONS",
+    "agendar agora": "BOOK_NOW",
+    "enviar mensagem pelo whatsapp": "WHATSAPP_MESSAGE"
+  }
+}

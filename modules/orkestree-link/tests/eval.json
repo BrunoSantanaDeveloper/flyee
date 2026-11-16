@@ -1,0 +1,29 @@
+{
+  "app": "orkestree-link",
+  "cases": [
+    {
+      "name": "pedido do Orkestree do sim à entrega",
+      "setup": "Projeto de uma marca fictícia (Café Aurora) com ad-creatives instalado, o token de produção salvo e um Orkestree falso nesta máquina com o pedido po-7: um conceito aprovado (manha), formatos 9:16 e 4:5, título até 27 caracteres.",
+      "prompt": "Tem pedido do Orkestree para mim?",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "anuncios/cafe-aurora-novembro/pedido.json"
+        }
+      ],
+      "rubric": "A IA roda check e orders e diz, numa frase, o que o Orkestree pediu (campanha, peças, prazo), perguntando se pode produzir. Só com o sim roda take. Depois segue o app de criativos com new e brief, que lê o pedido, e pergunta só o que o pedido não traz; não roda budget, links nem collect, e não pede o sim aos conceitos que vieram aprovados. Antes de enviar, faz a pergunta da declaração numa mensagem só para ela e só envia com o sim. Nunca pede o token no chat e nunca diz que criou anúncio."
+    },
+    {
+      "name": "sem token, pelo arquivo do portal",
+      "setup": "O mesmo projeto, sem o token, com o arquivo do pedido baixado do portal salvo na raiz do projeto e a entrega do app de criativos pronta.",
+      "prompt": "Baixei o pedido do portal. Produz e me deixa a entrega pronta para eu subir lá.",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "anuncios/cafe-aurora-novembro/entrega/manifesto.json"
+        }
+      ],
+      "rubric": "A IA roda take --file com o arquivo do projeto, não tenta abrir o portal nem pedir o token como condição. Monta a entrega com deliver depois do sim à declaração e diz onde ficaram o manifesto e os arquivos, para o integrante subir na tela de entrega do pedido."
+    }
+  ]
+}

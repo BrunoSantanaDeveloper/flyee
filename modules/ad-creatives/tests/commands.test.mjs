@@ -5,6 +5,7 @@
 
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -296,7 +297,8 @@ describe("the round, from the briefing to the journal", () => {
     for (const file of ["memoria-reels-lembra-v1.mp4", "memoria-reels-lembra-v1-capa.png", "nomes.json", "textos.md"]) assert.ok(existsSync(join(project.dir, "entrega", file)), file);
     const names = JSON.parse(readFileSync(join(project.dir, "entrega", "nomes.json"), "utf8"));
     assert.deepEqual(names.ads.map((ad) => ad.ad_name), ["memoria-reels-lembra-v1", "confianca-reels-branco-v1", "mtc-reels-pulso-v1"]);
-    assert.deepEqual(names.ads[0].files, [{ file: "memoria-reels-lembra-v1.mp4", placement: "vertical", format: "9:16", kind: "video" }]);
+    const delivered0 = readFileSync(join(project.dir, "entrega", "memoria-reels-lembra-v1.mp4"));
+    assert.deepEqual(names.ads[0].files, [{ file: "memoria-reels-lembra-v1.mp4", placement: "vertical", format: "9:16", kind: "video", sha256: createHash("sha256").update(delivered0).digest("hex"), bytes: delivered0.length }], "since 1.3.0 each file carries its SHA-256 and size");
     const texts = readFileSync(join(project.dir, "entrega", "textos.md"), "utf8");
     assert.match(texts, /https:\/\/www\.prontuariolotus\.com\.br\/assinar\?utm_content=memoria-reels-lembra-v1/);
     assert.match(texts, /utm_content=\{\{ad\.name\}\}/);

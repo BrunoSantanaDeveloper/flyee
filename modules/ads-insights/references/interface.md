@@ -14,6 +14,15 @@ Na pasta `ads-insights/` da raiz do projeto:
 | `leituras/<id>/report.json` | o veredito por peça, `interface_version` 1 |
 | `semanal/<AAAA-MM-DD>.json` | a leitura da semana: achados, movimentos propostos, vereditos dos movimentos anteriores |
 | `movimentos.json` | os movimentos: propostos, aplicados e julgados |
+| `respostas.json` | desde a 1.1.0, o que o integrante respondeu ao `intake`: `allowable` (`value`, `status`, `informed_at`) e `counts[]` (`period`, `stage`, `total`, `from_ads`, `status`, `informed_at`), sem dado pessoal |
+
+## A leitura de uma campanha que já rodou (1.1.0)
+
+`intake --json` diz o que pedir ao integrante para ler uma campanha, numa mensagem só, sem esperar o contrato: `found` (os exports da pasta de entrada, lidos só pelo cabeçalho, a leitura mais recente, o evento, a etapa, o custo permitido e a origem dele, os números já informados) e `questions[]` com `key` (`export`, `counts` ou `allowable`), `question`, `where` ou `why`, `suggestion` e `yes_accepts`, no máximo três. Um app que chama este para ler resultados repassa essas perguntas e nenhuma outra. O evento vem do que foi dito, da leitura, do contrato, do plano e, por último, de `anuncios/<campanha>/verba.json` do app de criativos.
+
+`report.json` ganhou `asks[]`: as colunas que faltam no export e mudam um veredito desta tabela (`field`, `column`, `because`, `where`), no máximo três. Vazio quando nada falta que mude um veredito.
+
+`weekly` roda sem o contrato. Sem a planilha de origem, os dois números do `intake` entram no lugar: `ledger.by_stage` traz os vindos dos anúncios e `ledger.claim_ratio` é o que a plataforma reivindica dividido por eles.
 
 ## `report.json`
 

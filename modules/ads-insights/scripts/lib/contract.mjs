@@ -70,7 +70,7 @@ export function contractTemplate({ plan = null, planData = null, today }) {
       atribuicao: item("o padrão da Meta (7 dias após o clique, 1 dia após a visualização) e o do Google Ads; as duas contagens são reivindicação, nunca verdade", "informado", "padrão do app"),
       canais: fromPlan(planData?.channels ? Object.entries(planData.channels).filter(([, on]) => on).map(([channel]) => channel) : null),
       historia: item("a planilha de origem (o que o negócio registrou) manda; a plataforma explica o que acontece dentro dela", "informado", "padrão do app"),
-      exports_semanais: item("toda segunda: o export da Meta no nível de anúncio com os 14 dias anteriores; o do Google Ads por campanha e por termo de pesquisa quando a Busca roda; a lista de leads e compras da semana com a origem", "informado", "padrão do app"),
+      exports_semanais: item("toda segunda: o export da Meta no nível de anúncio com os 14 dias anteriores; o do Google Ads por campanha e por termo de pesquisa quando a Busca roda; a lista de leads e compras da semana com a origem, ou só dois números do sistema: quantos entraram e quantos vieram dos anúncios", "informado", "padrão do app"),
       sal: item(randomBytes(16).toString("hex"), "verificado", "gerado pelo app; nunca sai do projeto"),
     },
   };

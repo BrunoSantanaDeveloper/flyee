@@ -233,15 +233,16 @@ export const DEFAULT_NAME_PATTERN = "<conceito>-<formato>-<gancho>-v<n>";
  * The briefing as the script uses it, and what is missing. `missing` lists the fields to ask
  * for, each with its question; `problems` the values that are there but cannot be read.
  */
-export function checkBriefing(text) {
+export function checkBriefing(text, { order = false } = {}) {
   const { fields, unknown } = parseBriefing(text);
   const problems = [];
   const missing = [];
-  for (const field of BRIEF_FIELDS.filter((candidate) => candidate.required)) {
+  // With an order of the Orkestree, the budget and the research are the Orkestree's: neither is asked.
+  for (const field of BRIEF_FIELDS.filter((candidate) => candidate.required && !(order && candidate.key === "verba"))) {
     const value = fields[field.key];
     if (value === undefined || (Array.isArray(value) && !value.length)) missing.push({ field: field.key, question: field.ask });
   }
-  if (!fields.concorrentes?.length && !fields.palavras_busca?.length) {
+  if (!order && !fields.concorrentes?.length && !fields.palavras_busca?.length) {
     missing.push({ field: "concorrentes", question: BRIEF_FIELDS.find((field) => field.key === "concorrentes").ask });
   }
   const budget = fields.verba === undefined ? null : parseMoney(fields.verba);

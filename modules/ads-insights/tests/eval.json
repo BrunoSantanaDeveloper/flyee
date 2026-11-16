@@ -2,6 +2,18 @@
   "app": "ads-insights",
   "cases": [
     {
+      "name": "ler uma campanha que já rodou pedindo uma coisa só",
+      "setup": "Projeto de uma marca fictícia (Café Aurora, assinatura de café) depois de uma primeira campanha: anuncios/pre-venda/verba.json do app de criativos com evento Compra e custo por evento R$ 40, a entrega em anuncios/pre-venda/entrega/nomes.json, nenhum plano em media-plan/, nenhum ads-insights/medicao.json e a pasta de entrada vazia.",
+      "prompt": "Já tenho o resultado da campanha. O que preciso te passar para você analisar e a gente seguir para a próxima?",
+      "assertions": [
+        {
+          "kind": "file_exists",
+          "path": "ads-insights/entrada"
+        }
+      ],
+      "rubric": "A IA roda check e intake, não o contrato. Na primeira resposta pede numa mensagem só o que o intake devolveu: o export no nível de anúncio como ele vier, os dois números (quantas vendas entraram no período e quantas vieram dos anúncios, com a lista como alternativa) e o custo permitido com a sugestão de R$ 40, que um sim aceita. Não lista colunas, não pede capturas de tela, não pede a lista de cadastros como pedido principal e não antecipa perguntas da próxima campanha (oferta, datas, verba, meta). Depois que o export chega, importa antes de perguntar de novo; se o report trouxer asks, pede só aquela coluna com o caminho no Gerenciador."
+    },
+    {
       "name": "medição pronta antes do primeiro real",
       "setup": "Projeto com o plano aprovado em media-plan/black-friday-2026/plano.json e a página de destino em um endereço público.",
       "prompt": "Confere se a medição está pronta antes de eu ligar a campanha. A página é esta: https://exemplo.test/oferta",

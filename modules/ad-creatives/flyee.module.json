@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "ad-creatives",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "type": "workflow",
   "trail": "divulgar",
   "title": {
@@ -52,6 +52,7 @@
     "scripts/lib/files.mjs",
     "scripts/lib/links.mjs",
     "scripts/lib/matrix.mjs",
+    "scripts/lib/order.mjs",
     "scripts/lib/page.mjs",
     "scripts/lib/partners.mjs",
     "scripts/lib/pieces.mjs",
@@ -183,8 +184,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "O som dos vídeos acompanha melhor os cortes. O whoosh de cada corte agora soa mais alto no instante do corte, e não um pouco depois, e a trilha tem o ponto alto no corte para a oferta, onde o impacto já cai. Isso vale com o Motor de vídeo atualizado; com um mais antigo, o som sai como antes.",
-    "en": "The videos' sound follows the cuts more closely. Each cut's whoosh is now loudest on the cut itself, not a little after it, and the track peaks on the cut into the offer, where the impact already lands. This works with the updated Video engine; with an older one, the sound comes out as before."
+    "pt-BR": "Quando a campanha chega como pedido do Orkestree, o briefing pega dele a marca, o produto, o público, os termos proibidos, a página, o evento, a oferta, as datas e o padrão do nome e só pergunta o resto; a verba e a pesquisa ficam no Orkestree, e o sim aos conceitos é o que a empresa deu lá. A entrega passa a levar a impressão digital e o tamanho de cada arquivo.",
+    "en": "When the campaign arrives as an Orkestree order, the briefing takes the brand, the product, the audience, the forbidden terms, the page, the event, the offer, the dates and the name pattern from it and asks only the rest; the budget and the research stay with the Orkestree, and the yes to the concepts is the one the company gave there. The delivery now carries each file's fingerprint and size."
   },
   "license": "member"
 }

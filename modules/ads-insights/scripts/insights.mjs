@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { contractTemplate, contractValues, validateContract } from "./lib/contract.mjs";
 import { aggregateByName, normalizeExport } from "./lib/exports.mjs";
+import { columnAsks, countsFor, eventStage, exportKind, intakeQuestions, STAGE_WORDS } from "./lib/intake.mjs";
 import { importRows, ledgerHeader, ledgerLines, readLedger, rowFrom, summarize } from "./lib/ledger.mjs";
 import { applyMove, emptyMoves, isOpen, judgeMoves, proposeMoves } from "./lib/moves.mjs";
 import { renderPulse, renderReading, renderTracking, renderWeekly } from "./lib/report.mjs";
@@ -37,16 +38,19 @@ const PATHS = {
   pulse: join(DIR, "pulso"),
   tags: join(DIR, "tags"),
   moves: join(DIR, "movimentos.json"),
+  answers: join(DIR, "respostas.json"),
 };
 
 const ARG_SPEC = {
   flags: ["json", "launch"],
-  options: ["today", "plan", "html", "source", "medium", "campaign", "content", "term", "url", "names", "name", "event", "period", "level", "allowable", "stage", "partner", "value", "qualified", "email", "date", "claimed", "claimed-leads", "reading", "google", "on", "daily", "rule"],
+  options: ["today", "plan", "html", "source", "medium", "campaign", "content", "term", "url", "names", "name", "event", "period", "level", "allowable", "stage", "partner", "value", "qualified", "email", "date", "claimed", "claimed-leads", "reading", "google", "on", "daily", "rule", "total", "from-ads"],
 };
 
 const HELP = `Medição e leitura de resultados (interface ${INTERFACE_VERSION})
 
   check                                  o app está pronto; o que o projeto já tem
+  intake [--allowable <reais>] [--total <n> --from-ads <n> [--stage compra] [--period ...]]
+                                         o que pedir para ler uma campanha que já rodou, numa mensagem só; grava as respostas
   contract [--plan <plano>]              cria ou confere medicao.json, o contrato de medição
   tags <url> | tags --html <arquivo>     o que está no HTML servido: Pixel, GA4, GTM, Google Ads, aviso de cookies
   utm build --source --medium --campaign --content [--term] [--url] [--names <nomes.json>]
@@ -144,6 +148,47 @@ function readingOf(id) {
   return { id: clean, dir, table, report: readJson(join(dir, "report.json")) };
 }
 
+function loadAnswers() {
+  const data = readJson(PATHS.answers);
+  return data && data.version === 1 ? { allowable: null, counts: [], ...data } : { version: 1, allowable: null, counts: [] };
+}
+
+/** The ad platform exports in the inbox, by their header only, and whether a reading already came from each. */
+function inboxExports(readings) {
+  if (!existsSync(PATHS.inbox)) return [];
+  const imported = new Set(readings.map((reading) => readJson(join(PATHS.readings, reading.id, "tabela.json"))?.source_file).filter(Boolean));
+  return readdirSync(PATHS.inbox)
+    .filter((name) => /\.(csv|txt)$/i.test(name))
+    .map((name) => {
+      const file = join(PATHS.inbox, name);
+      const kind = exportKind(readText(file), COLUMNS);
+      return kind ? { file: rel(file), source: kind.source, level: kind.level, imported: imported.has(rel(file)) } : null;
+    })
+    .filter(Boolean);
+}
+
+/**
+ * The newest budget sum of the ad creatives app (anuncios/<campanha>/verba.json): its event and
+ * its cost per event, the last place to look when neither the contract nor a plan has them.
+ */
+function campaignBudget() {
+  const dir = join(ROOT, "anuncios");
+  if (!existsSync(dir)) return null;
+  const found = readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => ({ campaign: entry.name, data: readJson(join(dir, entry.name, "verba.json")) }))
+    .filter((item) => item.data && typeof item.data === "object")
+    .sort((a, b) => String(b.data.computed_at ?? "").localeCompare(String(a.data.computed_at ?? "")))[0];
+  if (!found) return null;
+  const cost = typeof found.data.cost_per_event === "number" && found.data.cost_per_event > 0 ? found.data.cost_per_event : null;
+  return { campaign: found.campaign, event: typeof found.data.event === "string" && found.data.event ? found.data.event : null, cost_per_event: cost };
+}
+
+/** The optimization event, from what was said now, the reading, the contract, the plan, then the budget sum. */
+function eventOf(values, table, contract, plan) {
+  return values.event ?? table?.event ?? contract?.values.event ?? plan?.data?.premises?.evento?.value ?? campaignBudget()?.event ?? null;
+}
+
 function listReadings() {
   if (!existsSync(PATHS.readings)) return [];
   return readdirSync(PATHS.readings, { withFileTypes: true })
@@ -165,8 +210,11 @@ function checkCommand() {
   const readings = listReadings();
   const ledgerRows = existsSync(PATHS.ledger) ? readLedger(readText(PATHS.ledger)) : [];
   const moves = readJson(PATHS.moves) ?? emptyMoves();
-  const next = !contract
-    ? { action: "contract", command: command("contract"), say: "Comece pelo contrato de medição: as definições que o relatório não discute depois." }
+  const exports = inboxExports(readings);
+  const next = !contract && (exports.some((item) => !item.imported) || readings.length)
+    ? { action: "intake", command: command("intake"), say: "Há resultado de campanha para ler: o intake diz o que falta pedir, numa mensagem só. O contrato fica para antes da próxima campanha." }
+    : !contract
+    ? { action: "contract", command: command("contract"), say: "Antes do primeiro real, comece pelo contrato de medição. Para ler uma campanha que já rodou, comece pelo intake." }
     : !contract.validity.ready
       ? { action: "ask", command: command("contract"), say: `Faltam itens do contrato que a leitura precisa: ${contract.validity.required_unknown.join(", ")}. Pergunte numa mensagem só.` }
       : !readings.length
@@ -182,8 +230,77 @@ function checkCommand() {
     plan: plan ? { plan: plan.slug, state: plan.data.state, version: plan.data.version, file: rel(plan.path) } : null,
     readings,
     ledger: { file: rel(PATHS.ledger), lines: ledgerRows.length },
+    exports_in_inbox: exports,
     moves: { open: moves.moves.filter((move) => isOpen(move)).length, total: moves.moves.length },
     rules_checked_on: RULES.checked_on,
+    next_step: next,
+  };
+}
+
+function intakeCommand(values) {
+  ensureDir();
+  const today = todayOf(values);
+  const contract = loadContract({ required: false });
+  const plan = findPlan();
+  const readings = listReadings();
+  const answers = loadAnswers();
+  const latest = readings.find((reading) => reading.source === "meta") ?? readings[0] ?? null;
+  const latestPeriod = latest?.period ?? null;
+  const event = eventOf(values, latest ? readJson(join(PATHS.readings, latest.id, "tabela.json")) : null, contract, plan);
+  const stage = values.stage ?? eventStage(event) ?? null;
+  const recorded = [];
+
+  if (values.allowable !== undefined) {
+    const value = Number(String(values.allowable).replace(",", "."));
+    if (!Number.isFinite(value) || value <= 0) throw usage("--allowable precisa ser um valor em reais, como 120 ou 89,90.");
+    answers.allowable = { value, status: "informado", informed_at: today };
+    recorded.push("allowable");
+  }
+  if (values.total !== undefined || values["from-ads"] !== undefined) {
+    const total = values.total === undefined ? null : Number(values.total);
+    const fromAds = Number(values["from-ads"]);
+    if (!Number.isInteger(fromAds) || fromAds < 0) throw usage("--from-ads precisa ser um número inteiro: quantos vieram dos anúncios.");
+    if (total !== null && (!Number.isInteger(total) || total < fromAds)) throw usage("--total precisa ser um número inteiro, maior ou igual a --from-ads.");
+    const period = periodOf(values) ?? latestPeriod;
+    if (!period) throw usage("Sem leitura importada, informe o período dos números: --period AAAA-MM-DD..AAAA-MM-DD.");
+    const countStage = values.stage ?? stage ?? "compra";
+    if (!STAGE_WORDS[countStage]) throw usage(`--stage aceita ${Object.keys(STAGE_WORDS).join(", ")}.`);
+    answers.counts = [...answers.counts.filter((entry) => !(entry.stage === countStage && entry.period?.start === period.start && entry.period?.end === period.end)), { period, stage: countStage, total, from_ads: fromAds, status: "informado", informed_at: today }];
+    recorded.push("counts");
+  }
+  if (recorded.length) writeJson(PATHS.answers, answers);
+
+  const exports = inboxExports(readings);
+  const pending = exports.filter((item) => !item.imported);
+  const { allowable, source: allowableSource } = allowableOf({}, contract, plan);
+  const counts = stage ? countsFor(answers, latestPeriod, stage) : null;
+  const ledgerLines = existsSync(PATHS.ledger) ? readLedger(readText(PATHS.ledger)).length : 0;
+  const budget = allowable ? null : campaignBudget();
+  const suggestion = budget?.cost_per_event ? { value: budget.cost_per_event, label: `o custo por evento usado na conta da verba da campanha ${budget.campaign}` } : null;
+  const questions = intakeQuestions({ exportFound: pending.length > 0, reading: latest, stage, counts: counts ?? (ledgerLines ? { from: "ledger" } : null), allowable, allowableSuggestion: suggestion, period: latestPeriod });
+  const next = pending.length
+    ? { action: "import", command: command(`import ${pending[0].file} --source ${pending[0].source}`), say: `O export já está na pasta (${pending[0].file}). Importe antes de pedir qualquer coisa e rode intake de novo: as perguntas que sobrarem saem com o período da campanha.` }
+    : questions.length
+      ? { action: "ask", command: null, say: `Pergunte numa mensagem só (${questions.length} pergunta(s)), com as palavras de question e, se ele perguntar onde, as de where. Não acrescente colunas, capturas nem perguntas da próxima campanha: essas são do app de plano, depois da leitura. Grave cada resposta com intake --allowable, ou --total e --from-ads.` }
+      : latest && !latest.judged
+        ? { action: "report", command: command(`report ${latest.id}`), say: "Tudo o que a leitura precisa está aqui. Julgue a tabela." }
+        : { action: "weekly", command: command("weekly"), say: "Tudo o que a leitura precisa está aqui. Monte a leitura da semana." };
+  return {
+    ...base("intake"),
+    recorded,
+    found: {
+      exports,
+      reading: latest ? { id: latest.id, period: latest.period, judged: latest.judged } : null,
+      event,
+      stage,
+      allowable_brl: allowable,
+      allowable_source: allowableSource,
+      counts: counts ?? null,
+      ledger_lines: ledgerLines,
+      contract: contract ? { ready: contract.validity.ready } : null,
+    },
+    questions,
+    file: rel(PATHS.answers),
     next_step: next,
   };
 }
@@ -385,13 +502,15 @@ function allowableOf(values, contract, plan) {
   if (contract?.values.allowable) return { allowable: contract.values.allowable, source: "contrato de medição" };
   const planValue = plan?.data?.funnel?.allowable_cpl_brl ?? plan?.data?.economics?.allowable_cac_brl ?? null;
   if (planValue) return { allowable: planValue, source: `plano ${plan.slug}` };
+  const answered = loadAnswers().allowable;
+  if (typeof answered?.value === "number" && answered.value > 0) return { allowable: answered.value, source: `informado em ${brDay(answered.informed_at)}` };
   return { allowable: null, source: null };
 }
 
 function judgeReading(reading, { contract, plan, values }) {
   const rules = rulesOf(plan);
   const { allowable, source } = allowableOf(values, contract, plan);
-  const event = values.event ?? reading.table.event ?? contract?.values.event ?? null;
+  const event = eventOf(values, reading.table, contract, plan);
   const normalized = { source: reading.table.source, level: reading.table.level, fields: reading.table.fields, rows: reading.table.rows, period: reading.table.period, missing: reading.table.missing, unknown_columns: reading.table.unknown_columns, totals: reading.table.totals };
   const table = { ...judgeTable(normalized, { event, allowable, rules }), source: normalized.source, level: normalized.level, rules_label: rules.sample.label };
   return { normalized, table, allowable, allowableSource: source, event, rules };
@@ -402,10 +521,11 @@ function reportCommand(positionals, values) {
   const contract = loadContract({ required: false });
   const plan = findPlan();
   const judged = judgeReading(reading, { contract, plan, values });
-  const report = { interface_version: INTERFACE_VERSION, app: APP.name, reading: reading.id, generated_at: new Date().toISOString(), source: judged.normalized.source, level: judged.normalized.level, period: judged.normalized.period, event: judged.event, allowable_brl: judged.allowable, allowable_source: judged.allowableSource, totals: judged.normalized.totals, missing: judged.normalized.missing, unmatched: reading.table.unmatched ?? [], counts: judged.table.counts, median_visit_to_result_pct: judged.table.median_visit_to_result_pct, rows: judged.table.rows, rules_checked_on: judged.rules.checked_on };
+  const asks = ["ad", "campaign", "adset", "search_term", "keyword", "adgroup"].includes(judged.normalized.level) ? columnAsks({ source: judged.normalized.source, fields: judged.normalized.fields, rows: judged.table.rows, event: judged.event }) : [];
+  const report = { interface_version: INTERFACE_VERSION, app: APP.name, reading: reading.id, generated_at: new Date().toISOString(), source: judged.normalized.source, level: judged.normalized.level, period: judged.normalized.period, event: judged.event, allowable_brl: judged.allowable, allowable_source: judged.allowableSource, totals: judged.normalized.totals, missing: judged.normalized.missing, asks, unmatched: reading.table.unmatched ?? [], counts: judged.table.counts, median_visit_to_result_pct: judged.table.median_visit_to_result_pct, rows: judged.table.rows, rules_checked_on: judged.rules.checked_on };
   writeJson(join(reading.dir, "report.json"), report);
   writeFileAtomic(join(reading.dir, "leitura.md"), renderReading({ id: reading.id, normalized: judged.normalized, table: judged.table, allowableSource: judged.allowableSource, unmatched: reading.table.unmatched ?? [] }));
-  return { ...base("report"), reading: reading.id, files: { report: rel(join(reading.dir, "report.json")), markdown: rel(join(reading.dir, "leitura.md")) }, allowable_brl: judged.allowable, allowable_source: judged.allowableSource, event: judged.event, counts: judged.table.counts, rows: judged.table.rows.map((row) => ({ name: row.name, verdict: row.verdict, certainty: row.certainty, where_it_fails: row.where_it_fails, spend: row.metrics.spend, results: row.metrics.results, cost_per_result_brl: row.metrics.cost_per_result_brl, readings: row.readings })), say: tableSay(judged.table), next_step: { action: "weekly", command: command(`weekly --reading ${reading.id}`), say: `A leitura está em ${rel(join(reading.dir, "leitura.md"))}. Monte a leitura da semana, que cruza a tabela com a planilha de origem e propõe os movimentos.` } };
+  return { ...base("report"), reading: reading.id, files: { report: rel(join(reading.dir, "report.json")), markdown: rel(join(reading.dir, "leitura.md")) }, allowable_brl: judged.allowable, allowable_source: judged.allowableSource, event: judged.event, counts: judged.table.counts, rows: judged.table.rows.map((row) => ({ name: row.name, verdict: row.verdict, certainty: row.certainty, where_it_fails: row.where_it_fails, spend: row.metrics.spend, results: row.metrics.results, cost_per_result_brl: row.metrics.cost_per_result_brl, readings: row.readings })), asks, say: tableSay(judged.table), next_step: asks.length ? { action: "ask", command: null, say: `Falta${asks.length > 1 ? "m" : ""} no export ${asks.length} coluna(s) que muda(m) um veredito: ${asks.map((ask) => ask.column).join(", ")}. Mostre o veredito que já saiu e peça só essa(s), numa mensagem, com as palavras de where; com o novo export, importe e julgue de novo.` } : { action: "weekly", command: command(`weekly --reading ${reading.id}`), say: `A leitura está em ${rel(join(reading.dir, "leitura.md"))}. Monte a leitura da semana, que cruza a tabela com os números do negócio e propõe os movimentos.` } };
 }
 
 function latestReading(source, preferred = null) {
@@ -417,7 +537,9 @@ function latestReading(source, preferred = null) {
 function weeklyCommand(values) {
   ensureDir();
   const today = todayOf(values);
-  const contract = loadContract();
+  // A reading of a campaign that already ran does not wait for the contract: without it, the
+  // weekly read uses what the plan, the answers of the intake and the exports carry.
+  const contract = loadContract({ required: false }) ?? { data: null, validity: null, values: contractValues(null) };
   const plan = findPlan();
   const rules = rulesOf(plan);
   const metaReading = latestReading("meta", values.reading ?? null);
@@ -427,7 +549,16 @@ function weeklyCommand(values) {
   const judgedGoogle = googleReading ? { id: googleReading.id, ...judgeReading(googleReading, { contract, plan, values: {} }) } : null;
   const ledgerRows = existsSync(PATHS.ledger) ? readLedger(readText(PATHS.ledger)) : [];
   const purchasesClaimed = values.claimed !== undefined ? Number(values.claimed) : [judgedMeta, judgedGoogle].filter(Boolean).some((reading) => /compra|purchase/i.test(String(reading.event ?? ""))) ? [judgedMeta, judgedGoogle].filter(Boolean).reduce((sum, reading) => sum + reading.table.rows.reduce((acc, row) => acc + (row.metrics.results ?? 0), 0), 0) : null;
-  const ledger = summarize(ledgerRows, { claimedPurchases: Number.isFinite(purchasesClaimed) ? purchasesClaimed : null });
+  let ledger = summarize(ledgerRows, { claimedPurchases: Number.isFinite(purchasesClaimed) ? purchasesClaimed : null });
+  // Without the list, the two numbers of the intake stand in for it: the platform's claim is set
+  // against the sales the member's own system says came from the ads.
+  const counts = !ledgerRows.length ? countsFor(loadAnswers(), judgedMeta?.normalized.period ?? judgedGoogle?.normalized.period ?? null) : null;
+  if (counts) {
+    const claimed = Number.isFinite(purchasesClaimed) && counts.stage === "compra" ? purchasesClaimed : null;
+    const ratio = claimed !== null && counts.from_ads > 0 ? Math.round((claimed / counts.from_ads) * 100) / 100 : null;
+    const words = STAGE_WORDS[counts.stage].plural;
+    ledger = { ...ledger, by_stage: { ...ledger.by_stage, [counts.stage]: counts.from_ads }, claimed_purchases: claimed, claim_ratio: ratio, counts, say: `${counts.total ?? "?"} ${words} no sistema no período, ${counts.from_ads} vindos dos anúncios (números informados em ${brDay(counts.informed_at)}).${claimed !== null && counts.from_ads === 0 && claimed > 0 ? ` A plataforma reivindica ${claimed} e o sistema não registra nenhuma vinda dos anúncios: confira o campo de origem e o evento de compra.` : ""}` };
+  }
   const allowable = judgedMeta?.allowable ?? judgedGoogle?.allowable ?? null;
 
   const store = readJson(PATHS.moves) ?? emptyMoves();
@@ -453,7 +584,7 @@ function weeklyCommand(values) {
     ...(channels.includes("email") || channels.includes("owned") ? [{ label: "E-mail", measured: false, send: "o relatório de envios da ferramenta de e-mail, com cliques por envio" }] : []),
     ...(channels.includes("whatsapp") ? [{ label: "WhatsApp", measured: false, send: "a contagem de mensagens e respostas da semana" }] : []),
   ];
-  const notChecked = [...(!judgedMeta ? ["Meta: sem export desta semana."] : []), ...(!judgedGoogle && (channels.includes("google") || channels.includes("google_search")) ? ["Busca do Google: sem export desta semana."] : []), ...(!ledgerRows.length ? ["A planilha de origem está vazia: a verdade do negócio ficou de fora."] : []), ...(judgedMeta?.normalized.missing.length ? [`Colunas ausentes no export da Meta: ${judgedMeta.normalized.missing.join(", ")}.`] : []), ...coverage.filter((item) => !item.measured).map((item) => `${item.label}: usado, não medido (mande ${item.send}).`)];
+  const notChecked = [...(!judgedMeta ? ["Meta: sem export desta semana."] : []), ...(!judgedGoogle && (channels.includes("google") || channels.includes("google_search")) ? ["Busca do Google: sem export desta semana."] : []), ...(!ledgerRows.length ? [counts ? `A verdade do negócio veio em dois números informados, sem a origem de cada venda: a leitura compara o total, não cada anúncio.` : "Sem a planilha de origem nem os dois números do sistema, a verdade do negócio ficou de fora."] : []), ...(judgedMeta?.normalized.missing.length ? [`Colunas ausentes no export da Meta: ${judgedMeta.normalized.missing.join(", ")}.`] : []), ...coverage.filter((item) => !item.measured).map((item) => `${item.label}: usado, não medido (mande ${item.send}).`)];
 
   const rendered = renderWeekly({ today, contract: contract.values, plan: plan ? { plan: plan.slug, version: plan.data.version, state: plan.data.state } : null, metaReading: judgedMeta, googleReading: judgedGoogle, ledger, claimRatio: ledger.claim_ratio, moveLines, proposed, openMoves, coverage, notChecked });
   const markdownPath = join(PATHS.weekly, `${today}.md`);
@@ -550,10 +681,13 @@ function renderText(result) {
     case "check":
       body = [`Medição e leitura de resultados ${result.app.version} · Node ${result.node}`, `Contrato: ${result.contract ? (result.contract.ready ? "fechado" : `faltam ${result.contract.required_unknown.join(", ")}`) : "não existe"}; leituras: ${result.readings.length}; planilha: ${result.ledger.lines} linha(s).`];
       break;
+    case "intake":
+      body = result.questions.length ? result.questions.map((item) => `- ${item.question}`) : ["Nada a pedir: o que a leitura precisa já está aqui."];
+      break;
     case "tags":
     case "report":
     case "ledger":
-      body = [result.say ?? ""];
+      body = [result.say ?? "", ...(result.asks ?? []).map((ask) => `- ${ask.where}`)];
       break;
     case "weekly":
       body = result.say;
@@ -574,6 +708,8 @@ async function main(argv) {
   switch (name) {
     case "check":
       return checkCommand();
+    case "intake":
+      return intakeCommand(values);
     case "contract":
       return contractCommand(values);
     case "tags":

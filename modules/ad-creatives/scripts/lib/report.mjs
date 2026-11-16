@@ -110,7 +110,7 @@ export function conceptsMarkdown(concepts, { campaign, evidence, labels, approva
   const byId = new Map(evidence.items.map((item) => [item.id, item]));
   const lines = [`# Conceitos: ${campaign}`, ""];
   lines.push("A confiança de cada conceito é calculada pelo app, pelo número de tipos de fonte que o apoiam: nenhum é aposta, um é baixa, dois é média, três ou mais é alta. Os tipos são anúncio de concorrente, orgânico medido, fala do público e resultado próprio. Ninguém escreve a confiança à mão, e ela ordena apostas: não é previsão de resultado.", "");
-  lines.push(approval ? `Aprovados pelo integrante em ${day(approval.at)}.` : "Ainda não aprovados pelo integrante.", "");
+  lines.push(approval ? (approval.by === "orkestree" ? `Aprovados por uma pessoa da empresa no Orkestree em ${day(approval.at)} (pedido ${approval.order}).` : `Aprovados pelo integrante em ${day(approval.at)}.`) : "Ainda não aprovados pelo integrante.", "");
   concepts.forEach((concept, index) => {
     lines.push(`## ${index + 1}. ${concept.key} · confiança ${CONFIDENCE_LABELS[concept.confidence]}`, "");
     lines.push(`- ${concept.driver.type === "barreira" ? "Barreira" : "Motivador"}: ${concept.driver.text}`);

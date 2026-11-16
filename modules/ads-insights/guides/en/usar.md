@@ -33,7 +33,8 @@ Before the first real is spent, your AI gets measurement ready: what counts as a
 
 ## Tips
 
-- Always export the whole campaign period, at ad level, with impressions, link clicks, landing page views, 3-second plays and results. What is missing stays blank, never zero.
+- Export the whole campaign period, at ad level, as the table comes. If a column that changes a verdict is missing, the AI asks for that one only and says where it is. What is missing stays blank, never zero.
+- To check what Meta counts, two numbers from your system are enough: how many sales or sign-ups came in during the period and how many came from the ads. The list with each one's origin shows more, but it is not required.
 - Save the export in ads-insights/entrada before asking for the read; a list with personal data is only read from there.
 - When the AI shows the two readings of an ad at the threshold, the choice is yours: it does not decide in silence.
 - After changing an ad set, wait for the date the move becomes readable before changing it again.

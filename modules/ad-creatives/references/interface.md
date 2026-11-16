@@ -10,6 +10,7 @@ O que este app grava e outros apps leem, e o que ele lê dos outros. Tudo aqui s
 | app de plano | `media-plan/<plano>/pagina.md` | `page brief` escreve o briefing da página de destino |
 | Motor de vídeo | `capturas/<site>/captura.json` | `capture` traz o logo, as cores e as telas; `page audit` confere a página viva |
 | app de medição | `ads-insights/leituras/<leitura>/report.json` | a rodada seguinte (na versão 1.3.0): o resultado próprio de cada anúncio |
+| Ligação com o Orkestree | `anuncios/<campanha>/pedido.json` (desde a 1.3.0) | `brief` preenche marca, produto, público e termos proibidos (quando o pedido os traz), página, evento, oferta, preço, datas e padrão do nome com `source: pedido` e não pede verba nem pesquisa; as fichas que mantêm a chave, o ângulo e o gancho do pedido levam a aprovação dada no Orkestree |
 
 ## O que este app grava para os outros
 
@@ -29,6 +30,8 @@ A lista dos anúncios entregues, pela qual a medição liga cada linha do export
   ]
 }
 ```
+
+Desde a 1.3.0, cada item de `files` traz também `sha256` e `bytes`, e o arquivo traz `order` quando a campanha veio de um pedido do Orkestree. `file` é o nome do arquivo dentro de `entrega/`.
 
 `ad_name` é o nome exato que vai no Gerenciador e em `utm_content`; `concept` e `angle` ligam a peça à ficha. Um app que lê o export compara o nome letra por letra e lista o que não casa, sem adivinhar.
 

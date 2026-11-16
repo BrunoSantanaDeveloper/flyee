@@ -19,7 +19,8 @@ Os guias desta pasta: `../../references/medicao.md` (o contrato e o árbitro por
 
 - **Os números são do script.** Veredito, certeza, amostra, custo por resultado, data em que um movimento fica legível: tudo sai de `report`, `weekly` e `pulse`. Você cita; nunca calcula de cabeça nem arredonda para cima.
 - **Abaixo da amostra mínima é indício, e o texto diz.** 1.000 impressões e 30 cliques para ler gancho e CTR; 30 resultados para ler custo. "Dado insuficiente" é um veredito honesto, não um fracasso.
-- **A plataforma reivindica; a planilha de origem é a verdade.** Nunca cite um resultado da Meta ou do Google como venda real. Quando as duas histórias discordam, mostre as duas e deixe a escolha com o integrante.
+- **A plataforma reivindica; o sistema do integrante é a verdade.** A planilha de origem, ou os dois números que ele informa (quantos entraram e quantos vieram dos anúncios). Nunca cite um resultado da Meta ou do Google como venda real. Quando as duas histórias discordam, mostre as duas e deixe a escolha com o integrante.
+- **Na leitura, o que pedir é do script.** Peça só o que `intake` e `report` devolvem, com as palavras deles. Nunca monte uma lista de colunas, nunca peça capturas de tela nem a lista de cadastros quando os dois números bastam, e nunca antecipe as perguntas da próxima campanha: elas são do app de plano, depois da leitura.
 - **Nenhum dado pessoal entra em arquivo nenhum.** A planilha de origem leva um pseudônimo; nome, e-mail e telefone ficam de fora. Uma lista com dados pessoais só é lida de `ads-insights/entrada/`, e você nunca copia uma linha dela para a conversa.
 - **O app prescreve; o integrante executa.** Ninguém aqui mexe na conta de anúncios, no e-mail ou no WhatsApp, nem pede a senha deles. Um movimento vira "aplicado" só quando ele diz que fez, com a data.
 - **Chat curto, documento completo.** Na conversa vão as três linhas de `say` e as decisões; a leitura inteira fica no arquivo, que você indica numa frase. Quando ele pedir, mostre a seção.
@@ -36,12 +37,15 @@ Os guias desta pasta: `../../references/medicao.md` (o contrato e o árbitro por
 
 ## Depois: a leitura
 
-1. O integrante exporta do Gerenciador a tabela no nível de anúncio, com o período inteiro, e salva em `ads-insights/entrada/`. `import <arquivo> --source meta --json` (ou `--source google` para o Google Ads: campanha, grupo, palavra, termo de pesquisa ou anúncio). O script aceita português e inglês, vírgula ou ponto e vírgula; o que o export não traz fica em `missing`, nunca em zero.
-2. `link <leitura> --names anuncios/<campanha>/entrega/nomes.json --json` liga cada linha à peça da entrega. O que não casa fica em `unmatched`; nada é adivinhado.
-3. `report <leitura> --json` julga cada peça: escalar, manter, iterar, cortar, negativar ou dado insuficiente, com a certeza e onde a peça falha (gancho, miolo, página). Mostre `say` e, quando houver `readings`, as duas leituras do limiar para ele escolher.
-4. `weekly --json` (toda segunda, com `--claimed <compras reivindicadas>` quando o evento é compra) cruza as leituras com a planilha de origem, julga os movimentos anteriores, propõe os da semana e escreve `ads-insights/semanal/<data>.md`. Na conversa: as três linhas de `say`, as decisões e onde está o documento.
-5. Quando o integrante disser que fez um movimento: `move applied <id> --on <data> --json`. Até a data em `legivel_em`, nada mais nesse objeto, ou a leitura seguinte não separa os efeitos.
-6. Entre leituras, se ele perguntar "tem algo pegando fogo": `pulse --daily <export de 1 a 3 dias> --source meta --json`. Fala só o que quebrou um limiar; abre dizendo o que vê.
+Ler uma campanha que já rodou não espera o contrato: comece pelo `intake`, mesmo sem `medicao.json`. O contrato fica para antes da próxima campanha.
+
+1. `intake --json` olha o que o projeto já tem (o export na pasta de entrada, o evento, o custo permitido, os números já informados) e devolve `questions`: no máximo três, numa mensagem só, com as palavras de `question` e, se ele perguntar onde, as de `where`. Quando um export já está na pasta, `next_step` manda importar antes de perguntar qualquer coisa. Grave as respostas com `intake --allowable <reais>` e `intake --total <n> --from-ads <n>`, e rode `intake` de novo até não sobrar pergunta.
+2. `import <arquivo> --source meta --json` (ou `--source google` para o Google Ads: campanha, grupo, palavra, termo de pesquisa ou anúncio). O script aceita o export como ele vier, em português ou em inglês, com vírgula ou ponto e vírgula; o que o export não traz fica em `missing`, nunca em zero.
+3. `link <leitura> --names anuncios/<campanha>/entrega/nomes.json --json` liga cada linha à peça da entrega. O que não casa fica em `unmatched`; nada é adivinhado.
+4. `report <leitura> --json` julga cada peça: escalar, manter, iterar, cortar, negativar ou dado insuficiente, com a certeza e onde a peça falha (gancho, miolo, página). Mostre `say` e, quando houver `readings`, as duas leituras do limiar para ele escolher. Quando `asks` não vier vazio, falta uma coluna que muda um veredito: mostre o que já saiu e peça só essa coluna, com as palavras de `where`, numa mensagem.
+5. `weekly --json` (toda segunda, com `--claimed <compras reivindicadas>` quando o evento é compra) cruza as leituras com a planilha de origem ou com os dois números do `intake`, julga os movimentos anteriores, propõe os da semana e escreve `ads-insights/semanal/<data>.md`. Na conversa: as três linhas de `say`, as decisões e onde está o documento.
+6. Quando o integrante disser que fez um movimento: `move applied <id> --on <data> --json`. Até a data em `legivel_em`, nada mais nesse objeto, ou a leitura seguinte não separa os efeitos.
+7. Entre leituras, se ele perguntar "tem algo pegando fogo": `pulse --daily <export de 1 a 3 dias> --source meta --json`. Fala só o que quebrou um limiar; abre dizendo o que vê.
 
 ## O que vem depois
 

@@ -40,7 +40,7 @@ Decidido pelo operador em 2026-10-12:
 | D11 | Confiança de um conceito | Proposto: pelo número de tipos de fonte independentes que o apoiam. 0 = aposta, 1 = baixa, 2 = média, 3 ou mais = alta | `scripts/lib/concepts.mjs` |
 | D12 | Regra de seleção e limiares da leitura de concorrentes | Proposto: os 10 primeiros cartões ativos de cada concorrente, todos registrados, sem escolha; o script ordena por tempo no ar. Anúncio "mantido" a partir de 30 dias no ar; um ângulo vira padrão do mercado quando aparece em 2 ou mais concorrentes; concorrente com menos de 3 anúncios ativos é indício. Fecha na T0.4, com o operador no papel do integrante | `references/pesquisa-manual.md`; constantes em `scripts/lib/evidence.mjs` |
 | D13 | Pastas no projeto do integrante | `./anuncios/<campanha>/`, `./instagram-research/` e `./ads-insights/` | constantes dos scripts; permissões `fs:write` |
-| D14 | O app escreve na conta de anúncios? | Não: decidido. Ele prescreve, e quem cria a campanha é a pessoa | invariante 5 |
+| D14 | O app escreve na conta de anúncios? | ⚠️ Substituída em 2026-11-16 pela G1 de `docs/PLANO-GESTAO-TRAFEGO.md`: a IA pode escrever na conta, pedindo permissão antes de cada escrita, e quem gere a conta é o Orkestree. Era: "Não: decidido. Ele prescreve, e quem cria a campanha é a pessoa". Os apps continuam prescrevendo até a versão que trouxer a ligação com o Orkestree | invariante 5 |
 | D15 | Amostra mínima para julgar uma peça (`ads-insights`) | Em aberto. Decide-se com o export real da campanha do MedChina | `references/leitura.json` do `ads-insights` |
 | D16 | Posicionamentos de anúncio no feed (4:5 e 1:1) | Valores do Guia de Anúncios da Meta, conferidos no dia | `modules/video-render/references/redes.json` |
 | D17 | IAs testadas e core | `compatible_ais: ["claude_code"]`; `min_core` `>=1.3.0` no workflow (usa a `texto-natural`) e `>=1.1.0` no tool | manifesto |
@@ -88,7 +88,7 @@ Decididas pelo operador em 2026-10-23, depois de uma avaliação de prontidão: 
 2. **O app não promete nem prevê resultado.** A evidência ordena apostas. O conferidor de texto bloqueia promessa de ROAS, CPA ou venda nas fichas e nas notas de lançamento.
 3. **Todo dado carrega origem e data.** Apify, link, captura de tela, exportação ou declaração do integrante. Conceito sem evidência sai marcado como aposta, nunca vestido de achado.
 4. **Nunca usar login, cookie ou sessão do integrante para colher dado da Meta.** Os atores do Apify rodam sem a conta dele; é isso que mantém a conta fora de risco.
-5. **Nunca escrever na conta de anúncios nem pedir credencial dela.** É dinheiro em jogo e não há como desfazer.
+5. **Nunca escrever na conta de anúncios nem pedir credencial dela.** É dinheiro em jogo e não há como desfazer. ⚠️ Substituída em 2026-11-16 pela G1 e pelas invariantes 1 e 2 de `docs/PLANO-GESTAO-TRAFEGO.md`: escrita só com o sim do integrante àquela escrita, e nunca acima do teto aprovado.
 6. **Sem a chave o app entrega.** O modo manual é o modo base, e a chave só automatiza.
 7. **Nenhuma coleta paga sem limite de itens, e acima do teto (D7) só depois de dizer o custo estimado.** Um ator sem limite pode gastar o crédito do mês numa chamada.
 8. **O integrante não abre o terminal.** A pesquisa manual acontece no navegador, com links prontos.
@@ -518,7 +518,7 @@ Roda ao fim do ÉPICO 3 e de novo ao fim do ÉPICO 4.
 ### Invariantes que estes épicos acrescentam
 
 14. **Nenhum número sem origem e data.** Dado medido vem de coleta, export ou do integrante; faixa de referência vem rotulada como regra de bolso com fonte, moeda e data; cenário é aritmética condicional sobre suposição rotulada. Nenhum app promete ou prevê resultado.
-15. **O app prescreve; o integrante executa o que mexe em dinheiro ou envia.** Nenhum app escreve na conta de anúncios, na ferramenta de e-mail ou no WhatsApp, nem pede a credencial delas.
+15. **O app prescreve; o integrante executa o que mexe em dinheiro ou envia.** Nenhum app escreve na conta de anúncios, na ferramenta de e-mail ou no WhatsApp, nem pede a credencial delas. ⚠️ Para a conta de anúncios, substituída em 2026-11-16 pela G1 de `docs/PLANO-GESTAO-TRAFEGO.md` (o Orkestree escreve, com permissão antes de cada escrita); e-mail e WhatsApp não mudam.
 16. **Perguntas numa mensagem só, até quatro, cada uma com sugestão** e o que muda se a resposta for outra; uma sugestão nunca inventa fato da marca e fica `sugerido-pendente` até o sim.
 17. **Os fatos da marca vivem no projeto** (`media-plan/marca.md`, `plano.json`) com fonte e data; todo app olha o projeto antes de perguntar.
 18. **Contratos entre apps só crescem:** `plano.json`, `report.json`, `nomes.json` e `origens.csv` com `interface_version` 1 e mudanças aditivas; cada app que serve outro traz `references/interface.md`.
@@ -719,7 +719,7 @@ core 1.10.0 → `media-plan` 1.0.0 → `ads-insights` 1.0.0 (medição) → `ad-
 - O download de um anúncio por link pelo `yt-dlp` e a leitura dele pelo `video-analysis` não foram testados (T0.4).
 - Não sei se uma captura da aba de Reels basta para uma mediana confiável (T0.2).
 - O número da fase de aprendizado (D10) e as medidas de anúncio no feed (D16) vieram de fontes de terceiros.
-- O conector oficial de anúncios da Meta e a API do Instagram ficam fora da 1.x. A leitura automática agendada depende da fase P4.
+- O conector oficial de anúncios da Meta e a API do Instagram ficam fora da 1.x. A leitura automática agendada depende da fase P4. ⚠️ Desde 2026-11-16, os dois ficam no Orkestree, e a leitura agendada também (`docs/PLANO-GESTAO-TRAFEGO.md`, ÉPICO 4).
 - Peça com pessoa falando não é produzida pelo app: sai como roteiro e plano de cenas.
 - O lado da plataforma (`flyee-club`) não foi aberto. Publicação, marca da versão gratuita e página do app são passos de console.
 - Os fatos do MedChina vêm dos documentos do próprio projeto, auditados por ele em 2026-08-09, e não foram conferidos de novo.

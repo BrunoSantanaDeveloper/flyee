@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "ads-insights",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "type": "tool",
   "trail": "escalar",
   "title": {
@@ -34,6 +34,7 @@
     "scripts/lib/contract.mjs",
     "scripts/lib/csv.mjs",
     "scripts/lib/exports.mjs",
+    "scripts/lib/intake.mjs",
     "scripts/lib/ledger.mjs",
     "scripts/lib/moves.mjs",
     "scripts/lib/report.mjs",
@@ -63,10 +64,10 @@
     },
     {
       "kind": "fs:read",
-      "scope": "ads-insights/entrada/, anuncios/*/entrega/nomes.json e media-plan/*/plano.json",
+      "scope": "ads-insights/entrada/, anuncios/*/entrega/nomes.json, anuncios/*/verba.json e media-plan/*/plano.json",
       "reason": {
-        "pt-BR": "Os exports e as listas que você traz, os nomes dos anúncios da entrega e o plano aprovado, de onde vêm o custo permitido e a regra de link.",
-        "en": "The exports and lists you bring, the ad names of the delivery and the approved plan, where the allowable cost and the link rule come from."
+        "pt-BR": "Os exports e as listas que você traz, os nomes dos anúncios da entrega, a conta da verba da campanha e o plano aprovado, de onde vêm o evento, o custo permitido e a regra de link.",
+        "en": "The exports and lists you bring, the ad names of the delivery, the campaign's budget sum and the approved plan, where the event, the allowable cost and the link rule come from."
       }
     },
     {
@@ -79,8 +80,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "As perguntas do contrato vêm na ordem certa: primeiro o tipo de negócio, e na rodada seguinte o número que julga os anúncios e a ativação, já com a sugestão que o tipo permite. Para aceitar uma sugestão, basta dizer sim, e o que está com outra pessoa vira um questionário para enviar.",
-    "en": "The contract's questions come in the right order: first the type of business, and in the next round the number that judges the ads and the activation, with the suggestion the type allows. To accept a suggestion you just say yes, and what another person knows becomes a questionnaire to send."
+    "pt-BR": "Ler uma campanha que já rodou ficou mais simples. A IA pede o export como ele vier, sem lista de colunas, e no lugar da lista de cadastros bastam dois números do seu sistema. Uma coluna só é pedida quando muda um veredito, com o caminho no Gerenciador. A leitura não espera mais o contrato de medição, e as perguntas da próxima campanha ficam para o app de plano.",
+    "en": "Reading a campaign that already ran got simpler. The AI asks for the export as it comes, with no column list, and two numbers from your system replace the sign-up list. A column is asked for only when it changes a verdict, with the path in the Ads Manager. The read no longer waits for the measurement contract, and the next campaign's questions belong to the planning app."
   },
   "license": "member"
 }

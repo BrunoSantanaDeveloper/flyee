@@ -24,6 +24,7 @@ import { campaignLinks, linksMarkdown } from "./lib/links.mjs";
 import { checkMatrix, matrixFromConcepts, matrixMarkdown } from "./lib/matrix.mjs";
 import { auditPage, pageBriefMarkdown } from "./lib/page.mjs";
 import { commentsToItems, instagramPostsToItems, partnerApps, partnerKind } from "./lib/partners.mjs";
+import { briefFromOrder, orderApproval, readOrder } from "./lib/order.mjs";
 import { applyPlanToBriefing, briefFromPlan, findPlan } from "./lib/plan.mjs";
 import { checkSearch, searchMarkdown } from "./lib/search.mjs";
 import { beatGrid, checkPiece, checkPoster, draftPiece, dropOf, eventsOf, FONT_FILE, fontWeight, IMAGE_FILE, imageSize, imageTarget, pageHtml, paletteFrom, posterOf, screenTexts } from "./lib/pieces.mjs";
@@ -74,11 +75,11 @@ function errorOf(error) {
 
 function campaignOf(name) {
   const { slug, paths } = requireCampaign(ROOT, name, { scriptCommand: SCRIPT_COMMAND });
-  return { slug, paths, state: readState(paths, slug) };
+  return { slug, paths, state: readState(paths, slug), order: readOrder(paths.dir) };
 }
 
 function briefOf(ctx) {
-  return checkBriefing(readFileSync(ctx.paths.briefing, "utf8"));
+  return checkBriefing(readFileSync(ctx.paths.briefing, "utf8"), { order: Boolean(ctx.order) });
 }
 
 function requireBrief(ctx, fields, what) {
@@ -105,7 +106,12 @@ function loadConcepts(ctx, { brief, evidence }) {
 function approvalOf(ctx, concepts) {
   const approved = ctx.state.approvals?.concepts ?? null;
   const hash = hashJson(concepts.map(approvalContent));
-  return { approved: Boolean(approved), current: Boolean(approved) && approved.hash === hash, at: approved?.at ?? null, hash, confidence_changes: confidenceChanges(concepts, approved) };
+  const local = { approved: Boolean(approved), current: Boolean(approved) && approved.hash === hash, at: approved?.at ?? null, hash, confidence_changes: confidenceChanges(concepts, approved) };
+  if (local.current) return local;
+  // An order of the Orkestree carries the concepts a person of the company approved there: while
+  // every card keeps the key, the angle and the hook of the order, the yes is that one.
+  const fromOrder = orderApproval(ctx.order, concepts);
+  return fromOrder ? { approved: true, current: true, at: fromOrder.at, hash, by: "orkestree", order: fromOrder.order, confidence_changes: [] } : local;
 }
 
 function requireApproved(ctx, concepts) {
@@ -212,7 +218,7 @@ function listCampaigns() {
   return dirsIn(join(ROOT, ADS_DIR))
     .filter((slug) => isFile(join(ROOT, ADS_DIR, slug, "briefing.md")))
     .map((slug) => {
-      const ctx = { slug, paths: layout(ROOT, slug), state: readState(layout(ROOT, slug), slug) };
+      const ctx = { slug, paths: layout(ROOT, slug), state: readState(layout(ROOT, slug), slug), order: readOrder(layout(ROOT, slug).dir) };
       const stage = stageOf(ctx);
       return { campaign: slug, dir: rel(ctx.paths.dir), stage: stage.stage, say: stage.say, round: ctx.state.round ?? 0 };
     });
@@ -228,8 +234,9 @@ function stageOf(ctx) {
   const checked = briefOf(ctx);
   if (!checked.complete) return step("briefing", "O briefing tem campos em branco.", `brief ${ctx.slug}`);
   const evidence = readEvidence(ctx.paths.evidence, ctx.slug);
-  if (!evidence.items.length) return step("pesquisa", "Falta a pesquisa: os links da Biblioteca de Anúncios e as capturas do integrante.", `links ${ctx.slug}`);
-  if (!isFile(ctx.paths.concepts)) return step("conceitos", "Falta escrever os conceitos a partir da evidência.", `evidence ${ctx.slug}`);
+  // With an order, the research and the concepts came from the Orkestree: the cards start from them.
+  if (!evidence.items.length && !ctx.order) return step("pesquisa", "Falta a pesquisa: os links da Biblioteca de Anúncios e as capturas do integrante.", `links ${ctx.slug}`);
+  if (!isFile(ctx.paths.concepts)) return step("conceitos", ctx.order ? `Falta escrever as fichas a partir dos conceitos do pedido ${ctx.order.id}: a chave, o ângulo e o gancho como vieram.` : "Falta escrever os conceitos a partir da evidência.", ctx.order ? `concepts ${ctx.slug}` : `evidence ${ctx.slug}`);
   let concepts;
   try {
     concepts = loadConcepts(ctx, { brief: checked.brief, evidence }).concepts;
@@ -291,8 +298,23 @@ function fillFromPlan(ctx) {
   return { plan: fromPlan.plan, filled: applied.filled };
 }
 
+/**
+ * What an order of the Orkestree answers of the briefing: the empty lines take the order's values,
+ * each remembered as `pedido`, before the plan fills what is left.
+ */
+function fillFromOrder(ctx) {
+  if (!ctx.order) return { order: null, filled: [] };
+  const applied = applyPlanToBriefing(readFileSync(ctx.paths.briefing, "utf8"), briefFromOrder(ctx.order));
+  if (applied.filled.length) writeFileAtomic(ctx.paths.briefing, applied.text);
+  ctx.state.brief_sources = { ...(ctx.state.brief_sources ?? {}), ...Object.fromEntries(applied.filled.map((key) => [key, "pedido"])) };
+  ctx.state.order = { id: ctx.order.id, taken_at: ctx.order.taken_at ?? null };
+  writeState(ctx.paths, ctx.state);
+  return { order: { id: ctx.order.id, state: ctx.order.state ?? "open", due: ctx.order.due ?? null }, filled: applied.filled };
+}
+
 function briefCommand(positionals) {
   const ctx = campaignOf(positionals[0]);
+  const fromOrder = fillFromOrder(ctx);
   const fromPlan = fillFromPlan(ctx);
   const checked = briefOf(ctx);
   const brief = checked.brief;
@@ -302,9 +324,14 @@ function briefCommand(positionals) {
   const budget = brief.verba_diaria > 0 ? learningBudget({ daily: brief.verba_diaria, cost: brief.custo_por_evento, event: brief.evento ?? null }) : null;
   const capture = ctx.state.capture ?? null;
   const site = brief.site ?? brief.pagina ?? null;
+  const fromOrderKeys = Object.keys(sources).filter((key) => sources[key] === "pedido");
   let next;
-  if (!checked.complete) {
-    next = { action: "ask", command: null, say: fromPlan.plan ? `${fromPlanKeys.length} campo(s) vieram do plano ${fromPlan.plan.plan}. Pergunte ao integrante, numa mensagem só, o que falta (questions). Grave as respostas no briefing.md, sem inventar oferta, preço ou número, e rode brief de novo.` : "Pergunte ao integrante, numa mensagem só, o que falta (questions). Grave as respostas no briefing.md, sem inventar oferta, preço ou número; oferta, preço e verba sem plano são trabalho do app de plano. Rode brief de novo." };
+  if (!checked.complete && fromOrder.order) {
+    next = { action: "ask", command: null, say: `${fromOrderKeys.length} campo(s) vieram do pedido ${fromOrder.order.id} do Orkestree e não voltam como pergunta. Pergunte ao integrante, numa mensagem só, só o que o pedido não traz (questions). Grave as respostas no briefing.md e rode brief de novo.` };
+  } else if (checked.complete && fromOrder.order && !(site && !capture)) {
+    next = { action: "concepts", command: command(`status ${ctx.slug}`), say: `Com o pedido ${fromOrder.order.id}, a verba e a pesquisa ficam no Orkestree. Escreva as fichas em conceitos.json a partir dos conceitos do pedido, com a chave, o ângulo e o gancho como vieram, e siga o status: o sim aos conceitos é o que a empresa deu no Orkestree.` };
+  } else if (!checked.complete) {
+    next = { action: "ask", command: null, say: fromPlan.plan ?`${fromPlanKeys.length} campo(s) vieram do plano ${fromPlan.plan.plan}. Pergunte ao integrante, numa mensagem só, o que falta (questions). Grave as respostas no briefing.md, sem inventar oferta, preço ou número, e rode brief de novo.` : "Pergunte ao integrante, numa mensagem só, o que falta (questions). Grave as respostas no briefing.md, sem inventar oferta, preço ou número; oferta, preço e verba sem plano são trabalho do app de plano. Rode brief de novo." };
   } else if (site && !capture) {
     next = { action: "capture", command: command(`capture ${ctx.slug}`), say: "Copie a marca do site (logo, cores e telas) antes das peças." };
   } else {
@@ -321,6 +348,8 @@ function briefCommand(positionals) {
     fields,
     sources,
     plan: fromPlan.plan ?? ctx.state.plan ?? null,
+    order: fromOrder.order,
+    filled_from_order: fromOrderKeys,
     filled_from_plan: fromPlanKeys,
     filled_now: fromPlan.filled,
     budget: budget ? { viable: budget.viable, max_cost_per_event: budget.max_cost_per_event, floor_per_set: budget.floor_per_set, say: budget.say } : null,
@@ -622,7 +651,8 @@ function conceptsCommand(positionals) {
   const data = readJson(ctx.paths.concepts, {});
   writeJson(ctx.paths.concepts, { ...data, version: data.version ?? 1, campaign: ctx.slug, checked_at: nowIso(), concepts });
   const approval = approvalOf(ctx, concepts);
-  writeFileAtomic(ctx.paths.conceptsMd, conceptsMarkdown(concepts, { campaign: ctx.slug, evidence, labels: LABELS, approval: approval.current ? ctx.state.approvals.concepts : null, warnings }));
+  const approvalShown = approval.current ? (approval.by === "orkestree" ? { at: approval.at, by: "orkestree", order: approval.order } : ctx.state.approvals?.concepts ?? null) : null;
+  writeFileAtomic(ctx.paths.conceptsMd, conceptsMarkdown(concepts, { campaign: ctx.slug, evidence, labels: LABELS, approval: approvalShown, warnings }));
   return {
     ...base("concepts"),
     campaign: ctx.slug,
@@ -1360,7 +1390,9 @@ async function deliverCommand(positionals) {
     generated_at: generatedAt,
     name_pattern: brief.padrao,
     site_reads_name: Boolean(brief.le_nome),
-    ads: concepts.map((concept) => ({ ad_name: concept.ad_name, concept: concept.key, angle: concept.angle, files: files.filter((file) => file.concept === concept.key).map((file) => ({ file: file.file, placement: file.placement, format: file.format, kind: file.kind })) })),
+    // sha256 and bytes since 1.3.0: whoever receives the delivery checks each file against them.
+    ads: concepts.map((concept) => ({ ad_name: concept.ad_name, concept: concept.key, angle: concept.angle, files: files.filter((file) => file.concept === concept.key).map((file) => ({ file: file.file, placement: file.placement, format: file.format, kind: file.kind, sha256: sha256File(resolve(ROOT, file.path)), bytes: statSync(resolve(ROOT, file.path)).size })) })),
+    ...(ctx.order ? { order: ctx.order.id } : {}),
   });
   writeFileAtomic(join(ctx.paths.delivery, "textos.md"), textsMarkdown(concepts, { campaign: ctx.slug, brief, files }));
   const budget = brief.verba_diaria > 0 ? learningBudget({ daily: brief.verba_diaria, cost: brief.custo_por_evento, event: brief.evento ?? null }) : null;

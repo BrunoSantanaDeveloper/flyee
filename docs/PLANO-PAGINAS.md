@@ -2,7 +2,7 @@
 
 **Objetivo:** quando o operador (ou um integrante) pedir à IA uma página de um tipo conhecido (página de vendas, planos e preços, página de API, order bump, upsell, downsell, cross-sell, página de obrigado), a IA segue o roteiro de mercado daquele tipo e os modelos reais analisados, constrói a página e a confere pela captura. O repertório cresce a cada modelo que o operador traz.
 
-> Conferido contra o código em 2026-11-08. A primeira rodada (Hostinger) está em a702826; a segunda (Juridiq, ÉPICO 5) está em 9b986bd e e859313; a terceira (ÉPICO 6) está em 4cc2280. As tags `video-render@1.1.0` e `conversion-pages@1.1.0` apontam para 4cc2280 e chegaram à plataforma como rascunho, com o SHA-256 da plataforma igual ao do pack. Publicar e marcar a versão de entrada (D7) continuam sendo cliques do operador. **⚠️ A terceira rodada piorou a página do ONE e não deve ser publicada; o ÉPICO 7 a corrige no commit b5535b0, com as tags `video-render@1.2.0` (`8b8ef9c2…`, run 42546822988) e `conversion-pages@1.2.0` (`a77b9581…`, run 42546875997), rascunhos com o SHA-256 da plataforma igual ao do pack.** Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
+> Conferido contra o código em 2026-11-08. A primeira rodada (Hostinger) está em a702826; a segunda (Juridiq, ÉPICO 5) está em 9b986bd e e859313; a terceira (ÉPICO 6) está em 4cc2280. As tags `video-render@1.1.0` e `conversion-pages@1.1.0` apontam para 4cc2280 e chegaram à plataforma como rascunho, com o SHA-256 da plataforma igual ao do pack. Publicar e marcar a versão de entrada (D7) continuam sendo cliques do operador. **⚠️ A terceira rodada piorou a página do ONE e não deve ser publicada; o ÉPICO 7 a corrige no commit b5535b0, com as tags `video-render@1.2.0` (`8b8ef9c2…`, run 42546822988) e `conversion-pages@1.2.0` (`a77b9581…`, run 42546875997), rascunhos com o SHA-256 da plataforma igual ao do pack.** As rodadas dos ÉPICOs 8 e 9 estão em f5dc4ad, com a correção do aviso de cookies em 1c343b4; as tags `video-render@1.3.0` (`3bc73786…`, run 43784479934) e `conversion-pages@1.3.0` (`685171d3…`, run 43784538501) apontam para 310fc83 (2026-11-15), rascunhos com o SHA-256 da plataforma igual ao do pack. Legenda: ✅ existe · 🟡 parcial · ⬜ não existe · ⚠️ correção.
 
 ## Estado da implementação (2026-11-07)
 
@@ -14,12 +14,12 @@
 | T6.1 a T6.7 | ✅ | A rodada da demonstração e das medições (2026-11-08), commitada em 4cc2280 junto com o som do motor: `conversion-pages` 1.1.0 e `video-render` 1.1.0, corrigidos no lugar antes das tags (D16). Detalhes no ÉPICO 6 |
 | T7.1 a T7.5 | ✅ | A correção da rodada 6 (2026-11-08), em b5535b0: detalhes no ÉPICO 7 |
 | T7.6 | ✅ | A home refeita (5aadb0c) foi ao ar em 2026-11-09 com o push do operador, junto com aa15754 e 2263691: o deploy 42599019108 passou, e a página publicada tem o título novo e o brilho (`mkt-aurora`). Detalhes no ÉPICO 7 |
-| T8.1 a T8.4 | ✅ na árvore, sem commit | O modelo da Subido AI, o tipo `curso`, a conferência e o motor 1.3.0 (2026-11-09): detalhes no ÉPICO 8 |
+| T8.1 a T8.4 | ✅ | Em f5dc4ad. O modelo da Subido AI, o tipo `curso`, a conferência e o motor 1.3.0 (2026-11-09): detalhes no ÉPICO 8 |
 | T8.5 | ✅ | A construção de verdade, em duas rodadas com leitores às cegas: detalhes no ÉPICO 8 |
-| T8.6 | 🟡 | Versões prontas e instaladas para o usuário, sem commit e sem tag: detalhes no ÉPICO 8 |
-| T9.1 a T9.3, T9.5 | ✅ na árvore, sem commit | O modelo da Databricks, a §15 do guia das figuras, as correções do motor e o design system para o Orkestree na pasta de trabalho (2026-11-09): detalhes no ÉPICO 9 |
+| T8.6 | ✅ | Tags no 310fc83 (2026-11-15), rascunhos na plataforma com o SHA-256 do pacote; publicar é o clique do operador: detalhes no ÉPICO 8 |
+| T9.1 a T9.3, T9.5 | ✅ | Em f5dc4ad, com a correção do aviso de cookies em 1c343b4. O modelo da Databricks, a §15 do guia das figuras, as correções do motor e o design system para o Orkestree na pasta de trabalho (2026-11-09): detalhes no ÉPICO 9 |
 | T9.4 | ✅ | A construção de verdade, em quatro rodadas com leitores às cegas; a quarta venceu nas seis perguntas, nas duas ordens: detalhes no ÉPICO 9 |
-| T9.6 | 🟡 | As mesmas versões 1.3.0, sem commit e sem tag: detalhes no ÉPICO 9 |
+| T9.6 | ✅ | As mesmas versões 1.3.0, nas mesmas tags do T8.6: detalhes no ÉPICO 9 |
 | ⚠️ CI do Windows | corrigido | `anatomy.test.mjs` falhava no Windows do GitHub desde a702826: o Windows Server desliga as animações do sistema, o navegador responde `prefers-reduced-motion: reduce`, e a página do teste para a animação. A captura e o render passam a fixar `no-preference` (T6.6). A CI de 4cc2280 passou no Linux e no Windows (run 42508159600) |
 | ⚠️ `appeared_after_scroll` | corrigido | `video-render/references/interface.md` dizia "só apareceu depois da rolagem". A captura rola a página para aquecer antes de ler, e uma janela que abre pela rolagem saía como presente na chegada. Agora há uma leitura na chegada, antes do aquecimento (T5.4) |
 | ⚠️ `above_fold.mobile` | corrigido | A interface dizia "pelo mesmo texto na mesma ordem". Um botão do menu escondido no celular tomava o par do botão de mesmo texto da página (no JuriChat, "Comece grátis" saía como ausente no celular). Agora o pareamento é primeiro pelo mesmo elemento (T5.4) |
@@ -573,7 +573,7 @@ Medido nas capturas dos seis modelos: na Subido, `cash_price_shown`, `stack_sum`
 
 ### T8.6: a versão e a instalação
 
-**Estado: 🟡 sem commit e sem tag.** Manifestos em 1.3.0 com o changelog nos dois idiomas; `validate` e `pack`: `conversion-pages` 1.3.0 com 35 arquivos, `video-render` 1.3.0 com 36. `npm run ci:verify` no Windows: 193 testes da CLI (1 pulado), 75 do `module-tools` e 790 dos apps (2 pulados), nenhum falha. Depois da prova, `npm run apps -- link conversion-pages video-render --user` instalou as duas versões para o usuário. O commit, as tags (o motor primeiro) e a publicação esperam o operador.
+**Estado: ✅ em f5dc4ad, com as tags no 310fc83 (2026-11-15); o estado final das duas versões está no T9.6.** Manifestos em 1.3.0 com o changelog nos dois idiomas; `validate` e `pack`: `conversion-pages` 1.3.0 com 35 arquivos, `video-render` 1.3.0 com 36. `npm run ci:verify` no Windows: 193 testes da CLI (1 pulado), 75 do `module-tools` e 790 dos apps (2 pulados), nenhum falha. Depois da prova, `npm run apps -- link conversion-pages video-render --user` instalou as duas versões para o usuário. O commit, as tags (o motor primeiro) e a publicação esperam o operador.
 
 ### Onde a implementação divergiu
 
@@ -662,12 +662,14 @@ As 33 imagens de demonstração e o vídeo do Genie One foram baixados para estu
 
 ### T9.6: a versão e a instalação
 
-**Estado: 🟡 sem commit e sem tag.** As duas versões continuam 1.3.0 (D32), mudadas no lugar, com o changelog nos dois idiomas e o README em dia.
-- `validate` e `pack`: `conversion-pages` 1.3.0 com 36 arquivos (`685171d3…`), `video-render` 1.3.0 com 36 (`950caedb…`).
+**Estado: ✅ commit, tags e rascunhos (2026-11-15).** As duas versões continuam 1.3.0 (D32), mudadas no lugar, com o changelog nos dois idiomas e o README em dia.
+- `validate` e `pack`: `conversion-pages` 1.3.0 com 36 arquivos (`685171d3…`), `video-render` 1.3.0 com 36 (`3bc73786…`). ⚠️ O pacote do motor era `950caedb…` até 2026-11-15: o CI do Linux de 938833b falhou em `quality.test.mjs:367`, porque a segunda tentativa de fechar o aviso de cookies acontecia antes de um aviso que abre 1,5 s depois do carregamento, numa máquina rápida. A correção (1c343b4, ainda 1.3.0, sem tag) espera pelo aviso até 4 s depois do carregamento de cada tela (`dismissLateCookies` com `loadedAt`, `tests/cookies-late.test.mjs`), e o changelog diz isso.
+- O CI de 310fc83 passou no Linux e no Windows (run 43783926530). As tags foram uma de cada vez, o motor primeiro: `video-render@1.3.0` (run 43784479934) e `conversion-pages@1.3.0` (run 43784538501), cada rascunho com o SHA-256 da plataforma igual ao do pacote.
 - `npm run ci:verify` no Windows passou: 193 testes da CLI (1 pulado), 75 do `module-tools`, 792 dos apps (2 pulados), nenhuma falha, os 13 apps válidos, o pacote da CLI limpo.
 - Uma rodada anterior dos testes do motor, feita com os leitores rodando ao mesmo tempo, teve uma falha: o teste do tempo-limite em `runner.test.mjs`, que oscila com a máquina carregada. Sozinho, ele passou (3 de 3), e no `ci:verify` também.
 - Depois da prova, `npm run apps -- link conversion-pages video-render --user` instalou as duas versões para o usuário. A ponte da skill já traz a descrição nova, e a cópia em `~/.flyee/user-apps` traz o modelo e a §15.
-- O commit, as tags (o motor primeiro) e a publicação esperam o operador.
+- Publicar os rascunhos 1.3.0 e marcar a versão de entrada (D7) são os cliques do operador no console. Os rascunhos 1.1.0 dos dois apps continuam sem publicar (ÉPICO 7).
+- Em 2026-11-15, `npm run apps -- link conversion-pages video-render --user` trocou a cópia do usuário, de 2026-11-09, pela das tags: `scripts/lib/capture.mjs` em `~/.flyee/user-apps` é igual ao do repositório.
 
 ### Onde a implementação divergiu
 

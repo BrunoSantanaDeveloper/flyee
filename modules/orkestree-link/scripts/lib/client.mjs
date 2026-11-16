@@ -70,7 +70,15 @@ export async function call(base, token, method, path, body = undefined) {
   } catch {
     parsed = null;
   }
-  if (!response.ok) throw failure(response.status, parsed);
+  if (!response.ok) {
+    const error = failure(response.status, parsed);
+    const wait = Number(response.headers.get("retry-after"));
+    if (Number.isFinite(wait) && wait > 0) {
+      error.details = { ...(error.details ?? {}), retry_after_s: wait };
+      error.fix = `O Orkestree pediu para esperar ${Math.ceil(wait / 60)} minuto(s) antes de tentar de novo.`;
+    }
+    throw error;
+  }
   if (parsed === null || typeof parsed !== "object") throw new AppError("unexpected", "O Orkestree respondeu algo que não é JSON.", "Tente de novo; se repetir, mostre esta mensagem ao integrante.");
   return parsed;
 }

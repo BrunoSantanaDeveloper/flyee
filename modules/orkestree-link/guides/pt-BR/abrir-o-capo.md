@@ -22,6 +22,7 @@ O pedido fica em pedido.json, na pasta da campanha, com a data em que foi pego. 
 Antes de enviar, o app confere:
 
 - cada arquivo existe e tem a impressão digital SHA-256 e o tamanho registrados;
+- cada vídeo é MP4 e cada imagem é PNG ou JPEG, com o conteúdo igual ao que o nome diz;
 - cada formato e cada conceito estão no pedido;
 - cada texto cabe no limite do pedido;
 - nenhum texto traz e-mail ou telefone;

@@ -22,6 +22,7 @@ The order sits in pedido.json, in the campaign folder, with the date it was take
 Before sending, the app checks:
 
 - every file exists and has its SHA-256 fingerprint and size recorded;
+- every video is an MP4 and every image a PNG or JPEG, with content matching what the name says;
 - every format and every concept is in the order;
 - every text fits the order's limit;
 - no text carries an e-mail or a phone number;

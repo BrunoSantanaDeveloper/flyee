@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "orkestree-link",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "tool",
   "trail": "escalar",
   "title": {
@@ -92,8 +92,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "A entrega diz qual versão do app de criativos a produziu, lida do relatório da campanha. Antes de enviar, o app confere também o que o Orkestree recusaria: o ângulo de cada anúncio igual ao do conceito no pedido, no máximo as peças por conceito que o pedido pede, nome de anúncio sem repetição e nome de arquivo simples, em minúsculas e com extensão.",
-    "en": "The delivery says which version of the ad creatives app produced it, read from the campaign report. Before sending, the app also checks what the Orkestree would refuse: each ad keeps the angle of its concept in the order, no more pieces per concept than the order asks, no repeated ad name and a simple file name, lowercase and with an extension."
+    "pt-BR": "Antes de enviar, o app confere o tipo de cada arquivo como o Orkestree passou a exigir: vídeo só em MP4, imagem só em PNG ou JPEG, e o conteúdo de cada arquivo igual ao que o nome diz. Quando o Orkestree pede para esperar, o app diz quanto tempo.",
+    "en": "Before sending, the app checks each file's type as the Orkestree now requires: video only as MP4, image only as PNG or JPEG, and each file's content matching what its name says. When the Orkestree asks to wait, the app says for how long."
   },
   "license": "member"
 }

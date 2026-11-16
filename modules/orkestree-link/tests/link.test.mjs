@@ -88,13 +88,17 @@ async function fakeOrkestree({ tamper = null } = {}) {
   return { url: `http://127.0.0.1:${server.address().port}`, state, close: () => new Promise((done) => server.close(done)) };
 }
 
+/** Bytes that start like an MP4 (the "ftyp" box) and like a PNG (its signature). */
+const mp4 = (text) => Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from("ftypisom"), Buffer.from(text)]);
+const png = () => Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from("imagem")]);
+
 /** A member's project after the ad creatives app delivered: names, concept cards and the files. */
 function project({ headline = "Café antes de acordar" } = {}) {
   const root = mkdtempSync(join(tmpdir(), "orkestree-link-"));
   const campaign = join(root, "anuncios", CAMPAIGN);
   mkdirSync(join(campaign, "entrega"), { recursive: true });
-  writeFileSync(join(campaign, "entrega", "manha-reels-cafe-v1.mp4"), Buffer.from("video vertical de teste"));
-  writeFileSync(join(campaign, "entrega", "manha-feed-cafe-v1.mp4"), Buffer.from("video de feed de teste"));
+  writeFileSync(join(campaign, "entrega", "manha-reels-cafe-v1.mp4"), mp4("video vertical de teste"));
+  writeFileSync(join(campaign, "entrega", "manha-feed-cafe-v1.mp4"), mp4("video de feed de teste"));
   writeFileSync(join(campaign, "entrega", "nomes.json"), JSON.stringify({ version: 1, campaign: CAMPAIGN, ads: [{ ad_name: "manha-reels-cafe-v1", concept: "manha", angle: "manha", files: [{ file: "manha-reels-cafe-v1.mp4", placement: "vertical", format: "9:16", kind: "video" }, { file: "manha-feed-cafe-v1.mp4", placement: "feed", format: "4:5", kind: "video" }] }] }));
   writeFileSync(join(campaign, "conceitos.json"), JSON.stringify({ version: 1, concepts: [{ key: "manha", angle: "manha", hook: { text: "O café chega antes de você acordar" }, copy: { primary_text: "O café chega antes de você acordar. Assinatura a partir de R$ 59 por mês.", headline, description: "Torra fresca", cta: "Assinar" } }] }));
   // The creatives app writes its own name and version in the delivery report.
@@ -243,6 +247,27 @@ test("what the Orkestree would refuse stops here first: the producer's version, 
   assert.ok(found.includes("outside_order:angle"), found.join(" "));
   assert.ok(found.includes("outside_order:concept"), "per_concept is 1 and the delivery has 2 ads of the concept");
   assert.ok(found.includes("outside_order:files"), "a file name with a space and capitals is refused");
+  assert.equal(fake.state.deliveries.length, 0);
+});
+
+test("video only as MP4, image only as PNG or JPEG, and the bytes have to be what the name says", async (t) => {
+  const fake = await fakeOrkestree();
+  t.after(fake.close);
+  const root = project();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  await run(root, ["take", "po-7", "--url", fake.url]);
+  const campaign = join(root, "anuncios", CAMPAIGN);
+  writeFileSync(join(campaign, "entrega", "manha-reels-cafe-v1.mp4"), png());
+  writeFileSync(join(campaign, "entrega", "manha-feed-cafe-v1.webp"), Buffer.from("RIFF....WEBP"));
+  writeFileSync(join(campaign, "entrega", "manha-imagem-cafe-v1.png"), png());
+  writeFileSync(join(campaign, "entrega", "nomes.json"), JSON.stringify({ version: 1, campaign: CAMPAIGN, ads: [{ ad_name: "manha-reels-cafe-v1", concept: "manha", angle: "manha", files: [
+    { file: "manha-reels-cafe-v1.mp4", placement: "vertical", format: "9:16", kind: "video" },
+    { file: "manha-feed-cafe-v1.webp", placement: "feed", format: "4:5", kind: "image" },
+    { file: "manha-imagem-cafe-v1.png", placement: "imagem", format: "4:5", kind: "video" },
+  ] }] }));
+  const sent = await run(root, ["deliver", CAMPAIGN, "--declare", "--url", fake.url]);
+  assert.equal(sent.json.ok, false);
+  assert.deepEqual(sent.json.problems.map((problem) => problem.code).sort(), ["file_content", "file_missing", "file_type", "file_type"], "the three files are refused, and the ad is left with none");
   assert.equal(fake.state.deliveries.length, 0);
 });
 

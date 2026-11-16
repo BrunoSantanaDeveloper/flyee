@@ -3,7 +3,7 @@
 // when every file has its SHA-256, every text fits the order's limits, nothing asks for what the
 // order did not ask, and the member declared that no piece carries a person made by AI.
 
-import { existsSync } from "node:fs";
+import { closeSync, existsSync, openSync, readSync } from "node:fs";
 import { basename, isAbsolute, join, resolve, sep } from "node:path";
 
 import { AppError, fileDigest, readJson, safeCampaign } from "./util.mjs";
@@ -42,6 +42,25 @@ export function returnedNames(order) {
 
 /** The file names the contract accepts in a delivery (section 6). */
 const FILE_NAME = /^[a-z0-9][a-z0-9._-]{0,119}\.[a-z0-9]{2,5}$/;
+
+/** The file types of a delivery, by extension, and how the first bytes of each one look. */
+const TYPES = [
+  { ext: /\.mp4$/, kind: "video", label: "um vídeo MP4", bytes: (head) => head.length >= 8 && head.toString("latin1", 4, 8) === "ftyp" },
+  { ext: /\.png$/, kind: "image", label: "uma imagem PNG", bytes: (head) => head.length >= 8 && head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
+  { ext: /\.jpe?g$/, kind: "image", label: "uma imagem JPEG", bytes: (head) => head.length >= 3 && head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff },
+];
+
+/** The first 16 bytes of a file, for its type. */
+function readHead(path) {
+  const handle = openSync(path, "r");
+  try {
+    const buffer = Buffer.alloc(16);
+    const read = readSync(handle, buffer, 0, 16, 0);
+    return buffer.subarray(0, read);
+  } finally {
+    closeSync(handle);
+  }
+}
 const EMAIL = /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/u;
 const PHONE = /(?:\+?55\s?)?\(?\d{2}\)?\s?9?\d{4}[\s.-]?\d{4}/;
 
@@ -117,8 +136,22 @@ export async function buildDelivery({ root, campaignDir, order, buttons, produce
         continue;
       }
       seen.add(name);
+      // The contract takes video as MP4 and image as PNG or JPEG, and checks that the bytes are what the name says.
+      const type = TYPES.find((candidate) => candidate.ext.test(name));
+      if (!type) {
+        problems.push({ ...where("files"), code: "file_type", say: `${name} não é MP4, PNG nem JPEG: o Orkestree recebe vídeo em MP4 e imagem em PNG ou JPEG.` });
+        continue;
+      }
+      if (item.kind && item.kind !== type.kind) {
+        problems.push({ ...where("files"), code: "file_type", say: `${name} está marcado como ${item.kind === "video" ? "vídeo" : "imagem"}, mas a extensão é de ${type.kind === "video" ? "vídeo" : "imagem"}.` });
+        continue;
+      }
+      if (!type.bytes(readHead(path))) {
+        problems.push({ ...where("files"), code: "file_content", say: `O conteúdo de ${name} não é ${type.label}, como o nome diz.` });
+        continue;
+      }
       const digest = await fileDigest(path);
-      files.push({ file: name, placement: target.placement, format: item.format, kind: item.kind ?? (/\.(png|jpe?g|webp)$/i.test(name) ? "image" : "video"), sha256: digest.sha256, bytes: digest.bytes });
+      files.push({ file: name, placement: target.placement, format: item.format, kind: type.kind, sha256: digest.sha256, bytes: digest.bytes });
       uploads.push({ file: name, path, bytes: digest.bytes });
     }
     if (!files.length) problems.push({ ...where("files"), code: "file_missing", say: "O anúncio está sem nenhum arquivo." });

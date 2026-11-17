@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "conversion-pages",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "type": "workflow",
   "trail": "vender",
   "title": {
@@ -31,6 +31,7 @@
     "references/modelos.json",
     "references/modelos/databricks-pagina-de-produto.md",
     "references/modelos/hostinger-agente-pos-compra.md",
+    "references/modelos/hostinger-black-friday.md",
     "references/modelos/jurichat-pagina-de-vendas.md",
     "references/modelos/juridiq-api.md",
     "references/modelos/juridiq-pagina-de-vendas.md",
@@ -115,8 +116,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "A página de vendas de curso, mentoria ou comunidade, com o modelo da Subido AI em duas versões de teste A/B. A conferência pede o preço à vista junto das parcelas, soma a lista do que se recebe, fecha o desconto com o total das parcelas e confere o que continua se mexendo com o pedido de menos movimento. Um dado de exemplo dentro de uma amostra com etiqueta deixa de ser apontado, e o botão do topo que rola até a oferta conta como o chamado da primeira tela. Numa página longa, a foto sem letras vem em várias folhas. A origem de um número também é lida quando vem como source ou claim. Entra o modelo das páginas de produto da Databricks, e o guia das figuras ganha os diagramas feitos com as peças do produto, o gráfico que mostra o produto agindo, os ícones próprios de cada recurso e as logos reais de clientes e de ferramentas: poucas logos ficam paradas, inteiras e com a legenda do que são. Os dados de exemplo contam uma história só em todas as figuras, e uma frase sem número que o próprio produto desmente sai da página.",
-    "en": "The course, mentoring or community sales page, with the Subido AI model in both versions of its A/B test. The check asks for the cash price next to the installments, adds up the value list, closes the discount against the installments' total and sees what keeps moving when reduced motion is asked. Sample data inside a labelled sample is no longer flagged, and a top button that scrolls to the offer counts as the first screen's call. On a long page, the photo with no letters comes in several sheets. A number's origin is also read when written as source or claim. The Databricks product pages become a model, and the figure guide adds diagrams drawn from the product's own parts, the chart that shows the product acting, an icon of its own for each feature, and the real logos of customers and tools: a few logos stay still, whole and captioned. Sample data tells one story across every figure, and a claim with no number that the product itself disproves leaves the page."
+    "pt-BR": "O modelo da Black Friday da Hostinger, nos planos e na página inicial: a promoção por cima da página de sempre, a condição inteira debaixo do botão de cada plano, o bônus de antes e de agora e o contador que termina na mesma hora para todos. A conferência passa a fechar o total pago adiantado com o preço por mês e a reconhecer o selo de oferta especial como plano em destaque.",
+    "en": "Hostinger's Black Friday model, on the plans and the home page: the promotion laid over the usual page, the full terms under each plan's button, the bonus as a before and after number and a countdown that ends at the same time for everyone. The check now matches the total paid up front with the monthly price and counts a special offer badge as the highlighted plan."
   },
   "license": "member"
 }

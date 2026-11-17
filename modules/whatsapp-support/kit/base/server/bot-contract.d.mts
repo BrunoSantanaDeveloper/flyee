@@ -2,7 +2,7 @@ export interface BotRequest {
   method: string;
   /** O caminho completo pedido, com a query, como chegou: é o que o robô assinou. */
   pathWithQuery: string;
-  /** O trecho depois da base das rotas do robô: "config", "tools/<nome>", "history" ou "generate". */
+  /** O trecho depois da base das rotas do robô: "config", "contact", "tools/<nome>", "history" ou "generate". */
   route: string;
   query: Record<string, string | undefined>;
   rawBody: string;
@@ -51,6 +51,31 @@ export interface SuggestionsPayload {
   at: string;
 }
 
+/** O que o robô manda à rota contact, no começo da conversa e a cada leva de mensagens do cliente (cache curto). */
+export interface ContactPayload {
+  account_id: number;
+  conversation_id: number;
+  inbox_id: number | null;
+  /** phone: o número do contato; na rota não oficial pode vir null, e o telefone fica em identifier (5511...@c.us). */
+  contact: { id: number | null; name: string | null; phone: string | null; identifier: string | null };
+  /** O perfil que o robô conhecia nesta conversa, ou null. */
+  previous_profile: string | null;
+}
+
+/** Um dado da pessoa: texto, número, sim ou não, vazio ou uma lista de textos. */
+export type ContactFact = string | number | boolean | null | string[];
+
+/**
+ * O perfil de quem escreve. profile null (ou a rota ausente) é conversa sem perfil, como antes. facts entra no
+ * prompt como dado da pessoa, nunca instrução; empresa, etapa e origem também vão para o resumo da passagem.
+ */
+export interface ContactProfile {
+  /** Uma das chaves declaradas (DeclaredProfile.key), ou null. */
+  profile: string | null;
+  label?: string;
+  facts?: Record<string, ContactFact>;
+}
+
 /** Uma parte de áudio para o projeto transcrever: MP3 mono de até 5 minutos, em base64. */
 export interface TranscribePayload {
   account_id: number;
@@ -79,6 +104,11 @@ export function handleBotRequest(
     getConfig(accountId: number): Promise<Record<string, unknown> | null>;
     runTool(name: string, payload: unknown): Promise<unknown>;
     getHistory(accountId: number, conversationId: number, limit: number): Promise<Array<{ role: string; text: string; at: string }>>;
+    /**
+     * O perfil de quem escreve e o que o sistema sabe da pessoa. Sem este tratador, a rota contact responde 404 e
+     * o robô segue sem perfil. Devolva null quando não souber quem é.
+     */
+    getContact?(accountId: number, payload: ContactPayload): Promise<ContactProfile | null>;
     generate?(payload: { purpose: "acao" | "sugestoes"; [key: string]: unknown }): Promise<Record<string, unknown>>;
     /**
      * O texto falado na parte, com a IA do próprio projeto; só com ai.transcription "project". Para recusar

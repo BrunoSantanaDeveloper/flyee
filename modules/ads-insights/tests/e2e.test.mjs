@@ -24,7 +24,7 @@ function project({ plan = true, inbox = true } = {}) {
     mkdirSync(join(root, "media-plan", "black-friday-2026"), { recursive: true });
     cpSync(join(FIXTURES, "plano-aprovado.json"), join(root, "media-plan", "black-friday-2026", "plano.json"));
   }
-  if (inbox) for (const file of ["export-meta-pt.csv", "export-meta-en.csv", "export-meta-sem-video.csv", "export-google-termos-pt.csv", "export-meta-dia.csv", "leads.csv", "pagina-com-tags.html", "pagina-vazia.html"]) cpSync(join(FIXTURES, file), join(root, "ads-insights", "entrada", file));
+  if (inbox) for (const file of ["export-meta-pt.csv", "export-meta-pt-2026-11.csv", "export-meta-en.csv", "export-meta-sem-video.csv", "export-google-termos-pt.csv", "export-meta-dia.csv", "leads.csv", "pagina-com-tags.html", "pagina-vazia.html"]) cpSync(join(FIXTURES, file), join(root, "ads-insights", "entrada", file));
   cpSync(join(FIXTURES, "nomes.json"), join(root, NAMES));
   return root;
 }
@@ -224,6 +224,29 @@ test("import normalizes the Portuguese and the English export alike, link matche
   const own = await run(root, ["report", "meta-pt", "--allowable", "10"]);
   assert.equal(own.json.allowable_source, "informado agora");
   assert.equal(own.json.counts.escalar, 0, "at R$ 10 nothing scales");
+});
+
+test("import reads the Meta export of late 2026: the 3-second plays come from their cost, the end date is read and the reading says how", async () => {
+  const root = project();
+  await ready(root);
+  const recent = await run(root, ["import", "ads-insights/entrada/export-meta-pt-2026-11.csv", "--source", "meta", "--name", "meta-2026-11"]);
+  assert.equal(recent.status, 0, JSON.stringify(recent.json));
+  assert.deepEqual(recent.json.missing, []);
+  assert.deepEqual(recent.json.derived, { video_plays_3s: "cost_per_video_play_3s" });
+  assert.deepEqual(recent.json.period, { start: "2026-11-01", end: "2026-11-14" });
+  assert.doesNotMatch(recent.json.next_step.say, /o export não traz/);
+  const report = await run(root, ["report", "meta-2026-11"]);
+  assert.equal(report.status, 0, JSON.stringify(report.json));
+  const reportJson = JSON.parse(readAt(root, "ads-insights/leituras/meta-2026-11/report.json"));
+  const agenda = reportJson.rows.find((row) => row.name === "tempo-reels-agenda-v1");
+  assert.equal(agenda.metrics.hook_rate, 0.4);
+  assert.equal(agenda.metrics.thruplay_rate, 0.4);
+  assert.deepEqual(reportJson.missing, []);
+  const markdown = readAt(root, "ads-insights/leituras/meta-2026-11/leitura.md");
+  assert.match(markdown, /calculadas do custo por reprodução/);
+  assert.doesNotMatch(markdown, /O que o export não traz/);
+  assert.doesNotMatch(markdown, / a \./, "the period has its end date");
+  assert.ok(!/[–—!]/.test(markdown));
 });
 
 test("weekly crosses the readings with the ledger, proposes the moves and judges them after the member applies one; pulse speaks only of what broke", async () => {

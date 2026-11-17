@@ -14,8 +14,10 @@ import {
   type Day,
   type GroupSettings,
   type MediaSettings,
+  type Mode,
   type PermissionGroup,
   type PlatformSettings,
+  type ProfileSettings,
   type Scope,
 } from "../atendimento/base/shared/settings.mjs";
 import { supportApi, type SettingsResponse } from "../atendimento/base/ui/client.mjs";
@@ -35,9 +37,30 @@ const GROUP_LABELS: Record<PermissionGroup, string> = {
   modo: "Como o robô trabalha",
   grupos: "Grupos do WhatsApp",
   midia: "Imagens, áudios, vídeos e arquivos",
+  perfis: "O que muda para cada perfil de quem escreve",
 };
 const SEM_GRUPOS: GroupSettings = { mode: "fora", call_words: [], team_id: null };
 const MIDIA_PADRAO: MediaSettings = { images: true, audio: true, video: true, documents: true, transcription_note: true };
+
+// Feriados nacionais de data fixa (MM-DD). Os de data móvel (Carnaval, Sexta-feira Santa, Corpus Christi) e os
+// estaduais e municipais entram à mão.
+const FERIADOS_NACIONAIS = ["01-01", "04-21", "05-01", "09-07", "10-12", "11-02", "11-15", "11-20", "12-25"];
+
+function comFeriadosNacionais(atuais: string[], ano = new Date().getFullYear()): string[] {
+  const nacionais = [ano, ano + 1].flatMap((year) => FERIADOS_NACIONAIS.map((dia) => `${year}-${dia}`));
+  return [...new Set([...atuais, ...nacionais])].sort();
+}
+
+/** Um número inteiro maior que zero, ou null (o campo vazio vale o padrão). */
+function inteiroOuVazio(text: string): number | null {
+  const value = Number(text.trim());
+  return text.trim() && Number.isInteger(value) && value > 0 ? value : null;
+}
+
+/** O bloco do perfil só com o que foi preenchido: o que fica vazio vale o padrão. */
+function blocoLimpo(bloco: ProfileSettings): ProfileSettings {
+  return Object.fromEntries(Object.entries(bloco).filter(([, value]) => value !== null && value !== undefined && value !== "")) as ProfileSettings;
+}
 
 export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
   const [data, setData] = useState<SettingsResponse | null>(null);
@@ -45,6 +68,8 @@ export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
   const [problemas, setProblemas] = useState<Record<string, string>>({});
   const [aviso, setAviso] = useState<{ tone: "success" | "info" | "danger"; text: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
+  // O texto dos feriados enquanto a pessoa digita: as linhas vazias ficam até ela terminar.
+  const [feriadosTexto, setFeriadosTexto] = useState<string | null>(null);
 
   useEffect(() => {
     api
@@ -67,7 +92,7 @@ export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
 
   async function salvar() {
     if (!settings) return;
-    const encontrados = validateSettings(settings, { declaredTools: data!.tools.map((tool) => tool.name), scope: escopo });
+    const encontrados = validateSettings(settings, { declaredTools: data!.tools.map((tool) => tool.name), declaredProfiles: data!.profiles ?? [], scope: escopo });
     setProblemas(Object.fromEntries(encontrados.map((problem) => [problem.field, problem.message])));
     if (encontrados.length) {
       setAviso({ tone: "danger", text: "Confira os campos marcados." });
@@ -93,8 +118,22 @@ export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
       .map((part) => part.split(/\s*(?:a|às|as)\s*/).slice(0, 2) as [string, string]);
     update({ hours: { ...hours, days: { ...hours.days, [day]: ranges } } });
   };
+  const setFeriados = (text: string) => {
+    setFeriadosTexto(text);
+    update({ hours: { ...hours, holidays: text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean) } });
+  };
+  const anoAtual = new Date().getFullYear();
   const grupos = settings.groups ?? SEM_GRUPOS;
   const midia = settings.media ?? MIDIA_PADRAO;
+  const perfisDeclarados = data.profiles ?? [];
+  const perfis = settings.profiles ?? {};
+  const setPerfil = (chave: string, patch: ProfileSettings) => {
+    const bloco = blocoLimpo({ ...(perfis[chave] ?? {}), ...patch });
+    const next = { ...perfis };
+    if (Object.keys(bloco).length) next[chave] = bloco;
+    else delete next[chave];
+    update({ profiles: next });
+  };
   // Sem quem transcreva, "Ouvir áudios" some: ligar não mudaria nada. Quando não se sabe (null), mostra tudo.
   const semAudio = data.media?.audio === false;
   const toggleList = (list: string[] | null | undefined, name: string, on: boolean) => {
@@ -196,6 +235,26 @@ export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
                 onChange={(text) => setDay(day, text)}
               />
             ))}
+            <TextArea
+              label="Feriados"
+              hint="Uma data por linha, no formato AAAA-MM-DD. No feriado, a equipe conta como fora do horário, e o robô sabe que hoje é feriado."
+              rows={4}
+              value={feriadosTexto ?? (hours.holidays ?? []).join("\n")}
+              error={problemas["hours.holidays"]}
+              onChange={setFeriados}
+            />
+            <Stack direction="row" gap={8}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setFeriadosTexto(null);
+                  update({ hours: { ...hours, holidays: comFeriadosNacionais(hours.holidays ?? [], anoAtual) } });
+                }}
+              >
+                {`Acrescentar os feriados nacionais de ${anoAtual} e ${anoAtual + 1}`}
+              </Button>
+            </Stack>
+            <Text tone="muted">O botão acrescenta só os feriados nacionais de data fixa. Carnaval, Sexta-feira Santa, Corpus Christi e os feriados da cidade e do estado entram à mão.</Text>
           </Stack>
         </Card>
       ) : null}
@@ -237,6 +296,60 @@ export function RoboAtendimento({ escopo = "cliente" }: { escopo?: Scope }) {
                 />
               </>
             ) : null}
+          </Stack>
+        </Card>
+      ) : null}
+
+      {can("perfis") && perfisDeclarados.length ? (
+        <Card title="Perfis">
+          <Stack>
+            <Text tone="muted">
+              O sistema diz quem está escrevendo, e o robô segue o bloco desse perfil depois da apresentação e das instruções gerais. Todos os campos são
+              opcionais: vazio vale o padrão.
+            </Text>
+            {perfisDeclarados.map((perfil) => {
+              const bloco = perfis[perfil.key] ?? {};
+              const campo = (nome: string) => problemas[`profiles.${perfil.key}.${nome}`];
+              return (
+                <Stack key={perfil.key} gap={8}>
+                  <Text>{perfil.label}</Text>
+                  {perfil.description ? <Text tone="muted">{perfil.description}</Text> : null}
+                  {problemas[`profiles.${perfil.key}`] ? <Text tone="danger">{problemas[`profiles.${perfil.key}`]}</Text> : null}
+                  <TextArea
+                    label="Instruções para este perfil"
+                    hint={`O que muda para quem tem este perfil. Vazio vale o padrão. Até ${LIMITS.instructions} caracteres.`}
+                    value={bloco.instructions ?? ""}
+                    error={campo("instructions")}
+                    onChange={(instructions) => setPerfil(perfil.key, { instructions })}
+                  />
+                  <TextField
+                    label="Respostas do robô antes de chamar a equipe"
+                    hint="Vazio vale o padrão."
+                    value={bloco.max_bot_turns ? String(bloco.max_bot_turns) : ""}
+                    error={campo("max_bot_turns")}
+                    onChange={(text) => setPerfil(perfil.key, { max_bot_turns: inteiroOuVazio(text) })}
+                  />
+                  <TextField
+                    label="Time do Chatwoot que recebe a conversa"
+                    hint="O número do time. Vazio vale o padrão."
+                    value={bloco.team_id ? String(bloco.team_id) : ""}
+                    error={campo("team_id")}
+                    onChange={(text) => setPerfil(perfil.key, { team_id: inteiroOuVazio(text) })}
+                  />
+                  <Choice<Mode | "">
+                    label="Como o robô trabalha com este perfil"
+                    value={bloco.mode ?? ""}
+                    onChange={(mode) => setPerfil(perfil.key, { mode: mode || null })}
+                    options={[
+                      { value: "", label: "Como o padrão", hint: "Vazio vale o padrão." },
+                      { value: "auto", label: "Responde sozinho" },
+                      { value: "sugestao", label: "Sugere a resposta", hint: "Uma nota interna que alguém da equipe revisa e envia." },
+                      { value: "desligado", label: "Desligado", hint: "A conversa de quem tem este perfil vai direto para a equipe." },
+                    ]}
+                  />
+                </Stack>
+              );
+            })}
           </Stack>
         </Card>
       ) : null}

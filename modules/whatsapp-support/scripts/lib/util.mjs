@@ -11,7 +11,8 @@ export class AppError extends Error {
   }
 }
 
-export function parseArgs(argv, { flags = [], options = [] } = {}) {
+/** repeat: as opções que podem vir mais de uma vez (--env a --env b); viram uma lista, na ordem. */
+export function parseArgs(argv, { flags = [], options = [], repeat = [] } = {}) {
   const positionals = [];
   const values = {};
   for (let index = 0; index < argv.length; index++) {
@@ -22,10 +23,11 @@ export function parseArgs(argv, { flags = [], options = [] } = {}) {
     }
     const [name, inline] = arg.slice(2).split(/=(.*)/s);
     if (flags.includes(name)) values[name] = true;
-    else if (options.includes(name)) {
+    else if (options.includes(name) || repeat.includes(name)) {
       const value = inline ?? argv[++index];
       if (value === undefined) throw new AppError("usage", `Falta o valor de --${name}.`, "Rode help para ver os comandos.");
-      values[name] = value;
+      if (repeat.includes(name)) values[name] = [...(values[name] ?? []), value];
+      else values[name] = value;
     } else throw new AppError("usage", `Opção desconhecida: --${name}.`, "Rode help para ver os comandos.");
   }
   return { positionals, values };

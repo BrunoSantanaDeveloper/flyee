@@ -25,6 +25,8 @@ export function readEnv(source = process.env) {
     debounceMs: number("DEBOUNCE_MS", 2500),
     configTtlMs: number("CONFIG_TTL_MS", 60000),
     configStaleMs: number("CONFIG_STALE_MS", 600000),
+    // Por quanto tempo o perfil de quem escreve (rota contact) vale numa conversa antes de perguntar de novo.
+    profileTtlMs: number("PROFILE_TTL_MS", 300000),
     keys,
     // Imagem, áudio e vídeo (media.mjs). O ffmpeg vem no Dockerfile do robô.
     ffmpegPath: String(source.FFMPEG_PATH ?? "").trim() || "ffmpeg",

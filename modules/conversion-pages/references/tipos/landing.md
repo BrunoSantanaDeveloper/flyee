@@ -40,7 +40,9 @@ Quando há uma promoção, como a Black Friday dos modelos:
 - as regras ficam escritas perto da oferta: até quando vale, para quem (por exemplo, novos clientes) e a que se aplica (por exemplo, só o primeiro ano do plano anual);
 - as mesmas regras aparecem com as mesmas palavras na faixa, na seção da promoção, na janela, nos planos e nas perguntas frequentes. No Juridiq, a promoção dá migração grátis em todos os planos, e as perguntas frequentes dizem que ela é grátis a partir do plano Essencial;
 - o contador termina na data escrita e não recomeça ao recarregar a página;
-- uma vaga ou um horário "restante" vem da agenda de verdade.
+- uma vaga ou um horário "restante" vem da agenda de verdade;
+- o topo diz o evento, o maior desconto real com "até", o preço de entrada e tem um botão só. O "até" e o "a partir de" saem dos cartões dos planos: na Hostinger, o topo diz R$ 9,99 e o plano mais barato custa R$ 5,99;
+- a promoção entra por cima da página de sempre (a faixa, o topo, os cartões e uma fileira com as outras ofertas) e sai quando termina.
 
 ## A janela da promoção
 
@@ -96,4 +98,5 @@ Os detalhes estão em `../lei.md`.
 ## Modelos
 
 - `../modelos/juridiq-pagina-de-vendas.md`: a página de um software jurídico, com a promoção de Black Friday, a janela que abre na metade da página e as demonstrações animadas.
+- `../modelos/hostinger-black-friday.md`: a Black Friday por cima da página inicial, com o topo testado com e sem contador e as outras ofertas da campanha depois dos planos.
 - `../modelos/jurichat-pagina-de-vendas.md`: o produto irmão, com a dor em cartões, a história de uma cliente numa conversa e os painéis.

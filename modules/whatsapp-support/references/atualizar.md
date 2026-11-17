@@ -122,3 +122,25 @@ O robô passa a ler o arquivo que a pessoa manda (contexto.md, "Imagem, áudio e
 1. Implante de novo o robô com o Dockerfile do kit, que agora instala também o poppler-utils. Nenhuma chave nova.
 2. Porte de `RoboAtendimento.tsx` a chave "Ler PDFs, planilhas e documentos" do cartão, que agora se chama "Imagens, áudios, vídeos e arquivos". Configurações gravadas antes não têm `media.documents` e valem como ligado.
 3. Rode `verify`: a linha `robo_midia` diz "lê PDF". Mande de outro celular um comprovante em PDF e uma planilha: o robô responde sobre os dois sem chamar a equipe.
+
+#### Perfil por conversa, acrescentado depois na mesma 1.0.0
+
+O robô passa a responder conforme quem escreve: o projeto diz o perfil da pessoa (contato novo, cliente em teste, ativo, inadimplente, bloqueado, cancelado) pela rota nova `contact`, e o superadmin diz na tela do robô o que muda em cada perfil (contexto.md, "O perfil de quem escreve"). Junto vieram o resumo em toda passagem para a equipe, o dia da semana e o feriado na linha de data e o campo dos feriados na tela.
+
+**Para quem não implementa nada, nada muda no atendimento.** Sem a rota `contact`, ela responde 404, e o robô continua igual: sem perfil, sem dados da pessoa, com o modo, o limite e o time de sempre. O que muda sozinho, ao implantar o robô novo: a nota interna da passagem para a equipe deixa de ser "O robô passou a conversa para a equipe: motivo" e vira o resumo de seis linhas, com "não informado" no que o robô não sabe; no modo desligado, a conversa ganha essa nota e vai para o time da passagem, quando a conta tem um; e a linha de data diz o dia da semana e o feriado. O motivo continua no relatório das lacunas.
+
+Depois do `update`, para ligar os perfis:
+
+1. Implante de novo o robô (`base/bot`). É ele que pergunta o perfil, monta o prompt com o bloco do perfil e deixa o resumo. Arquivo novo na base do robô: `bot/src/conversation.mjs`; a imagem do Dockerfile do kit já leva a pasta inteira.
+2. Implante de novo a API do projeto com a base nova: `handleBotRequest` ganhou a rota `contact`, e `settings.mjs`, o campo `profiles` e a permissão `perfis`. Um projeto que carrega a base módulo a módulo não tem arquivo novo do lado do servidor.
+3. Declare os perfis que o projeto sabe dizer: no código que veio de `lib/atendimento.ts`, porte a lista `profiles` (`[{ key, label, description }]`, a chave em letras minúsculas sem acento, números, `_` e `-`) e troque o exemplo pelos perfis reais. Porte também `declaredProfiles: profiles` nas duas chamadas de `validateSettings` em `writeSettings`, `profiles` em `botConfig` de `configFor` e `profiles` na resposta de `readSettings`.
+4. Implemente `getContact`: porte o tratador de `botHandler` e implemente `store.contactProfile`, que acha a pessoa pelo telefone (`contactPhone` e `brPhoneVariants`, como nas consultas) e devolve `{ profile, label, facts }`, ou null quando não souber quem é. Ponha em `facts` o que ajuda a atender (plano, dias de teste, valor em aberto) e, se o projeto souber, `empresa`, `etapa` e `origem`, que também vão para o resumo da passagem. Responda rápido: o robô espera 3 segundos e segue sem perfil.
+5. Porte de `RoboAtendimento.tsx` o cartão "Perfis" (um bloco por perfil declarado: instruções, limite de respostas, time e modo, vazio vale o padrão), o campo "Feriados" com o botão dos feriados nacionais no cartão do horário e `declaredProfiles` na validação de `salvar`. Se as telas ficam em outro repositório, com cópia própria de `base/shared/settings.mjs` e `base/ui/client.mjs`, leve também o campo `profiles`, a permissão `perfis` e `profiles` em `SettingsResponse`.
+6. No modelo `por-cliente`, decida se libera a permissão `perfis` aos clientes; ela nasce desligada, e a plataforma escreve os blocos de todos.
+7. Escreva os blocos dos perfis na tela do robô e rode a bateria de conversas (bateria.md) com um caso por perfil, antes de abrir para os clientes. Depois, de outro celular, escreva como um cliente de cada perfil e veja a resposta e, numa passagem, a nota com o resumo.
+
+Configurações gravadas antes não têm `profiles` e valem como sem bloco. O robô novo com um projeto de antes, e o projeto novo com um robô de antes, funcionam: o robô de antes nunca chama `contact`, e a rota `config` com `profiles` é lida só pelo robô novo.
+
+#### Bateria de conversas, acrescentada depois na mesma 1.0.0
+
+O comando `bateria` roda conversas escritas por quem aprova o atendimento com a IA de verdade e a configuração de produção, sem consultar o projeto e sem enviar nada (bateria.md). Nada a portar: depois do `update` e do perfil por conversa, copie `references/bateria.exemplo.json` do app para `<destino>/bateria.json`, troque pelos casos do projeto e rode `bateria` antes de abrir para os clientes. `--env` agora pode vir mais de uma vez, também em `verify` e `look`.

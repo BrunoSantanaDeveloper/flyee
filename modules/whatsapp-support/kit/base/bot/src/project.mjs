@@ -1,5 +1,6 @@
 // Cliente das rotas que o projeto expõe para o robô, todas assinadas com SUPPORT_BOT_SECRET:
 //   GET  <base>/config?account_id=           a configuração da conta (robô, IA, horário, ferramentas, tokens)
+//   POST <base>/contact                       o perfil de quem escreve e o que o sistema sabe da pessoa (D30)
 //   POST <base>/tools/<nome>                  uma consulta declarada pelo projeto, que aplica a restrição
 //   GET  <base>/history?account_id=&conversation_id=&limit=   as últimas mensagens, quando o robô reinicia
 //   POST <base>/generate                      a próxima ação, quando o provedor de IA é o próprio projeto
@@ -33,6 +34,11 @@ export function projectClient({ baseUrl, secret, fetchImpl = fetch, timeoutMs = 
 
   return {
     config: (accountId, { timeout } = {}) => call("GET", "config", { query: { account_id: accountId }, timeout }),
+    /**
+     * { account_id, conversation_id, inbox_id, contact: { id, name, phone, identifier }, previous_profile } e volta
+     * { profile, label?, facts? }. Prazo curto: está no caminho da resposta, e sem resposta a conversa segue sem perfil.
+     */
+    contact: (payload, { timeout = 3000 } = {}) => call("POST", "contact", { body: payload, timeout }),
     tool: (name, payload) => call("POST", `tools/${encodeURIComponent(name)}`, { body: payload }),
     history: (accountId, conversationId, limit = 20) =>
       call("GET", "history", { query: { account_id: accountId, conversation_id: conversationId, limit } }),

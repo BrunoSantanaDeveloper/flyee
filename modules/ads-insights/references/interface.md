@@ -10,7 +10,7 @@ Na pasta `ads-insights/` da raiz do projeto:
 |---|---|
 | `medicao.json` | o contrato de medição: cada item com `value` e `status` (`verificado`, `informado`, `desconhecido`) |
 | `origens.csv` | a planilha de origem: `data, etapa, origem, meio, campanha, conteudo, parceiro, valor_brl, qualificado, pseudonimo`; nunca um nome, um e-mail ou um telefone |
-| `leituras/<id>/tabela.json` | o export normalizado: `source`, `level`, `fields`, `missing`, `period`, `rows[]` com os campos do export |
+| `leituras/<id>/tabela.json` | o export normalizado: `source`, `level`, `fields`, `missing`, `period`, `rows[]` com os campos do export; desde a 1.1.1, `derived` diz o campo calculado de outro (`video_plays_3s` do `cost_per_video_play_3s`, quando o export traz o custo e não a contagem) |
 | `leituras/<id>/report.json` | o veredito por peça, `interface_version` 1 |
 | `semanal/<AAAA-MM-DD>.json` | a leitura da semana: achados, movimentos propostos, vereditos dos movimentos anteriores |
 | `movimentos.json` | os movimentos: propostos, aplicados e julgados |

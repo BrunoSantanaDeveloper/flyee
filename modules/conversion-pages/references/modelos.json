@@ -107,6 +107,21 @@
         "o mesmo esqueleto em todas as páginas de produto, com a barra de âncoras presa",
         "três superfícies que se alternam, um acento só e botão de canto reto"
       ]
+    },
+    {
+      "id": "hostinger-black-friday",
+      "title": "Hostinger: a Black Friday na página inicial, com o contador e os planos",
+      "source": "Hostinger",
+      "seen_on": "2026-11-17",
+      "types": ["planos", "landing"],
+      "file": "modelos/hostinger-black-friday.md",
+      "highlights": [
+        "a promoção entra por cima da página de sempre: a faixa, o topo, o bônus nos cartões e as outras ofertas",
+        "o topo com o evento, o maior desconto, o preço de entrada e um botão só",
+        "debaixo do botão de cada plano, o que se paga hoje, as parcelas, a renovação e o cancelamento",
+        "o bônus da campanha com o número de antes e o de agora, igual em todos os cartões",
+        "o contador termina na mesma hora para todos, e o topo é testado com e sem ele"
+      ]
     }
   ]
 }

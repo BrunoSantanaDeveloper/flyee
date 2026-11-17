@@ -6,7 +6,8 @@
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { loadEnv, pick } from "./lib/env.mjs";
+import { batteryReport, loadBot, readCases, runBattery } from "./lib/bateria.mjs";
+import { loadEnvFiles, pick } from "./lib/env.mjs";
 import { findInstalls, install, status, update } from "./lib/files.mjs";
 import { DEFAULT_SCREENS, look } from "./lib/look.mjs";
 import { buildTheme } from "./lib/theme.mjs";
@@ -32,11 +33,15 @@ const HELP = `Kit de atendimento no WhatsApp ${APP_VERSION}
                                 confere por HTTP o painel, a marca, o tema, a moldura, as funções, o robô e o OpenWA
   look <destino> --account <id> --user <id> [--env <arquivo>] [--claro]
                                 confere no navegador, entrando pelo login único da pessoa <id>, e salva capturas
+  bateria <destino> --casos <arquivo.json> --env <arquivo> [--env <outro>] [--account <id>]
+                                roda os casos de conversa com a IA de verdade e a configuração de produção, sem
+                                consultar o projeto nem enviar nada; salva conferencia/bateria-<data-hora>/relatorio.md
   help
 
-Todos aceitam --json. <destino> é uma pasta dentro do projeto aberto, por exemplo atendimento ou packages/atendimento.`;
+Todos aceitam --json. <destino> é uma pasta dentro do projeto aberto, por exemplo atendimento ou packages/atendimento.
+--env pode vir mais de uma vez; o arquivo seguinte vence o anterior.`;
 
-const ARG_SPEC = { flags: ["json", "force", "claro"], options: ["env", "account", "user"] };
+const ARG_SPEC = { flags: ["json", "force", "claro"], options: ["account", "user", "casos"], repeat: ["env"] };
 
 let jsonMode = false;
 const progress = (text) => {
@@ -58,6 +63,9 @@ function destination(positionals, { required = true } = {}) {
 }
 
 const rel = (path) => toPosix(path.slice(ROOT.length + 1)) || ".";
+
+/** O ambiente da conferência: o do processo e os arquivos --env do projeto, na ordem. */
+const envFrom = (values) => loadEnvFiles((values.env ?? []).map((file) => insideProject(ROOT, file)));
 
 function readChoices(dest) {
   const escolhas = readJson(join(dest, "escolhas.json"));
@@ -139,7 +147,7 @@ async function main(argv) {
     const escolhas = readChoices(dest);
     const summary = readJson(join(dest, "gerado", "tema.json"));
     if (!summary) throw new AppError("theme_missing", "Falta gerado/tema.json.", "Rode theme antes de verify.");
-    const env = loadEnv(values.env ? insideProject(ROOT, values.env) : null);
+    const env = envFrom(values);
     const { missing } = pick(env, ["CHATWOOT_PUBLIC_URL"]);
     progress("Conferindo o atendimento por HTTP...");
     const result = await verify({
@@ -168,7 +176,7 @@ async function main(argv) {
     const summary = readJson(join(dest, "gerado", "tema.json"));
     if (!summary) throw new AppError("theme_missing", "Falta gerado/tema.json.", "Rode theme antes de look.");
     if (!values.account || !values.user) throw new AppError("usage", "look precisa de --account e --user.", "Use a conta e a pessoa de teste (atendente) criadas pelo projeto.");
-    const env = loadEnv(values.env ? insideProject(ROOT, values.env) : null);
+    const env = envFrom(values);
     const { values: needed, missing } = pick(env, ["CHATWOOT_PUBLIC_URL", "CHATWOOT_PLATFORM_TOKEN"]);
     if (missing.length) throw new AppError("env_missing", `Faltam variáveis: ${missing.join(", ")}.`, "Passe --env com o .env do projeto ou defina as variáveis no ambiente.");
     const chatwoot = needed.CHATWOOT_PUBLIC_URL.replace(/\/+$/, "");
@@ -198,6 +206,57 @@ async function main(argv) {
       result.problem ?? "",
       `Relatório: ${rel(join(outDir, "relatorio.json"))}`,
     ].filter(Boolean));
+  }
+
+  if (command === "bateria") {
+    const dest = destination(positionals);
+    if (!values.casos) throw new AppError("usage", "bateria precisa de --casos.", "Passe o arquivo de casos, por exemplo a cópia de references/bateria.exemplo.json adaptada ao projeto.");
+    const casesPath = resolve(ROOT, values.casos);
+    const raw = readJson(casesPath);
+    if (!raw) throw new AppError("cases_missing", `Não consegui ler o arquivo de casos ${values.casos}.`, "Confira o caminho e se o arquivo é um JSON válido.");
+    const { conta, casos } = readCases(raw);
+    const accountId = Number(values.account ?? conta);
+    if (!Number.isInteger(accountId) || accountId <= 0) {
+      throw new AppError("usage", "Falta a conta do Chatwoot.", "Passe --account com o id da conta, ou ponha conta no arquivo de casos.");
+    }
+    const env = envFrom(values);
+    const { values: needed, missing } = pick(env, ["PROJECT_URL", "SUPPORT_BOT_SECRET"]);
+    if (missing.length) throw new AppError("env_missing", `Faltam variáveis: ${missing.join(", ")}.`, "Passe --env com o arquivo de variáveis do robô ou do projeto; são os mesmos nomes que o robô usa.");
+    // As chaves da IA com os mesmos nomes que o robô lê: as variáveis terminadas em _API_KEY.
+    const keys = Object.fromEntries(Object.entries(env).filter(([name, value]) => /_API_KEY$/.test(name) && String(value ?? "").trim()));
+    const bot = await loadBot(join(dest, "base", "bot", "src"));
+    progress(`Rodando ${casos.length} casos com a IA da conta ${accountId}, sem consultar o projeto e sem enviar nada...`);
+    const result = await runBattery({
+      bot,
+      cases: casos,
+      projectUrl: needed.PROJECT_URL,
+      secret: needed.SUPPORT_BOT_SECRET,
+      keys,
+      accountId,
+      kitVersion: readJson(join(dest, "kit.json"))?.version ?? null,
+    });
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const outDir = join(dest, "conferencia", `bateria-${stamp}`);
+    writeFileAtomic(join(outDir, "relatorio.md"), batteryReport(result));
+    writeJson(join(outDir, "resultado.json"), result);
+    if (!result.ok) process.exitCode = 1;
+    const failed = result.casos.filter((item) => !item.ok);
+    return emit(
+      {
+        ...base,
+        ok: result.ok,
+        report: rel(join(outDir, "relatorio.md")),
+        result: rel(join(outDir, "resultado.json")),
+        total: result.total,
+        passed: result.passaram,
+        failed: failed.map((item) => ({ nome: item.nome, checagens: item.checagens.filter((check) => !check.ok).map((check) => check.checagem) })),
+      },
+      [
+        ...result.casos.map((item) => `${item.ok ? "ok" : "FALHA"} ${item.nome}${item.ok ? "" : `: ${item.checagens.filter((check) => !check.ok).map((check) => check.checagem).join("; ")}`}`),
+        `${result.passaram} de ${result.total} casos passaram.`,
+        `Relatório: ${rel(join(outDir, "relatorio.md"))}`,
+      ],
+    );
   }
 
   throw new AppError("usage", `Comando desconhecido: ${command}.`, "Rode help para ver os comandos.");

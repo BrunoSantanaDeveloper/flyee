@@ -12,12 +12,14 @@ const FALLBACK_MODELS = new Set(["claude-fable-5-1", "claude-opus-5-5", "claude-
 
 /**
  * A parte fixa vai num bloco com cache_control (o mesmo texto em toda mensagem da conta: lido do cache,
- * custa uma fração da entrada); a parte variável vem num segundo bloco, depois do ponto de cache.
+ * custa uma fração da entrada). O bloco do perfil de quem fala, igual em toda conversa do mesmo perfil, vem
+ * depois com o próprio ponto de cache, sem mudar o da parte fixa; a parte variável vem por último, sem cache.
  */
 export function systemBlocks(system, ttl = "5m") {
   if (typeof system === "string") return system;
   const cache = ttl === "1h" ? { type: "ephemeral", ttl: "1h" } : { type: "ephemeral" };
   const blocks = [{ type: "text", text: system.stable, cache_control: cache }];
+  if (system.profile) blocks.push({ type: "text", text: system.profile, cache_control: cache });
   if (system.volatile) blocks.push({ type: "text", text: system.volatile });
   return blocks;
 }

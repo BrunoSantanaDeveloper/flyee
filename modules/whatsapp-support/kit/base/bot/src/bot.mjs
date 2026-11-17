@@ -1,14 +1,16 @@
 // O robô: recebe o aviso do Chatwoot, confere a assinatura com o segredo da conta, responde 200 na hora
 // e trabalha depois, uma conversa por vez. Toda falha vira passagem para a equipe. Cada passagem vai para
 // o relatório das lacunas do sistema; cada conversa passada à equipe e resolvida pode virar sugestão de
-// conhecimento, que alguém aprova no sistema antes de valer.
+// conhecimento, que alguém aprova no sistema antes de valer. A cada leva de mensagens, o perfil de quem
+// escreve vem do projeto (rota contact, com cache curto) e muda o modo, o limite, o time e o prompt.
 
 import { providerFor } from "./ai/index.mjs";
 import { runAgent } from "./agent.mjs";
 import { chatwootClient } from "./chatwoot.mjs";
 import { silentLogger } from "./log.mjs";
 import { createMemory, createSeenSet } from "./memory.mjs";
-import { asksForTeam, callsBot, isGroupContact, normalizeConfig, teamAvailable } from "./policy.mjs";
+import { NO_PROFILE, contactProfile, conversationConfig, handoffMessage, handoffSummary, ruleHandoff } from "./conversation.mjs";
+import { callsBot, isGroupContact, normalizeConfig } from "./policy.mjs";
 import { scrub } from "./privacy.mjs";
 import { projectClient } from "./project.mjs";
 import { buildSuggestionPrompt, buildSystemPrompt, parseSuggestions, SUGGESTION_SCHEMA, toMessages } from "./prompt.mjs";
@@ -63,6 +65,10 @@ function contactOf(payload) {
 
 const EMPTY_MEDIA = { images: [], texts: [], notes: [], skipped: [], documents: 0 };
 
+/** Depois de uma falha da rota contact, quando o robô pergunta de novo; até lá vale o perfil que se conhecia. */
+const PROFILE_RETRY_MS = 60000;
+const MAX_PROFILES = 2000;
+
 /**
  * Põe as imagens (fotos, prints e a grade do vídeo) na última mensagem da pessoa, em partes neutras
  * ({ type: "text" } e { type: "image", mime, data }) que cada adaptador de IA traduz para o seu formato.
@@ -92,6 +98,57 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
   const memory = createMemory({ now });
   const seen = createSeenSet();
   const configs = new Map();
+  // O perfil de cada conversa: { info, at, ttl }. Fica guardado depois de vencer, para mandar previous_profile.
+  const profiles = new Map();
+  const profileTtl = Number.isFinite(env.profileTtlMs) ? env.profileTtlMs : 300000;
+
+  function rememberProfile(key, info, ttl) {
+    profiles.delete(key);
+    profiles.set(key, { info, at: now(), ttl });
+    while (profiles.size > MAX_PROFILES) profiles.delete(profiles.keys().next().value);
+  }
+
+  /** Uma consulta pode confirmar quem é a pessoa: a próxima leva pergunta o perfil de novo ao projeto. */
+  function forgetProfile(key) {
+    const entry = profiles.get(key);
+    if (entry) entry.ttl = 0;
+  }
+
+  /**
+   * O perfil de quem escreve, pela rota contact, com cache curto por conversa. 404 ou profile null: sem
+   * perfil. Outra falha: fica o perfil que se conhecia (ou nenhum) e o robô pergunta de novo em um minuto,
+   * para uma falha passageira não tirar o modo desligado de um perfil bloqueado.
+   */
+  async function profileFor(key, { accountId, conversationId, inboxId, contact }) {
+    const cached = profiles.get(key);
+    if (cached && now() - cached.at < cached.ttl) return cached.info;
+    const previous = cached?.info ?? null;
+    let info;
+    let ttl = profileTtl;
+    try {
+      info = contactProfile(
+        await project.contact({
+          account_id: accountId,
+          conversation_id: conversationId,
+          inbox_id: inboxId,
+          contact: { id: contact.id, name: contact.name, phone: contact.phone_number, identifier: contact.identifier },
+          previous_profile: previous?.key ?? null,
+        }),
+      );
+    } catch (error) {
+      if (error?.status === 404) info = NO_PROFILE;
+      else {
+        info = previous ?? NO_PROFILE;
+        ttl = Math.min(PROFILE_RETRY_MS, profileTtl);
+        logger.warn({ event: "profile_failed", account: accountId, conversation: conversationId, code: error?.code ?? "unexpected" });
+      }
+    }
+    rememberProfile(key, info, ttl);
+    if (cached && (previous?.key ?? null) !== info.key) {
+      logger.info({ event: "profile_changed", account: accountId, conversation: conversationId, profile: info.key, previous: previous?.key ?? null });
+    }
+    return info;
+  }
 
   async function loadConfig(accountId, { timeout } = {}) {
     const cached = configs.get(accountId);
@@ -138,7 +195,9 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
       const called = config.mode !== "desligado" && config.groups.mode === "chamado" && callsBot(text, config.groups.call_words);
       return { key, record: text.trim() ? { id: payload.id, role: "cliente", text } : null, act: status === "pending" || (status === "open" && called) };
     }
-    const act = status === "pending" || (status === "open" && config.mode === "sugestao" && config.suggest_on_open);
+    // O modo vem do último perfil conhecido da conversa; processConversation confere com o perfil atual.
+    const mode = conversationConfig(config, profiles.get(key)?.info ?? NO_PROFILE).mode;
+    const act = status === "pending" || (status === "open" && mode === "sugestao" && config.suggest_on_open);
     return { key, record: text.trim() ? { id: payload.id, role: "cliente", text } : null, act };
   }
 
@@ -160,15 +219,20 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
     }
   }
 
-  async function handoffFlow({ cw, ids, config, pending, text, reason, category = "outro", topic = "", excerpt = "" }) {
+  /**
+   * Passa a conversa para a equipe. A nota interna é o resumo (handoffSummary): da IA, em summary, ou do
+   * que o robô tem, numa passagem por regra (done diz o que o robô fez). O motivo vai para as lacunas.
+   */
+  async function handoffFlow({ cw, ids, config, pending, text, reason, category = "outro", topic = "", excerpt = "", done = "", summary = null }) {
     const { account, conversation } = ids;
+    const note = handoffSummary(config, { ai: summary ?? {}, need: excerpt, done });
     if (config.mode === "sugestao") {
-      const note = text ? `${SUGGESTION_PREFIX}\n\n${text}\n\nO robô sugere passar para a equipe: ${reason}.` : `O robô sugere passar para a equipe: ${reason}.`;
-      await cw.send(account, conversation, { content: note, privateNote: true });
+      const content = text ? `${SUGGESTION_PREFIX}\n\n${text}\n\nO robô sugere passar para a equipe.\n\n${note}` : `O robô sugere passar para a equipe.\n\n${note}`;
+      await cw.send(account, conversation, { content, privateNote: true });
     } else {
-      const publicText = text || (teamAvailable(config.hours, new Date(now())) ? config.messages.handoff : config.messages.handoff_fora_do_horario);
+      const publicText = handoffMessage(config, { text, now: new Date(now()) });
       if (publicText) await cw.send(account, conversation, { content: publicText });
-      await cw.send(account, conversation, { content: `O robô passou a conversa para a equipe: ${reason}.`, privateNote: true });
+      await cw.send(account, conversation, { content: note, privateNote: true });
     }
     if (pending) await cw.handoff(account, conversation);
     if (config.handoff.labels.length) {
@@ -214,12 +278,16 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
     const conversationId = Number(last.payload.conversation.id);
     const ids = { account: accountId, conversation: conversationId };
     const cw = chatwootFactory({ baseUrl: env.chatwootUrl, token: config.chatwoot.bot_token, fetchImpl });
-    const log = (fields) => logger.info({ account: accountId, conversation: conversationId, mode: config.mode, ...fields });
+    // A configuração desta conversa: a da conta com o bloco do perfil de quem escreve por cima (D30).
+    let cfg = config;
+    const log = (fields) =>
+      logger.info({ account: accountId, conversation: conversationId, mode: cfg.mode, ...(cfg.profile?.key ? { profile: cfg.profile.key } : {}), ...fields });
     let pending = last.payload.conversation.status === "pending";
     const texts = items.map((item) => String(item.payload.content ?? "").trim()).filter(Boolean);
     let excerpt = texts.join(" ");
     const contact = contactOf(last.payload);
     const group = isGroupContact(contact);
+    const inboxId = last.payload.inbox?.id ?? last.payload.conversation?.inbox_id ?? null;
     let called = false;
 
     try {
@@ -241,16 +309,27 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
           return;
         }
       } else {
-        const draftingOnOpen = status === "open" && config.mode === "sugestao" && config.suggest_on_open;
+        if (status !== "pending" && status !== "open") {
+          log({ event: "skipped", status });
+          return;
+        }
+        // O perfil de quem escreve, a cada leva de mensagens (cache curto). Conversa de grupo não tem perfil.
+        cfg = conversationConfig(config, await profileFor(key, { accountId, conversationId, inboxId, contact }));
+        const draftingOnOpen = status === "open" && cfg.mode === "sugestao" && cfg.suggest_on_open;
         if (!pending && !draftingOnOpen) {
           log({ event: "skipped", status });
           return;
         }
 
-        if (config.mode === "desligado") {
+        if (cfg.mode === "desligado") {
           if (pending) {
-            if (config.messages.desligado) await cw.send(accountId, conversationId, { content: config.messages.desligado });
+            const off = ruleHandoff(cfg);
+            const message = handoffMessage(cfg, { code: off.code });
+            if (message) await cw.send(accountId, conversationId, { content: message });
+            // O resumo ajuda quem pega a conversa; se a nota falhar, a conversa ainda vai para a equipe.
+            await cw.send(accountId, conversationId, { content: handoffSummary(cfg, { need: excerpt, done: off.done }), privateNote: true }).catch(() => {});
             await cw.handoff(accountId, conversationId);
+            if (cfg.handoff.team_id) await cw.assignTeam(accountId, conversationId, cfg.handoff.team_id).catch(() => {});
           }
           log({ event: "handled", action: "handoff", code: "mode_off" });
           return;
@@ -262,10 +341,10 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
       const attachments = items.flatMap((item) => (Array.isArray(item.payload.attachments) ? item.payload.attachments : []));
       // Com ai.transcription "project", o áudio é transcrito pelo projeto, e o contêiner fica sem chave de IA.
       const transcriber =
-        config.ai.transcription === "project"
+        cfg.ai.transcription === "project"
           ? projectTranscriber((part) => project.transcribe({ account_id: accountId, conversation_id: conversationId, ...part }))
           : null;
-      const media = attachments.length ? await mediaTools.prepare({ attachments, wants: config.media, transcriber }) : EMPTY_MEDIA;
+      const media = attachments.length ? await mediaTools.prepare({ attachments, wants: cfg.media, transcriber }) : EMPTY_MEDIA;
       if (attachments.length) {
         const skipped = media.skipped.map((item) => `${item.kind}:${item.code}`).join(",");
         log({ event: "media", items: attachments.length, ...(skipped ? { code: skipped } : {}) });
@@ -279,7 +358,17 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
       excerpt = heard.join(" ");
       if (!heard.length && !media.images.length) {
         if (attachments.length && pending) {
-          await handoffFlow({ cw, ids, config, pending, text: config.messages.anexo, reason: "a pessoa mandou um arquivo que o robô não conseguiu ler", category: "anexo", topic: "arquivo enviado" });
+          await handoffFlow({
+            cw,
+            ids,
+            config: cfg,
+            pending,
+            text: cfg.messages.anexo,
+            reason: "a pessoa mandou um arquivo que o robô não conseguiu ler",
+            category: "anexo",
+            topic: "arquivo enviado",
+            done: "A pessoa mandou um arquivo que o robô não conseguiu ler.",
+          });
           log({ event: "handled", action: "handoff", code: "attachment" });
         } else log({ event: "skipped", code: "empty" });
         return;
@@ -287,18 +376,15 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
       // A transcrição também fica para a equipe, numa nota interna: quem atende lê sem ouvir.
       for (const note of media.notes) await cw.send(accountId, conversationId, { content: note, privateNote: true }).catch(() => {});
 
-      if (pending && asksForTeam(excerpt, config.handoff.keywords)) {
-        await handoffFlow({ cw, ids, config, pending, text: "", reason: "a pessoa pediu a equipe", category: "pedido_da_pessoa", excerpt });
-        log({ event: "handled", action: "handoff", code: "asked_for_team" });
-        return;
-      }
-      if (pending && memory.turns(key) >= config.handoff.max_bot_turns) {
-        await handoffFlow({ cw, ids, config, pending, text: "", reason: "o robô chegou ao limite de respostas", category: "limite", excerpt });
-        log({ event: "handled", action: "handoff", code: "max_turns" });
+      // As palavras que chamam a equipe e o limite de respostas, com o limite do perfil quando ele tem.
+      const rule = pending ? ruleHandoff(cfg, { text: excerpt, turns: memory.turns(key) }) : null;
+      if (rule) {
+        await handoffFlow({ cw, ids, config: cfg, pending, text: "", reason: rule.reason, category: rule.category, excerpt, done: rule.done });
+        log({ event: "handled", action: "handoff", code: rule.code });
         return;
       }
 
-      if (config.history_from_project && !memory.seeded(key)) {
+      if (cfg.history_from_project && !memory.seeded(key)) {
         try {
           const history = await project.history(accountId, conversationId, 20);
           memory.seed(key, Array.isArray(history) ? history : history?.messages ?? []);
@@ -308,10 +394,10 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
       }
 
       // Num grupo não há consulta (invariante 14): a resposta chega a todos os participantes.
-      const tools = group ? [] : config.tools;
-      const system = buildSystemPrompt(group ? { ...config, tools } : config, {
+      const tools = group ? [] : cfg.tools;
+      const system = buildSystemPrompt(group ? { ...config, tools } : cfg, {
         now: new Date(now()),
-        contactName: !group && config.share_contact_name ? firstName(last.payload.sender?.name) : null,
+        contactName: !group && cfg.share_contact_name ? firstName(last.payload.sender?.name) : null,
         group,
         media: media.images.length > 0,
         documents: media.documents > 0,
@@ -319,14 +405,17 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
       const messages = toMessages(memory.transcript(key));
       if (!messages.length) messages.push({ role: "user", content: heard.join("\n") || "A pessoa mandou uma imagem." });
       if (media.images.length) attachImages(messages, media.images);
-      const providerGenerate = providerFor(config.ai.provider);
+      const providerGenerate = providerFor(cfg.ai.provider);
       const generate = ({ system: prompt, messages: history, schema }) =>
-        providerGenerate({ ai: config.ai, system: prompt, messages: history, schema, keys: env.keys, fetchImpl, project, ids, tools, purpose: "acao" });
-      const inboxId = last.payload.inbox?.id ?? last.payload.conversation?.inbox_id ?? null;
-      const callTool = async (name, input) =>
-        group ? { ok: false, code: "group_chat" } : project.tool(name, { account_id: accountId, conversation_id: conversationId, inbox_id: inboxId, contact, input });
+        providerGenerate({ ai: cfg.ai, system: prompt, messages: history, schema, keys: env.keys, fetchImpl, project, ids, tools, purpose: "acao" });
+      const callTool = async (name, input) => {
+        if (group) return { ok: false, code: "group_chat" };
+        // Uma consulta pode confirmar quem é a pessoa (outro número, código por e-mail): o perfil é perguntado de novo na próxima leva.
+        forgetProfile(key);
+        return project.tool(name, { account_id: accountId, conversation_id: conversationId, inbox_id: inboxId, contact, input });
+      };
 
-      const showTyping = config.mode === "auto" && (pending || group);
+      const showTyping = cfg.mode === "auto" && (pending || group);
       if (showTyping) cw.typing(accountId, conversationId, true).catch(() => {});
       let action;
       try {
@@ -336,7 +425,7 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
       }
 
       if (action.action === "reply") {
-        if (config.mode === "sugestao") {
+        if (cfg.mode === "sugestao") {
           await cw.send(accountId, conversationId, { content: `${SUGGESTION_PREFIX}\n\n${action.text}`, privateNote: true });
           if (pending) await cw.handoff(accountId, conversationId);
         } else {
@@ -344,21 +433,33 @@ export function createBot({ env, fetchImpl = fetch, now = () => Date.now(), logg
           memory.add(key, { id: sent?.id, role: "robo", text: action.text });
           memory.countTurn(key);
         }
-        log({ event: "handled", action: "reply", lookups: action.lookups, provider: config.ai.provider, ms: now() - started });
+        log({ event: "handled", action: "reply", lookups: action.lookups, provider: cfg.ai.provider, ms: now() - started });
         return;
       }
 
-      if (pending || group || config.mode === "sugestao") {
-        await handoffFlow({ cw, ids, config, pending, text: action.text, reason: action.reason || "decisão do robô", category: action.category, topic: action.topic, excerpt });
+      if (pending || group || cfg.mode === "sugestao") {
+        await handoffFlow({
+          cw,
+          ids,
+          config: cfg,
+          pending,
+          text: action.text,
+          reason: action.reason || "decisão do robô",
+          category: action.category,
+          topic: action.topic,
+          excerpt,
+          summary: action.summary,
+        });
       }
-      log({ event: "handled", action: "handoff", code: action.category, lookups: action.lookups, provider: config.ai.provider, ms: now() - started });
+      log({ event: "handled", action: "handoff", code: action.category, lookups: action.lookups, provider: cfg.ai.provider, ms: now() - started });
     } catch (error) {
       logger.error({ event: "failed", account: accountId, conversation: conversationId, code: error?.code ?? "unexpected", ms: now() - started });
       // Num grupo em que ninguém chamou o robô, nem a falha vira mensagem (invariante 13).
       if (group && !called) return;
       try {
-        const text = config.mode === "sugestao" ? "" : config.messages.erro;
-        await handoffFlow({ cw, ids, config, pending, text, reason: `o robô falhou (${error?.code ?? "erro inesperado"})`, category: "falha", excerpt });
+        const code = error?.code ?? "erro inesperado";
+        const text = cfg.mode === "sugestao" ? "" : cfg.messages.erro;
+        await handoffFlow({ cw, ids, config: cfg, pending, text, reason: `o robô falhou (${code})`, category: "falha", excerpt, done: `O robô tentou responder e falhou (${code}).` });
       } catch (handoffError) {
         logger.error({ event: "handoff_failed", account: accountId, conversation: conversationId, code: handoffError?.code ?? "unexpected" });
       }

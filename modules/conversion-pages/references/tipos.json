@@ -223,7 +223,7 @@
         "Cada recurso tem o seu ícone, numa família só, igual no menu, nos cartões e nos diagramas"
       ],
       "checks": ["title_promises", "figures_seen", "cards_short", "cards_no_holes", "cta_first_screen", "cta_consistent", "h1_present", "numbers_not_zero", "claims_have_origin", "placeholder_data", "trial_terms", "promo_terms_shown", "discount_math", "cash_price_shown", "reference_price_true", "countdown_real", "popup_dismissable", "popup_on_arrival", "sticky_cta_long_page", "cancel_terms_shown", "supplier_identified", "legal_lines", "demo_honest", "demo_film", "ai_defaults", "off_brand", "video_autoplay_ok", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
-      "models": ["juridiq-pagina-de-vendas", "jurichat-pagina-de-vendas", "databricks-pagina-de-produto"]
+      "models": ["juridiq-pagina-de-vendas", "jurichat-pagina-de-vendas", "databricks-pagina-de-produto", "hostinger-black-friday"]
     },
     {
       "id": "curso",
@@ -308,6 +308,8 @@
         "O preço riscado do anual é doze vezes o mensal que existe de verdade no seletor",
         "Os cartões em ordem de preço, a mesma na tabela, com o destaque no plano que serve à maioria",
         "Cada cartão tem o seu chamado, que leva ao cadastro com o plano e o período escolhidos",
+        "Debaixo do chamado de cada plano, a condição inteira: o que se paga hoje, por quantos meses, em quantas parcelas, quanto custa a renovação e que dá para cancelar",
+        "Numa promoção, cada cartão leva o selo do seu desconto e o bônus com o número de antes e o de agora, e o \"a partir de\" e o \"até\" do topo saem dos cartões",
         "No celular, os cartões em coluna, com o plano em destaque visível sem rolar muito"
       ],
       "events": ["pricing_view", "billing_toggle", "plan_select", "plan_compare_view", "trial_start", "checkout_start", "demo_request"],
@@ -322,10 +324,12 @@
         "A renovação depois de um primeiro período com desconto está escrita",
         "Os cartões, a promoção e as perguntas frequentes dizem a mesma coisa sobre o que é grátis e para quem",
         "O chamado de cada plano leva ao cadastro com o plano escolhido",
+        "O \"a partir de\" e o \"até\" do topo são o menor preço e o maior desconto dos cartões",
+        "O começo e o fim da promoção estão escritos no topo e perto da oferta, e o contador termina no fim e mostra dias quando falta mais de um dia",
         "A tabela comparativa fica legível no celular"
       ],
       "checks": ["cards_no_holes", "h1_present", "prices_first_screen", "plan_highlighted", "discount_math", "cash_price_shown", "reference_price_true", "renewal_shown", "trial_terms", "cancel_terms_shown", "promo_terms_shown", "countdown_real", "popup_dismissable", "popup_on_arrival", "numbers_not_zero", "claims_have_origin", "placeholder_data", "supplier_identified", "legal_lines", "ai_defaults", "off_brand", "reduced_motion", "mobile_fits", "text_legible", "tap_targets", "contrast_ok", "controls_fit", "images_light", "images_alt"],
-      "models": ["juridiq-planos", "jurichat-pagina-de-vendas"]
+      "models": ["juridiq-planos", "jurichat-pagina-de-vendas", "hostinger-black-friday"]
     },
     {
       "id": "api",

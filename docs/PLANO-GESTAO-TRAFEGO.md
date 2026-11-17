@@ -9,7 +9,7 @@
 | Tarefa | Estado | Evidência |
 |---|---|---|
 | T1.1 | ✅ `ads-insights` 1.1.0 | `intake` em `modules/ads-insights/scripts/lib/intake.mjs`; `tests/intake.test.mjs` conta uma rodada com três perguntas e nenhum nome de coluna; 31 testes do app passam; `npm run validate` ok |
-| T1.2 | ⬜ | espera um export real no conjunto padrão de colunas, com os nomes trocados |
+| T1.2 | 🟡 `ads-insights` 1.1.1, sem tag | um export real de 2026-11-17, como o integrante o tirou, mostrou cinco nomes de coluna que a 1.1.0 não conhecia e o custo da reprodução de 3 s no lugar da contagem; a 1.1.1 lê os três e calcula a contagem (`tests/fixtures/export-meta-pt-2026-11.csv`, com o cabeçalho real e anúncios fictícios; 34 testes passam). ⬜ não se sabe se esse é o conjunto padrão |
 | T2.1 | ✅ | `grep -n "PLANO-GESTAO-TRAFEGO" docs/PLANO-ANUNCIOS.md` mostra a D14, as invariantes 5 e 15 e a linha 722 |
 | T2.2 | ✅ | `ad-creatives` 1.3.0, passo 6 da skill: com pedido, quem cria a campanha é o Orkestree; os textos do `ads-insights` continuam verdadeiros, porque nenhum app escreve na conta |
 | T3.1 | 🟡 | contrato em `orkestree/docs/CONTRATO-PRODUCAO.md`, versão 1, decidida em 2026-11-16 (o operador confirmou S240 a S247 na sessão do Orkestree), nenhuma rota servida ainda |
@@ -95,7 +95,7 @@ O trabalho:
 
 ### T1.2: o export padrão dá veredito?
 
-**Estado: ⬜, não medido.** Não se sabe quais colunas vêm no conjunto padrão do Gerenciador, nem quais vereditos ficam de pé sem as colunas de vídeo (gancho e ThruPlay).
+**Estado: 🟡 2026-11-17.** Um export real, de uma campanha de uma marca do operador (26/10 a 17/11, nível de anúncio, 33 colunas), foi lido pelo `import` e pelo `report` da 1.0.1 instalada no projeto, que lê as colunas como a 1.1.0 (`git diff ads-insights@1.0.1 ads-insights@1.1.0` não muda `colunas.json`, `exports.mjs`, `csv.mjs` nem `report.mjs`). Ela ignorou "Encerramento dos relatórios" (a leitura saiu com "01/10 a ."), "Veiculação de anúncio", "Valor de conversão da compra", "ThruPlays de 15 segundos" e "Reproduções de 100% do vídeo", e o export traz "Custo por reprodução de vídeo por no mínimo 3 segundos" em vez da contagem. Por isso o gancho ficou em branco e a leitura pediu colunas que estavam no arquivo. A 1.1.1 (sem tag, pacote `624af867…`) lê esses nomes, calcula a contagem como gasto ÷ custo (`deriveCounts` em `scripts/lib/exports.mjs`, com `derived` na tabela) e não lê mais "0,160669" como milhar (`scripts/lib/csv.mjs`). Sobre o mesmo export, a leitura passou a ter o período inteiro, o gancho da peça principal (70%) e nenhuma coluna ausente; os vereditos continuam `dado_insuficiente`, agora pela amostra (771 impressões) e não pelas colunas. ⬜ Não se sabe se esse export é o conjunto padrão do Gerenciador: o integrante o tirou como estava na conta dele.
 - Rodar `import` e `report` sobre um export no conjunto padrão, com nomes de anúncio trocados.
 - Listar quais vereditos saem dele e quais viram `dado_insuficiente`.
 
@@ -225,4 +225,4 @@ Este épico está aqui só para deixar a fronteira clara. O plano e o aceite del
 - **Orkestree:** foram lidas as linhas citadas do plano e o código, por grep; nada rodou. Os estados ✅ e 🟡 dele são os que o plano dele declara.
 - **Meta:** as camadas de acesso e o limite de chamadas vêm de resultados de busca de 2026-11-16 que citam as páginas da Meta (`developers.facebook.com/docs/marketing-api/overview/rate-limiting` e `.../marketing-api/access/`), sem leitura da página inteira. O formato da importação em massa do Gerenciador não foi conferido.
 - **Sessão de origem:** só a troca de 2026-11-16 foi lida.
-- **Export padrão:** não se sabe se o conjunto padrão do export traz as colunas de vídeo; é a T1.2.
+- **Export padrão:** não se sabe se o conjunto padrão do export traz as colunas de vídeo; é a T1.2. O export real de 2026-11-17 trouxe o custo da reprodução de 3 s, os ThruPlays de 15 s e as reproduções até o fim, mas não se sabe se o integrante mudou as colunas antes de exportar.

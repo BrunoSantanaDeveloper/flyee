@@ -21,6 +21,9 @@ const ALLOWED = new Set([
   "port",
   "group",
   "phone",
+  // A chave do perfil de quem escreve (D30), no formato de PROFILE_KEY: um código, nunca o nome ou o dado da pessoa.
+  "profile",
+  "previous",
 ]);
 
 export function createLogger({ write = (line) => process.stdout.write(`${line}\n`), clock = () => new Date() } = {}) {

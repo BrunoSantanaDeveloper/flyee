@@ -17,7 +17,8 @@ const percent = (value) => (value === null || value === undefined ? "" : pct(val
 export const words = (text) => String(text ?? "").trim().split(/\s+/).filter(Boolean).length;
 
 function periodText(period) {
-  return period ? `${brDay(period.start)} a ${brDay(period.end, true)}` : "período não informado no export";
+  if (!period?.start) return "período não informado no export";
+  return period.end ? `${brDay(period.start)} a ${brDay(period.end, true)}` : `a partir de ${brDay(period.start)}, sem a data de fim no export`;
 }
 
 /** leitura.md: the judged table of one export. */
@@ -34,6 +35,7 @@ export function renderReading({ id, normalized, table, allowableSource = null, u
     for (const row of table.rows) lines.push(`| ${row.name} | ${money(row.metrics.spend)} | ${num(row.metrics.impressions)} | ${num(row.metrics.clicks)} | ${percent(row.metrics.ctr_pct)} | ${money(row.metrics.avg_cpc_brl)} | ${num(row.metrics.results)} | ${money(row.metrics.cost_per_result_brl)} | ${VERDICT_WORD[row.verdict]} | ${CERTAINTY_WORD[row.certainty]} |`);
   }
   lines.push("");
+  if (normalized.derived?.video_plays_3s) lines.push("As reproduções de 3 segundos foram calculadas do custo por reprodução que o export traz: o valor gasto dividido por esse custo, a mesma conta da plataforma. Numa peça que não gastou, ficaram em branco.", "");
   lines.push("## Por que cada veredito", "");
   for (const row of table.rows) lines.push(`- ${row.name}: ${VERDICT_WORD[row.verdict]}, ${CERTAINTY_WORD[row.certainty]}. ${row.reasons.join(" ")}${row.legible_when.length ? ` Fica legível com ${row.legible_when.join(" e ")}.` : ""}`);
   const near = table.rows.filter((row) => row.readings);

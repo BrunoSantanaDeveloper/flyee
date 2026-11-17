@@ -36,11 +36,15 @@ const SAVING = edge("economi[zs]e|economia de|voc[êe] economiza|poupe|save");
 const PERCENT_OFF = /(\d{1,2})\s?%\s?(?:off|de desconto|desconto)/i;
 const MONTHLY_AVERAGE = /m[ée]dia mensal|por m[êe]s no (?:plano )?anual|\/\s?m[êe]s,? cobrado anualmente/i;
 const ANNUAL = /\/\s?ano|por ano|ao ano|anual|no ano(?!\p{L})/iu;
+// "pague R$ 287,52 por 48 meses": a total paid up front for a period, as the Hostinger cards write it.
+const PREPAID_TOTAL = /(R\$\s?[\d.]+(?:,\d{2})?)\s+(?:por|pelos?)\s+(\d{1,2})\s+meses/i;
+const PER_MONTH = /\/\s?m[êe]s|por m[êe]s|ao m[êe]s/i;
+const RENEWS = /renova|renews?(?!\p{L})/iu;
 const CNPJ = /CNPJ[:\s]*\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|(?<!\d)\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}(?!\d)|CPF[:\s]*\d{3}\.?\d{3}\.?\d{3}-?\d{2}/i;
 const ADDRESS = edge("rua|avenida|av\\.?|alameda|travessa|rodovia|pra[çc]a|estrada|largo|quadra|setor|cep");
 const CONTACT = edge("contato|fale conosco|central de ajuda|suporte|atendimento|whatsapp|e-?mail|sac|contact|support");
 const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/;
-export const RECOMMENDED = edge("recomendado|mais popular|mais escolhido|mais vendido|melhor escolha|mais assinado|favorito|most popular|recommended|best value");
+export const RECOMMENDED = edge("recomendado|mais popular|mais escolhido|mais vendido|melhor escolha|mais assinado|favorito|oferta especial|melhor oferta|most popular|recommended|best value|special offer|best deal");
 const DOCS = edge("documenta[çc][ãa]o|docs|refer[êe]ncia da api|api reference|documentation");
 const CODE_SAMPLE = /\bcurl\s+(?:-\w+\s+)*["']?https?:|fetch\(\s*["'`]https?:|requests\.(?:get|post)\(|Authorization:?\s*["'`]?Bearer|\b(?:GET|POST|PUT|PATCH|DELETE)\s+\/[\w{}/.-]+/;
 const RATE_LIMIT = /\d[\d.,]*\s*(?:mil\s+)?(?:requisi[çc][õo]es|chamadas|requests|req)\s*(?:\/|por|per|a cada)\s*(?:segundo|minuto|min|hora|dia|m[êe]s|second|minute|hour|day|month|s|m|h)(?!\p{L})|limite de \d|rate limit(?: de| of)? \d/iu;
@@ -281,6 +285,19 @@ function overlays(anatomy, context) {
 }
 
 /** The prices of one plan card: from its struck price to the next one, in page order. */
+/**
+ * A price is a saving when the words right before it say so. The context is a stretch of text around the
+ * price, and in "Economia de R$ 427,20 no primeiro ano. Total do 1º ano: R$ 640,80" both prices share it:
+ * only the first one is the saving.
+ */
+function isSaving(price) {
+  const context = String(price.context ?? "");
+  const at = context.indexOf(String(price.text ?? ""));
+  const lead = at >= 0 ? context.slice(Math.max(0, at - 40), at) : context;
+  const trail = at >= 0 ? context.slice(at + String(price.text).length, at + String(price.text).length + 20) : "";
+  return SAVING.test(lead) || /^\s*(?:de economia|economizados?|a menos)(?!\p{L})/iu.test(trail);
+}
+
 function cardOf(prices, index) {
   let start = index;
   while (start > 0 && !prices[start].struck) start -= 1;
@@ -586,11 +603,23 @@ const RULES = {
       if (!reference) return;
       const context = String(price.context ?? "");
       const others = card.filter((other) => !other.struck && other !== price);
-      if (SAVING.test(context)) {
-        const paid = others.filter((other) => prices.indexOf(other) < index);
+      if (isSaving(price)) {
+        // What is paid can come before or after the saving ("Economia de R$ 427,20. Total do 1º ano: R$ 640,80").
+        const paid = others.filter((other) => !isSaving(other));
         if (!paid.length) return;
         checked += 1;
         if (!paid.some((other) => samePrice(reference.value - other.value, price.value))) problems.push(`a economia de ${clip(price.text, 20)} não é a diferença entre ${clip(reference.text, 20)} e nenhum preço do mesmo plano`);
+        return;
+      }
+      // The total paid up front is the card's monthly price times the months: the big monthly number of a
+      // prepaid plan is the total divided by the months.
+      const prepaid = PREPAID_TOTAL.exec(context);
+      if (prepaid && samePrice(parsePrice(prepaid[1]), price.value) && Number(prepaid[2]) >= 2) {
+        const months = Number(prepaid[2]);
+        const monthly = others.filter((other) => prices.indexOf(other) < index && PER_MONTH.test(String(other.context ?? "")) && !RENEWS.test(String(other.context ?? "")));
+        if (!monthly.length) return;
+        checked += 1;
+        if (!monthly.some((other) => Math.abs(other.value * months - price.value) <= months * 0.005 + 0.01)) problems.push(`${clip(price.text, 20)} por ${months} meses não é ${months} vezes o preço por mês do mesmo plano (${clip(monthly[0].text, 20)})`);
         return;
       }
       const percent = PERCENT_OFF.exec(context);
@@ -615,7 +644,7 @@ const RULES = {
       }
     });
     if (!checked) return null;
-    if (!problems.length) return ["ok", checked === 1 ? "A conta do desconto bate com o preço riscado." : `As ${checked} contas de desconto, economia e média mensal batem com os preços da página.`];
+    if (!problems.length) return ["ok", checked === 1 ? "A conta do desconto bate com o preço riscado." : `As ${checked} contas de desconto, economia, média mensal e total do período batem com os preços da página.`];
     return ["atencao", `A conta não bate: ${problems[0]}.`];
   },
 

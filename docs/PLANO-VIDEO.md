@@ -104,6 +104,50 @@ Origem: o estudo de 2026-11-08 (seção 7). Os repositórios foram lidos como te
 | Y | **Cursor roteirizado e gravação real do produto** | Um cursor com semente na biblioteca das páginas cobre a maior parte das demonstrações e continua determinístico (P). A gravação do produto rodando já existe em parte: o comando `film` do motor, feito para as páginas em 2026-11-08, fotografa um trecho em tempo real e não é determinístico | `video-render` (`motion.js`) | P |
 | Z | **`Motion.follow` e `Motion.flow`** | Regras para um elemento seguir outro e para entradas que se sobrepõem sem disputar o mesmo instante | `video-render` (`motion.js`) | P |
 
+### 2.5 Avaliado em 2026-11-17: editar a gravação e gerar mídia pela conexão do integrante (aguarda o sim do operador)
+
+Pedido do operador: ver se os vídeos `fqaEZqPzKZs` e `dTzkBlmcQZo` (Felipe Borges, Fala IA) servem às ferramentas de conteúdo e de tráfego pago. Lidos pela análise de imagem e som do `video-analysis`, porque o YouTube recusou as legendas duas vezes (`rate_limited`); o repositório `felpborges/skill-reel` foi lido como texto, nunca executado.
+
+**O que cada um propõe.**
+- `fqaEZqPzKZs` (2026-10-28, 14:36, 91 mil views em 20 dias num canal de 26 mil inscritos): a gravação bruta de alguém falando vira um Reel editado. Mostra 2:33 de bruto virando 38,7 s "em 10 minutos" (05:20), a −14,25 LUFS e com 30 efeitos. Grátis é a skill `skill-reel`; o "Agentic Design OS" com estilos e color grading é da comunidade paga dele. O autor diz que chegou ao resultado com "111 mil palavras de instruções e mais de 12 rodadas" num só Reel (02:42).
+- `dTzkBlmcQZo` (2026-11-16, 11:58, com link de desconto da Higgsfield na descrição): Reels sem aparecer, a partir de notícias do nicho, com voz, trilha, efeitos, imagens e b-roll gerados pela Higgsfield pela conexão MCP, e "3 vídeos com hooks diferentes" para escalar. Não cita custo por peça, plano, número de views nem direito de uso das imagens que "o Claude vai buscar na internet" (07:45).
+
+**O que já temos.**
+
+| Peça dos vídeos | Estado no flyee |
+|---|---|
+| Editar uma gravação | ⬜ O Estúdio recusa hoje "editar uma gravação, cenas geradas, outro formato, assistir a uma referência, mais de 20 segundos" (`video-studio/skills/motion-video/SKILL.md:40`). Aprovado em 2026-10-07 (seção 1.1), com as partes A a H propostas (2.1); para anúncios, os ÉPICOs 13 a 16 de `docs/PLANO-ANUNCIOS-FALA.md`, todos ⬜ menos a prova do `whisper` (T13.1, 🟡) |
+| Trilha e efeitos | ✅ compostos e sintetizados pelo motor, na batida (seção 1.3) |
+| Imagem gerada | 🟡 só no `motion-carousel`: a IA da conversa, o Codex pelo plano do ChatGPT, a chave do Gemini, as fotos do integrante (`motion-carousel/skills/motion-carousel/SKILL.md:56-59`). Vídeo gerado (b-roll): ⬜ em todos os apps |
+| Voz gerada em português | ⬜ item X, sem teste de escuta (seção 3) |
+| Ganchos variados | ✅ nos anúncios: três conceitos por campanha (`ad-creatives/references/conceitos.md:3`) e duas variações do gancho que escalou (`ad-creatives/skills/ad-creatives/SKILL.md:112`). ⬜ no Estúdio |
+| Pauta a partir de notícias | ⬜; o print de notícia com a fonte na tela é o item K |
+
+**Do `skill-reel`, só o método** (o repositório não tem licença: entra como ideia, sem texto nem código, D31). O fluxo é o da seção 2.1 e do ÉPICO 13, validado por ele numa gravação só (voz masculina, microfone próximo, sala tratada, como o próprio `corte/CORTE.md` declara). O que acrescenta:
+1. A IA escolhe as tomadas lendo o texto de cada trecho; o ponto do corte vem do vale de energia do áudio, nunca do tempo de palavra do Whisper. Confirma a D36.
+2. Cada emenda é conferida transcrevendo sozinha a janela de ±2 s em volta dela; reprova pausa acima de 0,25 s, palavra comida e repetição colada. Entra no `check-edit` (T13.3).
+3. As falhas do Whisper que ele lista viram casos de teste da T13.1: inventa fala em silêncio longo, esconde repetição na transcrição longa, engole o começo de recorte curto, inventa "é, hum" quando o pedido cita vícios numa janela curta, pula uma frase inteira.
+4. Regra das tomadas: a última completa; a mais enxuta quando as duas estão completas; falsa largada a menos de 1 s fica de fora com o início colado na tomada boa; folga de 0,1 a 0,2 s; tomadas que dizem coisas diferentes viram pergunta a quem gravou.
+5. O rosto nunca é coberto, e a altura livre acima da cabeça é medida (com menos de uns 300 px, o texto vai para o peito). Confirma o item F e a D37.
+6. Um dicionário de correções da transcrição por marca (Cloud → Claude, A → IA). Entra na memória da marca (item I).
+
+Os números dele (J/L de 4 quadros, até 0,8 efeito por segundo a 0,1 a 0,2 do volume da voz, −14 LUFS, pico até −1 dBTP) são uma segunda fonte para a D42 e só entram medidos nos nossos filmes, pela regra de `.claude/rules/apps.md` sobre o que muda o que um app constrói.
+
+**Propostas.** Estado de todas: ⬜.
+
+| # | O que | Onde entra | Tam. | Aceite |
+|---|---|---|---|---|
+| AA | Começar a edição de gravações pela base comum aos dois usos: ÉPICO 13 (`words`, `check-edit`) e T14.1 (`track`) de `docs/PLANO-ANUNCIOS-FALA.md`, com os itens 1 a 4 acima no `check-edit` | `video-analysis`, `video-render` | G | um bruto de 2 a 3 min com retomadas, gravado para o teste (D46), sai sem pausa acima de 0,25 s e sem palavra comida na transcrição de cada emenda; o mesmo bruto dá o mesmo corte duas vezes |
+| AB | Sobre a base, o `rough-cut` do Estúdio (item A) e o tipo `fala` dos anúncios (ÉPICO 15), na ordem que o operador escolher | `video-studio`, `ad-creatives` | G | "edita este vídeo" deixa de cair em `unsupported` (`motion-video/SKILL.md:40`) e entrega o corte com a conferência |
+| AC | Mídia gerada pela conexão que o integrante já tem na IA dele (a da Higgsfield ou outra): um degrau depois da IA da conversa e antes de qualquer chave; estimativa, teto e o sim do integrante antes de gastar crédito, como no Apify; nunca como prova, depoimento ou pessoa que não existe | ordem das imagens do `motion-carousel`, cenas geradas do Estúdio, ilustração no `ad-creatives` | M | sem a conexão, nada muda; com ela, nenhuma geração sem o sim à estimativa |
+| AD | Três versões do mesmo vídeo com ganchos diferentes, no Estúdio | `video-studio` | P | um pedido de "três versões" entrega três vídeos com os primeiros 3 s diferentes e o resto igual |
+
+AC depende do teste de voz e b-roll da seção 3.
+
+- ⚠️ **As descrições automáticas escrevem "Higgfield" e `@higgfield/cli`** (`flyee-workspace/video-analyses/yt-fqaEZqPzKZs/descriptions/avaliacao-producao.md`). O pacote é `@higgsfield/cli` (npm, MIT, 1.2.2); `@higgfield/cli` não existe (npm 404).
+
+**O que não foi verificado:** as falas citadas vêm do Gemini e não foram conferidas no áudio, porque não houve legenda; a skill não rodou; nada da Higgsfield foi usado; o custo por peça na Higgsfield vem só de blogs que se contradizem (a página oficial diz apenas que tudo o que é gerado pela conexão desconta créditos, em qualquer plano); a licença do `prompt-motion.com` não foi lida; as regras da Meta para rótulo de IA em anúncio só foram lidas em fontes secundárias, que discordam entre si.
+
 ## 3. Testar antes de prometer
 
 **Recorte de pessoa** (palavras atrás de quem fala, fundo trocado pela grade da marca; no vídeo em 00:01, 00:33 e 13:30) e **elementos presos às mãos** (13:03). O vídeo diz que a máscara usa "Remotion"; a skill enviada não mostra como é feito, e só o `SKILL.md` veio, sem as referências nem os scripts.
@@ -114,6 +158,8 @@ Os elementos junto às mãos podem começar sem rastreamento: a IA lê os quadro
 
 **Narração local em português** (item X): ouvir Kokoro `pf_dora` e Piper `faber` lendo três textos reais de anúncio antes de qualquer código. Medir também o tamanho do modelo baixado, o tempo por minuto de fala nesta máquina e se a mesma entrada dá o mesmo áudio. O motor Kokoro do `argo` recusa as vozes `pf_*`, então o caminho não pode ser o dele.
 
+**Voz e b-roll pela Higgsfield** (item AC): ouvir a voz em português da Higgsfield nos mesmos três textos, ao lado de Kokoro e Piper; medir quantos créditos custam uma narração de 30 s, uma imagem e um b-roll de 5 s; ler os termos de uso comercial do que é gerado. O vídeo avisa que a voz às vezes sai em português de Portugal (06:20). Pede uma conta paga: decisão do operador.
+
 ## 4. O que não adotamos
 
 - **Depender de um modelo e de um nível de esforço.** Ele só chega a bom resultado com o modelo mais caro em esforço alto. No Estúdio a qualidade fica nos roteiros, nos modelos de página e nas conferências, para funcionar com a IA que o integrante tiver.
@@ -122,6 +168,8 @@ Os elementos junto às mãos podem começar sem rastreamento: a IA lê os quadro
 - **Transcrição paga obrigatória.** O modo sem chave vem primeiro; a chave é opcional.
 - **CLIProxyAPI** (`router-for-me/CLIProxyAPI`), recusado para o produto e para qualquer texto de integrante. Ele usa os logins de assinatura fora dos programas a que pertencem: tem um disfarce de Claude Code (`config.example.yaml:486`), se apresenta como o Codex (`Originator: codex_cli_rs` em `internal/api/server_routes.go:447`) e alterna grupos de contas (README, linhas 134 a 140). Isso contraria a regra de cada pessoa usar a própria IA com o próprio login. A cláusula correspondente dos termos da OpenAI não foi lida.
 - **Os modelos do `earshot`** (torch, 1,1 GB), **o GSAP** (a licença dele cita ferramentas de animação sem código), **o HyperFrames**, **o fluxo do `take-one`** (só macOS, e o próprio texto fala em 1 a 2 horas e 0,4 a 0,7 milhão de tokens por sessão), **a clonagem e o `--assets` do `reanimate`** e **as trilhas do Mixkit** (as nossas são originais).
+- **Canal sem rosto em escala a partir de notícias** como objetivo de um app (`dTzkBlmcQZo`, 2026-11-17). A política de monetização do YouTube, atualizada em 2025-07-15, deixa de fora "AI-generated content made with generic or unoriginal templates giving the impression of mass production" e pede que "the substance of each video should be materially varied" (support.google.com/youtube/answer/1311392). Os apps são produto para a marca de qualquer integrante, com o material dele (D22), e imagem buscada na internet sem origem e licença não entra (item L).
+- **As ferramentas do `skill-reel`**: HyperFrames e GSAP (já recusados acima), Python com OpenCV ou MediaPipe e um segundo Whisper (`whisper.cpp`). Os nossos apps são Node, a transcrição é o filtro do ffmpeg (D36) e o rosto roda no navegador do motor (D37). Também o "Agentic Design OS" dele, fechado e pago.
 
 ## 5. Ordem sugerida
 
@@ -148,6 +196,9 @@ Desde 2026-11-08 a captura, o navegador e o comando `film` são do trabalho de p
 | Flute (`webprodigies-org/flute`, MIT, 0.1.2) | câmera 3D, foco por profundidade, camadas; o método de exportar é o mesmo do nosso motor, sem som | 2026-10-10 |
 | Mateus Dias, vídeo `61u9wOT-Cds` e a skill `yt-ddiasmatt-animation` | as seções 2.1 a 2.3 | 2026-10-10 |
 | AI LABS, vídeos `p565AqELA8M` e `oTWUyW_bR-g`, e os repositórios `huashu-motion`, `rossark-motion-skill`, `take-one`, `reanimate`, `argo`, `explainroo`, `video-director`, `earshot` e `CLIProxyAPI` | os três defeitos de som da seção 1.3, a seção 2.4 e o que foi recusado na seção 4 | 2026-11-08 |
+| Felipe Borges, vídeos `fqaEZqPzKZs` e `dTzkBlmcQZo`, o repositório `felpborges/skill-reel` (sem licença), a página da conexão MCP da Higgsfield e a política de monetização do YouTube | a seção 2.5, o teste de voz e b-roll da seção 3 e os dois últimos itens da seção 4 | 2026-11-17 |
+
+As análises de 2026-11-17 ficam em `C:\AppsProjects\flyee-workspace\video-analyses\yt-fqaEZqPzKZs\` e `yt-dTzkBlmcQZo\` (`descriptions/avaliacao-producao.md` e `avaliacao-custos.md`).
 
 Os dois vídeos de 2026-11-08 foram lidos só pela análise de imagem e som do `video-analysis`, porque o YouTube recusou as legendas (HTTP 429). As análises ficam em `C:\AppsProjects\flyee-workspace\video-analyses\yt-p565AqELA8M\` e `yt-oTWUyW_bR-g\` (`descriptions/flyee-avaliacao.md`). Os repositórios não foram executados, e as licenças só foram lidas onde a seção 4 cita.
 

@@ -79,11 +79,15 @@ export function parseNumber(cell) {
     // Both present: the later one is the decimal mark.
     text = lastComma > lastDot ? text.replace(/\./g, "").replace(",", ".") : text.replace(/,/g, "");
   } else if (lastComma !== -1) {
-    // Only commas: a decimal mark when it is followed by 1 or 2 digits at the end, else thousands.
-    text = /,\d{1,2}$/.test(text) && text.split(",").length === 2 ? text.replace(",", ".") : text.replace(/,/g, "");
+    // Only commas: thousands when the groups are three digits long and the first does not start
+    // with 0 ("12,000"); otherwise a single comma is the decimal mark ("12,5", "0,160669").
+    if (/^-?[1-9]\d{0,2}(,\d{3})+$/.test(text) && !/,\d{1,2}$/.test(text)) text = text.replace(/,/g, "");
+    else if (text.split(",").length === 2) text = text.replace(",", ".");
+    else return null;
   } else if (lastDot !== -1) {
-    // Only dots: thousands when the groups are three digits long, otherwise a decimal mark.
-    if (/^\d{1,3}(\.\d{3})+$/.test(text)) text = text.replace(/\./g, "");
+    // Only dots: thousands when the groups are three digits long and the first does not start
+    // with 0 ("26.000"), otherwise a decimal mark ("0.160", "86.44"). No grouped number starts with 0.
+    if (/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(text)) text = text.replace(/\./g, "");
   }
   if (!/^-?\d+(\.\d+)?$/.test(text)) return null;
   const value = Number(text);

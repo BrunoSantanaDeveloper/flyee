@@ -304,6 +304,45 @@ test("discount math that does not add up is caught: the savings, the percentage 
   assert.equal(status(run("landing", salesPage({ anatomy: { prices: PRICES.filter((p) => !p.struck) } })), "discount_math"), "skipped", "no struck price, no math to check");
 });
 
+test("a prepaid plan: the total for the months is the monthly price times the months, as on the Hostinger cards", () => {
+  // Read on hostinger.com/br on 2026-11-17: R$ 5,99 a month, R$ 287,52 for 48 months, renewal at R$ 23,99.
+  const card = (monthly, total) => [
+    { text: "R$ 29,99", value: 29.99, struck: true, context: "R$ 29,99 R$ 5,99 /mês", section: 2, y: 1500 },
+    { text: `R$ ${monthly}`, value: Number(monthly.replace(",", ".")), struck: false, context: `R$ 29,99 R$ ${monthly} /mês`, section: 2, y: 1520 },
+    { text: `R$ ${total}`, value: Number(total.replace(".", "").replace(",", ".")), struck: false, context: `Registre hoje e pague R$ ${total} por 48 meses ou divida o total em até 12 parcelas.`, section: 2, y: 1600 },
+    { text: "R$ 23,99", value: 23.99, struck: false, context: "Renovação automática por R$ 23,99/mês pelo mesmo período.", section: 2, y: 1620 },
+  ];
+  const right = run("planos", salesPage({ anatomy: { prices: card("5,99", "287,52") } }));
+  assert.equal(status(right, "discount_math"), "ok");
+  const wrong = run("planos", salesPage({ anatomy: { prices: card("5,99", "299,52") } }));
+  assert.equal(status(wrong, "discount_math"), "atencao");
+  assert.match(wrong.items.find((i) => i.id === "discount_math").detail, /R\$ 299,52 por 48 meses não é 48 vezes o preço por mês/);
+});
+
+test("a saving written before the total it comes from adds up, and the total beside it is not read as a saving", () => {
+  // A card built on 2026-11-17 in a test session: the saving and the total share one stretch of text.
+  const shared = "Economia de R$ 427,20 no primeiro ano Total do 1º ano: R$ 640,80";
+  const card = (saving) => [
+    { text: "R$ 1.068,00", value: 1068, struck: true, context: "Preço normal do anual: R$ 1.068,00", section: 4, y: 1500 },
+    { text: "R$ 53,40", value: 53.4, struck: false, context: "R$ 53,40 /mês no 1º ano", section: 4, y: 1520 },
+    { text: saving.text, value: saving.value, struck: false, context: shared.replace("R$ 427,20", saving.text), section: 4, y: 1560 },
+    { text: "R$ 640,80", value: 640.8, struck: false, context: shared.replace("R$ 427,20", saving.text), section: 4, y: 1580 },
+  ];
+  const right = run("planos", salesPage({ anatomy: { prices: card({ text: "R$ 427,20", value: 427.2 }) } }));
+  assert.equal(status(right, "discount_math"), "ok");
+  const wrong = run("planos", salesPage({ anatomy: { prices: card({ text: "R$ 472,20", value: 472.2 }) } }));
+  assert.equal(status(wrong, "discount_math"), "atencao");
+  assert.match(wrong.items.find((i) => i.id === "discount_math").detail, /economia de R\$ 472,20/);
+});
+
+test("a plan marked as the special offer counts as the highlighted plan", () => {
+  const plans = salesPage({ anatomy: {
+    sections: [{ index: 0, heading: { tag: "h2", text: "Garanta a sua oferta" }, y: 0, height: 1300, text: "Básico\nOferta especial • 82% de desconto\nCompleto", words: 20 }],
+    prices: PRICES.map((p) => ({ ...p, section: 0, y: p.y - 600 })),
+  } });
+  assert.equal(status(run("planos", plans), "plan_highlighted"), "ok");
+});
+
 test("the trial says its length, and the page text beats the sections for the footer", () => {
   const sevenDays = salesPage({ text: "Teste gratuitamente por 7 dias, sem cartão de crédito.\nCNPJ: 12.345.678/0001-90\nRua das Flores, 10\ncontato@exemplo.com.br\nOferta válida até 31/12" });
   assert.equal(status(run("landing", sevenDays), "trial_terms"), "ok");
@@ -401,7 +440,7 @@ test("the command creates a page, plans it and audits a saved capture", () => {
     assert.equal(run("new", "obrigado", "--type", "obrigado").dir, "docs/paginas/obrigado");
     assert.equal(run("list").pages.length, 2);
     assert.deepEqual(run("types").types.map((t) => t.id), ["upsell", "order-bump", "downsell", "cross-sell", "obrigado", "landing", "curso", "planos", "api"]);
-    assert.deepEqual(run("models", "--type", "planos").models.map((m) => m.id), ["juridiq-planos", "jurichat-pagina-de-vendas"]);
+    assert.deepEqual(run("models", "--type", "planos").models.map((m) => m.id), ["juridiq-planos", "jurichat-pagina-de-vendas", "hostinger-black-friday"]);
     assert.deepEqual(run("models", "--type", "api").models.map((m) => m.id), ["juridiq-api"]);
   } finally {
     rmSync(project, { recursive: true, force: true });

@@ -39,6 +39,7 @@ O provedor de IA recebe as mensagens da conversa, o conhecimento e as instruçõ
 - Para dado sensível, exija uma confirmação além do telefone ou passe para a equipe.
 - Confira o contrato de tratamento de dados com o provedor de IA escolhido. Quem precisa da IA sob o próprio controle usa o provedor `project`.
 - O robô trata o que vem do cliente e das consultas como dado, nunca como ordem (regra 8 do prompt), mas a defesa real é a consulta só devolver o que pode.
+- Os `facts` da rota `contact` vão para o provedor de IA a cada mensagem, como dado da pessoa (contexto.md, "O perfil de quem escreve"). Ponha neles só o que ajuda a atender quem fala (plano, etapa, valor em aberto), nunca documento, senha ou dado de outra pessoa. O log do robô guarda só a chave do perfil, nunca os dados.
 - Num grupo do WhatsApp, todos leem o que o robô escreve e ninguém foi identificado: o robô só fala quando chamado, nunca consulta dados, e o projeto recusa consulta de conversa de grupo (`group_chat`). Conversa de grupo também não vira sugestão de conhecimento.
 
 ## Quem mexe no contexto

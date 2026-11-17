@@ -21,6 +21,7 @@ import {
   knowledgeOwner,
   validateSettings,
   type BotSettings,
+  type DeclaredProfile,
   type Model,
   type PlatformSettings,
   type Scope,
@@ -30,6 +31,8 @@ import {
   handleBotRequest,
   mediaSupport,
   type BotRequest,
+  type ContactPayload,
+  type ContactProfile,
   type GapEventPayload,
   type ProjectTool,
 } from "../atendimento/base/server/bot-contract.mjs";
@@ -133,6 +136,20 @@ export interface SupportStore {
    * conferência.
    */
   alertWhatsapp(tenantId: string, alerts: WhatsappAlert[]): Promise<void>;
+  /**
+   * O perfil de quem escreve (uma das chaves de `profiles`) e o que o sistema sabe da pessoa, para o robô
+   * responder conforme quem fala. Ache a pessoa pelo telefone (contactPhone e brPhoneVariants, como nas
+   * consultas) e devolva { profile, label, facts }, ou null quando não souber quem é. facts entra no prompt como
+   * dado da pessoa; as chaves empresa, etapa e origem também vão para o resumo da passagem para a equipe.
+   * Fica no caminho da resposta: responda rápido (o robô espera 3 segundos e segue sem perfil).
+   */
+  contactProfile(input: {
+    tenantId: string;
+    conversationId: number;
+    inboxId: number | null;
+    contact: ContactPayload["contact"];
+    previousProfile: string | null;
+  }): Promise<ContactProfile | null>;
   /** A camada da plataforma (uma só no sistema), editada pelo superadmin. */
   loadPlatformSettings(): Promise<PlatformSettings | null>;
   savePlatformSettings(settings: PlatformSettings): Promise<void>;
@@ -160,6 +177,7 @@ export const store: SupportStore = {
   listPanelPeople: adapt("liste as chaves de quem pode atender neste cliente hoje"),
   teamPeople: adapt("liste quem pode atender neste cliente hoje, com chave, nome e e-mail"),
   alertWhatsapp: adapt("avise quem conecta o número e, quando fixBy for tecnico, quem cuida do servidor"),
+  contactProfile: adapt("ache a pessoa pelo telefone e devolva { profile, label, facts }, ou null; sem perfis no projeto, devolva null"),
   loadPlatformSettings: adapt("leia a camada da plataforma"),
   savePlatformSettings: adapt("grave a camada da plataforma"),
   loadSettings: adapt("leia a camada do cliente"),
@@ -193,6 +211,21 @@ export const tools: ProjectTool[] = [
 ];
 
 const declaredTools = tools.map((tool) => tool.name);
+
+/**
+ * Os perfis de quem escreve que este projeto sabe dizer (store.contactProfile). O superadmin escreve na tela
+ * do robô o que muda em cada um: instruções, limite de respostas, time e modo. ADAPTE: troque pelos perfis
+ * reais do projeto, ou deixe a lista vazia para não ter o cartão "Perfis". A chave vai em letras minúsculas
+ * sem acento, números, _ ou -, e não muda depois de usada: é ela que fica gravada nas configurações.
+ */
+export const profiles: DeclaredProfile[] = [
+  { key: "contato_novo", label: "Contato novo", description: "Quem ainda não tem conta no sistema." },
+  { key: "em_teste", label: "Cliente em teste", description: "Conta no período de teste." },
+  { key: "ativo", label: "Cliente ativo", description: "Conta paga e em dia." },
+  { key: "inadimplente", label: "Inadimplente", description: "Conta com pagamento atrasado, ainda liberada." },
+  { key: "bloqueado", label: "Bloqueado", description: "Conta bloqueada por falta de pagamento." },
+  { key: "cancelado", label: "Cancelado", description: "Conta cancelada." },
+];
 
 /**
  * O provedor de IA padrão do projeto; o superadmin pode trocar na camada da plataforma (ai). Um projeto
@@ -445,6 +478,8 @@ export async function readSettings(request: Request, scope: Scope) {
     editable,
     tools: visibleTools.map(({ name, description }) => ({ name, description })),
     media,
+    // Os perfis declarados: o cartão "Perfis" mostra um bloco para cada um, quando a pessoa pode editar "perfis".
+    profiles,
   };
 }
 
@@ -452,7 +487,7 @@ export async function writeSettings(request: Request, scope: Scope, incoming: un
   const person = await store.currentPerson(request);
   if (!canEdit(person, scope)) return { status: 403, body: { code: "forbidden", message: "Você não pode mudar esta parte do robô." } };
   if (scope === "plataforma") {
-    const problems = validateSettings(incoming, { declaredTools, scope });
+    const problems = validateSettings(incoming, { declaredTools, declaredProfiles: profiles, scope });
     if (problems.length) return { status: 422, body: { code: "invalid", message: "Confira os campos marcados.", problems } };
     const before = await platformSettings();
     await store.savePlatformSettings(incoming as PlatformSettings);
@@ -464,7 +499,7 @@ export async function writeSettings(request: Request, scope: Scope, incoming: un
   const platform = await platformSettings();
   const current = await store.loadSettings(person!.tenantId);
   const next = applyClientEdits(current, incoming as Partial<BotSettings>, clientPermissions(MODEL, platform));
-  const problems = validateSettings(next, { declaredTools, scope });
+  const problems = validateSettings(next, { declaredTools, declaredProfiles: profiles, scope });
   if (problems.length) return { status: 422, body: { code: "invalid", message: "Confira os campos marcados.", problems } };
   await store.saveSettings(person!.tenantId, next);
   const aviso = JSON.stringify(current?.groups ?? null) !== JSON.stringify(next.groups ?? null) ? await applyGroups(person!.tenantId) : null;
@@ -577,7 +612,7 @@ async function configFor(accountId: number) {
   ]);
   if (!state?.bot_token) return null;
   const tenantName = MODEL === "por-cliente" ? await store.tenantName(tenantId) : "";
-  return { tenantId, platform, config: botConfig({ model: MODEL, platform, client, state, tools, ai: defaultAi, tenantName }) };
+  return { tenantId, platform, config: botConfig({ model: MODEL, platform, client, state, tools, ai: defaultAi, tenantName, profiles }) };
 }
 
 const runTool = createToolRunner(tools, {
@@ -587,12 +622,24 @@ const runTool = createToolRunner(tools, {
   },
 });
 
-/** As rotas que o robô chama (config, tools, history, events, suggestions), conferidas pela assinatura. */
+/** As rotas que o robô chama (config, contact, tools, history, events, suggestions), conferidas pela assinatura. */
 export async function botHandler(request: BotRequest) {
   return handleBotRequest(request, {
     secret: env.botSecret(),
     async getConfig(accountId) {
       return (await configFor(accountId))?.config ?? null;
+    },
+    // O perfil de quem escreve: sem este tratador, a rota responde 404 e o robô segue sem perfil.
+    async getContact(accountId, payload) {
+      const tenantId = await store.tenantByAccount(accountId);
+      if (!tenantId) return null;
+      return store.contactProfile({
+        tenantId,
+        conversationId: Number(payload.conversation_id),
+        inboxId: payload.inbox_id ?? null,
+        contact: payload.contact,
+        previousProfile: payload.previous_profile ?? null,
+      });
     },
     runTool,
     async getHistory(accountId, conversationId, limit) {

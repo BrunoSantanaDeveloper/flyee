@@ -16,7 +16,10 @@ export const DAYS = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
 export const GROUP_MODES = ["fora", "equipe", "chamado"];
 
 /** Grupos de campos que a plataforma pode liberar para o cliente editar. */
-export const PERMISSION_GROUPS = ["apresentacao", "instrucoes", "conhecimento", "horario", "mensagens", "transferencia", "consultas", "modo", "grupos", "midia"];
+export const PERMISSION_GROUPS = ["apresentacao", "instrucoes", "conhecimento", "horario", "mensagens", "transferencia", "consultas", "modo", "grupos", "midia", "perfis"];
+
+/** A chave de um perfil de quem escreve, a mesma do robô: letras minúsculas sem acento, números, _ e -. */
+export const PROFILE_KEY = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 
 export const LIMITS = {
   persona: 2000,
@@ -50,6 +53,8 @@ export function defaultSettings(brand = "") {
     groups: { mode: "fora", call_words: [], team_id: null },
     // Imagem, áudio e vídeo que a pessoa manda (D28); a transcrição também vira nota interna para a equipe.
     media: { images: true, audio: true, video: true, documents: true, transcription_note: true },
+    // O que muda conforme o perfil de quem escreve (D30), um bloco por perfil que o projeto declara; vazio vale o padrão.
+    profiles: {},
     suggest_on_open: true,
     share_contact_name: true,
   };
@@ -59,7 +64,7 @@ export function defaultSettings(brand = "") {
 export function defaultPlatformSettings(brand = "") {
   return {
     ...defaultSettings(brand),
-    client_permissions: { apresentacao: true, instrucoes: true, conhecimento: true, horario: true, mensagens: true, transferencia: true, consultas: true, modo: false, grupos: false, midia: false },
+    client_permissions: { apresentacao: true, instrucoes: true, conhecimento: true, horario: true, mensagens: true, transferencia: true, consultas: true, modo: false, grupos: false, midia: false, perfis: false },
     tools_available: null,
     learning: { enabled: true },
     report: { enabled: true },
@@ -103,6 +108,7 @@ const GROUP_FIELDS = {
   modo: ["mode"],
   grupos: ["groups"],
   midia: ["media"],
+  perfis: ["profiles"],
 };
 
 /** Grava do que o cliente mandou só os grupos liberados; o resto fica como estava. */
@@ -115,11 +121,46 @@ export function applyClientEdits(current, incoming, permissions) {
   return next;
 }
 
+const blank = (value) => value === undefined || value === null || value === "";
+
+/** Os blocos dos perfis: só as chaves que o projeto declarou, com os mesmos limites dos campos globais. */
+function validateProfiles(profiles, declaredProfiles, add) {
+  if (blank(profiles)) return;
+  if (typeof profiles !== "object" || Array.isArray(profiles)) {
+    add("profiles", "Os perfis precisam ser um bloco por perfil.");
+    return;
+  }
+  const declared = new Map((declaredProfiles ?? []).map((profile) => [profile.key, profile.label || profile.key]));
+  for (const [key, block] of Object.entries(profiles)) {
+    const name = declared.get(key);
+    if (!name) {
+      add(`profiles.${key}`, `O perfil ${key} não existe neste sistema.`);
+      continue;
+    }
+    if (!block || typeof block !== "object" || Array.isArray(block)) {
+      add(`profiles.${key}`, `O perfil ${name} precisa de um bloco com instruções, limite, time e modo.`);
+      continue;
+    }
+    if (!blank(block.instructions) && (typeof block.instructions !== "string" || block.instructions.length > LIMITS.instructions)) {
+      add(`profiles.${key}.instructions`, `As instruções do perfil ${name} passam de ${LIMITS.instructions} caracteres.`);
+    }
+    const turns = block.max_bot_turns;
+    if (!blank(turns) && !(Number.isInteger(turns) && turns >= 1 && turns <= LIMITS.maxBotTurns)) {
+      add(`profiles.${key}.max_bot_turns`, `O limite de respostas do perfil ${name} vai de 1 a ${LIMITS.maxBotTurns}.`);
+    }
+    if (!blank(block.team_id) && !(Number.isInteger(block.team_id) && block.team_id > 0)) add(`profiles.${key}.team_id`, `O time do perfil ${name} é um número.`);
+    if (!blank(block.mode) && !MODES.includes(block.mode)) {
+      add(`profiles.${key}.mode`, `Escolha como o robô trabalha com o perfil ${name}: responder, sugerir ou desligado.`);
+    }
+  }
+}
+
 /**
  * Confere as configurações de uma camada. Devolve a lista de problemas, cada um com o campo e uma frase
- * para a tela; lista vazia quer dizer que pode salvar. declaredTools: os nomes das consultas do sistema.
+ * para a tela; lista vazia quer dizer que pode salvar. declaredTools: os nomes das consultas do sistema;
+ * declaredProfiles: os perfis que o projeto sabe dizer, [{ key, label, description }].
  */
-export function validateSettings(settings, { declaredTools = [], scope = "cliente" } = {}) {
+export function validateSettings(settings, { declaredTools = [], declaredProfiles = [], scope = "cliente" } = {}) {
   const problems = [];
   const add = (field, message) => problems.push({ field, message });
   if (!settings || typeof settings !== "object") return [{ field: "", message: "As configurações vieram vazias." }];
@@ -190,6 +231,8 @@ export function validateSettings(settings, { declaredTools = [], scope = "client
     if (media.documents !== undefined && typeof media.documents !== "boolean") add("media.documents", "Escolha sim ou não para PDF, planilha e documento.");
   }
 
+  validateProfiles(settings.profiles, declaredProfiles, add);
+
   for (const name of settings.tools_enabled ?? []) {
     if (!declaredTools.includes(name)) add("tools_enabled", `A consulta ${name} não existe neste sistema.`);
   }
@@ -230,13 +273,48 @@ function mediaSettings({ platform, client }) {
 
 const filled = (value) => (Array.isArray(value) ? value.length > 0 : value !== null && value !== undefined && String(value).trim() !== "");
 
+const blocksOf = (value) => (value && typeof value === "object" && !Array.isArray(value) ? value : {});
+
+/**
+ * O bloco de cada perfil para o robô. Na camada do cliente (por-cliente, com a permissão perfis), o que ele
+ * preencheu vale sobre a plataforma, campo a campo; as instruções da plataforma para o perfil seguem em
+ * platform_instructions, acima das do cliente, como as instruções globais. declared: os perfis do projeto,
+ * que dão o nome (label) e limitam as chaves; sem ele, valem as chaves gravadas.
+ */
+function profileBlocks({ model, base, layer, permissions, declared }) {
+  const platform = blocksOf(base.profiles);
+  const client = model === "por-cliente" && layer && permissions.perfis ? blocksOf(layer.profiles) : {};
+  const labels = new Map((declared ?? []).map((profile) => [profile.key, profile.label]));
+  const keys = declared?.length ? declared.map((profile) => profile.key) : [...new Set([...Object.keys(platform), ...Object.keys(client)])];
+  const blocks = {};
+  for (const key of keys.filter((item) => PROFILE_KEY.test(item))) {
+    const fromPlatform = blocksOf(platform[key]);
+    const fromClient = blocksOf(client[key]);
+    const block = {};
+    if (labels.get(key)) block.label = labels.get(key);
+    const platformText = String(fromPlatform.instructions ?? "").trim();
+    const clientText = String(fromClient.instructions ?? "").trim();
+    if (model === "por-cliente") {
+      if (platformText) block.platform_instructions = platformText;
+      if (clientText) block.instructions = clientText;
+    } else if (platformText) block.instructions = platformText;
+    for (const field of ["max_bot_turns", "team_id", "mode"]) {
+      const value = filled(fromClient[field]) ? fromClient[field] : fromPlatform[field];
+      if (filled(value)) block[field] = value;
+    }
+    blocks[key] = block;
+  }
+  return blocks;
+}
+
 /**
  * A configuração que a rota config devolve ao robô, juntando as camadas.
  * model: "por-cliente" ou "plataforma"; platform: a camada da plataforma; client: a do cliente (ignorada no
  * modelo plataforma); state: o que o provisionamento guardou; tools: as consultas que o sistema declara;
- * ai: o provedor padrão do sistema; tenantName: o nome do cliente, quando a camada dele não tem.
+ * ai: o provedor padrão do sistema; tenantName: o nome do cliente, quando a camada dele não tem;
+ * profiles: os perfis de quem escreve que o projeto declara ([{ key, label, description }]).
  */
-export function botConfig({ model = "por-cliente", platform, client, state, tools = [], ai = {}, tenantName = "" }) {
+export function botConfig({ model = "por-cliente", platform, client, state, tools = [], ai = {}, tenantName = "", profiles = [] }) {
   const base = { ...defaultPlatformSettings(), ...(platform ?? {}) };
   const permissions = clientPermissions(model, base);
   // A camada do cliente como ele salvou, sem padrões: o que ele nunca preencheu vem da plataforma.
@@ -273,6 +351,7 @@ export function botConfig({ model = "por-cliente", platform, client, state, tool
     },
     groups: groupSettings({ model, platform, client }),
     media: mediaSettings({ model, platform: base, client: layer && permissions.midia ? layer : null }),
+    profiles: profileBlocks({ model, base, layer, permissions, declared: profiles }),
     tools: tools.filter((tool) => enabled.has(tool.name)).map(({ name, description, input_schema }) => ({ name, description, input_schema })),
     suggest_on_open: (permissions.transferencia && layer ? layer.suggest_on_open : base.suggest_on_open) !== false,
     history_from_project: true,

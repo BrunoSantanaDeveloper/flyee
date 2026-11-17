@@ -16,6 +16,11 @@ export const DEFAULT_MESSAGES = {
 export const DEFAULT_KEYWORDS = ["atendente", "humano", "atendimento humano", "falar com uma pessoa", "falar com alguem", "gerente"];
 
 const DAY_KEYS = { Sun: "dom", Mon: "seg", Tue: "ter", Wed: "qua", Thu: "qui", Fri: "sex", Sat: "sab" };
+/** O dia da semana por extenso, para a linha de data do prompt. */
+export const WEEKDAY_NAMES = { dom: "domingo", seg: "segunda-feira", ter: "terça-feira", qua: "quarta-feira", qui: "quinta-feira", sex: "sexta-feira", sab: "sábado" };
+
+/** A chave de um perfil (rota contact e camada da plataforma): letras minúsculas sem acento, números, _ e -. */
+export const PROFILE_KEY = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 
 export class ConfigError extends Error {
   constructor(code, message) {
@@ -70,6 +75,8 @@ export function normalizeConfig(raw) {
       team_id: Number.isInteger(handoff.team_id) ? handoff.team_id : null,
     },
     groups: normalizeGroups(raw.groups),
+    // O bloco de cada perfil de quem escreve (D30); o perfil da conversa vem da rota contact (conversation.mjs).
+    profiles: normalizeProfiles(raw.profiles),
     // Imagem, áudio, vídeo (D28) e arquivos (D29): ligados quando a configuração não diz o contrário.
     media: {
       images: raw.media?.images !== false,
@@ -93,6 +100,28 @@ function normalizeGroups(raw) {
     call_words: words,
     team_id: Number.isInteger(raw?.team_id) && raw.team_id > 0 ? raw.team_id : null,
   };
+}
+
+/**
+ * O bloco de cada perfil, como botConfig manda: label, platform_instructions (só no modelo por-cliente),
+ * instructions, max_bot_turns, team_id e mode. Campo ausente ou inválido fica null e vale o global.
+ */
+export function normalizeProfiles(raw) {
+  const profiles = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return profiles;
+  for (const [key, block] of Object.entries(raw)) {
+    if (!PROFILE_KEY.test(key) || !block || typeof block !== "object" || Array.isArray(block)) continue;
+    const label = String(block.label ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
+    profiles[key] = {
+      label: label || null,
+      platform_instructions: String(block.platform_instructions ?? "").trim(),
+      instructions: String(block.instructions ?? "").trim(),
+      max_bot_turns: Number.isInteger(block.max_bot_turns) && block.max_bot_turns > 0 ? block.max_bot_turns : null,
+      team_id: Number.isInteger(block.team_id) && block.team_id > 0 ? block.team_id : null,
+      mode: MODES.includes(block.mode) ? block.mode : null,
+    };
+  }
+  return profiles;
 }
 
 function minutes(text) {

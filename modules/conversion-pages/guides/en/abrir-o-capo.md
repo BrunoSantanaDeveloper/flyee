@@ -15,7 +15,8 @@ Real models come with it, analysed one by one. Each model records the source, th
 - the sales page, the plans page and the API page of Juridiq, software for law firms;
 - the sales page of JuriChat, the WhatsApp support product from the same group;
 - the sales page of Subido AI, a course with a platform, mentoring and tools, in both versions of its A/B test of the top, seen on November 9, 2026;
-- the product pages of Databricks, a data and AI platform, with demo graphics drawn from the product's own parts, its own icons and real logos, seen the same day.
+- the product pages of Databricks, a data and AI platform, with demo graphics drawn from the product's own parts, its own icons and real logos, seen the same day;
+- Hostinger's Black Friday on its home and plans, with each plan's terms under its button, the bonus as a before and after number and the countdown tested with and without, seen on November 17, 2026.
 
 The first four were seen on November 7, 2026.
 

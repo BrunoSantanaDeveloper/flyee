@@ -389,7 +389,7 @@ test("prompt: parte fixa com regras, conhecimento e protocolo; data e nome só n
   assert.match(stable, /consultar_pedido/);
   assert.match(stable, /category: em handoff/);
   assert.doesNotMatch(stable, /Agora:|Maria/, "o que muda a cada mensagem fica fora da parte que vai para o cache");
-  assert.match(volatile, /Agora: 2026-11-09 11:00/);
+  assert.match(volatile, /Agora: segunda-feira, 2026-11-09 11:00 \(America\/Sao_Paulo\)\./);
   assert.match(volatile, /Nome da pessoa no WhatsApp: Maria/);
   const again = buildSystemPrompt(config, { now: new Date(NOW + 3600000), contactName: "João" });
   assert.equal(again.stable, stable, "a parte fixa é igual entre mensagens");

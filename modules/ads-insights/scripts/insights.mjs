@@ -445,7 +445,7 @@ function importCommand(positionals, values) {
   const id = slugify(values.name ?? `${values.source}-${period?.end ?? isoDay()}${values.level ? `-${values.level}` : ""}`, 60);
   const dir = join(PATHS.readings, id);
   mkdirSync(dir, { recursive: true });
-  const table = { version: 1, id, generated_at: new Date().toISOString(), source_file: rel(file), source: normalized.source, level: normalized.level, name_field: normalized.name_field, fields: normalized.fields, columns_matched: normalized.columns_matched, missing: normalized.missing, unknown_columns: normalized.unknown_columns, period, totals: normalized.totals, event: values.event ?? null, rows };
+  const table = { version: 1, id, generated_at: new Date().toISOString(), source_file: rel(file), source: normalized.source, level: normalized.level, name_field: normalized.name_field, fields: normalized.fields, columns_matched: normalized.columns_matched, missing: normalized.missing, derived: normalized.derived, unknown_columns: normalized.unknown_columns, period, totals: normalized.totals, event: values.event ?? null, rows };
   writeJson(join(dir, "tabela.json"), table);
   return {
     ...base("import"),
@@ -458,6 +458,7 @@ function importCommand(positionals, values) {
     daily_lines_merged: normalized.rows.length - rows.length,
     fields: normalized.fields,
     missing: normalized.missing,
+    derived: normalized.derived,
     unknown_columns: normalized.unknown_columns,
     totals: normalized.totals,
     next_step: normalized.level === "ad" && normalized.source === "meta" ? { action: "link", command: command(`link ${id} --names anuncios/<campanha>/entrega/nomes.json`), say: `${rows.length} peça(s) lidas${normalized.missing.length ? `; o export não traz ${normalized.missing.join(", ")}` : ""}. Ligue cada linha ao nome da entrega e julgue.` } : { action: "report", command: command(`report ${id}`), say: `${rows.length} linha(s) lidas. Julgue a tabela.` },
@@ -511,7 +512,7 @@ function judgeReading(reading, { contract, plan, values }) {
   const rules = rulesOf(plan);
   const { allowable, source } = allowableOf(values, contract, plan);
   const event = eventOf(values, reading.table, contract, plan);
-  const normalized = { source: reading.table.source, level: reading.table.level, fields: reading.table.fields, rows: reading.table.rows, period: reading.table.period, missing: reading.table.missing, unknown_columns: reading.table.unknown_columns, totals: reading.table.totals };
+  const normalized = { source: reading.table.source, level: reading.table.level, fields: reading.table.fields, rows: reading.table.rows, period: reading.table.period, missing: reading.table.missing, derived: reading.table.derived ?? {}, unknown_columns: reading.table.unknown_columns, totals: reading.table.totals };
   const table = { ...judgeTable(normalized, { event, allowable, rules }), source: normalized.source, level: normalized.level, rules_label: rules.sample.label };
   return { normalized, table, allowable, allowableSource: source, event, rules };
 }

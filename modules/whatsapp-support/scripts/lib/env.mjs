@@ -31,6 +31,11 @@ export function loadEnv(envFile, base = process.env) {
   return { ...base, ...parseDotenv(text) };
 }
 
+/** O ambiente com vários arquivos .env por cima, na ordem: o último vence. */
+export function loadEnvFiles(envFiles = [], base = process.env) {
+  return envFiles.reduce((env, file) => loadEnv(file, env), { ...base });
+}
+
 export function pick(env, names) {
   const values = {};
   const missing = [];

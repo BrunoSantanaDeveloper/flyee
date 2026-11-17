@@ -14,6 +14,7 @@
 - Cada forma de pagamento tem a sua conta: 30% no cartão parcelado sem juros e 40% no PIX à vista, no modelo.
 - A média mensal mostrada em destaque diz de qual preço ela sai. No modelo, é o total no cartão dividido por 12.
 - Um desconto só no primeiro período diz quanto custa a renovação.
+- Num período pago adiantado, o preço por mês é o total dividido pelos meses, e a página diz isso. Na Hostinger, R$ 5,99 por mês vezes 48 dá os R$ 287,52 pagos hoje, escritos debaixo do botão.
 
 ## As seções, na ordem
 
@@ -38,6 +39,17 @@
 - **A ordem dos cartões é a mesma na tabela.** Do mais caro para o mais barato, como nos modelos, a pessoa vê primeiro o preço mais alto. Do mais barato para o mais caro, quem compara pelo menor preço encontra mais rápido. Escolha uma ordem e registre a escolha no plano.
 - **Cada cartão tem o seu chamado,** que leva ao cadastro já com o plano e o período escolhidos.
 - **Uma agenda de demonstração embutida** serve quem quer conversar antes. Um aviso de "últimas vagas" só aparece quando a agenda tem mesmo poucas vagas. Nos modelos, o aviso batia com a agenda do dia na hora da leitura.
+
+## A promoção nos planos
+
+Numa promoção, como a Black Friday dos modelos da Hostinger e do Juridiq:
+
+- **Cada cartão tem o selo do seu desconto,** e o "até" do topo é o maior deles. O "a partir de" do topo é o menor preço dos cartões.
+- **Debaixo do chamado, a condição inteira:** o que se paga hoje, por quantos meses, em quantas parcelas, quanto custa a renovação e que dá para cancelar. A Hostinger escreve isso em três linhas logo abaixo de "Escolher plano", em todos os cartões.
+- **O bônus da promoção é um número de antes e de agora** ("500 em vez de 250"), numa caixa própria, igual em todos os cartões.
+- **O que o plano não tem aparece com um traço,** e um item com condição abre a regra no próprio item.
+- **O começo e o fim da promoção estão escritos** no topo e perto da oferta. O contador, se houver, termina no fim, não recomeça e mostra dias quando falta mais de um dia. Testar o topo com e sem o contador, como a Hostinger faz, mostra se ele vende.
+- **Quando a promoção acaba,** sai o que entrou por ela: a faixa, o topo, os selos e o bônus.
 
 ## O texto
 
@@ -76,3 +88,4 @@ Os detalhes estão em `../lei.md`.
 
 - `../modelos/juridiq-planos.md`: quatro planos com mensal e anual, cartão e PIX, a tabela comparativa e a agenda embutida.
 - `../modelos/jurichat-pagina-de-vendas.md`: a seção de planos do produto irmão, com o teste de 7 dias escrito.
+- `../modelos/hostinger-black-friday.md`: quatro planos pagos adiantados na Black Friday, com a condição inteira debaixo de cada botão, o bônus de antes e de agora e o contador testado com e sem.

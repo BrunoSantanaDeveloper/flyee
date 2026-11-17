@@ -37,6 +37,7 @@ A configuração da conta do Chatwoot. 404 quando a conta não é de nenhum clie
   "tools": [{ "name": "consultar_pedido", "description": "...", "input_schema": { "type": "object", "properties": {} } }],
   "groups": { "mode": "equipe", "call_words": [], "team_id": null },
   "media": { "images": true, "audio": true, "video": true, "documents": true, "transcription_note": true },
+  "profiles": { "em_teste": { "label": "Cliente em teste", "instructions": "Ofereça ajuda para configurar a conta.", "max_bot_turns": 4, "team_id": 2, "mode": "auto" } },
   "suggest_on_open": true,
   "history_from_project": true,
   "privacy": { "share_contact_name": true },
@@ -54,7 +55,24 @@ A configuração da conta do Chatwoot. 404 quando a conta não é de nenhum clie
 - `ai.provider`: `anthropic`, `openai` (e serviços compatíveis, com `base_url` e `key_env`), `gemini` ou `project`. As chaves ficam no ambiente do robô; `key_env` só aceita nomes terminados em `_API_KEY`.
 - `ai.transcription`: `project` quando o próprio projeto transcreve áudio e a fala do vídeo pela rota `transcribe`, para quem não deixa chave de IA no contêiner do robô; sem o campo, transcreve a chave do Gemini ou da OpenAI do robô (contexto.md, "Imagem, áudio e vídeo"). Declare junto com a rota: com `project` e sem a rota, todo áudio vai para a equipe.
 - `media`: o que o robô lê (imagem, áudio, vídeo, e `documents` para PDF, planilha, CSV e documento de texto) e se a transcrição vira nota para a equipe; sem `documents`, numa configuração salva antes, os arquivos valem como ligados. Monte com `botConfig` (vem de `mediaSettings`).
+- `profiles`: o bloco de cada perfil de quem escreve (contexto.md, "O perfil de quem escreve"), com `label`, `instructions`, `max_bot_turns`, `team_id` e `mode`, todos opcionais; no modelo `por-cliente`, as instruções da plataforma para o perfil vêm em `platform_instructions`, acima das do cliente. Campo ausente vale o global. Monte com `botConfig` passando `profiles`, os perfis que o projeto declara (`[{ key, label, description }]`): eles dão o nome de cada perfil e limitam as chaves. Sem o campo, nada muda.
 - Mensagens vazias usam o texto padrão do robô. O robô guarda a configuração por 60 segundos.
+
+### `POST contact`
+
+O perfil de quem escreve e o que o sistema sabe da pessoa. Corpo: `{ "account_id", "conversation_id", "inbox_id", "contact": { "id", "name", "phone", "identifier" }, "previous_profile" }`. Resposta:
+
+```json
+{ "profile": "em_teste", "label": "Cliente em teste", "facts": { "empresa": "Padaria Aurora", "etapa": "teste, 5 dias restantes", "origem": "Instagram", "plano": "Essencial" } }
+```
+
+- O robô pergunta no começo da conversa e a cada nova leva de mensagens do cliente, com cache de 5 minutos por conversa (`PROFILE_TTL_MS` no ambiente do robô). Uma consulta (`tools`) feita na conversa descarta o cache, porque pode confirmar quem é a pessoa: alguém que escreve de outro número e confirma o e-mail por código muda de perfil, e a próxima leva pergunta de novo. Conversa de grupo não pergunta.
+- `contact.phone` é o número do contato; na rota não oficial pode vir null, e o telefone fica em `identifier` (`5511...@c.us`). Ache a pessoa com `contactPhone` e `brPhoneVariants` de `base/shared/phone.mjs`, como nas consultas. `previous_profile` é o perfil que o robô conhecia nesta conversa, ou null.
+- `profile` é uma das chaves que o projeto declara: letras minúsculas sem acento, números, `_` e `-`. `label` é o nome para o resumo; sem ele, vale o nome declarado. `facts` traz até 30 dados, cada um texto, número, sim ou não, null ou lista de textos (até 500 caracteres por texto).
+- Sem perfil: 404, `{ "profile": null }` ou uma chave fora do formato. A conversa segue como antes, sem bloco nem dados. Os `facts` só valem com um perfil.
+- Outra falha (500, assinatura recusada, mais de 3 segundos sem resposta): o robô fica com o perfil que já conhecia nesta conversa, ou nenhum, e pergunta de novo em um minuto. Assim uma queda passageira não tira o modo desligado de um perfil bloqueado.
+- Responda rápido: a rota fica no caminho da resposta.
+- Em Node: o tratador `getContact(accountId, payload)` de `handleBotRequest` (base/server/bot-contract.mjs); sem ele, a rota responde 404 `not_enabled`. No modelo `next/lib/atendimento.ts`, o tratador chama `store.contactProfile`.
 
 ### `POST tools/<nome>`
 
@@ -85,10 +103,26 @@ Perguntas e respostas tiradas de uma conversa que a equipe resolveu: `{ "account
 ## A ação que a IA devolve
 
 ```json
-{ "action": "reply" | "lookup" | "handoff", "text": "", "tool": "", "input": "", "reason": "", "category": "", "topic": "" }
+{
+  "action": "reply" | "lookup" | "handoff", "text": "", "tool": "", "input": "", "reason": "", "category": "", "topic": "",
+  "summary": { "profile": "", "company": "", "need": "", "done": "", "next_step": "", "origin": "" }
+}
 ```
 
 `reply` responde com `text`; `lookup` pede a consulta `tool` com `input` (um JSON em texto); `handoff` passa para a equipe, com `reason` para a equipe, `text` opcional para o cliente, `category` (`nao_sei`, `pedido_da_pessoa`, `decisao_humana`, `reclamacao`, `risco`, `outro`) e `topic`, o assunto em poucas palavras, que alimentam o relatório das lacunas. Até três consultas por mensagem; JSON inválido ganha uma segunda chance; na terceira falha, o robô passa para a equipe.
+
+`summary` é o resumo da passagem, que a IA preenche em `handoff` e deixa vazio nas outras ações. Ele vira a nota interna da conversa, uma linha por campo:
+
+```
+Perfil:
+Empresa e etapa:
+O que a pessoa precisa:
+O que já foi feito ou tentado:
+Próximo passo sugerido:
+Origem do contato:
+```
+
+O sistema vence a IA no que ele sabe: o perfil vem da rota `contact`, a empresa e a etapa dos `facts` `empresa` e `etapa`, a origem de `facts.origem`. Nas passagens por regra (a palavra que chama a equipe, o limite de respostas, o arquivo que não foi lido, o modo desligado, a falha), o robô preenche com o que tem: o que a pessoa precisa é o último trecho dela, e o que foi feito diz a regra. Campo sem valor fica "não informado". O motivo (`reason`) continua indo para o relatório das lacunas. Uma ação sem `summary`, como a de um provedor `project` de antes, continua válida.
 
 ### A tela sabe se o robô ouve
 

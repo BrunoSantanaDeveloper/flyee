@@ -3,6 +3,8 @@
 // SUPPORT_BOT_SECRET; sem assinatura válida, nada é lido.
 //
 //   GET  config?account_id=                       a configuração da conta (botConfig de shared/settings.mjs)
+//   POST contact                                   { account_id, conversation_id, inbox_id, contact: { id, name, phone, identifier },
+//                                                  previous_profile } e volta { profile, label?, facts? }, o perfil de quem escreve
 //   POST tools/<nome>                              { account_id, conversation_id, inbox_id, contact, input }
 //   GET  history?account_id=&conversation_id=&limit=   { messages: [{ role, text, at }] }
 //   POST generate                                  a ação (ou as sugestões), quando o provedor de IA é o próprio projeto
@@ -12,6 +14,16 @@
 //   POST suggestions                               { account_id, conversation_id, suggestions: [{ q, a, why }], at }
 
 import { verifyProjectRequest } from "../shared/signature.mjs";
+
+/** A resposta da rota contact: { profile } sempre, e label e facts só quando vieram. Sem perfil, profile null. */
+function contactBody(result) {
+  const profile = typeof result?.profile === "string" ? result.profile.trim() : "";
+  if (!profile) return { profile: null };
+  const body = { profile };
+  if (typeof result.label === "string" && result.label.trim()) body.label = result.label.trim();
+  if (result.facts && typeof result.facts === "object" && !Array.isArray(result.facts)) body.facts = result.facts;
+  return body;
+}
 
 function header(headers, name) {
   if (!headers) return undefined;
@@ -25,7 +37,8 @@ function header(headers, name) {
  *   pathWithQuery: o caminho completo pedido, com a query, exatamente como chegou (é o que foi assinado);
  *   route: o trecho depois da base das rotas do robô ("config", "tools/consultar_pedido", "history", "generate").
  * handlers: { secret, getConfig(accountId), runTool(name, payload), getHistory(accountId, conversationId, limit),
- *   generate?(payload), transcribe?(payload), saveEvent?(accountId, event), saveSuggestions?(accountId, payload) }
+ *   getContact?(accountId, payload), generate?(payload), transcribe?(payload), saveEvent?(accountId, event),
+ *   saveSuggestions?(accountId, payload) }
  */
 export async function handleBotRequest(request, handlers) {
   const method = String(request.method ?? "GET").toUpperCase();
@@ -48,6 +61,19 @@ export async function handleBotRequest(request, handlers) {
       if (!Number.isInteger(accountId)) return { status: 400, body: { ok: false, code: "account_id_missing" } };
       const config = await handlers.getConfig(accountId);
       return config ? { status: 200, body: config } : { status: 404, body: { ok: false, code: "account_unknown" } };
+    }
+    if (method === "POST" && route === "contact") {
+      // Sem o tratador, 404: o robô segue sem perfil, como antes da rota existir.
+      if (!handlers.getContact) return { status: 404, body: { ok: false, code: "not_enabled" } };
+      let payload;
+      try {
+        payload = JSON.parse(request.rawBody || "{}");
+      } catch {
+        return { status: 400, body: { ok: false, code: "bad_json" } };
+      }
+      const payloadAccount = Number(payload?.account_id);
+      if (!Number.isInteger(payloadAccount)) return { status: 400, body: { ok: false, code: "account_id_missing" } };
+      return { status: 200, body: contactBody(await handlers.getContact(payloadAccount, { ...payload, account_id: payloadAccount })) };
     }
     if (method === "POST" && route.startsWith("tools/")) {
       const name = decodeURIComponent(route.slice("tools/".length));

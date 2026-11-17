@@ -1,6 +1,6 @@
 import type { HealthFinding, HealthLevel } from "../server/health.mjs";
 import type { GapGroup } from "../shared/report.mjs";
-import type { BotSettings, Model, PlatformSettings, Problem, Scope } from "../shared/settings.mjs";
+import type { BotSettings, DeclaredProfile, Model, PlatformSettings, Problem, Scope } from "../shared/settings.mjs";
 
 export class SupportApiError extends Error {
   code: string;
@@ -26,6 +26,8 @@ export interface SettingsResponse {
   tools: Array<{ name: string; description: string }>;
   /** audio false: o robô não tem quem transcreva, e a tela esconde "Ouvir áudios"; null: não se sabe. */
   media?: { audio: boolean | null };
+  /** Os perfis de quem escreve que o sistema declara; o cartão "Perfis" mostra um bloco para cada um. Ausente ou vazio: sem o cartão. */
+  profiles?: DeclaredProfile[];
 }
 
 export interface Suggestion {

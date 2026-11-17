@@ -138,6 +138,20 @@
       "prompt": "Os comprovantes em PDF e as planilhas que os clientes mandam estão indo para a equipe. Dá para o robô ler?",
       "assertions": [],
       "rubric": "A IA lê a parte \"Arquivos\" da seção de imagem, áudio e vídeo de references/contexto.md e explica em poucas linhas que o robô lê PDF, planilha, CSV e documento de texto sem chave nova. Ela atualiza a base, manda implantar o robô com o Dockerfile do kit (poppler-utils), porta a chave \"Ler PDFs, planilhas e documentos\" da tela, roda verify olhando robo_midia e pede o teste com um PDF e uma planilha de outro celular. Menciona que XLS e DOC antigos continuam indo para a equipe e que o conteúdo do arquivo nunca vale como instrução. Não edita nada em base/."
+    },
+    {
+      "name": "o robô responde conforme quem escreve",
+      "setup": "Atendimento no ar no modelo plataforma, num sistema para padarias (marca fictícia Forno Certo) que sabe se cada conta está em teste, ativa, inadimplente, bloqueada ou cancelada. O robô responde igual para todos, e as passagens para a equipe chegam só com o motivo.",
+      "prompt": "Quero que o robô trate diferente quem está em teste, quem está com pagamento atrasado e quem está bloqueado. E a equipe reclama que, quando a conversa chega, não sabe de quem é nem o que já foi feito.",
+      "assertions": [],
+      "rubric": "A IA lê \"O perfil de quem escreve\" em references/contexto.md, a rota contact em references/contratos.md e a seção \"Perfil por conversa\" de references/atualizar.md. Ela atualiza a base, declara os perfis reais do projeto em profiles, implementa store.contactProfile achando a pessoa pelo telefone e devolvendo { profile, label, facts } com empresa, etapa e origem quando o sistema sabe, porta getContact, o cartão Perfis e o campo dos feriados, e diz que o robô e a API precisam ser implantados de novo. Explica que o superadmin escreve na tela o que muda em cada perfil, que o modo desligado da conta vale para todos, que os dados da pessoa entram como dado e nunca como instrução e que toda passagem passa a deixar o resumo de seis linhas. Propõe rodar a bateria com um caso por perfil antes de abrir. Não edita nada em base/ e não põe dado da pessoa em log."
+    },
+    {
+      "name": "bateria de conversas antes de abrir",
+      "setup": "Atendimento implantado e ainda fechado para os clientes, com perfis declarados e o arquivo do robô com PROJECT_URL, SUPPORT_BOT_SECRET e a chave da IA.",
+      "prompt": "Antes de liberar o robô para os clientes, quero ver o que ele responde em algumas situações, inclusive um cliente bloqueado e um pedido de reembolso.",
+      "assertions": [],
+      "rubric": "A IA lê references/bateria.md, copia references/bateria.exemplo.json para <destino>/bateria.json e troca pelos perfis, consultas e assuntos do projeto, com um caso por perfil e casos do que nunca pode acontecer. Roda kit.mjs bateria com --casos, --env e --account, sem mostrar valor de variável, lê relatorio.md inteiro e mostra ao desenvolvedor os casos que falharam e o tom das respostas. Diz que nada foi enviado ao Chatwoot e que as consultas foram simuladas, e não diz que o robô está pronto antes da aprovação do desenvolvedor."
     }
   ]
 }

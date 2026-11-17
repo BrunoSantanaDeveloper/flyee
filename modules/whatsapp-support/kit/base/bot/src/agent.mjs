@@ -25,12 +25,14 @@ export async function runAgent({ generate, system, messages, tools, callTool, ma
       badJson += 1;
       if (badJson > 1) throw error;
       conversation.push({ role: "assistant", content: String(text ?? "").slice(0, 2000) || "(vazio)" });
-      conversation.push({ role: "user", content: "Responda só com o objeto JSON pedido nas instruções, com os cinco campos." });
+      conversation.push({ role: "user", content: "Responda só com o objeto JSON pedido nas instruções, com todos os campos." });
       continue;
     }
     if (action.action !== "lookup") return { ...action, lookups };
 
-    if (lookups >= maxLookups) return { action: "handoff", text: "", tool: "", input: "", reason: "limite de consultas", lookups };
+    if (lookups >= maxLookups) {
+      return { action: "handoff", text: "", tool: "", input: "", reason: "limite de consultas", summary: { done: `O robô fez ${maxLookups} consultas ao sistema sem chegar à resposta.` }, lookups };
+    }
     lookups += 1;
     conversation.push({ role: "assistant", content: JSON.stringify(action) });
     const tool = known.get(action.tool);

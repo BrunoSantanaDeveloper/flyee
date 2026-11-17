@@ -36,6 +36,12 @@ test("csv: numbers as the exports write them, in both languages; an empty cell i
   for (const text of ["", "—", "-", "n/a", "abc", null, undefined]) assert.equal(parseNumber(text), null, String(text));
 });
 
+test("csv: a number that starts with zero is never read as thousands, with a comma or a dot", () => {
+  const cases = { "0,160669": 0.160669, "0.160669": 0.160669, "0,160": 0.16, "0.160": 0.16, "0,16": 0.16, "-0,5": -0.5, "12,000": 12000, "1,234,567": 1234567, "1.234.567": 1234567 };
+  for (const [text, value] of Object.entries(cases)) assert.equal(parseNumber(text), value, text);
+  assert.equal(parseNumber("1,234,56"), null, "groups that are not thousands are not guessed");
+});
+
 test("csv: the separator is read from the header, quotes and BOM are handled", () => {
   assert.equal(detectSeparator("a;b;c\n1;2;3"), ";");
   assert.equal(detectSeparator('a,"b,c",d\n1,2,3'), ",");
@@ -75,6 +81,32 @@ test("exports: a column the export does not carry goes to missing and never beco
   assert.equal(metrics.results, 36);
   assert.throws(() => normalizeExport("Coluna estranha;Outra\n1;2\n", { source: "meta", columns: COLUMNS }), { code: "export_invalid" });
   assert.throws(() => normalizeExport("", { source: "meta", columns: COLUMNS }), { code: "export_invalid" });
+});
+
+test("exports: the Meta export in Portuguese of late 2026 gives the 3-second plays from their cost and reads the renamed columns", () => {
+  const recent = normalizeExport(read("export-meta-pt-2026-11.csv"), { source: "meta", columns: COLUMNS });
+  assert.deepEqual(recent.missing, []);
+  assert.deepEqual(recent.derived, { video_plays_3s: "cost_per_video_play_3s" });
+  assert.deepEqual(recent.period, { start: "2026-11-01", end: "2026-11-14" });
+  const [agenda, cliente, preco] = recent.rows;
+  assert.equal(agenda.video_plays_3s, 600);
+  assert.equal(agenda.thruplays, 240);
+  assert.equal(agenda.video_plays_100, 90);
+  assert.equal(agenda.purchase_value, 197);
+  assert.equal(agenda.delivery, "active");
+  assert.equal(cliente.video_plays_3s, 200);
+  assert.equal(cliente.thruplays, null, "an empty cell is null, never zero");
+  assert.equal(preco.video_plays_3s, null, "a piece that spent nothing has no count to derive");
+  for (const header of ["Encerramento dos relatórios", "Veiculação de anúncio", "Valor de conversão da compra", "Custo por reprodução de vídeo por no mínimo 3 segundos (BRL)", "ThruPlays de 15 segundos", "Reproduções de 100% do vídeo"]) assert.ok(!recent.unknown_columns.includes(header), header);
+  const metrics = metricsOf(agenda, { source: "meta", fields: recent.fields });
+  assert.equal(metrics.hook_rate, 0.4);
+  assert.equal(metrics.thruplay_rate, 0.4);
+  const twice = aggregateByName([...recent.rows, ...recent.rows]);
+  const summed = twice.find((row) => row.name === "tempo-reels-agenda-v1");
+  assert.equal(summed.video_plays_3s, 1200);
+  assert.equal(summed.cost_per_video_play_3s, 0.2, "the cost is recomputed from the sums, never added");
+  const counted = normalizeExport(read("export-meta-pt.csv"), { source: "meta", columns: COLUMNS });
+  assert.deepEqual(counted.derived, {}, "with the count in the export nothing is derived");
 });
 
 test("exports: the Google search-terms export is read at the search_term level with Brazilian numbers", () => {

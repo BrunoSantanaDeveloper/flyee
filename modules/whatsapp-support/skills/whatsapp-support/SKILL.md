@@ -54,6 +54,7 @@ Siga [references/contratos.md](../../references/contratos.md) e [references/arqu
 - **Quem responde assume.** Quando alguém da equipe responde, pelo painel ou pelo celular do número, o robô abre a conversa para a equipe e não escreve mais nela. O que é respondido pelo celular aparece no painel como "Celular do WhatsApp", com a etiqueta `celular` e uma nota pedindo para registrar quem respondeu, porque o celular não diz quem digitou. Recomende ao desenvolvedor que a equipe responda pelo painel, onde fica o nome de quem atendeu.
 - **Rotas.** Copie `modelos/next/app/api/atendimento/` para o app. Em outro framework ou linguagem, porte as mesmas rotas usando `base/server/*.mjs` ou os contratos.
 - **Consultas do robô.** Troque o exemplo `consultar_pedido` pelas consultas reais. Cada uma devolve só dados da pessoa da conversa e é o projeto que confere quem ela é ([references/seguranca.md](../../references/seguranca.md)).
+- **Perfil de quem escreve.** Se o projeto sabe em que situação está quem escreve (contato novo, em teste, ativo, inadimplente, bloqueado, cancelado), troque a lista `profiles` do modelo pelos perfis reais e implemente `store.contactProfile`: acha a pessoa pelo telefone e devolve `{ profile, label, facts }`, ou null. O superadmin escreve na tela do robô o que muda em cada perfil, e o resumo de toda passagem para a equipe usa os `facts` `empresa`, `etapa` e `origem`. Sem perfis, deixe a lista vazia e `contactProfile` devolvendo null. Leia "O perfil de quem escreve" em [references/contexto.md](../../references/contexto.md) e a rota `contact` em [references/contratos.md](../../references/contratos.md).
 - **Telas.** Copie `modelos/react/`. Adapte só `primitives.tsx` aos componentes do design system; as telas usam apenas ele.
   - Na área do superadmin: `RoboAtendimento` com `escopo="plataforma"`, `SugestoesConhecimento` e `LacunasRobo` com o mesmo escopo e, no modelo `plataforma`, `ConectarWhatsApp`.
   - No modelo `por-cliente`, na área de configurações de cada cliente: `RoboAtendimento`, `SugestoesConhecimento` e `LacunasRobo` com `escopo="cliente"` (mostram só o que a plataforma liberou) e `ConectarWhatsApp`.
@@ -88,6 +89,14 @@ node .flyee/modules/whatsapp-support/scripts/kit.mjs look <destino> --account <i
 ```
 
 A pessoa de teste é uma atendente criada pelo próprio projeto, por exemplo com `ensureStaffUser` e a chave `conferencia`. `look` salva capturas em `<destino>/conferencia/`; olhe as capturas antes de dizer que o tema e o enxugar estão certos. Cada falha volta com a correção; corrija e rode de novo. `verify` confere cada sessão do OpenWA; o número da rota oficial aparece na tela Conectar WhatsApp e na rotina `checkWhatsapp`. Nenhuma conferência prova a entrega: peça ao desenvolvedor para mandar uma mensagem de outro celular e ver a resposta chegar.
+
+Antes de abrir para os clientes, rode a bateria de conversas: ela mostra o que o robô responde com a IA de verdade e a configuração de produção, sem consultar o projeto e sem enviar nada. Copie [references/bateria.exemplo.json](../../references/bateria.exemplo.json) para `<destino>/bateria.json` e troque pelos casos do projeto, com um caso por perfil declarado e um para cada coisa que nunca pode acontecer; o formato está em [references/bateria.md](../../references/bateria.md).
+
+```
+node .flyee/modules/whatsapp-support/scripts/kit.mjs bateria <destino> --casos <destino>/bateria.json --env <arquivo do robô> --account <id da conta> --json
+```
+
+A bateria usa `PROJECT_URL`, `SUPPORT_BOT_SECRET` e a chave da IA com os nomes que o robô usa; `--env` pode vir mais de uma vez. Ela grava `<destino>/conferencia/bateria-<data-hora>/relatorio.md`. Leia o relatório inteiro, mostre ao desenvolvedor os casos que falharam e o tom das respostas, e só diga que o robô está pronto depois que ele aprovar.
 
 ## Atualizar
 

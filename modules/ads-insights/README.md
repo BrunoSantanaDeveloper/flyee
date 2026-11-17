@@ -51,6 +51,7 @@ Ela não mexe na sua conta de anúncios: prescreve, você executa, e quando voc�
 
 ## O que há de novo
 
+- 1.1.1: a leitura entende o export da Meta como ele sai hoje em português. Quem passou dos 3 segundos é calculado pelo custo de cada reprodução quando o export traz o custo e não a contagem, e os ThruPlays de 15 segundos, as reproduções até o fim, o valor da compra, a data de fim e a veiculação passam a ser lidos. Antes, a leitura deixava essas colunas de fora e pedia o que já estava no arquivo.
 - 1.1.0: ler uma campanha que já rodou ficou mais simples. A IA pede o export como ele vier, sem lista de colunas, e no lugar da lista de cadastros bastam dois números do seu sistema: quantos entraram e quantos vieram dos anúncios. Uma coluna só é pedida quando muda um veredito, com o caminho no Gerenciador. A leitura não espera mais o contrato de medição, e as perguntas da próxima campanha ficam para o app de plano.
 - 1.0.1: as perguntas do contrato vêm na ordem certa: primeiro o tipo de negócio, e depois o número que julga os anúncios e a ativação, já com a sugestão. Para aceitar uma sugestão, basta dizer sim, e o que está com outra pessoa vira um questionário para enviar.
 - 1.0.0: primeira versão, completa. Contrato de medição, tags da página, regra única de link, plano de rastreamento, planilha de origem com pseudônimos, leitura dos exports da Meta e do Google Ads em português e em inglês, veredito por peça com a amostra mínima, leitura da semana com a verdade do negócio e os movimentos, pulso diário por exceção.

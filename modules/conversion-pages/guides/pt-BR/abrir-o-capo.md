@@ -15,7 +15,8 @@ Junto vêm os modelos reais analisados. Cada um traz a fonte, a data em que foi 
 - a página de vendas, a de planos e a da API do Juridiq, um software para escritórios de advocacia;
 - a página de vendas do JuriChat, o atendimento por WhatsApp do mesmo grupo;
 - a página de vendas da Subido AI, um curso com plataforma, mentorias e ferramentas, nas duas versões do teste A/B do topo, vista em 9 de novembro de 2026;
-- as páginas de produto da Databricks, uma plataforma de dados e IA, com os gráficos de demonstração desenhados com as peças do produto, os ícones próprios e as logos reais, vistas no mesmo dia.
+- as páginas de produto da Databricks, uma plataforma de dados e IA, com os gráficos de demonstração desenhados com as peças do produto, os ícones próprios e as logos reais, vistas no mesmo dia;
+- a Black Friday da Hostinger na página inicial e nos planos, com a condição de cada plano debaixo do botão, o bônus de antes e de agora e o contador testado com e sem, vista em 17 de novembro de 2026.
 
 Os quatro primeiros foram vistos em 7 de novembro de 2026.
 

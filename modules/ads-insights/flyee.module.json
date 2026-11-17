@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "ads-insights",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "tool",
   "trail": "escalar",
   "title": {
@@ -80,8 +80,8 @@
     }
   ],
   "changelog": {
-    "pt-BR": "Ler uma campanha que já rodou ficou mais simples. A IA pede o export como ele vier, sem lista de colunas, e no lugar da lista de cadastros bastam dois números do seu sistema. Uma coluna só é pedida quando muda um veredito, com o caminho no Gerenciador. A leitura não espera mais o contrato de medição, e as perguntas da próxima campanha ficam para o app de plano.",
-    "en": "Reading a campaign that already ran got simpler. The AI asks for the export as it comes, with no column list, and two numbers from your system replace the sign-up list. A column is asked for only when it changes a verdict, with the path in the Ads Manager. The read no longer waits for the measurement contract, and the next campaign's questions belong to the planning app."
+    "pt-BR": "A leitura passou a entender o export da Meta como ele sai hoje em português. Quem passou dos 3 segundos é calculado pelo custo de cada reprodução quando o export traz o custo e não a contagem, e ThruPlays de 15 segundos, reproduções até o fim, valor da compra, data de fim e veiculação são lidos. Antes, essas colunas ficavam de fora e a leitura pedia o que já estava no arquivo. Um custo com zero antes da vírgula, como 0,16, não vira mais milhar.",
+    "en": "The read now understands the Meta export as it comes out in Portuguese today. Plays past 3 seconds are computed from the cost of each play when the export carries the cost and not the count, and 15 second ThruPlays, plays to the end, purchase value, end date and delivery are read. Before, these columns were left out and the read asked for what was already in the file. A cost with a zero before the decimal mark, like 0,16, is no longer read as thousands."
   },
   "license": "member"
 }

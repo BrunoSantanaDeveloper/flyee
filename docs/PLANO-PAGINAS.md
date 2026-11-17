@@ -20,6 +20,9 @@
 | T9.1 a T9.3, T9.5 | ✅ | Em f5dc4ad, com a correção do aviso de cookies em 1c343b4. O modelo da Databricks, a §15 do guia das figuras, as correções do motor e o design system para o Orkestree na pasta de trabalho (2026-11-09): detalhes no ÉPICO 9 |
 | T9.4 | ✅ | A construção de verdade, em quatro rodadas com leitores às cegas; a quarta venceu nas seis perguntas, nas duas ordens: detalhes no ÉPICO 9 |
 | T9.6 | ✅ | As mesmas versões 1.3.0, nas mesmas tags do T8.6: detalhes no ÉPICO 9 |
+| T10.1 a T10.3 | ✅ na árvore, sem commit | O modelo da Black Friday da Hostinger, os tipos `planos` e `landing` e três correções da conferência (2026-11-17): detalhes no ÉPICO 10 |
+| T10.4 | ✅ | A construção de verdade, em duas rodadas com leitores às cegas; a segunda venceu nas duas ordens em assinar, entender o preço e escolher o plano: detalhes no ÉPICO 10 |
+| T10.5 | 🟡 | `conversion-pages` 1.4.0 empacotado e instalado para o usuário; o commit e a tag esperam o operador: detalhes no ÉPICO 10 |
 | ⚠️ CI do Windows | corrigido | `anatomy.test.mjs` falhava no Windows do GitHub desde a702826: o Windows Server desliga as animações do sistema, o navegador responde `prefers-reduced-motion: reduce`, e a página do teste para a animação. A captura e o render passam a fixar `no-preference` (T6.6). A CI de 4cc2280 passou no Linux e no Windows (run 42508159600) |
 | ⚠️ `appeared_after_scroll` | corrigido | `video-render/references/interface.md` dizia "só apareceu depois da rolagem". A captura rola a página para aquecer antes de ler, e uma janela que abre pela rolagem saía como presente na chegada. Agora há uma leitura na chegada, antes do aquecimento (T5.4) |
 | ⚠️ `above_fold.mobile` | corrigido | A interface dizia "pelo mesmo texto na mesma ordem". Um botão do menu escondido no celular tomava o par do botão de mesmo texto da página (no JuriChat, "Comece grátis" saía como ausente no celular). Agora o pareamento é primeiro pelo mesmo elemento (T5.4) |
@@ -116,6 +119,10 @@ Não rodou: o `ci:verify` completo (a CLI não mudou), macOS e Linux, e um pedid
 | D35 | Os diagramas e os ícones próprios | O guia das figuras ganha a seção 15: o diagrama feito com as peças do produto (camadas, fluxo, centro com raios, órbita) e uma família de ícones próprios repetida no menu, nos cartões e nos diagramas. Entra provado pela construção (T9.4). | `references/demonstracao.md` §15 |
 | D36 | O motor e as janelas | O aviso de cookies que abre depois do carregamento é fechado numa segunda tentativa; na foto sem letras, o que flutua sobre a página (janela, fundo dela, chat, cartão de canto, inclusive em árvore própria ou pendurado no `<html>`) fica escondido, com aviso; uma transição de 5 s ou mais conta como movimento contínuo. | `modules/video-render/scripts/lib/capture.mjs` |
 | D37 | O design system para o Orkestree | Fica na pasta de trabalho, não no app: o site medido e descrito (nunca o CSS, as imagens ou os ícones deles), o dbui (`@databricks/design-system`, ISC declarado no `package.json`) como fonte das áreas logadas, e um espécime com código nosso. A aplicação no repositório do Orkestree é da sessão do Orkestree. | `flyee-workspace/pesquisa-paginas/databricks-2026-11-09/design-system/` |
+| D38 | O modelo da Black Friday da Hostinger é um arquivo só | A página inicial brasileira em promoção entra como `planos` (os cartões) e `landing` (o topo e a faixa). A internacional serve só de comparação. A oferta depois da compra continua no modelo de D3. Pedido do operador, para usar nas ofertas de Black Friday do MedChina; o modelo é produto, sem nada da marca (D22 do plano de anúncios). | `references/modelos/hostinger-black-friday.md` |
+| D39 | Versões | `conversion-pages` 1.4.0, porque a 1.3.0 já tem tag. O `video-render` não muda. Sem tag até o operador pedir. | manifesto |
+| D40 | A conferência fecha o período pago adiantado e lê a economia pelas palavras perto do preço | `discount_math` confere que "R$ 287,52 por 48 meses" é o preço por mês do cartão vezes 48. `plan_highlighted` aceita "Oferta especial" e "Melhor oferta". Um preço é economia quando as palavras logo antes ou logo depois dele dizem isso, e não quando a palavra aparece em qualquer ponto do trecho. Com a leitura antiga, a construção da rodada 2 recebeu um falso alarme em "Economia de R$ 427,20 no primeiro ano. Total do 1º ano: R$ 640,80". | `scripts/lib/checks.mjs` (`isSaving`, `PREPAID_TOTAL`, `RECOMMENDED`) |
+| D41 | O contador da promoção mostra dias, e o topo escreve o começo e o fim | Com mais de um dia pela frente, o contador mostra dias, horas e minutos. O começo e o fim ficam no topo e perto dos planos, e a figura do produto fica no topo, ao lado da oferta. Entra provado pela construção: na rodada 1, a sessão copiou o contador só em horas da Hostinger ("270:59:29"), e os dois leitores o leram como pressa (T10.4). | `modelos/hostinger-black-friday.md`; `tipos/planos.md`; `manual` dos `planos` em `tipos.json` |
 
 ## 0.5 Convenções do repositório que este trabalho toca
 
@@ -689,6 +696,84 @@ As 33 imagens de demonstração e o vídeo do Genie One foram baixados para estu
 - **As logos de ferramentas com o arquivo oficial** não foram construídas: o projeto da prova não tinha os arquivos, de propósito, para ver se a sessão inventava uma logo.
 - **A aplicação no Orkestree** é da sessão do Orkestree; nada foi escrito naquele repositório.
 
+## ÉPICO 10: o modelo da Black Friday da Hostinger (2026-11-17)
+
+O operador pediu a página da Hostinger como modelo para implementar as ofertas de Black Friday do MedChina. O bruto, as sondas e a prova estão em `flyee-workspace/pesquisa-paginas/hostinger-black-friday-2026-11-17/` (com LEIAME). Nada foi clicado além do aviso de cookies.
+
+### T10.1: as capturas e as sondas
+
+**Estado: ✅.** hostinger.com.br leva a hostinger.com/br, e hostinger.com abre a versão internacional, em inglês. As duas foram capturadas com `capture --no-letters` (`captura-br/`, `captura-com/`).
+
+Duas sondas leram o que a captura não lê:
+- **`sondas/contador.mjs`** lê o contador na primeira visita, 10 s depois, depois de recarregar e com o navegador zerado, e calcula a hora em que ele termina. Em todas as leituras, ele terminava em 2026-11-19T08:00:00Z (5h de Brasília), com diferença de 1 s: o contador não recomeça a cada visita. A data não está escrita na página, e a Black Friday é no dia 27.
+- **`sondas/topo.mjs`** lê o topo em visitas zeradas. Em 5 de 8 visitas zeradas, somando as duas sondas, o topo veio com o contador e "2x bônus de créditos"; nas outras, sem contador e com outro subtítulo. É um teste A/B do próprio contador. A versão internacional não tem contador.
+
+- **Aceite:** `sondas/contador-br.json` e `contador-br-2.json` (as horas de fim) e `sondas/topo-br.json` (os topos); `recortes/br-planos-1.png` mostra os cartões.
+
+### T10.2: o modelo e os tipos
+
+**Estado: ✅ na árvore (D38, D41).** `references/modelos/hostinger-black-friday.md` traz:
+- as contas dos quatro planos;
+- o teste A/B do topo e o contador;
+- a página na ordem e a mecânica que vale levar;
+- o movimento, o visual em palavras e as figuras como se veem na foto sem letras;
+- o que não repetir: a data do contador não escrita, o riscado que não diz o que é e é maior que a renovação, o "a partir de R$ 9,99" do topo com o Single a R$ 5,99, o plano em destaque a cerca de 3.000 px do topo no celular, "não precisa de cartão de crédito" numa página toda paga adiantada, os logos da imprensa sem legenda e o branco sobre o vermelho com contraste de 3,2 a 3,4 para 1;
+- como levar a oferta à página do integrante.
+
+`tipos/planos.md` ganha a seção "A promoção nos planos" e o preço do período pago adiantado. `tipos/landing.md` ganha o topo da promoção e a promoção que entra por cima da página de sempre. `tipos.json` ganha duas mecânicas e dois itens do manual nos `planos`, e o modelo nos `planos` e na `landing`. O modelo entra também em `modelos.json`, no README, nos guias e no changelog, e há um caso novo em `tests/eval.json`.
+- **Aceite:** `node scripts/pages.mjs models --type planos --json` lista `juridiq-planos`, `jurichat-pagina-de-vendas` e `hostinger-black-friday`, como confere `tests/pages.test.mjs`.
+
+### T10.3: a conferência
+
+**Estado: ✅ na árvore (D40).** A conferência da 1.3.0 sobre a captura da Hostinger, como `planos`, deu dois falsos resultados:
+- disse que nenhum plano estava em destaque, e o Unlimited tem o selo "Oferta especial", o fundo claro e o único botão cheio;
+- não conferiu o total pago adiantado.
+
+A construção da rodada 2 (T10.4) recebeu um terceiro: "a economia de R$ 640,80 não é a diferença…", num cartão em que a economia vinha antes do total, no mesmo trecho de texto.
+
+As três estão corrigidas:
+- `RECOMMENDED` aceita "oferta especial" e "melhor oferta";
+- `discount_math` confere o total de N meses contra o preço por mês do mesmo cartão;
+- `isSaving` lê a economia pelas palavras logo antes ou logo depois do preço, e compara com qualquer preço pago do cartão, venha antes ou depois.
+
+A conferência da Hostinger passa a dizer "As 4 contas… batem" e "Um plano aparece em destaque (Oferta especial)". As três páginas da prova fecham as contas sem alarme.
+- **Aceite:** três testes novos em `tests/pages.test.mjs`: o período pago adiantado, o selo de oferta especial e a economia antes do total, com o cartão real da rodada 2. O conjunto passa com 55 testes.
+
+### T10.4: a construção de verdade
+
+**Estado: ✅, em duas rodadas.** O mesmo pedido em todas as sessões: "crie a página de planos com a oferta de Black Friday do produto descrito em PRODUTO.md, no estilo da Hostinger". O produto é fictício, uma agenda para salões de beleza, com três planos, o anual com 40% no primeiro ano de 20/11 a 28/11 às 23h59 e lembretes em dobro como bônus.
+
+As sessões rodaram em Sonnet, num projeto como o de um integrante: o "antes" com o app 1.3.0, tirado da tag, e o "depois" com a 1.4.0. As duas construíram em 17/11, antes de a promoção abrir, então as fotos mostram a oferta pela prévia que cada sessão deixou na página.
+
+Os leitores rodaram às cegas, em Opus, no papel de dona de um salão com três profissionais, nas duas ordens de rótulo. Evidência em `prova/` (com LEIAME e a chave dos rótulos).
+- **Rodada 1:** antes (7,0 min, US$ 0,80) e depois (5,5 min, US$ 0,71). A sessão "antes" não tinha o modelo da Black Friday e usou o dos planos do Juridiq. Nas duas ordens, a nova venceu em entender quanto se paga hoje e depois e em escolher o plano. A antiga venceu em até quando vale e na confiança, porque a sessão copiou o contador só em horas da Hostinger ("270:59:29"), deixou o começo da promoção fora do topo e tirou a figura do produto do topo. Assinar e entender sem ler seguiram a posição do rótulo.
+- **O que mudou (D41):** o contador mostra dias quando falta mais de um dia, o começo e o fim ficam escritos no topo e a figura do produto fica ao lado da oferta. Cada regra está no modelo e no roteiro dos `planos`.
+- **Rodada 2:** depois2 (8,7 min, US$ 0,84) contra o mesmo "antes". Nas duas ordens, a nova venceu em assinar agora, em entender quanto se paga hoje e depois e em escolher o plano. Em até quando vale, venceu numa ordem e empatou na outra. Entender sem ler e confiança seguiram a posição do rótulo. As queixas da rodada 1 sumiram.
+- **Sobrou uma ressalva:** os leitores estranharam "8 dias e 23 horas" no contador. É efeito da prévia, que a sessão programou para simular o primeiro minuto da promoção, e não da página no ar. ⚠️ A prévia de uma página com data deveria dizer que é prévia; fica no backlog.
+- **Aceite:** `prova/leitores/cego-r2a.txt` e `cego-r2b.txt`, com a chave em `prova/cego-chave.txt`; `prova/comparacao/topo-computador-r2.jpg`.
+
+### T10.5: a versão e a instalação
+
+**Estado: 🟡.**
+- `npm run validate conversion-pages` passa.
+- `npm run pack conversion-pages` gera `dist/modules/conversion-pages-1.4.0.zip` (37 arquivos, `d630758b…`).
+- `node --test tests/*.test.mjs` passa com 55 testes.
+- `npm run apps -- link conversion-pages --user` atualizou a ponte para `conversion-pages@1.4.0`, e o modelo novo está na cópia do usuário. Isso basta para o repositório do MedChina, sem escrever nada nele.
+- O commit, a tag e a publicação esperam o operador.
+
+### Onde a implementação divergiu
+
+- **O pedido nomeou hostinger.com, e a análise usa a versão brasileira.** É a que mostra reais, parcelas e a lei daqui. A internacional confirma as contas e mostra que o contador existe só no Brasil.
+
+### Fora de cobertura desta rodada
+
+- **O que muda em 19/11, às 5h:** se o preço sobe, se começa outra fase ou se o contador some. O registro é de 17/11.
+- **A página `/br/black-friday`,** com todas as ofertas, a de preços e o carrinho não foram capturados.
+- **Os textos das condições** que abrem no item sublinhado foram lidos no texto da captura, sem abrir a dica na tela.
+- **A prova** usou um produto fictício, construções em Sonnet e leitores em Opus, duas leituras por rodada; nenhuma pessoa real leu, e nada foi medido em conversão. As fotos mostram a promoção pela prévia de cada sessão, e a página no ar entre 20/11 e 28/11 não foi vista.
+- **O uso no MedChina** é da sessão do MedChina; nada foi escrito naquele repositório.
+- **macOS e Linux** não rodaram as conferências novas.
+
 ## 5. Riscos
 
 | Risco | Primeiro sinal |
@@ -703,6 +788,7 @@ As 33 imagens de demonstração e o vídeo do Genie One foram baixados para estu
 | Uma regra nova melhora o teste e piora a página | só uma construção de verdade mostra (D26) |
 | Um exemplo do guia vira a figura de toda página | aconteceu no ÉPICO 9: "o custo é uma moeda" fez a mesma moeda servir a dois recursos. Os exemplos vêm de outro ramo que o do pedido, e a leitura dos ícones sem os nomes (§14) aponta a repetição |
 | Uma mecânica do modelo esconde o que a regra pede para mostrar | aconteceu no ÉPICO 9: as abas guardaram as figuras dos recursos, e a página perdeu nas duas ordens. O modelo diz o que levar e o que não levar de cada mecânica |
+| Um detalhe descrito no modelo vira regra na página | aconteceu no ÉPICO 10: "mostra horas acima de 24" virou um contador de "270:59:29". O detalhe ruim da página analisada vai para "o que não repetir", com o motivo |
 
 ## 6. Backlog: o que os outros apps ganham
 
@@ -757,6 +843,16 @@ As 33 imagens de demonstração e o vídeo do Genie One foram baixados para estu
 | `youtube-script` | a mesma pergunta na thumbnail: sem o texto, a imagem ainda diz o assunto? | a 1.3.0 mede palavras e repetição do título na thumbnail; não há teste da imagem sem texto |
 | `video-studio`, `motion-carousel` | os quadros de uma cena de produto sem letras, para saber se o objeto se reconhece com o som e o texto de fora: o motor já aplica o mesmo CSS | `film` e as folhas de contato mostram a página com o texto |
 | `contact-base` | os testes do título no assunto do e-mail (em voz alta, trocando o nome), com a mesma regra de exagerar o interesse e nunca o fato | `references/copy-regua.md:8` pede até 45 caracteres e palavras concretas; não traz esses testes |
+
+### Do modelo da Black Friday da Hostinger (2026-11-17)
+
+| App | O que ganharia | Evidência de que hoje não tem |
+|---|---|---|
+| `video-render` | a hora em que cada contador termina (a hora da leitura somada ao tempo que falta), para `countdown_real` comparar com `offer.deadline` e apontar o contador que recomeça a cada visita | `countdownsFrom` (`scripts/lib/capture.mjs:1018`) lê o contador duas vezes, com 1,2 s entre elas, e guarda só o texto; neste ÉPICO, a hora de fim saiu de uma sonda (`sondas/contador.mjs`) |
+| este app | uma prévia de página com data que diga na tela que é prévia; e a conferência do "até" e do "a partir de" do topo contra os cartões | na rodada 2, a prévia simulou o primeiro minuto da promoção sem aviso; a Hostinger tem o topo em R$ 9,99 e o plano mais barato a R$ 5,99, e nenhum item compara os dois |
+| `ad-creatives` (`ad-landing-page`) | o "até" e o "a partir de" do anúncio contra o maior desconto e o menor preço dos cartões da página, além do prazo, que já confere | `skills/ad-landing-page/SKILL.md:27` confere o prazo da oferta contra a data do plano, e nada compara o desconto e o preço de entrada |
+| `ads-insights` | o teste do topo com e sem contador, como a Hostinger faz, lido por versão com a amostra mínima; entra no item do teste A/B da Subido acima | a mesma evidência do item da Subido |
+| `video-studio`, `motion-carousel` | o objeto da campanha que se entende sem ler, como o sinal de porcentagem inflado da Hostinger, nos vídeos e slides de uma promoção | `video-studio` reconhece o pedido de oferta (`scripts/lib/request.mjs:364`), e nenhum roteiro traz um objeto próprio da promoção |
 
 ### Do modelo da Hostinger (D3)
 

@@ -6,7 +6,7 @@
 import { AppError, fold, parseDay } from "./util.mjs";
 import { parseNumber, parseTable } from "./csv.mjs";
 
-const NUMERIC = new Set(["spend", "impressions", "reach", "frequency", "cpm", "link_clicks", "link_ctr", "clicks_all", "landing_page_views", "video_plays_3s", "thruplays", "video_plays_100", "results", "cost_per_result", "leads", "purchases", "purchase_value", "registrations", "initiate_checkout", "clicks", "ctr", "avg_cpc", "conversions", "cost_per_conversion", "conversion_rate", "conversion_value", "impression_share", "quality_score"]);
+const NUMERIC = new Set(["spend", "impressions", "reach", "frequency", "cpm", "link_clicks", "link_ctr", "clicks_all", "landing_page_views", "video_plays_3s", "cost_per_video_play_3s", "thruplays", "video_plays_100", "results", "cost_per_result", "leads", "purchases", "purchase_value", "registrations", "initiate_checkout", "clicks", "ctr", "avg_cpc", "conversions", "cost_per_conversion", "conversion_rate", "conversion_value", "impression_share", "quality_score"]);
 const DATE_FIELDS = new Set(["period_start", "period_end", "day"]);
 
 /** "CTR (taxa de cliques no link)" → "ctr (taxa de cliques no link)"; "Impr." stays "impr.". */
@@ -67,9 +67,25 @@ function levelOf(source, fields) {
 const NAME_FIELD = { ad: "ad_name", adset: "adset_name", campaign: "campaign_name", adgroup: "adgroup_name", keyword: "keyword", search_term: "search_term" };
 
 /**
- * Normalizes one export. Returns { source, level, name_field, fields, missing, unknown_columns,
- * rows, period, totals }. Rows carry only the fields the export has; a row's missing numeric
- * cell is null. Throws `export_invalid` when no column is recognized.
+ * A Meta export may carry the cost of a 3-second play and not the count. The count is the spend
+ * over that cost, which is how the platform computes the cost; a row that spent nothing has no
+ * count to derive and stays null. Returns the fields derived this way.
+ */
+function deriveCounts(rows, fields) {
+  const derived = {};
+  if (!fields.has("video_plays_3s") && fields.has("cost_per_video_play_3s") && fields.has("spend")) {
+    for (const row of rows) row.video_plays_3s = row.spend > 0 && row.cost_per_video_play_3s > 0 ? Math.round(row.spend / row.cost_per_video_play_3s) : null;
+    fields.add("video_plays_3s");
+    derived.video_plays_3s = "cost_per_video_play_3s";
+  }
+  return derived;
+}
+
+/**
+ * Normalizes one export. Returns { source, level, name_field, fields, missing, derived,
+ * unknown_columns, rows, period, totals }. Rows carry only the fields the export has, plus the
+ * counts derived from a cost (`derived` says which and from what); a row's missing numeric cell
+ * is null. Throws `export_invalid` when no column is recognized.
  */
 export function normalizeExport(text, { source, columns, level = null }) {
   if (!["meta", "google"].includes(source)) throw new AppError("usage", `Origem desconhecida: ${source}.`, "Use --source meta ou --source google.");
@@ -88,8 +104,6 @@ export function normalizeExport(text, { source, columns, level = null }) {
   const detected = level ?? levelOf(source, fields);
   if (!detected) throw new AppError("export_invalid", "O arquivo não traz a coluna de nome (anúncio, conjunto, campanha, grupo, palavra ou termo).", "Exporte a tabela com a coluna de nome do nível que você quer ler.", { recognized: [...fields] });
   const nameField = NAME_FIELD[detected];
-  const expected = columns.fields_by_level[source][detected] ?? [];
-  const missing = expected.filter((field) => !fields.has(field));
 
   const rows = [];
   for (const record of table.records) {
@@ -106,13 +120,16 @@ export function normalizeExport(text, { source, columns, level = null }) {
     row.name = name;
     rows.push(row);
   }
+  const derived = deriveCounts(rows, fields);
+  const expected = columns.fields_by_level[source][detected] ?? [];
+  const missing = expected.filter((field) => !fields.has(field));
 
   const starts = rows.map((row) => row.period_start ?? row.day).filter(Boolean).sort();
   const ends = rows.map((row) => row.period_end ?? row.day).filter(Boolean).sort();
   const period = starts.length ? { start: starts[0], end: ends[ends.length - 1] } : null;
   const sum = (field) => (fields.has(field) ? rows.reduce((acc, row) => acc + (row[field] ?? 0), 0) : null);
   const totals = { spend: sum("spend"), impressions: sum("impressions"), link_clicks: sum("link_clicks"), clicks: sum("clicks"), results: sum("results"), conversions: sum("conversions"), landing_page_views: sum("landing_page_views") };
-  return { source, level: detected, name_field: nameField, fields: [...fields], columns_matched: Object.fromEntries(matched), missing, unknown_columns: unknown, rows, period, totals, separator: table.separator };
+  return { source, level: detected, name_field: nameField, fields: [...fields], columns_matched: Object.fromEntries(matched), missing, derived, unknown_columns: unknown, rows, period, totals, separator: table.separator };
 }
 
 /** Rows that share a name (a daily export, or one line per placement) summed into one. */
@@ -142,6 +159,7 @@ export function aggregateByName(rows) {
       if (typeof row.results === "number") row.cost_per_result = row.results > 0 ? row.spend / row.results : null;
       if (typeof row.conversions === "number") row.cost_per_conversion = row.conversions > 0 ? row.spend / row.conversions : null;
       if (typeof row.clicks === "number") row.avg_cpc = row.clicks > 0 ? row.spend / row.clicks : null;
+      if (typeof row.cost_per_video_play_3s === "number" && typeof row.video_plays_3s === "number") row.cost_per_video_play_3s = row.video_plays_3s > 0 ? row.spend / row.video_plays_3s : null;
     }
     if (typeof row.clicks === "number" && row.clicks > 0 && typeof row.conversions === "number") row.conversion_rate = (row.conversions / row.clicks) * 100;
   }

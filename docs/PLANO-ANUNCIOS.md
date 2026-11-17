@@ -691,6 +691,28 @@ core 1.10.0 → `media-plan` 1.0.0 → `ads-insights` 1.0.0 (medição) → `ad-
 - Gravação com pessoa e geração de imagem: inalterado; o app entrega roteiro e plano de cena marcados `needs_recording`.
 - Receita (`recipes/`) juntando os apps: quando a importação de receitas pela plataforma existir.
 
+## Proposto em 2026-11-17: a peça diz o que vende (aguarda a prova)
+
+Origem: a campanha de pré-Black de uma marca do operador (D22: o caso é história; as regras valem para qualquer integrante). As peças foram montadas à mão no Motor, fora do gerador do `ad-creatives`, porque o app ainda não monta vídeo de fala (`docs/PLANO-ANUNCIOS-FALA.md`, ÉPICO 15). No export de 2026-11-17, lido com o `ads-insights` 1.1.1, a peça que levou quase toda a verba teve 70% das impressões passando dos 3 s, 38% chegando aos 15 s, 21% de CTR do link e 110 visitas à página, e nenhuma visita virou início de checkout. A amostra fica abaixo das 1.000 impressões da regra. A atenção não faltou: o que falhou veio depois do clique.
+
+O que se via nas peças (olhado, não medido): a fala não dizia o que o produto faz; a tela do produto aparecia em pedaços pequenos; as três peças e os três estáticos tinham o mesmo molde; o terço de baixo de todo quadro vertical era uma faixa lisa; os estáticos eram só preço; a data da oferta estava na peça, e o anúncio seguiu ativo sem data de fim.
+
+Estado de todas: ⬜. Nada mudou em `modules/ad-creatives`.
+
+| # | Proposta | Onde entraria | Como se confere |
+|---|---|---|---|
+| CR1 | A capa (quadro 0) diz, sem som, para quem é e o que entrega, com o rosto ou a tela ocupando o quadro | `references/pagina-anuncio.md`, seção 2 ("A capa é o quadro 0") | a IA lê a capa sozinha, em tamanho de celular, e responde as duas perguntas |
+| CR2 | A primeira frase falada diz o que o produto faz | `references/conceitos.md` e o roteiro das peças com fala | a transcrição da primeira frase |
+| CR3 | A tela do produto aparece ampliada num campo, legível no celular, e não em pedaços | `pagina-anuncio.md`, seção 3 (`screen`: `height`, `motion`) | a folha de quadros em tamanho de celular |
+| CR4 | A imagem vai até a borda; só texto, logo e botão respeitam a zona da Meta | `pagina-anuncio.md`, seção 1 | uma conferência nova no `accept`: faixa lisa no terço de baixo vira aviso, a calibrar em peças boas e nesta |
+| CR5 | Um primeiro quadro diferente por conceito | `references/matriz.md` (a dimensão `visual` já existe) | as capas lado a lado; a matriz já recusa ângulos que diferem numa dimensão só |
+| CR6 | Data na peça só com data de fim programada no anúncio | `references/lancamento.md` e o `deliver` | a lista de anúncios com data, cada um com o fim |
+| CR7 | Estático para público frio com produto ou rosto; o cartão de preço só no remarketing | `pagina-anuncio.md` (imagens) e `lancamento.md` | nenhum estático frio só de preço |
+
+**A prova:** a rodada da Black da mesma marca, montada com estas regras (o briefing está no projeto da marca, fora deste repositório), comparada pelo operador com as capas da pré-Black e medida no export: gancho, CTR e, sobretudo, visita para cadastro ou início de checkout, com a origem gravada. Cada regra entra no app só depois de o operador preferir a rodada nova e de a medição não a contradizer, e entra com a conferência que roda. Um CTR maior sozinho não prova nada: a pré-Black teve 21%. Pela regra de 2026-11-08 de `.claude/rules/apps.md`, nenhum relatório diz que as regras melhoraram as peças porque os testes passam.
+
+**O que não foi verificado:** o detalhamento por posicionamento e por idade da pré-Black; quanto da verba rodou depois do fim da oferta (o export não separa por dia); a página de destino de hoje (a captura é de 2026-10-23).
+
 ## Verificação de ponta a ponta
 
 1. `npm run test:apps`: testes de unidade e de ponta a ponta dos apps novos, com servidor falso do Apify.
